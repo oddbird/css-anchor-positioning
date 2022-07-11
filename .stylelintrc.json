@@ -1,0 +1,23 @@
+{
+  "extends": "stylelint-config-standard",
+  "rules": {
+    "string-quotes": "single",
+    "selector-type-no-unknown": null,
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["machine"] }],
+    "function-no-unknown": [true, { "ignoreFunctions": ["machine", "do"] }],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      { "ignorePseudoClasses": ["your-pseudo-classes-here"] }
+    ],
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreProperties": [
+          "your",
+          "properties",
+          "here"
+        ]
+      }
+    ]
+  }
+}

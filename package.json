@@ -1,0 +1,51 @@
+{
+  "name": "@oddbird/polyfill-template",
+  "version": "0.0.0-development",
+  "description": "Polyfill template",
+  "license": "BSD-3-Clause",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "OddBird <birds@oddbird.net> (oddbird.net)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oddbird/polyfill.git"
+  },
+  "bugs": "https://github.com/oddbird/polyfill/issues",
+  "homepage": "https://polyfill.oddbird.net",
+  "keywords": [
+    "css",
+    "polyfill"
+  ],
+  "type": "module",
+  "main": "dist/main.js",
+  "module": "dist/module.js",
+  "files": [
+    "README.md",
+    "src/**/*.js"
+  ],
+  "scripts": {
+    "build:iife:minified": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.iife.min.js --format=iife --minify",
+    "build:esm:minified": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.min.js --format=esm --minify",
+    "build:esm:debug": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.js --format=esm",
+    "build": "rm -rf dist && yarn build:esm:debug && yarn build:esm:minified && yarn build:iife:minified",
+    "dev": "rm -rf dist && esbuild --bundle src/css-toggles.js --format=esm --servedir=. --outdir=dist --sourcemap --serve=3000",
+    "format:css": "stylelint --fix src/**/*.css",
+    "format:js": "prettier --write {src,tests}/**/*.js && eslint --fix {src,tests}/**/*.js",
+    "format": "yarn format:css && yarn format:js",
+    "lint:css": "stylelint src/**/*.css",
+    "lint:js": "prettier --check {src,tests}/**/*.js && eslint {src,tests}/**/*.js",
+    "lint": "yarn lint:css && yarn lint:js",
+    "prepack": "yarn build",
+    "preview": "rm -rf dist && yarn build && esbuild --servedir=. --serve=\"${PORT:-3000}\" --log-level=\"${LEVEL:-info}\"",
+    "test": "playwright test",
+    "test:ci": "playwright test --browser=all"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.23.1",
+    "stylis": "^4.1.1"
+  },
+  "dependencies": {
+    "esbuild": "^0.14.48"
+  }
+}
