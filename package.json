@@ -1,7 +1,7 @@
 {
-  "name": "@oddbird/polyfill-template",
+  "name": "@oddbird/css-anchor-positioning",
   "version": "0.0.0-development",
-  "description": "Polyfill template",
+  "description": "Polyfill for the proposed CSS anchor positioning spec",
   "license": "BSD-3-Clause",
   "publishConfig": {
     "access": "public"
@@ -9,32 +9,32 @@
   "author": "OddBird <birds@oddbird.net> (oddbird.net)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oddbird/polyfill.git"
+    "url": "https://github.com/oddbird/css-anchor-positioning.git"
   },
-  "bugs": "https://github.com/oddbird/polyfill/issues",
+  "bugs": "https://github.com/oddbird/css-anchor-positioning/issues",
   "homepage": "https://polyfill.oddbird.net",
   "keywords": [
     "css",
     "polyfill"
   ],
   "type": "module",
-  "main": "dist/main.js",
-  "module": "dist/module.js",
+  "main": "dist/css-anchor-positioning.js",
+  "module": "dist/css-anchor-positioning.js",
   "files": [
     "README.md",
     "src/**/*.js"
   ],
   "scripts": {
-    "build:iife:minified": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.iife.min.js --format=iife --minify",
-    "build:esm:minified": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.min.js --format=esm --minify",
-    "build:esm:debug": "esbuild --bundle src/css-toggles.js --outfile=dist/css-toggles.js --format=esm",
+    "build:iife:minified": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.iife.min.ts --format=iife --minify",
+    "build:esm:minified": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.min.ts --format=esm --minify",
+    "build:esm:debug": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.ts --format=esm",
     "build": "rm -rf dist && yarn build:esm:debug && yarn build:esm:minified && yarn build:iife:minified",
-    "dev": "rm -rf dist && esbuild --bundle src/css-toggles.js --format=esm --servedir=. --outdir=dist --sourcemap --serve=3000",
+    "dev": "rm -rf dist && esbuild --bundle src/css-anchor-positioning.ts --format=esm --servedir=. --outdir=dist --sourcemap --serve=3000",
     "format:css": "stylelint --fix src/**/*.css",
-    "format:js": "prettier --write {src,tests}/**/*.js && eslint --fix {src,tests}/**/*.js",
+    "format:js": "prettier --write {src,tests}/**/*.ts && eslint --fix {src,tests}/**/*.ts",
     "format": "yarn format:css && yarn format:js",
     "lint:css": "stylelint src/**/*.css",
-    "lint:js": "prettier --check {src,tests}/**/*.js && eslint {src,tests}/**/*.js",
+    "lint:js": "prettier --check {src,tests}/**/*.ts && eslint {src,tests}/**/*.ts",
     "lint": "yarn lint:css && yarn lint:js",
     "prepack": "yarn build",
     "preview": "rm -rf dist && yarn build && esbuild --servedir=. --serve=\"${PORT:-3000}\" --log-level=\"${LEVEL:-info}\"",
@@ -42,10 +42,16 @@
     "test:ci": "playwright test --browser=all"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.18.6",
+    "@babel/preset-typescript": "^7.18.6",
     "@playwright/test": "^1.23.1",
-    "stylis": "^4.1.1"
+    "esbuild-jest": "^0.5.0",
+    "jest": "^28.1.3",
+    "stylis": "^4.1.1",
+    "ts-jest": "^28.0.6"
   },
   "dependencies": {
+    "@types/jest": "^28.1.6",
     "esbuild": "^0.14.48"
   }
 }
