@@ -25,9 +25,9 @@
     "src/**/*.js"
   ],
   "scripts": {
-    "build:iife:minified": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.iife.min.ts --format=iife --minify",
-    "build:esm:minified": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.min.ts --format=esm --minify",
-    "build:esm:debug": "esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.ts --format=esm",
+    "build:iife:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.iife.min.ts --format=iife --minify",
+    "build:esm:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild  --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.min.ts --format=esm --minify",
+    "build:esm:debug": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.ts --format=esm",
     "build": "rm -rf dist && yarn build:esm:debug && yarn build:esm:minified && yarn build:iife:minified",
     "dev": "rm -rf dist && esbuild --bundle src/css-anchor-positioning.ts --format=esm --servedir=. --outdir=dist --sourcemap --serve=3000",
     "format:css": "stylelint --fix src/**/*.css",
@@ -42,7 +42,7 @@
     "test:ci": "playwright test --browser=all"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.18.6",
+    "@babel/preset-env": "^7.18.9",
     "@babel/preset-typescript": "^7.18.6",
     "@playwright/test": "^1.23.1",
     "esbuild-jest": "^0.5.0",
@@ -51,6 +51,8 @@
     "ts-jest": "^28.0.6"
   },
   "dependencies": {
+    "@babel/cli": "^7.18.9",
+    "@floating-ui/dom": "^1.0.0",
     "@types/jest": "^28.1.6",
     "esbuild": "^0.14.48"
   }
