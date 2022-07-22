@@ -1,8 +1,8 @@
-# Contributing to CSS Toggles
+# Contributing to CSS Anchor Positioning
 
 Ideas, issues, and pull-requests are welcome!
 
-- [**Github Issues**](https://github.com/oddbird/<POLYFILL-REPO>/issues/) are the
+- [**Github Issues**](https://github.com/oddbird/css-anchor-positioning/issues/) are the
   best place to request a feature, file a bug, or just ask a question. Also a
   great place to discuss possible features before you submit a PR.
 - **Pull Requests** are a big help, if you're willing to jump in and make things
