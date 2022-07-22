@@ -18,16 +18,16 @@
     "polyfill"
   ],
   "type": "module",
-  "main": "dist/css-anchor-positioning.js",
+  "main": "dist/css-anchor-positioning.min.js",
   "module": "dist/css-anchor-positioning.js",
   "files": [
     "README.md",
     "src/**/*.js"
   ],
   "scripts": {
-    "build:iife:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.iife.min.ts --format=iife --minify",
-    "build:esm:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild  --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.min.ts --format=esm --minify",
-    "build:esm:debug": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.ts --format=esm",
+    "build:iife:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.iife.min.js --format=iife --minify",
+    "build:esm:minified": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.min.js --format=esm --minify",
+    "build:esm:debug": "babel ./node_modules/@floating-ui --out-dir ./lib && esbuild --bundle src/css-anchor-positioning.ts --outfile=dist/css-anchor-positioning.js --format=esm",
     "build": "rm -rf dist && yarn build:esm:debug && yarn build:esm:minified && yarn build:iife:minified",
     "dev": "rm -rf dist && esbuild --bundle src/css-anchor-positioning.ts --format=esm --servedir=. --outdir=dist --sourcemap --serve=3000",
     "format:css": "stylelint --fix src/**/*.css",
@@ -42,9 +42,9 @@
     "test:ci": "playwright test --browser=all"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.18.9",
+    "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
-    "@playwright/test": "^1.23.1",
+    "@playwright/test": "^1.23.3",
     "esbuild-jest": "^0.5.0",
     "jest": "^28.1.3",
     "stylis": "^4.1.1",

@@ -1,3 +1,72 @@
-p {
-  color: black;
+#myPopup {
+  position: fixed;
+  position-set: buttonMenuPos;
+  overflow: auto;
+
+  /* The popup is at least as wide as the button */
+  min-width: calc(anchor(right) - anchor(left));
+
+  /* The popup is at least as tall as 2 menu items */
+  min-height: 6em;
+}
+
+/* This example intentionally left verbose */
+@position-set buttonMenuPos {
+  /* First try to align the top, left edge of the popup
+        with the bottom, left edge of the button. */
+  1 {
+    top: anchor(bottom);
+    left: anchor(left);
+
+    /* The popup is no wider than the distance from the
+            left button edge to the right edge of the viewport */
+    max-width: calc(100vw - anchor(left));
+
+    /* clamp the height of the popup to be no taller than
+            the distance between the bottom of the button and the
+            bottom of the layout viewport. */
+    max-height: calc(100vh - anchor(bottom));
+  }
+
+  /* Next try to align the bottom, left edge of the popup
+        with the top, left edge of the button. */
+  2 {
+    bottom: anchor(top);
+    left: anchor(left);
+
+    max-width: calc(100vw - anchor(left));
+
+    /* clamp the height of the popup to be no taller than
+            the distance between the top of the button and the
+            bottom of the layout viewport. */
+    max-height: anchor(top);
+  }
+
+  /* Next try to align the top, right edge of the popup
+        with the bottom, right edge of the button. */
+  3 {
+    top: anchor(bottom);
+    right: anchor(right);
+
+    /* The popup is no wider than the distance from the
+            right button edge to left edge of the viewport. */
+    max-width: anchor(right);
+
+    max-height: calc(100vh - anchor(bottom));
+  }
+
+  /* Finally, try to align the bottom, right edge of the popup
+        with the top, right edge of the button. Other positions are possible,
+        but this is the final option the author would like the rendering
+        engine to try. */
+  4 {
+    bottom: anchor(top);
+    right: anchor(right);
+
+    /* The popup is no wider than the distance from the
+            right button edge to left edge of the viewport. */
+    max-width: anchor(right);
+
+    max-height: anchor(top);
+  }
 }
