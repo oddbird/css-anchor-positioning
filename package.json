@@ -54,6 +54,7 @@
     "@babel/cli": "^7.18.9",
     "@floating-ui/dom": "^1.0.0",
     "@types/jest": "^28.1.6",
-    "esbuild": "^0.14.48"
+    "esbuild": "^0.14.48",
+    "esbuild-plugin-babel": "^0.2.3"
   }
 }
