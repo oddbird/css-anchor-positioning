@@ -1,7 +1,21 @@
 const csstree = require("css-tree");
 
-export function fetchCSS(path: string) {
-  // TODO - get link element to stylesheet, get URL, fetch contents
+function handleLinkedStylesheets() {
+  let linkElements = document.querySelectorAll('link');
+  let CSSlinks = [];
+  linkElements.forEach(link => {
+    if(link.type === 'text/css') {
+       CSSlinks.push(link);
+       console.log('link', link)
+    }
+  })
+  return CSSlinks;
+}
+
+export function fetchCSS(rawCSS: string) {
+  let linkedCSS = handleLinkedStylesheets();
+  let inlineCSS = document.querySelectorAll('style');
+  return linkedCSS
 }
 
 export function parsePositionFallback(ast: string) {

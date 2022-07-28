@@ -2,10 +2,20 @@ import {
   parseCSS,
   parseAnchorFunctions,
   parsePositionFallback,
+  fetchCSS,
 } from "../src/css-anchor-positioning";
 import { sampleAnchorCSS } from "./helpers";
 
 const cssWithoutAnchorPositioning = ".a { color: red; } .b { color: green; }";
+
+describe("fetch stylesheet", () => {
+  it("fetches CSS", () => {
+    const result = fetchCSS();
+    console.log(result);
+    expect( result).toBeTruthy();
+  })
+})
+
 
 describe("parse stylesheet", () => {
   it("parses and finds @position-fallback at-rule", () => {
