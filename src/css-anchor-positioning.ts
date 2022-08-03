@@ -6,16 +6,16 @@ function handleLinkedStylesheets() {
   linkElements.forEach((link) => {
     if (link.type === 'text/css' || link.rel === 'stylesheet') {
       CSSlinks.push(link);
-      console.log('link', link);
     }
   });
   return CSSlinks;
 }
 
-export function fetchCSS(rawCSS: string) {
+export function fetchCSS() {
   let linkedCSS = handleLinkedStylesheets();
-  // let inlineCSS = document.querySelectorAll('style');
-  return linkedCSS;
+  let inlineCSS = document.querySelectorAll('style');
+
+  return [inlineCSS, linkedCSS];
 }
 
 export function parsePositionFallback(ast: string) {
