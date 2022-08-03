@@ -1,4 +1,4 @@
-const csstree = require('css-tree');
+import { PositionFallbackRulesMap } from "./parsing";
 
 function handleLinkedStylesheets() {
   let linkElements = document.querySelectorAll('link');
@@ -18,27 +18,8 @@ export function fetchCSS() {
   return [inlineCSS, linkedCSS];
 }
 
-export function parsePositionFallback(ast: string) {
-  return csstree.findAll(
-    ast,
-    (node) => node.type === 'Atrule' && node.name.includes('position-fallback'),
-  );
+export function transformCSS(positionFallbackRules: PositionFallbackRulesMap) {
+  // for each position fallback set, get the anchor and floating element for that set
+  // call floating-ui's compute position (fallback rules go in middleware)
+  // remove anchor-positioning spec CSS (anchor() and @position-fallback and @try) from CSS
 }
-
-export function parseAnchorFunctions(ast: string) {
-  return csstree.findAll(
-    ast,
-    (node) => node.type === 'Function' && node.name.includes('anchor'),
-  );
-}
-
-export function parseCSS(cssText: string) {
-  const ast = csstree.parse(cssText);
-
-  const positionFallbackRules = parsePositionFallback(ast);
-  const anchors = parseAnchorFunctions(ast);
-
-  return positionFallbackRules.length || anchors.length ? ast : false;
-}
-
-export function transformCSS(cssText: string) {}
