@@ -1,4 +1,4 @@
-import { PositionFallbackRulesMap } from "./parsing";
+import { PositionFallbackRulesMap } from './parsing.js';
 
 export function fetchCSS(path: string) {
   // TODO - get link element to stylesheet, get URL, fetch contents

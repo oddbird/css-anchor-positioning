@@ -1,4 +1,4 @@
-const csstree = require("css-tree");
+import * as csstree from 'css-tree';
 
 interface TryBlockMap {
   [key: string]: string;
@@ -8,16 +8,15 @@ export interface PositionFallbackRulesMap {
   [key: string]: TryBlockMap[];
 }
 
-export function parsePositionFallback(ast: string) {
+export function parsePositionFallback(ast: csstree.CssNode) {
   const parsedFallbackRules = csstree.findAll(
     ast,
-
-    (node) => node.type === "Atrule" && node.name.includes("position-fallback")
+    (node) => node.type === 'Atrule' && node.name.includes('position-fallback'),
   );
   const fallbacks: PositionFallbackRulesMap = {};
 
   if (parsedFallbackRules) {
-    parsedFallbackRules.forEach((fallback) => {
+    parsedFallbackRules.forEach((fallback: csstree.Atrule) => {
       const fallbackName = fallback.prelude.value;
       const fallbackTryBlocks: TryBlockMap[] = [];
 
