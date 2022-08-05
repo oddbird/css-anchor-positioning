@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "esModuleInterop": true
+    "module": "node16",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/*.test.ts", "node_modules"]
 }
