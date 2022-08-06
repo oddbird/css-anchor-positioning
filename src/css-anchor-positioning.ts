@@ -1,4 +1,4 @@
-import { PositionFallbackRulesMap } from "./parsing";
+import { PositionFallbackRulesMap } from './parsing.js';
 
 function handleLinkedStylesheets() {
   let linkElements = document.querySelectorAll('link');

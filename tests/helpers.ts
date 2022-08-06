@@ -1,2 +1,0 @@
-export const sampleAnchorCSS =
-  "#myPopup {position: fixed;position-fallback: --button-popup;overflow: auto;min-width: anchor-size(--button width);} @position-fallback --button-popup {@try {top: anchor(--button bottom);left: anchor(--button left);}@try {bottom: anchor(--button top);left: anchor(--button left);}@try {top: anchor(--button bottom);right: anchor(--button right);}@try {bottom: anchor(--button top);right: anchor(--button right);}}";

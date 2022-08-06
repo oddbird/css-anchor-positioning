@@ -1,8 +1,8 @@
 <link type="text/css" href="./src/styles.css">
-<button id="button" popup="myPopup">Anchor</button>
-<popup id="myPopup" anchor="button" role="menu">…</popup>
+<button id="button" popup="my-popup">Anchor</button>
+<popup id="my-popup" anchor="button" role="menu">…</popup>
 <style>
-  #myPopup {
+  #my-popup {
     position: fixed;
     position-fallback: --button-popup;
     overflow: auto;
@@ -16,30 +16,30 @@
 
   @position-fallback --button-popup {
     /* First try to align the top, left edge of the popup
-  with the bottom, left edge of the button. */
+       with the bottom, left edge of the button. */
     @try {
       top: anchor(--button bottom);
       left: anchor(--button left);
     }
 
     /* Next try to align the bottom, left edge of the popup
-  with the top, left edge of the button. */
+       with the top, left edge of the button. */
     @try {
       bottom: anchor(--button top);
       left: anchor(--button left);
     }
 
     /* Next try to align the top, right edge of the popup
-  with the bottom, right edge of the button. */
+       with the bottom, right edge of the button. */
     @try {
       top: anchor(--button bottom);
       right: anchor(--button right);
     }
 
     /* Finally, try to align the bottom, right edge of the popup
-  with the top, right edge of the button. Other positions are possible,
-  but this is the final option the author would like the rendering
-  engine to try. */
+       with the top, right edge of the button. Other positions are possible,
+       but this is the final option the author would like the rendering
+       engine to try. */
     @try {
       bottom: anchor(--button top);
       right: anchor(--button right);
