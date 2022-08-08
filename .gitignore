@@ -22,8 +22,10 @@ lib-cov
 coverage
 *.lcov
 
-# nyc test coverage
+# test coverage/reports
 .nyc_output
+.coverage
+playwright-report
 
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
