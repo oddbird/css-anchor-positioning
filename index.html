@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
     <link rel="stylesheet" href="/src/base.css" />
-    <link rel="stylesheet" href="/src/styles.css" />
+    <link type="text/css" href="/src/styles.css" />
   </head>
   <body>
     <h1>CSS Anchor Positioning Polyfill</h1>
@@ -16,7 +16,13 @@
         <div id="floating">Floating element</div>
       </div>
 
-      <script src="/src/css-anchor-positioning.ts" type="module"></script>
+      <button id="button" popup="my-popup">Anchor</button>
+      <popup id="my-popup" anchor="button" role="menu">…</popup>
+
+      <script src="/dist/css-anchor-positioning.iife.js"></script>
+      <script>
+        globalThis.CssAnchorPositioning();
+      </script>
     </body>
   </body>
 </html>

@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --frozen-lockfile
-          npx playwright install --with-deps
+          yarn playwright install --with-deps
       - run: yarn test:ci
 
   lint:

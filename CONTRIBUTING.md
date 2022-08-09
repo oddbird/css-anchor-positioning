@@ -31,6 +31,6 @@ A complete end-to-end test suite is available in the `tests/` folder.
 
 - Configure Playwright (this step is only required once or when the version of
   `@playwright/test` changes in package.json):
-  `npx playwright install --with-deps`
+  `yarn playwright install --with-deps`
 - Run tests (Chromium only): `yarn test`
 - Run tests (Chromium, Firefox & Webkit): `yarn test:ci`
