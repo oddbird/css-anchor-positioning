@@ -4,7 +4,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/css-anchor-positioning.ts'),
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'CssAnchorPositioning',
       // the proper extensions will be added
       fileName: 'css-anchor-positioning',

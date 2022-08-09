@@ -1,5 +1,7 @@
 !.*
 .git/
 .vscode/
+coverage/
 dist/
 node_modules/
+playwright-report/
