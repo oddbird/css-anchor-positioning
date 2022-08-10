@@ -10,19 +10,20 @@
   </head>
   <body>
     <h1>CSS Anchor Positioning Polyfill</h1>
-    <body>
-      <div>
-        <div id="reference"></div>
-        <div id="floating">Floating element</div>
-      </div>
+    <button id="button" popup="my-popup">Anchor</button>
+    <popup id="my-popup" anchor="button" role="menu">
+      <ul>
+        <li>First menu option</li>
+        <li>Second menu option</li>
+        <li>Third menu option</li>
+        <li>Fourth menu option</li>
+      </ul>
+    </popup>
 
-      <button id="button" popup="my-popup">Anchor</button>
-      <popup id="my-popup" anchor="button" role="menu">…</popup>
+    <script type="module">
+      import transformCSS from '/src/index.ts';
 
-      <script src="/dist/css-anchor-positioning.umd.cjs"></script>
-      <script>
-        globalThis.CssAnchorPositioning();
-      </script>
-    </body>
+      transformCSS();
+    </script>
   </body>
 </html>
