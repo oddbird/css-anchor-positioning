@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "module": "node16",
-    "moduleResolution": "node16",
+    "strict": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true
   },
   "include": ["src/**/*.ts"],

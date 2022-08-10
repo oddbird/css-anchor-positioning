@@ -2,7 +2,7 @@ import type { PositionFallbackRulesMap } from './parsing.js';
 
 function handleLinkedStylesheets() {
   const linkElements = document.querySelectorAll('link');
-  const CSSlinks = [];
+  const CSSlinks: HTMLLinkElement[] = [];
   linkElements.forEach((link) => {
     if (link.type === 'text/css' || link.rel === 'stylesheet') {
       CSSlinks.push(link);
