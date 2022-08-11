@@ -1,5 +1,6 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   build: {
@@ -8,7 +9,9 @@ export default defineConfig({
       name: 'CssAnchorPositioning',
       // the proper extensions will be added
       fileName: 'css-anchor-positioning',
-      formats: ['es', 'umd', 'iife'],
     },
+    target: 'es6',
+    sourcemap: true,
   },
+  plugins: [dts({ rollupTypes: true })],
 });
