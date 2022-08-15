@@ -29,12 +29,11 @@ recommend setting up your IDE to automatically format code for you.
 
 Unit tests and end-to-end tests are available in the `tests/` folder.
 
-To run all tests: `yarn test`
-To run unit tests: `yarn test:unit`
-To run end-to-end tests:
-
-- Configure Playwright (this step is only required once or when the version of
-  `@playwright/test` changes in package.json):
-  `yarn playwright install --with-deps`
-- Run tests (Chromium only): `yarn test:e2e`
-- Run tests (Chromium, Firefox & Webkit): `yarn test:e2e:ci`
+- To run all tests: `yarn test`
+- To run unit tests: `yarn test:unit`
+- To run end-to-end tests:
+  - Configure Playwright (this step is only required once or when the version of
+    `@playwright/test` changes in package.json):
+    `yarn playwright install --with-deps`
+  - Run tests (Chromium only): `yarn test:e2e`
+  - Run tests (Chromium, Firefox & Webkit): `yarn test:e2e:ci`
