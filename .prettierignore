@@ -1,6 +1,7 @@
 !.*
 .git/
 .vscode/
+.yarn/
 coverage/
 dist/
 node_modules/

@@ -1,8 +1,10 @@
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
@@ -13,5 +15,4 @@ export default defineConfig({
     target: 'es6',
     sourcemap: true,
   },
-  plugins: [dts({ rollupTypes: true })],
 });
