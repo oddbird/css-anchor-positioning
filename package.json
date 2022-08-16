@@ -37,24 +37,24 @@
   "scripts": {
     "build": "vite build",
     "serve": "vite dev",
-    "dev": "yarn serve",
+    "dev": "npm run serve",
     "tsc": "tsc --noEmit",
     "types": "tsc --emitDeclarationOnly",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "eslint:check": "eslint .",
-    "eslint:fix": "yarn eslint:check --fix",
-    "format:css": "yarn lint:css --fix",
+    "eslint:fix": "npm run eslint:check --fix",
+    "format:css": "npm run lint:css --fix",
     "format:js": "run-s prettier:fix eslint:fix tsc",
     "format": "run-p format:*",
-    "lint:css": "stylelint '**/*.css'",
+    "lint:css": "stylelint \"**/*.css\"",
     "lint:js": "run-s prettier:check eslint:check tsc",
     "lint": "run-p lint:*",
     "prepack": "run-s build types",
-    "test:unit": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:unit:ci": "yarn test:unit --ci",
+    "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:unit:ci": "npm run test:unit --ci",
     "test:e2e": "playwright test tests/e2e/",
-    "test:e2e:ci": "yarn test:e2e --browser=all",
+    "test:e2e:ci": "npm run test:e2e --browser=all",
     "test": "run-p test:unit test:e2e",
     "test:ci": "run-p test:unit:ci test:e2e:ci"
   },
@@ -65,6 +65,7 @@
     "@types/node": "*",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",
+    "cross-env": "^7.0.3",
     "css-tree": "^2.2.1",
     "eslint": "^8.22.0",
     "eslint-config-prettier": "^8.5.0",
@@ -87,11 +88,6 @@
   },
   "resolutions": {
     "tslib": ">=2"
-  },
-  "yarn-upgrade-all": {
-    "ignore": [
-      "@types/node"
-    ]
   },
   "dependencies": {
     "@types/css-tree": "^1.0.7"
