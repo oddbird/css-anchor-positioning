@@ -1,5 +1,4 @@
 import { computePosition } from '@floating-ui/dom';
-import http from 'http';
 
 import { parseCSS, PositionFallbackRulesMap } from './parsing.js';
 
@@ -12,12 +11,14 @@ function handleLinkedStylesheets() {
     }
   });
 
-  const linkedCss = CSSlinks.map((link) => {
+  const linkedCss = CSSlinks.map(async (link) => {
     // fetch css and push into array of strings
-    console.log(link.href);
-    http.get(link.href).toString();
+    const css = await fetch(link.href).then((response) => {
+      return response.text();
+    });
+    console.log(css);
   });
-  console.log(linkedCss);
+
   return linkedCss;
 }
 
