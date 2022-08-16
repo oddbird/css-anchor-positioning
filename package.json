@@ -93,5 +93,6 @@
     "ignore": [
       "@types/node"
     ]
-  }
+  },
+  "dependencies": {}
 }

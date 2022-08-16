@@ -1,21 +1,32 @@
 import { computePosition } from '@floating-ui/dom';
+import http from 'http';
 
-import type { PositionFallbackRulesMap } from './parsing.js';
+import { parseCSS, PositionFallbackRulesMap } from './parsing.js';
 
 function handleLinkedStylesheets() {
   const linkElements = document.querySelectorAll('link');
   const CSSlinks: HTMLLinkElement[] = [];
   linkElements.forEach((link) => {
-    if (link.type === 'text/css' || link.rel === 'stylesheet') {
+    if ((link.type === 'text/css' || link.rel === 'stylesheet') && link.href) {
       CSSlinks.push(link);
     }
   });
-  return CSSlinks;
+
+  const linkedCss = CSSlinks.map((link) => {
+    // fetch css and push into array of strings
+    console.log(link.href);
+    http.get(link.href).toString();
+  });
+  console.log(linkedCss);
+  return linkedCss;
 }
 
 export function fetchCSS() {
   const linkedCSS = handleLinkedStylesheets();
   const inlineCSS = document.querySelectorAll('style');
+  console.log(linkedCSS);
+  const inlineString = inlineCSS.forEach((inline) => inline.innerHTML);
+  console.log(inlineString);
 
   return [inlineCSS, linkedCSS];
 }
@@ -24,7 +35,8 @@ export function transformCSS(positionFallbackRules: PositionFallbackRulesMap) {
   // for each position fallback set, get the anchor and floating element for that set
   // call floating-ui's compute position (fallback rules go in middleware)
   // remove anchor-positioning spec CSS (anchor() and @position-fallback and @try) from CSS
-
+  const raw = fetchCSS();
+  // let parsed = parseCSS(raw);
   // @@@ Testing purposes...
   console.log('running');
   applyPolyfill();
