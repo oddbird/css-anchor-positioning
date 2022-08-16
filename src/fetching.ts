@@ -1,8 +1,8 @@
 import { computePosition } from '@floating-ui/dom';
 
-import { parseCSS, PositionFallbackRulesMap } from './parsing.js';
+import type { PositionFallbackRulesMap } from './parsing.js';
 
-function handleLinkedStylesheets() {
+async function handleLinkedStylesheets() {
   const linkElements = document.querySelectorAll('link');
   const CSSlinks: HTMLLinkElement[] = [];
   linkElements.forEach((link) => {
@@ -11,35 +11,43 @@ function handleLinkedStylesheets() {
     }
   });
 
-  const linkedCss = CSSlinks.map(async (link) => {
-    // fetch css and push into array of strings
-    const css = await fetch(link.href).then((response) => {
-      return response.text();
-    });
-    console.log(css);
-  });
+  const linkedCSS = await Promise.all(
+    CSSlinks.map(async (link) => {
+      // fetch css and push into array of strings
+      const response = await fetch(link.href);
+      const text = await response.text();
+      return text;
+    }),
+  );
 
-  return linkedCss;
+  return linkedCSS;
 }
 
-export function fetchCSS() {
-  const linkedCSS = handleLinkedStylesheets();
-  const inlineCSS = document.querySelectorAll('style');
-  console.log(linkedCSS);
-  const inlineString = inlineCSS.forEach((inline) => inline.innerHTML);
-  console.log(inlineString);
+function handleInlineStyles() {
+  const styleElements = document.querySelectorAll('style');
+  const inlineCSS: string[] = [];
+  styleElements.forEach((el) => inlineCSS.push(el.innerHTML));
+
+  return inlineCSS;
+}
+
+export async function fetchCSS() {
+  const linkedCSS = await handleLinkedStylesheets();
+  const inlineCSS = handleInlineStyles();
 
   return [inlineCSS, linkedCSS];
 }
 
-export function transformCSS(positionFallbackRules: PositionFallbackRulesMap) {
+export async function transformCSS(
+  positionFallbackRules: PositionFallbackRulesMap,
+) {
   // for each position fallback set, get the anchor and floating element for that set
   // call floating-ui's compute position (fallback rules go in middleware)
   // remove anchor-positioning spec CSS (anchor() and @position-fallback and @try) from CSS
-  const raw = fetchCSS();
+  const raw = await fetchCSS();
   // let parsed = parseCSS(raw);
   // @@@ Testing purposes...
-  console.log('running');
+  console.log(raw);
   applyPolyfill();
 }
 

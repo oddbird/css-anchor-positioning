@@ -73,8 +73,10 @@
     "eslint-plugin-jest": "^26.8.2",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "fetch-mock-jest": "^1.5.1",
     "jest": "^28.1.3",
     "jest-environment-jsdom": "^28.1.3",
+    "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
     "stylelint": "^14.10.0",
@@ -84,17 +86,16 @@
     "typescript": "^4.7.4",
     "v8": "^0.1.0",
     "vite": "^3.0.7",
-    "vite-plugin-dts": "^1.4.1"
+    "vite-plugin-dts": "^1.4.1",
+    "whatwg-fetch": "^3.6.2"
   },
   "resolutions": {
     "tslib": ">=2"
   },
   "yarn-upgrade-all": {
     "ignore": [
-      "@types/node"
+      "@types/node",
+      "node-fetch"
     ]
-  },
-  "dependencies": {
-    "node-fetch": "^3.2.10"
   }
 }

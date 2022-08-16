@@ -14,7 +14,7 @@ export default {
   // cacheDirectory: "/private/var/folders/xv/yhn4k6yd0kv8fgq5vmkffrvr0000gn/T/jest_dx",
 
   // Automatically clear mock calls, instances, contexts and results before every test
-  clearMocks: true,
+  // clearMocks: true,
 
   // Indicates whether the coverage information should be collected while executing the test
   collectCoverage: true,
@@ -138,7 +138,7 @@ export default {
   // setupFiles: [],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
-  // setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/tests/unit/setup-jest.ts'],
 
   // The number of seconds after which a test is considered as slow and reported as such in the results.
   // slowTestThreshold: 5,

@@ -61,5 +61,3 @@ export function parseCSS(cssText: string) {
 
   return positionFallbackRules;
 }
-
-//  cssText: HTMLLinkElement[] | NodeListOf<HTMLStyleElement>
