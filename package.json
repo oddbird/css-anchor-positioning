@@ -31,7 +31,7 @@
   "files": [
     "README.md",
     "src/**/*.ts",
-    "dist",
+    "dist/**/*.{ts,js,cjs,map}",
     "package.json"
   ],
   "scripts": {
@@ -73,8 +73,10 @@
     "eslint-plugin-jest": "^26.8.2",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^7.0.0",
+    "fetch-mock-jest": "^1.5.1",
     "jest": "^28.1.3",
     "jest-environment-jsdom": "^28.1.3",
+    "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
     "stylelint": "^14.10.0",
@@ -91,7 +93,8 @@
   },
   "yarn-upgrade-all": {
     "ignore": [
-      "@types/node"
+      "@types/node",
+      "node-fetch"
     ]
   }
 }

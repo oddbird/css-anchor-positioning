@@ -2,31 +2,62 @@ import { computePosition } from '@floating-ui/dom';
 
 import type { PositionFallbackRulesMap } from './parsing.js';
 
-function handleLinkedStylesheets() {
-  const linkElements = document.querySelectorAll('link');
-  const CSSlinks: HTMLLinkElement[] = [];
-  linkElements.forEach((link) => {
-    if (link.type === 'text/css' || link.rel === 'stylesheet') {
-      CSSlinks.push(link);
-    }
-  });
-  return CSSlinks;
+interface LinkedCSS {
+  source: string;
+  css: string;
 }
 
-export function fetchCSS() {
-  const linkedCSS = handleLinkedStylesheets();
-  const inlineCSS = document.querySelectorAll('style');
+async function handleLinkedStylesheets(): Promise<LinkedCSS[]> {
+  const linkElements = document.querySelectorAll('link');
+  const CSSlinks: URL[] = [];
+
+  linkElements.forEach((link) => {
+    const srcUrl = new URL(link.href, document.baseURI);
+    if (srcUrl.origin !== location.origin) {
+      return;
+    }
+    if ((link.type === 'text/css' || link.rel === 'stylesheet') && link.href) {
+      CSSlinks.push(srcUrl);
+    }
+  });
+
+  const linkedCSS = await Promise.all(
+    CSSlinks.map(async (link) => {
+      // fetch css and push into array of strings
+      const response = await fetch(link.toString());
+      const text = await response.text();
+      return { source: link.toString(), css: text };
+    }),
+  );
+
+  return linkedCSS;
+}
+
+function handleInlineStyles() {
+  const styleElements = document.querySelectorAll('style');
+  const inlineCSS: string[] = [];
+  styleElements.forEach((el) => inlineCSS.push(el.innerHTML));
+
+  return inlineCSS;
+}
+
+export async function fetchCSS(): Promise<[string[], LinkedCSS[]]> {
+  const linkedCSS = await handleLinkedStylesheets();
+  const inlineCSS = handleInlineStyles();
 
   return [inlineCSS, linkedCSS];
 }
 
-export function transformCSS(positionFallbackRules: PositionFallbackRulesMap) {
+export async function transformCSS(
+  positionFallbackRules: PositionFallbackRulesMap,
+) {
   // for each position fallback set, get the anchor and floating element for that set
   // call floating-ui's compute position (fallback rules go in middleware)
   // remove anchor-positioning spec CSS (anchor() and @position-fallback and @try) from CSS
-
+  const raw = await fetchCSS();
+  // let parsed = parseCSS(raw);
   // @@@ Testing purposes...
-  console.log('running');
+  console.log(raw);
   applyPolyfill();
 }
 
