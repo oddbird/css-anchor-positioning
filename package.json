@@ -31,7 +31,7 @@
   "files": [
     "README.md",
     "src/**/*.ts",
-    "dist",
+    "dist/**/*.{ts,js,cjs,map}",
     "package.json"
   ],
   "scripts": {
