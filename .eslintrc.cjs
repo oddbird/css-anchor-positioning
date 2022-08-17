@@ -25,5 +25,6 @@ module.exports = {
   rules: {
     'import/order': 0,
     'simple-import-sort/imports': 1,
+    'no-warning-comments': [1, { terms: ['todo', 'fixme', '@@@'] }],
   },
 };
