@@ -4,5 +4,5 @@
     "isolatedModules": false,
     "types": ["vitest/globals"]
   },
-  "include": ["./**/*.test.ts"]
+  "include": ["./**/*.ts"]
 }
