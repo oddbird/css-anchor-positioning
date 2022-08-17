@@ -1,6 +1,3 @@
-// Polyfill `fetch` for older browsers
-import 'whatwg-fetch';
-
 import { transformCSS } from './fetching.js';
 
 // Expose API
