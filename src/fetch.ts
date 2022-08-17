@@ -25,8 +25,8 @@ async function handleLinkedStylesheets(): Promise<LinkedCSS[]> {
     CSSlinks.map(async (link) => {
       // fetch css and push into array of strings
       const response = await fetch(link.toString());
-      const text = await response.text();
-      return { source: link.toString(), css: text };
+      const css = await response.text();
+      return { source: link.toString(), css };
     }),
   );
 

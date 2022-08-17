@@ -1,8 +1,12 @@
+/// <reference types="vitest" />
+
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
 
 export default defineConfig({
+  server: {
+    port: 3000,
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
@@ -13,5 +17,28 @@ export default defineConfig({
     target: 'es6',
     sourcemap: true,
   },
-  plugins: [dts({ rollupTypes: true })],
+  /**
+   * @see https://vitest.dev/config/#configuration
+   */
+  test: {
+    include: ['./tests/unit/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    globals: true,
+    environment: 'jsdom',
+    watch: false,
+    setupFiles: './tests/unit/setup.ts',
+    clearMocks: true,
+    reporters: 'dot',
+    coverage: {
+      enabled: true,
+      provider: 'istanbul',
+      reporter: ['text-summary', 'html'],
+      exclude: ['src/index.ts', 'tests/**/*'],
+      skipFull: true,
+      // Threshold
+      statements: 50,
+      branches: 50,
+      functions: 50,
+      lines: 50,
+    },
+  },
 });
