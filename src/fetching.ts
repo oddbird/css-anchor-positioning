@@ -2,7 +2,12 @@ import { computePosition } from '@floating-ui/dom';
 
 import type { PositionFallbackRulesMap } from './parsing.js';
 
-async function handleLinkedStylesheets() {
+interface LinkedCSS {
+  source: string;
+  css: string;
+}
+
+async function handleLinkedStylesheets(): Promise<LinkedCSS[]> {
   const linkElements = document.querySelectorAll('link');
   const CSSlinks: URL[] = [];
 
@@ -21,7 +26,7 @@ async function handleLinkedStylesheets() {
       // fetch css and push into array of strings
       const response = await fetch(link.toString());
       const text = await response.text();
-      return text;
+      return { source: link.toString(), css: text };
     }),
   );
 
@@ -36,7 +41,7 @@ function handleInlineStyles() {
   return inlineCSS;
 }
 
-export async function fetchCSS() {
+export async function fetchCSS(): Promise<[string[], LinkedCSS[]]> {
   const linkedCSS = await handleLinkedStylesheets();
   const inlineCSS = handleInlineStyles();
 

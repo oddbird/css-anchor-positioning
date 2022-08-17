@@ -25,6 +25,9 @@ describe('fetch stylesheet', () => {
     const [inlineCSS, linkedCSS] = await fetchCSS();
 
     expect(inlineCSS).toHaveLength(1);
+    expect(inlineCSS[0].trim()).toBe('p { color: red; }');
     expect(linkedCSS).toHaveLength(1);
+    expect(linkedCSS[0].source).toBe(`${location.origin}/specExample.css`);
+    expect(linkedCSS[0].css).toEqual(sampleAnchorCSS);
   });
 });
