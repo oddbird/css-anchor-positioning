@@ -2,10 +2,14 @@ import { computePosition } from '@floating-ui/dom';
 
 import type { PositionFallbackRulesMap } from './parsing.js';
 
+export const CSSlinks: HTMLLinkElement[] = [];
+
 async function handleLinkedStylesheets() {
   const linkElements = document.querySelectorAll('link');
-  const CSSlinks: HTMLLinkElement[] = [];
+
   linkElements.forEach((link) => {
+    const srcUrl = new URL(link.href, document.baseURI);
+    if (srcUrl.origin !== location.origin) return;
     if ((link.type === 'text/css' || link.rel === 'stylesheet') && link.href) {
       CSSlinks.push(link);
     }
