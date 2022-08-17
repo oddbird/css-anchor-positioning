@@ -18,12 +18,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
-          cache: yarn
+          cache: npm
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
-          yarn playwright install --with-deps
-      - run: yarn test:ci
+          npm install
+          npx playwright install --with-deps
+      - run: npm run test:ci
 
   lint:
     name: Lint
@@ -33,8 +33,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
-          cache: yarn
+          cache: npm
       - name: Lint
         run: |
-          yarn install --frozen-lockfile
-          yarn lint
+          npm install
+          npm run lint

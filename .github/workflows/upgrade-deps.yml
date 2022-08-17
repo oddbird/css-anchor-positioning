@@ -25,13 +25,13 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version-file: .nvmrc
-          cache: yarn
+          cache: npm
       - name: Upgrade dependencies
         run: |
-          rm -f yarn.lock
-          npx --yes yarn-upgrade-all
+          npx --yes npm-check-updates -u
+          npm install
       - name: Build
-        run: yarn build
+        run: npm run build
       - name: Detect changes
         id: changes
         run: echo "::set-output name=count::$(git status --porcelain=v1 2>/dev/null | wc -l)"

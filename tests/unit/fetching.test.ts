@@ -1,4 +1,4 @@
-import fetchMock from 'fetch-mock-jest';
+import fetchMock from 'fetch-mock';
 
 import { fetchCSS } from '../../src/fetching.js';
 import { sampleAnchorCSS } from './../helpers.js';
