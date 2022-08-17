@@ -1,3 +1,8 @@
+/**
+ * If not using the `test.globals: true` config.
+ * Probably better for a TypeScript setup.
+ */
+// import { describe, beforeAll, afterAll, it, expect } from 'vitest';
 import { fetchCSS } from '../../src/fetching.js';
 
 describe('fetch stylesheet', () => {
