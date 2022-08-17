@@ -2,23 +2,24 @@ import { computePosition } from '@floating-ui/dom';
 
 import type { PositionFallbackRulesMap } from './parsing.js';
 
-export const CSSlinks: HTMLLinkElement[] = [];
-
 async function handleLinkedStylesheets() {
   const linkElements = document.querySelectorAll('link');
+  const CSSlinks: URL[] = [];
 
   linkElements.forEach((link) => {
     const srcUrl = new URL(link.href, document.baseURI);
-    if (srcUrl.origin !== location.origin) return;
+    if (srcUrl.origin !== location.origin) {
+      return;
+    }
     if ((link.type === 'text/css' || link.rel === 'stylesheet') && link.href) {
-      CSSlinks.push(link);
+      CSSlinks.push(srcUrl);
     }
   });
 
   const linkedCSS = await Promise.all(
     CSSlinks.map(async (link) => {
       // fetch css and push into array of strings
-      const response = await fetch(link.href);
+      const response = await fetch(link.toString());
       const text = await response.text();
       return text;
     }),
