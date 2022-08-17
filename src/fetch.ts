@@ -1,6 +1,6 @@
 import { computePosition } from '@floating-ui/dom';
 
-import type { PositionFallbackRulesMap } from './parsing.js';
+import type { PositionFallbackRulesMap } from './parse.js';
 
 interface LinkedCSS {
   source: string;
