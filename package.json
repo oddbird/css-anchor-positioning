@@ -52,12 +52,11 @@
     "lint": "run-p lint:*",
     "prepack": "run-s build types",
     "test:unit": "vitest",
-    "test:unit:ci": "npm run test:unit -- --ci",
     "test:watch": "npm run test:unit -- --watch",
     "test:e2e": "playwright test tests/e2e/",
     "test:e2e:ci": "npm run test:e2e -- --browser=all",
     "test": "run-p test:unit test:e2e",
-    "test:ci": "run-p test:unit:ci test:e2e:ci"
+    "test:ci": "run-p test:unit test:e2e:ci"
   },
   "devDependencies": {
     "@floating-ui/dom": "^1.0.1",
