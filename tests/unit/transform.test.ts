@@ -1,5 +1,5 @@
-import { removeAnchorCSS } from '../../src/transform';
-import { sampleAnchorCSS } from '../helpers';
+import { removeAnchorCSS } from '../../src/transform.js';
+import { sampleAnchorCSS } from '../helpers.js';
 
 describe('remove anchor positioning CSS from source CSS', () => {
   it('parses and removes new anchor positioning CSS after transformation to JS', () => {

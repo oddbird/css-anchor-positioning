@@ -6,10 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
     <link rel="stylesheet" href="/base.css" />
-    <link type="text/css" href="/styles.css" />
+    <link rel="stylesheet" type="text/css" href="/styles.css" />
     <style>
       .test {
         color: red;
+      }
+    </style>
+    <style>
+      #my-popup {
+        position: fixed;
+        position-fallback: --button-popup;
+        overflow: auto;
+
+        /* The popup is at least as wide as the button */
+        min-width: anchor-size(--button width);
+
+        /* The popup is at least as tall as 2 menu items */
+        min-height: 6em;
       }
     </style>
   </head>

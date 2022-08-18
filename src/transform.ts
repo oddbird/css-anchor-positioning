@@ -2,16 +2,15 @@ import * as csstree from 'css-tree';
 
 import { fetchCSS } from './fetch.js';
 
-export const sampleAnchorCSSString =
-  '#my-popup {position: fixed;position-fallback: --button-popup;overflow: auto;min-width: anchor-size(--button width);min-height: 6em;}@position-fallback --button-popup {@try {top: anchor(--button bottom);left: anchor(--button left);}@try {bottom: anchor(--button top);left: anchor(--button left);}@try {top: anchor(--button bottom);right: anchor(--button right);}@try {bottom: anchor(--button top);right: anchor(--button right);}}h1{color: green}';
-
 export function removeAnchorCSS(originalCSS: string) {
   const ast = csstree.parse(originalCSS);
   csstree.walk(ast, function (node, item, list) {
-    // TODO - refactor if statements to be cleaner
+    // remove position fallback at-rules i.e. "@position-fallback --button-popup"
     if (node.type === 'Atrule' && node.name.includes('position-fallback')) {
       list.remove(item);
     }
+
+    // remove position fallback declaration i.e. "position-fallback: --button-popup;"
     if (
       node.type === 'Declaration' &&
       node.property.includes('position-fallback')
@@ -22,40 +21,23 @@ export function removeAnchorCSS(originalCSS: string) {
   return csstree.generate(ast);
 }
 
-export function transformCSS() {
-  console.log('transforming!');
-  // 1 - fetch CSS - get stylesheets and inline styles
-  //const fetched = fetchCSS();
+export async function transformCSS() {
+  const fetchedCSS = await fetchCSS().then((fetchedCSS) => fetchedCSS);
+  const cssFromStylesheet = fetchedCSS[1];
 
-  // temp
-  const cssFromStylesheet = [sampleAnchorCSSString]; // TODO eventuall call fetchCSS() once fixes pushed up;
-
-  // const cssFromStyletag = [sampleAnchorCSSString];
-
-  // const [cssFromStyletag, cssFromStylesheet] = fetchCSS();
-
-  //   const updatedCSS = removeAnchorCSS(cssToTransform);
-
-  //   const blob = new Blob([updatedCSS], { type: 'text/css' });
-  //   const linkTags = document.querySelectorAll('link');
-  //   linkTags.forEach((link) => {
-  //     if (link.rel === 'stylesheet') {
-  //       link.href = URL.createObjectURL(blob);
-  //     }
-  //   });
-
-  cssFromStylesheet.map((sourceCSS) => {
-    //   const cssText = await fetch(sourceCSS.toString()).then((r) => r.text());
-    //   const updatedCSS = removeAnchorCSS(cssText);
-    const updatedCSS = removeAnchorCSS(sourceCSS);
+  cssFromStylesheet.forEach((sourceCSS) => {
+    const updatedCSS = removeAnchorCSS(sourceCSS.css);
     const blob = new Blob([updatedCSS], { type: 'text/css' });
     const linkTags = document.querySelectorAll('link');
     linkTags.forEach((link) => {
-      if (link.rel === 'stylesheet') {
+      if (link.rel === 'stylesheet' && sourceCSS.source.includes(link.href)) {
         link.href = URL.createObjectURL(blob);
       }
     });
   });
 
-  // TODO style tags
+  const styleTagCSS = document.querySelectorAll('style');
+  styleTagCSS.forEach((element) => {
+    element.innerHTML = removeAnchorCSS(element.innerHTML);
+  });
 }

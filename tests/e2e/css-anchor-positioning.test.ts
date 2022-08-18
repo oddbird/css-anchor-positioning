@@ -7,11 +7,14 @@ test('source CSS replaced with new polyfilled CSS source', async ({ page }) => {
 
   const stylesheets = await page.locator('head link');
   const sheet = await stylesheets.first();
-
   await expect(
     await sheet.evaluate((s) => (s as HTMLLinkElement).href),
   ).toContain('blob');
 
-  const heading = await page.locator('h1');
-  await expect(heading).toHaveCSS('color', 'rgb(0, 128, 0)');
+  const styleTags = await page.locator('style');
+  const anchorStyletag = await styleTags.last();
+  await expect(await anchorStyletag.innerHTML()).not.toContain(
+    'position-fallback',
+  );
+  await expect(await anchorStyletag.innerHTML()).toContain('#my-popup');
 });
