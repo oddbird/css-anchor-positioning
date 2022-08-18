@@ -1,36 +1,37 @@
 import * as csstree from 'css-tree';
 
-import { fetchCSS } from './fetch.js';
+import { fetchCSS, isStyleLink } from './fetch.js';
+import { isFallbackAtRule, isFallbackDeclaration } from './parse.js';
 
 export function removeAnchorCSS(originalCSS: string) {
   const ast = csstree.parse(originalCSS);
   csstree.walk(ast, function (node, item, list) {
-    // remove position fallback at-rules i.e. "@position-fallback --button-popup"
-    if (node.type === 'Atrule' && node.name.includes('position-fallback')) {
-      list.remove(item);
-    }
+    if (list) {
+      // remove position fallback at-rules
+      // e.g. `@position-fallback --button-popup {...}`
+      if (isFallbackAtRule(node)) {
+        list.remove(item);
+      }
 
-    // remove position fallback declaration i.e. "position-fallback: --button-popup;"
-    if (
-      node.type === 'Declaration' &&
-      node.property.includes('position-fallback')
-    ) {
-      list.remove(item);
+      // remove position fallback declaration
+      // e.g. `position-fallback: --button-popup;`
+      if (isFallbackDeclaration(node)) {
+        list.remove(item);
+      }
     }
   });
   return csstree.generate(ast);
 }
 
 export async function transformCSS() {
-  const fetchedCSS = await fetchCSS().then((fetchedCSS) => fetchedCSS);
-  const cssFromStylesheet = fetchedCSS[1];
+  const [, linkedCSS] = await fetchCSS();
 
-  cssFromStylesheet.forEach((sourceCSS) => {
+  linkedCSS.forEach((sourceCSS) => {
     const updatedCSS = removeAnchorCSS(sourceCSS.css);
     const blob = new Blob([updatedCSS], { type: 'text/css' });
     const linkTags = document.querySelectorAll('link');
     linkTags.forEach((link) => {
-      if (link.rel === 'stylesheet' && sourceCSS.source.includes(link.href)) {
+      if (isStyleLink(link) && sourceCSS.source.includes(link.href)) {
         link.href = URL.createObjectURL(blob);
       }
     });

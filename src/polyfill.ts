@@ -1,6 +1,6 @@
 import { transformCSS } from './transform.js';
 
-export function polyfill(): void {
+export function polyfill() {
   // fetch CSS from stylesheet and inline style
 
   // parse and see if polyfill / JS needed
