@@ -1,4 +1,4 @@
-import { parseCSS } from '../../src/parsing.js';
+import { parseCSS } from '../../src/parse.js';
 import { sampleAnchorCSS, sampleNoAnchorCSS } from './../helpers.js';
 
 describe('parseCSS', () => {

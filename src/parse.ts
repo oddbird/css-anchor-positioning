@@ -4,14 +4,24 @@ interface TryBlockMap {
   [key: string]: string;
 }
 
-export interface PositionFallbackRulesMap {
+interface PositionFallbackRulesMap {
   [key: string]: TryBlockMap[];
 }
 
-export function parsePositionFallback(ast: csstree.CssNode) {
+export function isFallbackDeclaration(node: csstree.CssNode) {
+  return (
+    node.type === 'Declaration' && node.property.includes('position-fallback')
+  );
+}
+
+export function isFallbackAtRule(node: csstree.CssNode) {
+  return node.type === 'Atrule' && node.name.includes('position-fallback');
+}
+
+function parsePositionFallback(ast: csstree.CssNode) {
   const parsedFallbackRules = csstree.findAll(
     ast,
-    (node) => node.type === 'Atrule' && node.name.includes('position-fallback'),
+    isFallbackAtRule,
   ) as csstree.Atrule[];
   const fallbacks: PositionFallbackRulesMap = {};
 
@@ -49,6 +59,7 @@ export function parsePositionFallback(ast: csstree.CssNode) {
   return fallbacks;
 }
 
+// @@@ This is not currently used anywhere...
 export function parseCSS(cssText: string) {
   const ast = csstree.parse(cssText, {
     parseAtrulePrelude: false,
@@ -56,8 +67,5 @@ export function parseCSS(cssText: string) {
     parseValue: false,
   });
 
-  const positionFallbackRules: PositionFallbackRulesMap =
-    parsePositionFallback(ast);
-
-  return positionFallbackRules;
+  return parsePositionFallback(ast);
 }

@@ -34,11 +34,6 @@ export default defineConfig({
       reporter: ['text-summary', 'html'],
       exclude: ['src/index.ts', 'tests/**/*'],
       skipFull: true,
-      // Threshold
-      statements: 50,
-      branches: 50,
-      functions: 50,
-      lines: 50,
     },
   },
 });

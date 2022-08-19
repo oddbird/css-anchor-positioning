@@ -1,7 +1,7 @@
 import fetchMock from 'fetch-mock';
 
-import { fetchCSS } from '../../src/fetching.js';
-import { sampleAnchorCSS } from './../helpers.js';
+import { fetchCSS } from '../../src/fetch.js';
+import { sampleAnchorCSS } from '../helpers.js';
 
 describe('fetch stylesheet', () => {
   beforeAll(() => {
