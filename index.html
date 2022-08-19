@@ -5,75 +5,27 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
-    <link rel="stylesheet" href="/base.css" />
-    <link type="text/css" href="/styles.css" />
+    <link rel="stylesheet" href="/position-fallback.css" />
+    <link type="text/css" href="/demo.css" />
     <style>
-      #my-popup-inline {
+      #my-anchor-inline {
+        anchor-name: --my-anchor-inline;
+      }
+
+      #my-floating-inline {
         position: fixed;
-        position-fallback: --button-popup-inline;
+        top: anchor(--my-anchor-inline bottom);
         overflow: auto;
-
-        /* The popup is at least as wide as the button */
-        min-width: anchor-size(--button-inline width);
-
-        /* The popup is at least as tall as 2 menu items */
-        min-height: 6em;
-
-        @position-fallback --button-popup-inline {
-          /* First try to align the top, left edge of the popup
-          with the bottom, left edge of the button. */
-          @try {
-            top: anchor(--button-inline bottom);
-            left: anchor(--button-inline left);
-          }
-
-          /* Next try to align the bottom, left edge of the popup
-          with the top, left edge of the button. */
-          @try {
-            bottom: anchor(--button-inline top);
-            left: anchor(--button-inline left);
-          }
-
-          /* Next try to align the top, right edge of the popup
-          with the bottom, right edge of the button. */
-          @try {
-            top: anchor(--button-inline bottom);
-            right: anchor(--button-inline right);
-          }
-
-          /* Finally, try to align the bottom, right edge of the popup
-          with the top, right edge of the button. Other positions are possible,
-          but this is the final option the author would like the rendering
-          engine to try. */
-          @try {
-            bottom: anchor(--button-inline top);
-            right: anchor(--button-inline right);
-          }
-        }
       }
     </style>
   </head>
   <body>
     <h1>CSS Anchor Positioning Polyfill</h1>
-    <button id="button" popup="my-popup">Anchor</button>
-    <popup id="my-popup" anchor="button" role="menu">
-      <ul>
-        <li>First menu option</li>
-        <li>Second menu option</li>
-        <li>Third menu option</li>
-        <li>Fourth menu option</li>
-      </ul>
-    </popup>
+    <div id="my-anchor">Anchor</div>
+    <div id="my-floating">Floating</div>
 
-    <button id="button-inline" popup="my--popup-inline">Anchor</button>
-    <popup id="my-popup-inline" anchor="button-inline" role="menu">
-      <ul>
-        <li>First menu option</li>
-        <li>Second menu option</li>
-        <li>Third menu option</li>
-        <li>Fourth menu option</li>
-      </ul>
-    </popup>
+    <div id="my-anchor-inline">Anchor</div>
+    <div id="my-floating-inline">Floating</div>
 
     <script type="module">
       import polyfill from '/src/index.ts';

@@ -1,0 +1,13 @@
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-floating {
+  position: fixed;
+  max-width: max-content;
+  justify-content: center;
+
+  --center: anchor(--my-anchor 50%);
+
+  left: calc(var(--center));
+}

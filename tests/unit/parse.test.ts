@@ -1,22 +1,29 @@
 import { parseCSS } from '../../src/parse.js';
-import { sampleAnchorCSS, sampleNoAnchorCSS } from './../helpers.js';
+import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
   it('parses and returns @position-fallback strategy', () => {
-    const result = parseCSS(sampleAnchorCSS);
+    const css = getSampleCSS('position-fallback');
+    const result = parseCSS(css);
 
     expect(result).toEqual({
-      '--button-popup': [
-        { top: 'anchor(--button bottom)', left: 'anchor(--button left)' },
-        { bottom: 'anchor(--button top)', left: 'anchor(--button left)' },
-        { top: 'anchor(--button bottom)', right: 'anchor(--button right)' },
-        { bottom: 'anchor(--button top)', right: 'anchor(--button right)' },
+      '--button-positioning': [
+        { top: 'anchor(--my-anchor bottom)', left: 'anchor(--my-anchor left)' },
+        { bottom: 'anchor(--my-anchor top)', left: 'anchor(--my-anchor left)' },
+        {
+          top: 'anchor(--my-anchor bottom)',
+          right: 'anchor(--my-anchor right)',
+        },
+        {
+          bottom: 'anchor(--my-anchor top)',
+          right: 'anchor(--my-anchor right)',
+        },
       ],
     });
   });
 
   it('does not find @position-fallback at-rule or anchor() function', () => {
-    const result = parseCSS(sampleNoAnchorCSS);
+    const result = parseCSS(sampleBaseCSS);
 
     expect(result).toEqual({});
   });

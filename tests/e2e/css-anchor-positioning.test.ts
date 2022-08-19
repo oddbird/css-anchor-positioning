@@ -16,5 +16,5 @@ test('source CSS replaced with new polyfilled CSS source', async ({ page }) => {
   const anchorStyletag = styleTags.first();
 
   expect(await anchorStyletag.innerHTML()).not.toContain('position-fallback');
-  expect(await anchorStyletag.innerHTML()).toContain('#my-popup');
+  expect(await anchorStyletag.innerHTML()).toContain('#my-floating');
 });

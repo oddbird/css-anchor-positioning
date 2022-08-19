@@ -1,0 +1,41 @@
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-floating {
+  position: fixed;
+  position-fallback: --button-positioning;
+  overflow: auto;
+}
+
+@position-fallback --button-positioning {
+  /* First try to align the top, left edge of the popup
+  with the bottom, left edge of the button. */
+  @try {
+    top: anchor(--my-anchor bottom);
+    left: anchor(--my-anchor left);
+  }
+
+  /* Next try to align the bottom, left edge of the popup
+  with the top, left edge of the button. */
+  @try {
+    bottom: anchor(--my-anchor top);
+    left: anchor(--my-anchor left);
+  }
+
+  /* Next try to align the top, right edge of the popup
+  with the bottom, right edge of the button. */
+  @try {
+    top: anchor(--my-anchor bottom);
+    right: anchor(--my-anchor right);
+  }
+
+  /* Finally, try to align the bottom, right edge of the popup
+  with the top, right edge of the button. Other positions are possible,
+  but this is the final option the author would like the rendering
+  engine to try. */
+  @try {
+    bottom: anchor(--my-anchor top);
+    right: anchor(--my-anchor right);
+  }
+}

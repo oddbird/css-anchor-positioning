@@ -1,0 +1,8 @@
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-floating {
+  position: fixed;
+  min-width: anchor-size(--my-anchor width);
+}

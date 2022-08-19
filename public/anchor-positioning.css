@@ -1,0 +1,9 @@
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-floating {
+  position: fixed;
+  top: anchor(--my-anchor bottom);
+  overflow: auto;
+}
