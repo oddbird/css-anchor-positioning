@@ -7,16 +7,28 @@ describe('parseCSS', () => {
     const result = parseCSS(css);
 
     expect(result).toEqual({
-      '--button-positioning': [
-        { top: 'anchor(--my-anchor bottom)', left: 'anchor(--my-anchor left)' },
-        { bottom: 'anchor(--my-anchor top)', left: 'anchor(--my-anchor left)' },
+      '--fallback1': [
         {
-          top: 'anchor(--my-anchor bottom)',
-          right: 'anchor(--my-anchor right)',
+          top: 'anchor(--my-anchor-fallback top)',
+          left: 'anchor(--my-anchor-fallback right)',
         },
         {
-          bottom: 'anchor(--my-anchor top)',
-          right: 'anchor(--my-anchor right)',
+          right: 'anchor(--my-anchor-fallback left)',
+          top: 'anchor(--my-anchor-fallback top)',
+        },
+        {
+          left: 'anchor(--my-anchor-fallback left)',
+          top: 'anchor(--my-anchor-fallback bottom)',
+        },
+        {
+          left: 'anchor(--my-anchor-fallback left)',
+          bottom: 'anchor(--my-anchor-fallback top)',
+        },
+        {
+          left: 'anchor(--my-anchor-fallback right)',
+          top: 'anchor(--my-anchor-fallback top)',
+          width: '35px',
+          height: '40px',
         },
       ],
     });

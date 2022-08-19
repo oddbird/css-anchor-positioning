@@ -1,41 +1,50 @@
-#my-anchor {
-  anchor-name: --my-anchor;
+#my-anchor-fallback {
+  anchor-name: --my-anchor-fallback;
+  margin-left: 45px;
+  width: 100px;
+  height: 30px;
+  background: orange;
 }
 
-#my-floating {
-  position: fixed;
-  position-fallback: --button-positioning;
-  overflow: auto;
+#my-floating-fallback {
+  position: absolute;
+  position-fallback: --fallback1;
+  width: 40px;
+  height: 15px;
+  margin: 5px;
+  background: green;
 }
 
-@position-fallback --button-positioning {
-  /* First try to align the top, left edge of the popup
-  with the bottom, left edge of the button. */
+@position-fallback --fallback1 {
   @try {
-    top: anchor(--my-anchor bottom);
-    left: anchor(--my-anchor left);
+    /* 1: Position to the right of the anchor. */
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
   }
 
-  /* Next try to align the bottom, left edge of the popup
-  with the top, left edge of the button. */
   @try {
-    bottom: anchor(--my-anchor top);
-    left: anchor(--my-anchor left);
+    /* 2: Position to the left of the anchor. */
+    right: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback top);
   }
 
-  /* Next try to align the top, right edge of the popup
-  with the bottom, right edge of the button. */
   @try {
-    top: anchor(--my-anchor bottom);
-    right: anchor(--my-anchor right);
+    /* 3: Position to the bottom of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback bottom);
   }
 
-  /* Finally, try to align the bottom, right edge of the popup
-  with the top, right edge of the button. Other positions are possible,
-  but this is the final option the author would like the rendering
-  engine to try. */
   @try {
-    bottom: anchor(--my-anchor top);
-    right: anchor(--my-anchor right);
+    /* 4: Position to the top of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    bottom: anchor(--my-anchor-fallback top);
+  }
+
+  @try {
+    /* 5: Position to the left with the narrower width. */
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
+    width: 35px;
+    height: 40px;
   }
 }

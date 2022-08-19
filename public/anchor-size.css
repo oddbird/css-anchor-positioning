@@ -1,8 +1,10 @@
-#my-anchor {
+#my-anchor-size {
   anchor-name: --my-anchor;
+  width: 5em;
+  background: orange;
 }
 
-#my-floating {
-  position: fixed;
-  min-width: anchor-size(--my-anchor width);
+#my-floating-size {
+  background: green;
+  width: anchor-size(--my-anchor width);
 }
