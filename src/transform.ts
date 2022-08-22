@@ -1,10 +1,15 @@
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
-import { isFallbackAtRule, isFallbackDeclaration } from './parse.js';
+import {
+  getDataFromCSS,
+  isFallbackAtRule,
+  isFallbackDeclaration,
+  parseCSS,
+} from './parse.js';
 
 export function removeAnchorCSS(originalCSS: string) {
-  const ast = csstree.parse(originalCSS);
+  const ast = parseCSS(originalCSS);
   csstree.walk(ast, function (node, item, list) {
     if (list) {
       // remove position fallback at-rules
@@ -24,9 +29,12 @@ export function removeAnchorCSS(originalCSS: string) {
 }
 
 export async function transformCSS() {
-  const [, linkedCSS] = await fetchCSS();
+  const [inlineCSS, linkedCSS] = await fetchCSS();
 
+  // Handle linked stylesheets
   linkedCSS.forEach((sourceCSS) => {
+    getDataFromCSS(sourceCSS.css);
+
     const updatedCSS = removeAnchorCSS(sourceCSS.css);
     const blob = new Blob([updatedCSS], { type: 'text/css' });
     const linkTags = document.querySelectorAll('link');
@@ -37,6 +45,10 @@ export async function transformCSS() {
     });
   });
 
+  // Handle inline stylesheets
+  inlineCSS.forEach((sourceCSS) => {
+    getDataFromCSS(sourceCSS);
+  });
   const styleTagCSS = document.querySelectorAll('style');
   styleTagCSS.forEach((element) => {
     element.innerHTML = removeAnchorCSS(element.innerHTML);
