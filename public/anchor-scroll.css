@@ -1,0 +1,40 @@
+#scroll-container {
+  width: 400px;
+  height: 400px;
+  overflow: scroll;
+}
+
+#scroll-contents {
+  width: 1000px;
+  height: 1000px;
+  position: relative;
+}
+
+#placefiller-above-anchor {
+  height: 500px;
+}
+
+#placefiller-before-anchor {
+  display: inline-block;
+  width: 500px;
+}
+
+#scroll-anchor {
+  anchor-name: --scroll-anchor;
+}
+
+#inner-anchored {
+  color: green;
+  position: absolute;
+  left: anchor(--scroll-anchor left);
+  bottom: anchor(--scroll-anchor top);
+  anchor-scroll: --scroll-anchor;
+}
+
+#outer-anchored {
+  color: blue;
+  position: absolute;
+  left: anchor(--scroll-anchor left);
+  top: anchor(--scroll-anchor bottom);
+  anchor-scroll: --scroll-anchor;
+}

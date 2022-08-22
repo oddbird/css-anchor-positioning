@@ -34,20 +34,12 @@ function parsePositionFallback(ast: csstree.CssNode) {
       children.forEach((childBlock) => {
         const tryBlock: TryBlockMap = {};
 
-        // First edge position in try block is the `head` in the AST
-        //  property : the edge direction (i.e. top, left, bottom, right)
-        //  value.value : the anchor function (i.e. anchor(--button left))
         if (childBlock.block?.children) {
-          const firstEdge = childBlock.block.children
-            .first as unknown as csstree.Declaration;
-          tryBlock[firstEdge.property] = (firstEdge.value as csstree.Raw).value;
-
-          // Second edge position in try block is the `tail` in the AST
-          const secondEdge = childBlock.block.children
-            .last as unknown as csstree.Declaration;
-          tryBlock[secondEdge.property] = (
-            secondEdge.value as csstree.Raw
-          ).value;
+          (
+            childBlock.block?.children as csstree.List<csstree.Declaration>
+          ).forEach((child) => {
+            tryBlock[child.property] = (child.value as csstree.Raw).value;
+          });
         }
 
         fallbackTryBlocks.push(tryBlock);

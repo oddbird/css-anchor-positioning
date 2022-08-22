@@ -1,0 +1,50 @@
+#my-anchor-fallback {
+  anchor-name: --my-anchor-fallback;
+  margin-left: 45px;
+  width: 100px;
+  height: 30px;
+  background: orange;
+}
+
+#my-floating-fallback {
+  position: absolute;
+  position-fallback: --fallback1;
+  width: 40px;
+  height: 15px;
+  margin: 5px;
+  background: green;
+}
+
+@position-fallback --fallback1 {
+  @try {
+    /* 1: Position to the right of the anchor. */
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
+  }
+
+  @try {
+    /* 2: Position to the left of the anchor. */
+    right: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback top);
+  }
+
+  @try {
+    /* 3: Position to the bottom of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback bottom);
+  }
+
+  @try {
+    /* 4: Position to the top of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    bottom: anchor(--my-anchor-fallback top);
+  }
+
+  @try {
+    /* 5: Position to the left with the narrower width. */
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
+    width: 35px;
+    height: 40px;
+  }
+}

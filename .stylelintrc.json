@@ -11,6 +11,15 @@
       true,
       { "ignoreFunctions": ["anchor", "anchor-size"] }
     ],
-    "property-no-unknown": [true, { "ignoreProperties": ["position-fallback"] }]
+    "property-no-unknown": [
+      true,
+      {
+        "ignoreProperties": [
+          "anchor-name",
+          "anchor-scroll",
+          "position-fallback"
+        ]
+      }
+    ]
   }
 }
