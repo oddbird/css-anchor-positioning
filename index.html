@@ -5,7 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
-    <link type="text/css" href="/demo.css" />
+    <link rel="stylesheet" href="/parsing-test.css" />
+    <!-- <link type="text/css" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link
       rel="stylesheet"
@@ -31,7 +32,7 @@
         left: anchor(--my-anchor-inline right);
         background: green;
       }
-    </style>
+    </style> -->
   </head>
   <body>
     <h1>CSS Anchor Positioning Polyfill</h1>
@@ -49,7 +50,7 @@
       <div id="my-anchor-positioning">Anchor</div>
       <div id="my-floating-positioning">Floating</div>
     </div>
-
+<!--
     <h2>Anchor Positioning via anchor() (inline)</h2>
     <div style="position: relative">
       <div id="my-anchor-inline">Anchor</div>
@@ -83,7 +84,7 @@
 
     <h2>Anchor Size</h2>
     <div id="my-anchor-size">Anchor</div>
-    <div id="my-floating-size">Floating</div>
+    <div id="my-floating-size">Floating</div> -->
 
     <script type="module">
       import polyfill from '/src/index.ts';
