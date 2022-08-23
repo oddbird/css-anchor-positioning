@@ -130,6 +130,69 @@ function parseAnchorFn(node: csstree.FunctionNode) {
   };
 }
 
+function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
+  if (
+    isAnchorNameDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    const name = (node.value.children.first as unknown as csstree.Identifier)
+      .name;
+    return { name, selector: rule.value };
+  }
+  return {};
+}
+
+function getAnchorFunctionData(
+  node: csstree.CssNode,
+  declaration: csstree.Declaration | null,
+  rule?: csstree.Raw,
+) {
+  if (isAnchorFunction(node) && rule?.value && declaration) {
+    return { [declaration.property]: parseAnchorFn(node) };
+  }
+}
+
+function getPositionFallbackDeclaration(
+  node: csstree.CssNode,
+  rule?: csstree.Raw,
+) {
+  if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
+    const name = (node.value.children.first as unknown as csstree.Identifier)
+      .name;
+    return { name, selector: rule.value };
+  }
+  return {};
+}
+
+function getPositionFallbackRules(node: csstree.CssNode) {
+  if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
+    const name = node.prelude.value;
+    const tryBlocks: TryBlock[] = [];
+    const tryAtRules = node.block.children.filter(isTryAtRule);
+    tryAtRules.forEach((atRule) => {
+      if (atRule.block?.children) {
+        const tryBlock: TryBlock = {};
+        // Only declarations are allowed inside a `@try` block
+        const declarations = atRule.block.children.filter(isDeclaration);
+        declarations.forEach((child) => {
+          const firstChild = child.value.children
+            .first as unknown as csstree.CssNode;
+          // Parse value if it's an `anchor()` fn; otherwise store it raw
+          if (firstChild && isAnchorFunction(firstChild)) {
+            tryBlock[child.property] = parseAnchorFn(firstChild);
+          } else {
+            tryBlock[child.property] = csstree.generate(child.value);
+          }
+        });
+        tryBlocks.push(tryBlock);
+      }
+    });
+    return { name, fallbacks: tryBlocks };
+  }
+  return {};
+}
+
 export function getDataFromCSS(css: string) {
   const anchorNames: AnchorNames = {};
   const anchorFunctions: AnchorFunctionDeclarations = {};
@@ -138,66 +201,45 @@ export function getDataFromCSS(css: string) {
   const ast = parseCSS(css);
   csstree.walk(ast, function (node) {
     const rule = this.rule?.prelude as csstree.Raw | undefined;
+
     // Parse `anchor-name` declaration
-    if (
-      isAnchorNameDeclaration(node) &&
-      node.value.children.first &&
-      rule?.value
-    ) {
-      const name = (node.value.children.first as unknown as csstree.Identifier)
-        .name;
-      if (anchorNames[name]) {
-        anchorNames[name].push(rule.value);
+    const { name: anchorName, selector: anchorSelector } = getAnchorNameData(
+      node,
+      rule,
+    );
+    if (anchorName && anchorSelector) {
+      if (anchorNames[anchorName]) {
+        anchorNames[anchorName].push(anchorSelector);
       } else {
-        anchorNames[name] = [rule.value];
+        anchorNames[anchorName] = [anchorSelector];
       }
     }
+
     // Parse `anchor()` function
-    if (isAnchorFunction(node) && rule?.value && this.declaration) {
+    const anchorFnData = getAnchorFunctionData(node, this.declaration, rule);
+    if (anchorFnData && rule?.value) {
       anchorFunctions[rule.value] = {
         ...anchorFunctions[rule.value],
-        [this.declaration.property]: parseAnchorFn(node),
+        ...anchorFnData,
       };
     }
+
     // Parse `position-fallback` declaration
-    if (
-      isFallbackDeclaration(node) &&
-      node.value.children.first &&
-      rule?.value
-    ) {
-      const name = (node.value.children.first as unknown as csstree.Identifier)
-        .name;
-      fallbackNames[rule.value] = name;
+    const { name: fbName, selector: fbSelector } =
+      getPositionFallbackDeclaration(node, rule);
+    if (fbName && fbSelector) {
+      fallbackNames[fbSelector] = fbName;
     }
+
     // Parse `@position-fallback` rule
-    if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
-      const name = node.prelude.value;
-      const tryBlocks: TryBlock[] = [];
-      const tryAtRules = node.block.children.filter(isTryAtRule);
-      tryAtRules.forEach((atRule) => {
-        if (atRule.block?.children) {
-          const tryBlock: TryBlock = {};
-          // Only declarations are allowed inside a `@try` block
-          const declarations = atRule.block.children.filter(isDeclaration);
-          declarations.forEach((child) => {
-            const firstChild = child.value.children
-              .first as unknown as csstree.CssNode;
-            // Parse value if it's an `anchor()` fn; otherwise store it raw
-            if (firstChild && isAnchorFunction(firstChild)) {
-              tryBlock[child.property] = parseAnchorFn(firstChild);
-            } else {
-              tryBlock[child.property] = csstree.generate(child.value);
-            }
-          });
-          tryBlocks.push(tryBlock);
-        }
-      });
-      if (tryBlocks.length) {
-        fallbacks[name] = tryBlocks;
-      }
+    const { name: fbRuleName, fallbacks: fbTryBlocks } =
+      getPositionFallbackRules(node);
+    if (fbRuleName && fbTryBlocks.length) {
+      fallbacks[fbRuleName] = fbTryBlocks;
     }
   });
 
+  // Merge data together under floating-element selector key
   const validPositions: AnchorPositions = {};
   for (const [floatingEl, anchorFns] of Object.entries(anchorFunctions)) {
     const fallbackName = fallbackNames[floatingEl];
@@ -231,7 +273,35 @@ export function getDataFromCSS(css: string) {
       };
     }
   }
+
   console.log(validPositions);
+
+  /* Example data shape:
+    {
+      '#my-floating-element': {
+        declarations: {
+          top: {
+            anchorName: '--my-anchor',
+            anchorEl: '#my-target-anchor-element',
+            anchorEdge: 'bottom',
+            fallbackValue: '50px',
+          },
+        },
+        fallbacks: [
+          {
+            top: {
+              anchorName: '--my-anchor',
+              anchorEl: '#my-target-anchor-element',
+              anchorEdge: 'top',
+              fallbackValue: '0px',
+            },
+            width: '35px',
+          },
+        ],
+      },
+    }
+    */
+  return validPositions;
 }
 
 export function parseCSS(cssText: string) {
