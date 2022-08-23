@@ -16,15 +16,15 @@ interface AnchorNames {
 
 interface AnchorFunction {
   anchorEl?: string[];
-  anchorName: string;
-  anchorEdge: string;
-  fallbackValue?: string;
+  anchorName?: string;
+  anchorEdge?: string;
+  fallbackValue: string;
 }
 
 interface AnchorFunctionDeclaration {
   // `key` is the property being declared
   // `value` is the anchor-positioning data for that property
-  [key: string]: AnchorFunction | undefined;
+  [key: string]: AnchorFunction;
 }
 
 interface AnchorFunctionDeclarations {
@@ -34,10 +34,12 @@ interface AnchorFunctionDeclarations {
 }
 
 interface AnchorPosition {
-  // `key` is the property being declared, or "fallbackPositions"
-  // `value` is the anchor-positioning data for that property,
-  //   or the list of fallback positions
-  [key: string]: AnchorFunction | TryBlock[] | undefined;
+  declarations: {
+    // `key` is the property being declared
+    // `value` is the anchor-positioning data for that property
+    [key: string]: AnchorFunction;
+  };
+  fallbacks?: TryBlock[];
 }
 
 interface AnchorPositions {
@@ -49,7 +51,7 @@ interface AnchorPositions {
 interface TryBlock {
   // `key` is the property being declared
   // `value` is the property value, or parsed anchor-fn data
-  [key: string]: string | AnchorFunction | undefined;
+  [key: string]: string | AnchorFunction;
 }
 
 interface FallbackNames {
@@ -124,7 +126,7 @@ function parseAnchorFn(node: csstree.FunctionNode) {
   return {
     anchorName,
     anchorEdge,
-    fallbackValue: fallbackValue || undefined,
+    fallbackValue: fallbackValue || '0px',
   };
 }
 
@@ -152,18 +154,10 @@ export function getDataFromCSS(css: string) {
     }
     // Parse `anchor()` function
     if (isAnchorFunction(node) && rule?.value && this.declaration) {
-      const { anchorName, anchorEdge, fallbackValue } = parseAnchorFn(node);
-      if (anchorName && anchorEdge) {
-        const obj = {
-          anchorName,
-          anchorEdge,
-          fallbackValue,
-        };
-        anchorFunctions[rule.value] = {
-          ...anchorFunctions[rule.value],
-          [this.declaration.property]: obj,
-        };
-      }
+      anchorFunctions[rule.value] = {
+        ...anchorFunctions[rule.value],
+        [this.declaration.property]: parseAnchorFn(node),
+      };
     }
     // Parse `position-fallback` declaration
     if (
@@ -179,25 +173,18 @@ export function getDataFromCSS(css: string) {
     if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
       const name = node.prelude.value;
       const tryBlocks: TryBlock[] = [];
-      const atRules = node.block.children.filter(isTryAtRule);
-      atRules.forEach((atRule) => {
+      const tryAtRules = node.block.children.filter(isTryAtRule);
+      tryAtRules.forEach((atRule) => {
         if (atRule.block?.children) {
           const tryBlock: TryBlock = {};
+          // Only declarations are allowed inside a `@try` block
           const declarations = atRule.block.children.filter(isDeclaration);
           declarations.forEach((child) => {
             const firstChild = child.value.children
               .first as unknown as csstree.CssNode;
             // Parse value if it's an `anchor()` fn; otherwise store it raw
             if (firstChild && isAnchorFunction(firstChild)) {
-              const { anchorName, anchorEdge, fallbackValue } =
-                parseAnchorFn(firstChild);
-              if (anchorName && anchorEdge) {
-                tryBlock[child.property] = {
-                  anchorName,
-                  anchorEdge,
-                  fallbackValue,
-                };
-              }
+              tryBlock[child.property] = parseAnchorFn(firstChild);
             } else {
               tryBlock[child.property] = csstree.generate(child.value);
             }
@@ -205,52 +192,45 @@ export function getDataFromCSS(css: string) {
           tryBlocks.push(tryBlock);
         }
       });
-      fallbacks[name] = tryBlocks;
+      if (tryBlocks.length) {
+        fallbacks[name] = tryBlocks;
+      }
     }
   });
-  // console.log('anchorNames', anchorNames);
-  // console.log('anchorFunctions', anchorFunctions);
-  // console.log('fallbackNames', fallbackNames);
-  // console.log('fallbacks', fallbacks);
 
   const validPositions: AnchorPositions = {};
-  Object.keys(anchorFunctions).forEach((floatingEl) => {
+  for (const [floatingEl, anchorFns] of Object.entries(anchorFunctions)) {
     const fallbackName = fallbackNames[floatingEl];
     const positionFallbacks = fallbackName
       ? fallbacks[fallbackName]
       : undefined;
     if (positionFallbacks) {
+      // Populate `anchorEl` for each fallback `anchor()` fn
       positionFallbacks.forEach((tryBlock) => {
-        Object.keys(tryBlock).forEach((prop) => {
-          if (typeof tryBlock[prop] === 'object') {
-            const anchorName = (tryBlock[prop] as AnchorFunction).anchorName;
-            const anchorEl = anchorNames[anchorName];
-            if (anchorEl) {
-              (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
-            } else {
-              tryBlock[prop] = undefined;
-            }
+        for (const [prop, value] of Object.entries(tryBlock)) {
+          if (typeof value === 'object') {
+            const anchorName = (value as AnchorFunction).anchorName;
+            const anchorEl = anchorName ? anchorNames[anchorName] : undefined;
+            (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
-        });
+        }
       });
     }
-    validPositions[floatingEl] = { positionFallbacks };
-    const anchorFns = anchorFunctions[floatingEl];
-    Object.keys(anchorFns).forEach((floatingEdge) => {
-      const anchorObj = anchorFns[floatingEdge];
-      if (anchorObj) {
-        const anchorEl = anchorNames[anchorObj.anchorName];
-        let pos: AnchorFunction | undefined;
-        if (anchorEl) {
-          pos = {
-            ...anchorObj,
-            anchorEl,
-          };
-        }
-        validPositions[floatingEl][floatingEdge] = pos;
-      }
-    });
-  });
+    validPositions[floatingEl] = {
+      fallbacks: positionFallbacks,
+      declarations: {},
+    };
+    for (const [floatingEdge, anchorObj] of Object.entries(anchorFns)) {
+      // Populate `anchorEl` for each `anchor()` fn
+      const anchorEl = anchorObj.anchorName
+        ? anchorNames[anchorObj.anchorName]
+        : undefined;
+      validPositions[floatingEl].declarations[floatingEdge] = {
+        ...anchorObj,
+        anchorEl,
+      };
+    }
+  }
   console.log(validPositions);
 }
 
