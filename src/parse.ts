@@ -8,6 +8,33 @@ interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }
 
+interface AnchorNames {
+  [key: string]: string[];
+}
+
+interface AnchorFunction {
+  anchorName: string;
+  anchorEdge: string;
+  fallbackValue?: string;
+}
+
+interface AnchorFunctionWithFloating extends AnchorFunction {
+  floatingEl: string;
+  floatingEdge: string;
+}
+
+interface TryBlock {
+  [key: string]: string | AnchorFunction;
+}
+
+interface FallbackNames {
+  [key: string]: string[];
+}
+
+interface Fallbacks {
+  [key: string]: TryBlock[];
+}
+
 export function isDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
@@ -68,18 +95,19 @@ function parseAnchorFn(node: csstree.FunctionNode) {
   return {
     anchorName,
     anchorEdge,
-    fallbackValue,
+    fallbackValue: fallbackValue || undefined,
   };
 }
 
 export function getDataFromCSS(css: string) {
-  const anchorNames: any = {};
-  const anchorFunctions: any = [];
-  const fallbackDeclarations: any = {};
-  const fallbacks: any = {};
+  const anchorNames: AnchorNames = {};
+  const anchorFunctions: AnchorFunctionWithFloating[] = [];
+  const fallbackDeclarations: FallbackNames = {};
+  const fallbacks: Fallbacks = {};
   const ast = parseCSS(css);
   csstree.walk(ast, function (node) {
     const rule = this.rule?.prelude as csstree.Raw | undefined;
+    // Parse `anchor-name` declaration
     if (
       isAnchorNameDeclaration(node) &&
       node.value.children.first &&
@@ -93,16 +121,20 @@ export function getDataFromCSS(css: string) {
         anchorNames[name] = [rule.value];
       }
     }
+    // Parse `anchor()` function
     if (isAnchorFunction(node) && rule?.value && this.declaration) {
       const { anchorName, anchorEdge, fallbackValue } = parseAnchorFn(node);
-      anchorFunctions.push({
-        floatingEl: rule.value,
-        floatingEdge: this.declaration.property,
-        anchorName,
-        anchorEdge,
-        fallbackValue,
-      });
+      if (anchorName && anchorEdge) {
+        anchorFunctions.push({
+          floatingEl: rule.value,
+          floatingEdge: this.declaration.property,
+          anchorName,
+          anchorEdge,
+          fallbackValue,
+        });
+      }
     }
+    // Parse `position-fallback` declaration
     if (
       isFallbackDeclaration(node) &&
       node.value.children.first &&
@@ -116,24 +148,33 @@ export function getDataFromCSS(css: string) {
         fallbackDeclarations[name] = [rule.value];
       }
     }
+    // Parse `@position-fallback` rule
     if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
       const name = node.prelude.value;
-      const tryBlocks: any = [];
+      const tryBlocks: TryBlock[] = [];
       const atRules = node.block.children.filter(isTryAtRule);
       atRules.forEach((atRule) => {
         if (atRule.block?.children) {
-          const tryBlock: any = {};
+          const tryBlock: TryBlock = {};
           const declarations = atRule.block.children.filter(isDeclaration);
           declarations.forEach((child) => {
             const firstChild = child.value.children
               .first as unknown as csstree.CssNode;
+            // Parse value if it's an `anchor()` fn; otherwise store it raw
             if (firstChild && isAnchorFunction(firstChild)) {
-              tryBlock[child.property] = parseAnchorFn(firstChild);
+              const { anchorName, anchorEdge, fallbackValue } =
+                parseAnchorFn(firstChild);
+              if (anchorName && anchorEdge) {
+                tryBlock[child.property] = {
+                  anchorName,
+                  anchorEdge,
+                  fallbackValue,
+                };
+              }
             } else {
               tryBlock[child.property] = csstree.generate(child.value);
             }
           });
-
           tryBlocks.push(tryBlock);
         }
       });
