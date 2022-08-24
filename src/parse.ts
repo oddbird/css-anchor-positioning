@@ -218,6 +218,11 @@ export function getDataFromCSS(css: string) {
     // Parse `anchor()` function
     const anchorFnData = getAnchorFunctionData(node, this.declaration, rule);
     if (anchorFnData && rule?.value) {
+      // This will override earlier declarations
+      // with the same exact rule selector
+      // *and* the same exact declaration property:
+      // (e.g. multiple `top: anchor(...)` declarations
+      // for the same `.foo {...}` selector)
       anchorFunctions[rule.value] = {
         ...anchorFunctions[rule.value],
         ...anchorFnData,
@@ -228,6 +233,10 @@ export function getDataFromCSS(css: string) {
     const { name: fbName, selector: fbSelector } =
       getPositionFallbackDeclaration(node, rule);
     if (fbName && fbSelector) {
+      // This will override earlier `position-fallback` declarations
+      // with the same rule selector:
+      // (e.g. multiple `position-fallback:` declarations
+      // for the same `.foo {...}` selector)
       fallbackNames[fbSelector] = fbName;
     }
 
@@ -235,6 +244,10 @@ export function getDataFromCSS(css: string) {
     const { name: fbRuleName, fallbacks: fbTryBlocks } =
       getPositionFallbackRules(node);
     if (fbRuleName && fbTryBlocks.length) {
+      // This will override earlier `@position-fallback` lists
+      // with the same name:
+      // (e.g. multiple `@position-fallback --my-fallback {...}` uses
+      // with the same `--my-fallback` name)
       fallbacks[fbRuleName] = fbTryBlocks;
     }
   });
