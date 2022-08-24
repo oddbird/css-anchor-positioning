@@ -29,28 +29,31 @@ export function removeAnchorCSS(originalCSS: string) {
 }
 
 export async function transformCSS() {
-  const [inlineCSS, linkedCSS] = await fetchCSS();
+  const styleData = await fetchCSS();
+  const allCSS: string[] = [];
 
   // Handle linked stylesheets
-  linkedCSS.forEach((sourceCSS) => {
-    getDataFromCSS(sourceCSS.css);
+  styleData.forEach(({ source, css }) => {
+    allCSS.push(css);
 
-    const updatedCSS = removeAnchorCSS(sourceCSS.css);
-    const blob = new Blob([updatedCSS], { type: 'text/css' });
-    const linkTags = document.querySelectorAll('link');
-    linkTags.forEach((link) => {
-      if (isStyleLink(link) && sourceCSS.source.includes(link.href)) {
-        link.href = URL.createObjectURL(blob);
-      }
-    });
+    if (source !== 'style') {
+      const updatedCSS = removeAnchorCSS(css);
+      const blob = new Blob([updatedCSS], { type: 'text/css' });
+      const linkTags = document.querySelectorAll('link');
+      linkTags.forEach((link) => {
+        if (isStyleLink(link) && source.includes(link.href)) {
+          link.href = URL.createObjectURL(blob);
+        }
+      });
+    }
   });
 
   // Handle inline stylesheets
-  inlineCSS.forEach((sourceCSS) => {
-    getDataFromCSS(sourceCSS);
-  });
   const styleTagCSS = document.querySelectorAll('style');
   styleTagCSS.forEach((element) => {
     element.innerHTML = removeAnchorCSS(element.innerHTML);
   });
+
+  // Get data from concatenated styles
+  getDataFromCSS(allCSS.join('\n'));
 }

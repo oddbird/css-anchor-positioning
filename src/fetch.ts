@@ -1,5 +1,5 @@
-interface LinkedCSS {
-  source: string;
+interface StyleData {
+  source: 'style' | string;
   css: string;
 }
 
@@ -9,43 +9,44 @@ export function isStyleLink(link: HTMLLinkElement) {
   );
 }
 
-async function handleLinkedStylesheets(): Promise<LinkedCSS[]> {
-  const linkElements = document.querySelectorAll('link');
-  const CSSlinks: URL[] = [];
+function getStylesheetUrl(link: HTMLLinkElement): URL | undefined {
+  const srcUrl = new URL(link.href, document.baseURI);
+  if (isStyleLink(link) && srcUrl.origin === location.origin) {
+    return srcUrl;
+  }
+}
 
-  linkElements.forEach((link) => {
-    const srcUrl = new URL(link.href, document.baseURI);
-    if (srcUrl.origin !== location.origin) {
-      return;
+async function fetchLinkedStylesheets(
+  sources: (string | URL)[],
+): Promise<StyleData[]> {
+  return Promise.all(
+    sources.map(async (src) => {
+      if (typeof src === 'string') {
+        return { source: 'style', css: src };
+      }
+      // fetch css and push into array of strings
+      const response = await fetch(src.toString());
+      const css = await response.text();
+      return { source: src.toString(), css };
+    }),
+  );
+}
+
+export async function fetchCSS(): Promise<StyleData[]> {
+  const elements = document.querySelectorAll('link, style');
+  const sources: (string | URL)[] = [];
+
+  elements.forEach((el) => {
+    if (el.tagName.toLowerCase() === 'link') {
+      const url = getStylesheetUrl(el as HTMLLinkElement);
+      if (url) {
+        sources.push(url);
+      }
     }
-    if (isStyleLink(link)) {
-      CSSlinks.push(srcUrl);
+    if (el.tagName.toLowerCase() === 'style') {
+      sources.push(el.innerHTML);
     }
   });
 
-  const linkedCSS = await Promise.all(
-    CSSlinks.map(async (link) => {
-      // fetch css and push into array of strings
-      const response = await fetch(link.toString());
-      const css = await response.text();
-      return { source: link.toString(), css };
-    }),
-  );
-
-  return linkedCSS;
-}
-
-function handleInlineStyles() {
-  const styleElements = document.querySelectorAll('style');
-  const inlineCSS: string[] = [];
-  styleElements.forEach((el) => inlineCSS.push(el.innerHTML));
-
-  return inlineCSS;
-}
-
-export async function fetchCSS(): Promise<[string[], LinkedCSS[]]> {
-  const linkedCSS = await handleLinkedStylesheets();
-  const inlineCSS = handleInlineStyles();
-
-  return [inlineCSS, linkedCSS];
+  return await fetchLinkedStylesheets(sources);
 }
