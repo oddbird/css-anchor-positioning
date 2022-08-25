@@ -133,6 +133,7 @@ export function position() {
             middleware: [
               flip({
                 fallbackPlacements: [
+                  // fallbackPlacements not needed?
                   strategies[key].declarations.left === '0px' ? '' : 'left',
                   strategies[key].declarations.bottom === '0px' ? '' : 'bottom',
                   strategies[key].declarations.right === '0px' ? '' : 'right',
