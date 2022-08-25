@@ -1,4 +1,4 @@
-import { autoUpdate, computePosition, flip } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, Placement } from '@floating-ui/dom';
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
@@ -112,45 +112,44 @@ export function position() {
     },
   };
 
-  Object.fromEntries(
-    Object.entries(strategies).map(([key, value], index) => {
-      const anchor = Object.fromEntries(
-        Object.entries(strategies[key].declarations).map(
-          ([declaration, value], index) => {
-            if (strategies[key].declarations[declaration].anchorEl) {
-              return strategies[key].declarations[declaration].anchorEl;
-            }
-          },
-        ),
-      );
+  Object.entries(strategies).map(([key, value]) => {
+    // For now, grab just the first declaration
+    // @@@ How do we handle multiple declarations?
+    const anchorObj = Object.values(value.declarations)[0];
+    const floating: HTMLElement | null = document.querySelector(key);
+    // @@@ For now, assume the first element is valid
+    const anchor = document.querySelector(anchorObj.anchorEl[0]);
 
-      const floating = document.getElementById(key);
-
-      if (anchor && floating) {
-        autoUpdate(anchor, floating, () => {
-          computePosition(anchor, floating, {
-            placement: strategies.strategy[0],
-            middleware: [
-              flip({
-                fallbackPlacements: [
-                  // fallbackPlacements not needed?
-                  strategies[key].declarations.left === '0px' ? '' : 'left',
-                  strategies[key].declarations.bottom === '0px' ? '' : 'bottom',
-                  strategies[key].declarations.right === '0px' ? '' : 'right',
-                  strategies[key].declarations.top === '0px' ? '' : 'top',
-                ],
-              }),
-            ],
-          }).then(({ x, y }) => {
-            Object.assign(floating.style, {
-              left: `${x}px`,
-              top: `${y}px`,
-            });
+    if (anchor && floating) {
+      autoUpdate(anchor, floating, () => {
+        computePosition(anchor, floating, {
+          // @@@ We should convert `anchorEdge` to valid placement options
+          //
+          // @@@ This is way too "smart" -- we're ignoring the property
+          // declaration entirely, and just assuming that the property is the
+          // opposite of the `anchorEdge`. What if we want the `top` of the
+          // floating element to line up with the `top` of the anchor element?
+          placement: anchorObj.anchorEdge as Placement,
+          // @@@ These should pull from `value.fallbacks`, not `fallbackValue`
+          // middleware: [
+          //   flip({
+          //     fallbackPlacements: [
+          //       value.declarations.left === '0px' ? '' : 'left',
+          //       value.declarations.bottom === '0px' ? '' : 'bottom',
+          //       value.declarations.right === '0px' ? '' : 'right',
+          //       value.declarations.top === '0px' ? '' : 'top',
+          //     ],
+          //   }),
+          // ],
+        }).then(({ x, y }) => {
+          Object.assign(floating.style, {
+            left: `${x}px`,
+            top: `${y}px`,
           });
         });
-      }
-    }),
-  );
+      });
+    }
+  });
 }
 
 position();
