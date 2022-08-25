@@ -295,7 +295,7 @@ export function getDataFromCSS(css: string) {
         declarations: {
           top: {
             anchorName: '--my-anchor',
-            anchorEl: '#my-target-anchor-element',
+            anchorEl: ['#my-target-anchor-element'],
             anchorEdge: 'bottom',
             fallbackValue: '50px',
           },
@@ -304,7 +304,7 @@ export function getDataFromCSS(css: string) {
           {
             top: {
               anchorName: '--my-anchor',
-              anchorEl: '#my-target-anchor-element',
+              anchorEl: ['#my-target-anchor-element'],
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
