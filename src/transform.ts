@@ -46,31 +46,110 @@ export async function transformCSS() {
 
 export function position() {
   const strategies = {
-    anchor: 'my-anchor-positioning',
-    floating: 'my-floating-positioning',
-    strategy: ['bottom', 'right'],
+    '#my-floating-positioning': {
+      declarations: {
+        top: {
+          anchorName: '--my-anchor-positioning',
+          anchorEdge: 'bottom',
+          fallbackValue: '0px',
+          anchorEl: ['#my-anchor-positioning'],
+        },
+        left: {
+          anchorName: '--my-anchor-positioning',
+          anchorEdge: 'right',
+          fallbackValue: '50px',
+          anchorEl: ['#my-anchor-positioning'],
+        },
+      },
+    },
+    '#inner-anchored': {
+      declarations: {
+        left: {
+          anchorName: '--scroll-anchor',
+          anchorEdge: 'left',
+          fallbackValue: '0px',
+          anchorEl: ['#scroll-anchor'],
+        },
+        bottom: {
+          anchorName: '--scroll-anchor',
+          anchorEdge: 'top',
+          fallbackValue: '0px',
+          anchorEl: ['#scroll-anchor'],
+        },
+      },
+    },
+    '#outer-anchored': {
+      declarations: {
+        left: {
+          anchorName: '--scroll-anchor',
+          anchorEdge: 'left',
+          fallbackValue: '0px',
+          anchorEl: ['#scroll-anchor'],
+        },
+        top: {
+          anchorName: '--scroll-anchor',
+          anchorEdge: 'bottom',
+          fallbackValue: '0px',
+          anchorEl: ['#scroll-anchor'],
+        },
+      },
+    },
+    '#my-floating-inline': {
+      declarations: {
+        top: {
+          anchorName: '--my-anchor-inline',
+          anchorEdge: 'bottom',
+          fallbackValue: '0px',
+          anchorEl: ['#my-anchor-inline'],
+        },
+        left: {
+          anchorName: '--my-anchor-inline',
+          anchorEdge: 'right',
+          fallbackValue: '0px',
+          anchorEl: ['#my-anchor-inline'],
+        },
+      },
+    },
   };
 
-  const anchor = document.getElementById(strategies.anchor);
-  const floating = document.getElementById(strategies.floating);
+  Object.fromEntries(
+    Object.entries(strategies).map(([key, value], index) => {
+      const anchor = Object.fromEntries(
+        Object.entries(strategies[key].declarations).map(
+          ([declaration, value], index) => {
+            if (strategies[key].declarations[declaration].anchorEl) {
+              return strategies[key].declarations[declaration].anchorEl;
+            }
+          },
+        ),
+      );
 
-  if (anchor && floating) {
-    autoUpdate(anchor, floating, () => {
-      computePosition(anchor, floating, {
-        placement: strategies.strategy[0],
-        middleware: [
-          flip({
-            fallbackPlacements: ['left', 'bottom'],
-          }),
-        ],
-      }).then(({ x, y }) => {
-        Object.assign(floating.style, {
-          left: `${x}px`,
-          top: `${y}px`,
+      const floating = document.getElementById(key);
+
+      if (anchor && floating) {
+        autoUpdate(anchor, floating, () => {
+          computePosition(anchor, floating, {
+            placement: strategies.strategy[0],
+            middleware: [
+              flip({
+                fallbackPlacements: [
+                  strategies[key].declarations.left === '0px' ? '' : 'left',
+                  strategies[key].declarations.bottom === '0px' ? '' : 'bottom',
+                  strategies[key].declarations.right === '0px' ? '' : 'right',
+                  strategies[key].declarations.top === '0px' ? '' : 'top',
+                ],
+              }),
+            ],
+          }).then(({ x, y }) => {
+            Object.assign(floating.style, {
+              left: `${x}px`,
+              top: `${y}px`,
+            });
+          });
         });
-      });
-    });
-  }
+      }
+    }),
+  );
 }
 
 position();
