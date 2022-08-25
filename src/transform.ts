@@ -1,3 +1,4 @@
+import { autoUpdate, computePosition, flip } from '@floating-ui/dom';
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
@@ -42,3 +43,34 @@ export async function transformCSS() {
     element.innerHTML = removeAnchorCSS(element.innerHTML);
   });
 }
+
+export function position() {
+  const strategies = {
+    anchor: 'my-anchor-positioning',
+    floating: 'my-floating-positioning',
+    strategy: ['bottom', 'right'],
+  };
+
+  const anchor = document.getElementById(strategies.anchor);
+  const floating = document.getElementById(strategies.floating);
+
+  if (anchor && floating) {
+    autoUpdate(anchor, floating, () => {
+      computePosition(anchor, floating, {
+        placement: strategies.strategy[0],
+        middleware: [
+          flip({
+            fallbackPlacements: ['left', 'bottom'],
+          }),
+        ],
+      }).then(({ x, y }) => {
+        Object.assign(floating.style, {
+          left: `${x}px`,
+          top: `${y}px`,
+        });
+      });
+    });
+  }
+}
+
+position();
