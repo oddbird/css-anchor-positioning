@@ -23,12 +23,12 @@ describe('fetch stylesheet', () => {
   it('fetches CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
     fetchMock.getOnce('end:sample.css', css);
-    const [inlineCSS, linkedCSS] = await fetchCSS();
+    const styleData = await fetchCSS();
 
-    expect(inlineCSS).toHaveLength(1);
-    expect(inlineCSS[0].trim()).toBe('p { color: red; }');
-    expect(linkedCSS).toHaveLength(1);
-    expect(linkedCSS[0].source).toBe(`${location.origin}/sample.css`);
-    expect(linkedCSS[0].css).toEqual(css);
+    expect(styleData).toHaveLength(2);
+    expect(styleData[0].source).toBe(`${location.origin}/sample.css`);
+    expect(styleData[0].css).toEqual(css);
+    expect(styleData[1].source).toBe('style');
+    expect(styleData[1].css.trim()).toBe('p { color: red; }');
   });
 });

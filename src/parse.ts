@@ -98,6 +98,18 @@ export function isTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'try';
 }
 
+export function isIdentifier(
+  node: csstree.CssNode,
+): node is csstree.Identifier {
+  return Boolean(node.type === 'Identifier' && node.name);
+}
+
+export function isPercentage(
+  node: csstree.CssNode,
+): node is csstree.Percentage {
+  return Boolean(node.type === 'Percentage' && node.value);
+}
+
 function parseAnchorFn(node: csstree.FunctionNode) {
   let anchorName: string | undefined,
     anchorEdge: string | undefined,
@@ -112,15 +124,19 @@ function parseAnchorFn(node: csstree.FunctionNode) {
       foundComma = true;
       return;
     }
-    if (child.type === 'Identifier' && child.name) {
-      switch (idx) {
-        case 0:
+    switch (idx) {
+      case 0:
+        if (isIdentifier(child)) {
           anchorName = child.name;
-          break;
-        case 1:
+        }
+        break;
+      case 1:
+        if (isIdentifier(child)) {
           anchorEdge = child.name;
-          break;
-      }
+        } else if (isPercentage(child)) {
+          anchorEdge = `${child.value}%`;
+        }
+        break;
     }
   });
   return {
@@ -193,12 +209,22 @@ function getPositionFallbackRules(node: csstree.CssNode) {
   return {};
 }
 
-export function getDataFromCSS(css: string) {
+export function getAST(cssText: string) {
+  const ast = csstree.parse(cssText, {
+    parseAtrulePrelude: false,
+    parseRulePrelude: false,
+    parseCustomProperty: true,
+  });
+
+  return ast;
+}
+
+export function parseCSS(css: string) {
   const anchorNames: AnchorNames = {};
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
-  const ast = parseCSS(css);
+  const ast = getAST(css);
   csstree.walk(ast, function (node) {
     const rule = this.rule?.prelude as csstree.Raw | undefined;
 
@@ -257,9 +283,7 @@ export function getDataFromCSS(css: string) {
 
   // Store any `position-fallback` declarations
   for (const [floatingEl, fallbackName] of Object.entries(fallbackNames)) {
-    const positionFallbacks = fallbackName
-      ? fallbacks[fallbackName]
-      : undefined;
+    const positionFallbacks = fallbacks[fallbackName];
     if (positionFallbacks) {
       // Populate `anchorEl` for each fallback `anchor()` fn
       positionFallbacks.forEach((tryBlock) => {
@@ -325,13 +349,4 @@ export function getDataFromCSS(css: string) {
     }
     */
   return validPositions;
-}
-
-export function parseCSS(cssText: string) {
-  const ast = csstree.parse(cssText, {
-    parseAtrulePrelude: false,
-    parseRulePrelude: false,
-  });
-
-  return ast;
 }
