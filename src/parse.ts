@@ -34,7 +34,7 @@ interface AnchorFunctionDeclarations {
 }
 
 interface AnchorPosition {
-  declarations: {
+  declarations?: {
     // `key` is the property being declared
     // `value` is the anchor-positioning data for that property
     [key: string]: AnchorFunction;
@@ -254,8 +254,9 @@ export function getDataFromCSS(css: string) {
 
   // Merge data together under floating-element selector key
   const validPositions: AnchorPositions = {};
-  for (const [floatingEl, anchorFns] of Object.entries(anchorFunctions)) {
-    const fallbackName = fallbackNames[floatingEl];
+
+  // Store any `position-fallback` declarations
+  for (const [floatingEl, fallbackName] of Object.entries(fallbackNames)) {
     const positionFallbacks = fallbackName
       ? fallbacks[fallbackName]
       : undefined;
@@ -270,19 +271,28 @@ export function getDataFromCSS(css: string) {
           }
         }
       });
+      validPositions[floatingEl] = {
+        fallbacks: positionFallbacks,
+      };
     }
-    validPositions[floatingEl] = {
-      fallbacks: positionFallbacks,
-      declarations: {},
-    };
+  }
+
+  // Store any `anchor()` fns
+  for (const [floatingEl, anchorFns] of Object.entries(anchorFunctions)) {
     for (const [floatingEdge, anchorObj] of Object.entries(anchorFns)) {
       // Populate `anchorEl` for each `anchor()` fn
       const anchorEl = anchorObj.anchorName
         ? anchorNames[anchorObj.anchorName]
         : undefined;
-      validPositions[floatingEl].declarations[floatingEdge] = {
-        ...anchorObj,
-        anchorEl,
+      validPositions[floatingEl] = {
+        ...validPositions[floatingEl],
+        declarations: {
+          ...validPositions[floatingEl]?.declarations,
+          [floatingEdge]: {
+            ...anchorObj,
+            anchorEl,
+          },
+        },
       };
     }
   }
