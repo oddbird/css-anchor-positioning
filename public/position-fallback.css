@@ -9,6 +9,7 @@
 #my-floating-fallback {
   position: absolute;
   position-fallback: --fallback1;
+  left: anchor(--my-anchor-fallback left);
   width: 40px;
   height: 15px;
   margin: 5px;
@@ -18,7 +19,7 @@
 @position-fallback --fallback1 {
   @try {
     /* 1: Position to the right of the anchor. */
-    left: anchor(--my-anchor-fallback right);
+    left: anchor(--my-anchor-fallback right, 10px);
     top: anchor(--my-anchor-fallback top);
   }
 
