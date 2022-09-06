@@ -11,4 +11,8 @@ describe('remove anchor positioning CSS from source CSS', () => {
     expect(result).not.toContain('@position-fallback');
     expect(result).not.toContain('@try');
   });
+
+  // invalid selection
+  // different declaration combinations
+  //
 });

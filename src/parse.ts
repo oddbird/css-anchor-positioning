@@ -42,7 +42,7 @@ interface AnchorPosition {
   fallbacks?: TryBlock[];
 }
 
-interface AnchorPositions {
+export interface AnchorPositions {
   // `key` is the floating element selector
   // `value` is an object with all anchor-positioning data for that element
   [key: string]: AnchorPosition;

@@ -3,6 +3,7 @@ import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
 import {
+  AnchorPositions,
   getAST,
   isFallbackAtRule,
   isFallbackDeclaration,
@@ -59,7 +60,7 @@ export async function transformCSS() {
   parseCSS(allCSS.join('\n'));
 }
 
-export function position() {
+export function position(rules: AnchorPositions) {
   const strategies = {
     '#my-floating-positioning': {
       declarations: {
@@ -127,13 +128,21 @@ export function position() {
     },
   };
 
-  Object.entries(strategies).map(([key, value]) => {
+  Object.entries(rules).map(([key, value]) => {
     // For now, grab just the first declaration
     // @@@ How do we handle multiple declarations?
-    const anchorObj = Object.values(value.declarations)[0];
+    const anchorObjArray = [];
+
+    // was thinking that we need this key and value, but i'm unsure how to handle them now lol
+    // obvs pushing into an array is not helpful esp. with the dashes
+    Object.entries(value.declarations).map(([anchorKey, anchorValue]) => {
+      anchorObjArray.push({ [anchorKey]: anchorValue });
+    });
+
     const floating: HTMLElement | null = document.querySelector(key);
-    // @@@ For now, assume the first element is valid
-    const anchor = document.querySelector(anchorObj.anchorEl[0]);
+    const anchor = document.querySelector(
+      anchorObjArray[0]['--center'].anchorEl[0],
+    );
 
     if (anchor && floating) {
       autoUpdate(anchor, floating, () => {
@@ -144,7 +153,7 @@ export function position() {
           // declaration entirely, and just assuming that the property is the
           // opposite of the `anchorEdge`. What if we want the `top` of the
           // floating element to line up with the `top` of the anchor element?
-          placement: anchorObj.anchorEdge as Placement,
+          placement: anchorObjArray[0]['--center'].anchorEdge as Placement,
           // @@@ These should pull from `value.fallbacks`, not `fallbackValue`
           // middleware: [
           //   flip({
@@ -166,5 +175,11 @@ export function position() {
     }
   });
 }
-
-position();
+fetchCSS().then((data) => {
+  const rules = data.map((datum) => {
+    return parseCSS(datum.css);
+  });
+  return rules.map((ruleset) => {
+    return position(ruleset);
+  });
+});
