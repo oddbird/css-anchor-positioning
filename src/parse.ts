@@ -321,8 +321,6 @@ export function parseCSS(css: string) {
     }
   }
 
-  console.log(validPositions);
-
   /* Example data shape:
     {
       '#my-floating-element': {

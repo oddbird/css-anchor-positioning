@@ -1,4 +1,4 @@
-import { autoUpdate, computePosition, flip, Placement } from '@floating-ui/dom';
+import { autoUpdate, Axis, computePosition, Placement } from '@floating-ui/dom';
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
@@ -57,129 +57,99 @@ export async function transformCSS() {
   });
 
   // Get data from concatenated styles
-  parseCSS(allCSS.join('\n'));
+  const rules = parseCSS(allCSS.join('\n'));
+
+  // @@@ Replace this with something that waits for DOM load?
+  // Or make `autoUpdate` work.
+  setTimeout(() => {
+    position(rules);
+  }, 1000);
 }
 
+const placementMapping: {
+  [key: string]: { placement: Placement; coord: Axis };
+} = {
+  'top:top': {
+    placement: 'left-start',
+    coord: 'y',
+  },
+  'top:bottom': {
+    placement: 'bottom',
+    coord: 'y',
+  },
+  'bottom:bottom': {
+    placement: 'left-end',
+    coord: 'y',
+  },
+  'bottom:top': {
+    placement: 'top',
+    coord: 'y',
+  },
+  'left:left': {
+    placement: 'top-start',
+    coord: 'x',
+  },
+  'left:right': {
+    placement: 'right',
+    coord: 'x',
+  },
+  'right:right': {
+    placement: 'top-end',
+    coord: 'x',
+  },
+  'right:left': {
+    placement: 'left',
+    coord: 'x',
+  },
+};
+
 export function position(rules: AnchorPositions) {
-  const strategies = {
-    '#my-floating-positioning': {
-      declarations: {
-        top: {
-          anchorName: '--my-anchor-positioning',
-          anchorEdge: 'bottom',
-          fallbackValue: '0px',
-          anchorEl: ['#my-anchor-positioning'],
-        },
-        left: {
-          anchorName: '--my-anchor-positioning',
-          anchorEdge: 'right',
-          fallbackValue: '50px',
-          anchorEl: ['#my-anchor-positioning'],
-        },
-      },
-    },
-    '#inner-anchored': {
-      declarations: {
-        left: {
-          anchorName: '--scroll-anchor',
-          anchorEdge: 'left',
-          fallbackValue: '0px',
-          anchorEl: ['#scroll-anchor'],
-        },
-        bottom: {
-          anchorName: '--scroll-anchor',
-          anchorEdge: 'top',
-          fallbackValue: '0px',
-          anchorEl: ['#scroll-anchor'],
-        },
-      },
-    },
-    '#outer-anchored': {
-      declarations: {
-        left: {
-          anchorName: '--scroll-anchor',
-          anchorEdge: 'left',
-          fallbackValue: '0px',
-          anchorEl: ['#scroll-anchor'],
-        },
-        top: {
-          anchorName: '--scroll-anchor',
-          anchorEdge: 'bottom',
-          fallbackValue: '0px',
-          anchorEl: ['#scroll-anchor'],
-        },
-      },
-    },
-    '#my-floating-inline': {
-      declarations: {
-        top: {
-          anchorName: '--my-anchor-inline',
-          anchorEdge: 'bottom',
-          fallbackValue: '0px',
-          anchorEl: ['#my-anchor-inline'],
-        },
-        left: {
-          anchorName: '--my-anchor-inline',
-          anchorEdge: 'right',
-          fallbackValue: '0px',
-          anchorEl: ['#my-anchor-inline'],
-        },
-      },
-    },
-  };
+  console.log(rules);
 
-  Object.entries(rules).map(([key, value]) => {
-    // For now, grab just the first declaration
-    // @@@ How do we handle multiple declarations?
-    const anchorObjArray = [];
+  Object.entries(rules).forEach(([floatingEl, position]) => {
+    const floating: HTMLElement | null = document.querySelector(floatingEl);
 
-    // was thinking that we need this key and value, but i'm unsure how to handle them now lol
-    // obvs pushing into an array is not helpful esp. with the dashes
-    Object.entries(value.declarations).map(([anchorKey, anchorValue]) => {
-      anchorObjArray.push({ [anchorKey]: anchorValue });
-    });
+    if (!floating) {
+      return;
+    }
 
-    const floating: HTMLElement | null = document.querySelector(key);
-    const anchor = document.querySelector(
-      anchorObjArray[0]['--center'].anchorEl[0],
+    const promises: Promise<{ left: string } | { top: string }>[] = [];
+
+    Object.entries(position.declarations || {}).forEach(
+      ([property, anchorValue]) => {
+        // @@@ For now, assume the first element is valid
+        if (anchorValue.anchorEl) {
+          const anchor = document.querySelector(anchorValue.anchorEl[0]);
+          const placement =
+            placementMapping[`${property}:${anchorValue.anchorEdge}`];
+          if (anchor && placement) {
+            const promise = computePosition(anchor, floating, {
+              placement: placement.placement,
+            }).then(({ x, y }) => {
+              if (placement.coord === 'x') {
+                return { left: `${x}px` };
+              }
+              return { top: `${y}px` };
+            });
+            // @@@ Figure out how to handle `autoUpdate`
+            autoUpdate(anchor, floating, () => {
+              console.log('re-calculate');
+            });
+            promises.push(promise);
+          }
+        }
+      },
     );
 
-    if (anchor && floating) {
-      autoUpdate(anchor, floating, () => {
-        computePosition(anchor, floating, {
-          // @@@ We should convert `anchorEdge` to valid placement options
-          //
-          // @@@ This is way too "smart" -- we're ignoring the property
-          // declaration entirely, and just assuming that the property is the
-          // opposite of the `anchorEdge`. What if we want the `top` of the
-          // floating element to line up with the `top` of the anchor element?
-          placement: anchorObjArray[0]['--center'].anchorEdge as Placement,
-          // @@@ These should pull from `value.fallbacks`, not `fallbackValue`
-          // middleware: [
-          //   flip({
-          //     fallbackPlacements: [
-          //       value.declarations.left === '0px' ? '' : 'left',
-          //       value.declarations.bottom === '0px' ? '' : 'bottom',
-          //       value.declarations.right === '0px' ? '' : 'right',
-          //       value.declarations.top === '0px' ? '' : 'top',
-          //     ],
-          //   }),
-          // ],
-        }).then(({ x, y }) => {
-          Object.assign(floating.style, {
-            left: `${x}px`,
-            top: `${y}px`,
-          });
-        });
+    if (promises.length) {
+      Promise.all(promises).then((results) => {
+        const placement = results.reduce(
+          (prev, current) => ({ ...prev, ...current }),
+          {},
+        );
+        console.log(floating, placement);
+        Object.assign(floating.style, placement);
       });
     }
   });
 }
-fetchCSS().then((data) => {
-  const rules = data.map((datum) => {
-    return parseCSS(datum.css);
-  });
-  return rules.map((ruleset) => {
-    return position(ruleset);
-  });
-});
