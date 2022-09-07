@@ -14,10 +14,23 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
+export type AnchorSideKeyword =
+  | 'top'
+  | 'left'
+  | 'right'
+  | 'bottom'
+  | 'start'
+  | 'end'
+  | 'self-start'
+  | 'self-end'
+  | 'center';
+
+export type AnchorSide = AnchorSideKeyword | number;
+
 interface AnchorFunction {
   anchorEl?: string[];
   anchorName?: string;
-  anchorEdge?: string;
+  anchorEdge?: AnchorSide;
   fallbackValue: string;
 }
 
@@ -112,7 +125,7 @@ export function isPercentage(
 
 function parseAnchorFn(node: csstree.FunctionNode) {
   let anchorName: string | undefined,
-    anchorEdge: string | undefined,
+    anchorEdge: AnchorSide | undefined,
     fallbackValue = '',
     foundComma = false;
   node.children.toArray().forEach((child, idx) => {
@@ -132,9 +145,10 @@ function parseAnchorFn(node: csstree.FunctionNode) {
         break;
       case 1:
         if (isIdentifier(child)) {
-          anchorEdge = child.name;
+          anchorEdge = child.name as AnchorSide;
         } else if (isPercentage(child)) {
-          anchorEdge = `${child.value}%`;
+          const number = Number(child.value);
+          anchorEdge = Number.isNaN(number) ? undefined : number;
         }
         break;
     }
