@@ -32,8 +32,10 @@ export default defineConfig({
       enabled: true,
       provider: 'istanbul',
       reporter: ['text-summary', 'html'],
-      exclude: ['src/index.ts', 'tests/**/*'],
+      include: ['src/**/*.{js,ts}'],
+      exclude: ['src/index.ts'],
       skipFull: true,
+      all: true,
     },
   },
 });
