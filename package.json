@@ -36,6 +36,7 @@
   ],
   "scripts": {
     "build": "vite build",
+    "preview": "vite preview",
     "serve": "vite dev",
     "dev": "npm run serve",
     "tsc": "tsc --noEmit",
