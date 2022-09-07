@@ -1,4 +1,11 @@
-import { autoUpdate, Axis, computePosition, Placement } from '@floating-ui/dom';
+import {
+  autoUpdate,
+  Axis,
+  computePosition,
+  offset,
+  Placement,
+  Rect,
+} from '@floating-ui/dom';
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
@@ -66,41 +73,22 @@ export async function transformCSS() {
   }, 1000);
 }
 
-const placementMapping: {
-  [key: string]: { placement: Placement; coord: Axis };
-} = {
-  'top:top': {
-    placement: 'left-start',
-    coord: 'y',
-  },
-  'top:bottom': {
-    placement: 'bottom',
-    coord: 'y',
-  },
-  'bottom:bottom': {
-    placement: 'left-end',
-    coord: 'y',
-  },
-  'bottom:top': {
-    placement: 'top',
-    coord: 'y',
-  },
-  'left:left': {
-    placement: 'top-start',
-    coord: 'x',
-  },
-  'left:right': {
-    placement: 'right',
-    coord: 'x',
-  },
-  'right:right': {
-    placement: 'top-end',
-    coord: 'x',
-  },
-  'right:left': {
-    placement: 'left',
-    coord: 'x',
-  },
+const getPixelValue = (
+  anchor: Rect,
+  edge: string | undefined,
+  fallback: string,
+) => {
+  switch (edge) {
+    case 'left':
+      return `${anchor.x}px`;
+    case 'right':
+      return `${anchor.x + anchor.width}px`;
+    case 'top':
+      return `${anchor.y}px`;
+    case 'bottom':
+      return `${anchor.y + anchor.height}px`;
+  }
+  return fallback;
 };
 
 export function position(rules: AnchorPositions) {
@@ -113,24 +101,35 @@ export function position(rules: AnchorPositions) {
       return;
     }
 
-    const promises: Promise<{ left: string } | { top: string }>[] = [];
+    const promises: Promise<{ [key: string]: string }>[] = [];
 
     Object.entries(position.declarations || {}).forEach(
       ([property, anchorValue]) => {
         // @@@ For now, assume the first element is valid
         if (anchorValue.anchorEl) {
           const anchor = document.querySelector(anchorValue.anchorEl[0]);
-          const placement =
-            placementMapping[`${property}:${anchorValue.anchorEdge}`];
-          if (anchor && placement) {
-            const promise = computePosition(anchor, floating, {
-              placement: placement.placement,
-            }).then(({ x, y }) => {
-              if (placement.coord === 'x') {
-                return { left: `${x}px` };
-              }
-              return { top: `${y}px` };
-            });
+          if (anchor) {
+            const promise = new Promise<{ [key: string]: string }>(
+              (resolve) => {
+                computePosition(anchor, floating, {
+                  middleware: [
+                    offset(({ rects }) => {
+                      resolve({
+                        // @@@ Ideally we would directly replace these values
+                        // in the CSS, so that we don't worry about the cascade,
+                        // and we could ignore `property` (e.g. handling `calc`)
+                        [property]: getPixelValue(
+                          rects.reference,
+                          anchorValue.anchorEdge,
+                          anchorValue.fallbackValue,
+                        ),
+                      });
+                      return 0;
+                    }),
+                  ],
+                });
+              },
+            );
             // @@@ Figure out how to handle `autoUpdate`
             autoUpdate(anchor, floating, () => {
               console.log('re-calculate');
