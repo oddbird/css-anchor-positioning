@@ -5,7 +5,6 @@ import { fetchCSS, isStyleLink } from './fetch.js';
 import {
   AnchorPositions,
   AnchorSide,
-  AnchorSideKeyword,
   getAST,
   isFallbackAtRule,
   isFallbackDeclaration,

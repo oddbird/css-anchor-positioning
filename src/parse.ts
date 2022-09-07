@@ -145,7 +145,7 @@ function parseAnchorFn(node: csstree.FunctionNode) {
         break;
       case 1:
         if (isIdentifier(child)) {
-          anchorEdge = child.name as AnchorSide;
+          anchorEdge = child.name as AnchorSideKeyword;
         } else if (isPercentage(child)) {
           const number = Number(child.value);
           anchorEdge = Number.isNaN(number) ? undefined : number;
