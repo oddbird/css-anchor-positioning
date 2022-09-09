@@ -1,4 +1,4 @@
-interface StyleData {
+export interface StyleData {
   source: 'style' | string;
   css: string;
 }
