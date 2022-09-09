@@ -1,9 +1,10 @@
-import { autoUpdate, Axis, computePosition, Placement } from '@floating-ui/dom';
+import { autoUpdate, computePosition, offset, Rect } from '@floating-ui/dom';
 import * as csstree from 'css-tree';
 
 import { fetchCSS, isStyleLink } from './fetch.js';
 import {
   AnchorPositions,
+  AnchorSide,
   getAST,
   isFallbackAtRule,
   isFallbackDeclaration,
@@ -63,44 +64,115 @@ export async function transformCSS() {
   // Or make `autoUpdate` work.
   setTimeout(() => {
     position(rules);
-  }, 1000);
+  }, 1500);
 }
 
-const placementMapping: {
-  [key: string]: { placement: Placement; coord: Axis };
-} = {
-  'top:top': {
-    placement: 'left-start',
-    coord: 'y',
-  },
-  'top:bottom': {
-    placement: 'bottom',
-    coord: 'y',
-  },
-  'bottom:bottom': {
-    placement: 'left-end',
-    coord: 'y',
-  },
-  'bottom:top': {
-    placement: 'top',
-    coord: 'y',
-  },
-  'left:left': {
-    placement: 'top-start',
-    coord: 'x',
-  },
-  'left:right': {
-    placement: 'right',
-    coord: 'x',
-  },
-  'right:right': {
-    placement: 'top-end',
-    coord: 'x',
-  },
-  'right:left': {
-    placement: 'left',
-    coord: 'x',
-  },
+const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
+  let percentage: number | undefined;
+  switch (edge) {
+    case 'start':
+    case 'self-start':
+      percentage = 0;
+      break;
+    case 'end':
+    case 'self-end':
+      percentage = 100;
+      break;
+    default:
+      if (typeof edge === 'number' && !Number.isNaN(edge)) {
+        percentage = edge;
+      }
+  }
+  if (percentage !== undefined) {
+    return isRTL ? 100 - percentage : percentage;
+  }
+  return undefined;
+};
+
+const getAxis = (position?: string) => {
+  switch (position) {
+    case 'top':
+    case 'bottom':
+      return 'y';
+    case 'left':
+    case 'right':
+      return 'x';
+  }
+  return null;
+};
+
+const getAxisProperty = (axis: 'x' | 'y' | null) => {
+  switch (axis) {
+    case 'x':
+      return 'width';
+    case 'y':
+      return 'height';
+  }
+  return null;
+};
+
+const getPixelValue = ({
+  floatingEl,
+  anchorRect,
+  anchorEdge,
+  floatingPosition,
+  fallback,
+}: {
+  floatingEl: HTMLElement;
+  anchorRect: Rect;
+  anchorEdge?: AnchorSide;
+  floatingPosition?: string;
+  fallback: string;
+}) => {
+  let percentage: number | undefined;
+  // This is required when the anchor edge is a logical keyword
+  // (`start/end/self-start/self-end/center`) or a percentage,
+  // not a physical keyword (`top/bottom/left/right`)
+  let axis: 'x' | 'y' | null = getAxis(floatingPosition);
+
+  switch (anchorEdge) {
+    case 'left':
+      percentage = 0;
+      axis = 'x';
+      break;
+    case 'right':
+      percentage = 100;
+      axis = 'x';
+      break;
+    case 'top':
+      percentage = 0;
+      axis = 'y';
+      break;
+    case 'bottom':
+      percentage = 100;
+      axis = 'y';
+      break;
+    case 'center':
+      percentage = 50;
+      break;
+    default:
+      // Logical keywords require knowledge about the inset property,
+      // as well as the writing direction of the floating element
+      // (or its containing block)
+      if (anchorEdge !== undefined && floatingEl) {
+        // @@@ `start` and `end` should use the writing-mode of the element's
+        // containing block, not the element itself
+        const isRTL = getComputedStyle(floatingEl).direction === 'rtl';
+        percentage = resolveLogicalKeyword(anchorEdge, isRTL);
+      }
+  }
+
+  const dir = getAxisProperty(axis);
+  if (
+    axis &&
+    dir &&
+    typeof percentage === 'number' &&
+    !Number.isNaN(percentage)
+  ) {
+    return `${anchorRect[axis] + (anchorRect[dir] * percentage) / 100}px`;
+  }
+
+  return fallback;
 };
 
 export function position(rules: AnchorPositions) {
@@ -113,24 +185,37 @@ export function position(rules: AnchorPositions) {
       return;
     }
 
-    const promises: Promise<{ left: string } | { top: string }>[] = [];
+    const promises: Promise<{ [key: string]: string }>[] = [];
 
     Object.entries(position.declarations || {}).forEach(
       ([property, anchorValue]) => {
         // @@@ For now, assume the first element is valid
         if (anchorValue.anchorEl) {
           const anchor = document.querySelector(anchorValue.anchorEl[0]);
-          const placement =
-            placementMapping[`${property}:${anchorValue.anchorEdge}`];
-          if (anchor && placement) {
-            const promise = computePosition(anchor, floating, {
-              placement: placement.placement,
-            }).then(({ x, y }) => {
-              if (placement.coord === 'x') {
-                return { left: `${x}px` };
-              }
-              return { top: `${y}px` };
-            });
+          if (anchor) {
+            const promise = new Promise<{ [key: string]: string }>(
+              (resolve) => {
+                computePosition(anchor, floating, {
+                  middleware: [
+                    offset(({ elements, rects }) => {
+                      resolve({
+                        // @@@ Ideally we would directly replace these values
+                        // in the CSS, so that we don't worry about the cascade,
+                        // and we could usually ignore `property` entirely
+                        [property]: getPixelValue({
+                          floatingEl: elements.floating,
+                          anchorRect: rects.reference,
+                          anchorEdge: anchorValue.anchorEdge,
+                          floatingPosition: property,
+                          fallback: anchorValue.fallbackValue,
+                        }),
+                      });
+                      return 0;
+                    }),
+                  ],
+                });
+              },
+            );
             // @@@ Figure out how to handle `autoUpdate`
             autoUpdate(anchor, floating, () => {
               console.log('re-calculate');
