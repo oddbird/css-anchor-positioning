@@ -3,7 +3,7 @@ import { autoUpdate, computePosition, offset, Rect } from '@floating-ui/dom';
 import { fetchCSS } from './fetch.js';
 import { AnchorPositions, AnchorSide, parseCSS } from './parse.js';
 
-const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
+export const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
   let percentage: number | undefined;
   switch (edge) {
     case 'start':
@@ -27,7 +27,7 @@ const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
 
 // @@@ This should also check the writing-mode
 // See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
-const getAxis = (position?: string) => {
+export const getAxis = (position?: string) => {
   switch (position) {
     case 'top':
     case 'bottom':
@@ -39,7 +39,7 @@ const getAxis = (position?: string) => {
   return null;
 };
 
-const getAxisProperty = (axis: 'x' | 'y' | null) => {
+export const getAxisProperty = (axis: 'x' | 'y' | null) => {
   switch (axis) {
     case 'x':
       return 'width';
@@ -49,19 +49,21 @@ const getAxisProperty = (axis: 'x' | 'y' | null) => {
   return null;
 };
 
-const getPixelValue = ({
-  floatingEl,
-  anchorRect,
-  anchorEdge,
-  floatingPosition,
-  fallback,
-}: {
+export interface GetPixelValueOpts {
   floatingEl: HTMLElement;
   anchorRect: Rect;
   anchorEdge?: AnchorSide;
   floatingPosition?: string;
   fallback: string;
-}) => {
+}
+
+export const getPixelValue = ({
+  floatingEl,
+  anchorRect,
+  anchorEdge,
+  floatingPosition,
+  fallback,
+}: GetPixelValueOpts) => {
   let percentage: number | undefined;
   // This is required when the anchor edge is a logical keyword
   // (`start/end/self-start/self-end/center`) or a percentage,
