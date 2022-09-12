@@ -12,7 +12,6 @@
   left: anchor(--my-anchor-fallback left);
   width: 40px;
   height: 15px;
-  margin: 5px;
   background: green;
 }
 

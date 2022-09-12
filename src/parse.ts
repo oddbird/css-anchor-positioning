@@ -14,10 +14,23 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
+export type AnchorSideKeyword =
+  | 'top'
+  | 'left'
+  | 'right'
+  | 'bottom'
+  | 'start'
+  | 'end'
+  | 'self-start'
+  | 'self-end'
+  | 'center';
+
+export type AnchorSide = AnchorSideKeyword | number;
+
 interface AnchorFunction {
   anchorEl?: string[];
   anchorName?: string;
-  anchorEdge?: string;
+  anchorEdge?: AnchorSide;
   fallbackValue: string;
 }
 
@@ -42,7 +55,7 @@ interface AnchorPosition {
   fallbacks?: TryBlock[];
 }
 
-interface AnchorPositions {
+export interface AnchorPositions {
   // `key` is the floating element selector
   // `value` is an object with all anchor-positioning data for that element
   [key: string]: AnchorPosition;
@@ -112,7 +125,7 @@ export function isPercentage(
 
 function parseAnchorFn(node: csstree.FunctionNode) {
   let anchorName: string | undefined,
-    anchorEdge: string | undefined,
+    anchorEdge: AnchorSide | undefined,
     fallbackValue = '',
     foundComma = false;
   node.children.toArray().forEach((child, idx) => {
@@ -132,9 +145,10 @@ function parseAnchorFn(node: csstree.FunctionNode) {
         break;
       case 1:
         if (isIdentifier(child)) {
-          anchorEdge = child.name;
+          anchorEdge = child.name as AnchorSideKeyword;
         } else if (isPercentage(child)) {
-          anchorEdge = `${child.value}%`;
+          const number = Number(child.value);
+          anchorEdge = Number.isNaN(number) ? undefined : number;
         }
         break;
     }
@@ -320,8 +334,6 @@ export function parseCSS(css: string) {
       };
     }
   }
-
-  console.log(validPositions);
 
   /* Example data shape:
     {

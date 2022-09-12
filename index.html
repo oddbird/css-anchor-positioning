@@ -27,8 +27,8 @@
 
       #my-floating-inline {
         position: absolute;
-        top: anchor(--my-anchor-inline bottom);
-        left: anchor(--my-anchor-inline right);
+        top: anchor(--my-anchor-inline end);
+        left: anchor(--my-anchor-inline end);
         background: green;
       }
     </style>
@@ -44,22 +44,24 @@
       >
     </p>
 
+    <button id="apply-polyfill">Apply Polyfill</button>
+
     <h2>Anchor Positioning via anchor() (stylesheet)</h2>
     <div style="position: relative">
-      <div id="my-anchor-positioning">Anchor</div>
       <div id="my-floating-positioning">Floating</div>
+      <div id="my-anchor-positioning">Anchor</div>
     </div>
 
     <h2>Anchor Positioning via anchor() (inline)</h2>
     <div style="position: relative">
-      <div id="my-anchor-inline">Anchor</div>
       <div id="my-floating-inline">Floating</div>
+      <div id="my-anchor-inline">Anchor</div>
     </div>
 
     <h2>Anchor Positioning via position-fallback</h2>
     <div style="position: relative">
-      <div id="my-anchor-fallback">Anchor</div>
       <div id="my-floating-fallback">Floating</div>
+      <div id="my-anchor-fallback">Anchor</div>
     </div>
 
     <h2>Anchor Positioning (with scroll)</h2>
@@ -87,7 +89,9 @@
 
     <script type="module">
       import polyfill from '/src/index.ts';
-      polyfill();
+
+      const btn = document.getElementById('apply-polyfill');
+      btn.addEventListener('click', () => polyfill());
     </script>
   </body>
 </html>

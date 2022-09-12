@@ -17,7 +17,7 @@ describe('parseCSS', () => {
           '--center': {
             anchorName: '--my-anchor',
             anchorEl: ['#my-anchor'],
-            anchorEdge: '50%',
+            anchorEdge: 50,
             fallbackValue: '0px',
           },
         },
