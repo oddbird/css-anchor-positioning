@@ -1,48 +1,55 @@
-/* eslint-disable no-warning-comments */
-
+// Given CSS selectors for a floating element and an anchor element,
+// returns elements that pass validation,
+// or `null` if no valid anchor element is found
 export function validatedForPositioning(
-  anchorName: string,
-  floatingName: string,
+  floatingEl: HTMLElement | null,
+  anchorSelectors: string[],
 ) {
-  const floatingElement = document.querySelector(floatingName) as HTMLElement;
-  const anchorElements = document.querySelectorAll(
-    anchorName,
-  ) as unknown as HTMLElement[];
-  const validAnchors: HTMLElement[] = [];
+  if (!floatingEl) {
+    return null;
+  }
 
-  anchorElements.forEach((anchor: HTMLElement) => {
-    if (validAnchorElement(anchor, floatingElement)) {
-      validAnchors.push(anchor);
+  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
+    anchorSelectors.join(', '),
+  );
+
+  for (const anchor of anchorElements) {
+    if (isValidAnchorElement(anchor, floatingEl)) {
+      return anchor;
     }
-  });
+  }
 
-  return validAnchors.length
-    ? { anchor: validAnchors[0], floating: floatingElement }
-    : { anchor: null, floating: null };
+  return null;
 }
 
-export function validAnchorElement(
-  anchorElement: HTMLElement,
-  floatingElement: HTMLElement,
+// Validates that anchor element is a valid anchor for given floating element
+export function isValidAnchorElement(
+  anchor: HTMLElement,
+  floating: HTMLElement,
 ) {
-  // el has the same containing block as the querying element, el is not absolutely positioned
+  // el has the same containing block as the querying element,
+  // el is not absolutely positioned
   const anchorAbsolutelyPositioned =
-    anchorElement?.style.position === 'absolute' ||
-    getComputedStyle(anchorElement).position === 'aboslute';
+    anchor?.style.position === 'absolute' ||
+    getComputedStyle(anchor).position === 'absolute';
 
   if (
     anchorAbsolutelyPositioned &&
-    anchorElement.offsetParent === floatingElement.offsetParent
-  )
+    anchor.offsetParent === floating.offsetParent
+  ) {
     return false;
+  }
 
-  // el has a different containing block from the querying element, the last containing block in el’s containing block chain before reaching the querying element’s containing block is not absolutely positioned
-  if (anchorElement.offsetParent != floatingElement.offsetParent) {
+  // el has a different containing block from the querying element,
+  // the last containing block in el’s containing block chain
+  // before reaching the querying element’s containing block
+  // is not absolutely positioned
+  if (anchor.offsetParent != floating.offsetParent) {
     let currentCB: HTMLElement | null;
     const anchorCBchain: HTMLElement[] = [];
 
-    currentCB = anchorElement.offsetParent as HTMLElement;
-    while (currentCB && currentCB != floatingElement.offsetParent) {
+    currentCB = anchor.offsetParent as HTMLElement;
+    while (currentCB && currentCB != floating.offsetParent) {
       anchorCBchain.push(currentCB);
       currentCB = currentCB?.offsetParent as HTMLElement;
     }
@@ -56,15 +63,14 @@ export function validAnchorElement(
     }
   }
 
-  // el is a descendant of the querying element’s containing block, or the quering element’s containing block is the initial containing block
-  const descendant = floatingElement?.offsetParent?.contains(anchorElement);
-  const floatingCBIsInitialCB = floatingElement?.offsetParent === null;
+  // el is a descendant of the querying element’s containing block,
+  // or the quering element’s containing block is the initial containing block
+  const descendant = floating?.offsetParent?.contains(anchor);
+  const floatingCBIsInitialCB = floating?.offsetParent === null;
 
-  if (descendant || floatingCBIsInitialCB) return true;
+  if (descendant || floatingCBIsInitialCB) {
+    return true;
+  }
 
   return false;
 }
-
-// export function validAnchorQuery(anchorQuery) {
-//   return false;
-// }

@@ -2,7 +2,7 @@
 import { type Page, expect, test } from '@playwright/test';
 
 import {
-  validAnchorElement,
+  isValidAnchorElement,
   validatedForPositioning,
 } from '../../src/validate.js';
 
@@ -12,7 +12,7 @@ test.beforeAll(async ({ browser }) => {
   sharedPage = await browser.newPage();
   await sharedPage.goto('/');
   await sharedPage.addScriptTag({
-    content: `${validAnchorElement}`,
+    content: `${isValidAnchorElement}`,
   });
 });
 
@@ -30,7 +30,7 @@ async function callValidFunction(sharedPage: Page) {
         floatingName,
       ) as HTMLElement;
       const anchorElement = document.querySelector(anchorName) as HTMLElement;
-      return validAnchorElement(anchorElement, floatingElement);
+      return isValidAnchorElement(anchorElement, floatingElement);
     },
     [anchorName, floatingName],
   );
@@ -72,7 +72,7 @@ test('anchor is valid if its not descendant of query element CB but query elemen
       </div>
 
       <div id="my-anchor-positioning">Anchor</div>
-      
+
       <div id="my-floating-positioning">Floating<div>
 
   `,
@@ -127,7 +127,7 @@ test('anchor is NOT valid if its not descendant of query element CB AND query el
       <div style="position: relative">
         <div id="my-anchor-positioning">Anchor</div>
       </div>
-      
+
       <div style="position: relative">
         <div id="my-floating-positioning">Floating<div>
       </div>
@@ -347,18 +347,21 @@ test('when multiple anchor elements have the same name and are valid, the first 
       interface Data {
         results: {
           anchor: HTMLElement | null;
-          floating: HTMLElement | null;
         };
         anchorWidth: string | undefined;
         anchorText: string | undefined;
       }
 
-      const validatedData = {} as Data;
-      const validateResults = validatedForPositioning(anchorName, floatingName);
+      const floatingElement = document.querySelector(
+        floatingName,
+      ) as HTMLElement;
 
-      validatedData.results = validateResults;
-      validatedData.anchorWidth = validateResults.anchor?.style.width;
-      validatedData.anchorText = validateResults.anchor?.innerHTML;
+      const validatedData = {} as Data;
+      const anchor = validatedForPositioning(floatingElement, [anchorName]);
+
+      validatedData.results = { anchor };
+      validatedData.anchorWidth = anchor?.style.width;
+      validatedData.anchorText = anchor?.innerHTML;
 
       return validatedData;
     },
@@ -366,7 +369,6 @@ test('when multiple anchor elements have the same name and are valid, the first 
   );
 
   expect(validationResults.results.anchor).toBeTruthy;
-  expect(validationResults.results.floating).toBeTruthy;
   expect(validationResults.anchorText).toContain('First Anchor Element');
   expect(validationResults.anchorWidth).toBe('10px');
 });

@@ -1,5 +1,7 @@
 import * as csstree from 'css-tree';
 
+import { validatedForPositioning } from './validate.js';
+
 interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
@@ -28,7 +30,7 @@ export type AnchorSideKeyword =
 export type AnchorSide = AnchorSideKeyword | number;
 
 interface AnchorFunction {
-  anchorEl?: string[];
+  anchorEl?: HTMLElement | null;
   anchorName?: string;
   anchorEdge?: AnchorSide;
   fallbackValue: string;
@@ -296,39 +298,46 @@ export function parseCSS(css: string) {
   const validPositions: AnchorPositions = {};
 
   // Store any `position-fallback` declarations
-  for (const [floatingEl, fallbackName] of Object.entries(fallbackNames)) {
+  for (const [floatingSel, fallbackName] of Object.entries(fallbackNames)) {
     const positionFallbacks = fallbacks[fallbackName];
     if (positionFallbacks) {
+      const floatingEl: HTMLElement | null =
+        document.querySelector(floatingSel);
       // Populate `anchorEl` for each fallback `anchor()` fn
       positionFallbacks.forEach((tryBlock) => {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
             const anchorName = (value as AnchorFunction).anchorName;
-            const anchorEl = anchorName ? anchorNames[anchorName] : undefined;
+            const anchorSelectors = anchorName ? anchorNames[anchorName] : [];
+            const anchorEl = validatedForPositioning(
+              floatingEl,
+              anchorSelectors,
+            );
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
         }
       });
-      validPositions[floatingEl] = {
+      validPositions[floatingSel] = {
         fallbacks: positionFallbacks,
       };
     }
   }
 
   // Store any `anchor()` fns
-  for (const [floatingEl, anchorFns] of Object.entries(anchorFunctions)) {
+  for (const [floatingSel, anchorFns] of Object.entries(anchorFunctions)) {
+    const floatingEl: HTMLElement | null = document.querySelector(floatingSel);
     for (const [floatingEdge, anchorObj] of Object.entries(anchorFns)) {
       // Populate `anchorEl` for each `anchor()` fn
-      const anchorEl = anchorObj.anchorName
+      const anchorSelectors = anchorObj.anchorName
         ? anchorNames[anchorObj.anchorName]
-        : undefined;
-      validPositions[floatingEl] = {
-        ...validPositions[floatingEl],
+        : [];
+      validPositions[floatingSel] = {
+        ...validPositions[floatingSel],
         declarations: {
-          ...validPositions[floatingEl]?.declarations,
+          ...validPositions[floatingSel]?.declarations,
           [floatingEdge]: {
             ...anchorObj,
-            anchorEl,
+            anchorEl: validatedForPositioning(floatingEl, anchorSelectors),
           },
         },
       };
@@ -340,8 +349,9 @@ export function parseCSS(css: string) {
       '#my-floating-element': {
         declarations: {
           top: {
+            floatingEl: <HTMLElement>,
             anchorName: '--my-anchor',
-            anchorEl: ['#my-target-anchor-element'],
+            anchorEl: <HTMLElement>,
             anchorEdge: 'bottom',
             fallbackValue: '50px',
           },
@@ -349,8 +359,9 @@ export function parseCSS(css: string) {
         fallbacks: [
           {
             top: {
+              floatingEl: <HTMLElement>,
               anchorName: '--my-anchor',
-              anchorEl: ['#my-target-anchor-element'],
+              anchorEl: <HTMLElement>,
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
