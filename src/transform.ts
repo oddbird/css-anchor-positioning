@@ -1,12 +1,7 @@
 import * as csstree from 'css-tree';
 
-import { fetchCSS, isStyleLink } from './fetch.js';
-import {
-  getAST,
-  isFallbackAtRule,
-  isFallbackDeclaration,
-  parseCSS,
-} from './parse.js';
+import { isStyleLink, StyleData } from './fetch.js';
+import { getAST, isFallbackAtRule, isFallbackDeclaration } from './parse.js';
 
 export function removeAnchorCSS(originalCSS: string) {
   const ast = getAST(originalCSS);
@@ -28,10 +23,7 @@ export function removeAnchorCSS(originalCSS: string) {
   return csstree.generate(ast);
 }
 
-export async function transformCSS() {
-  const styleData = await fetchCSS();
-  const allCSS: string[] = [];
-
+export function transformCSS(styleData: StyleData[]) {
   // Handle inline stylesheets
   const styleTagCSS = document.querySelectorAll('style');
   styleTagCSS.forEach((element) => {
@@ -40,8 +32,6 @@ export async function transformCSS() {
 
   // Handle linked stylesheets
   styleData.forEach(({ source, css }) => {
-    allCSS.push(css);
-
     if (source !== 'style') {
       const updatedCSS = removeAnchorCSS(css);
       const blob = new Blob([updatedCSS], { type: 'text/css' });
@@ -53,7 +43,4 @@ export async function transformCSS() {
       });
     }
   });
-
-  // Get data from concatenated styles
-  parseCSS(allCSS.join('\n'));
 }
