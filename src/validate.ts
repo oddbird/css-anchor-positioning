@@ -1,5 +1,5 @@
-// Given CSS selectors for a floating element and an anchor element,
-// returns elements that pass validation,
+// Given a floating element and CSS selector(s) for potential anchor element(s),
+// returns the first element that passes validation,
 // or `null` if no valid anchor element is found
 export function validatedForPositioning(
   floatingEl: HTMLElement | null,
@@ -22,53 +22,54 @@ export function validatedForPositioning(
   return null;
 }
 
+export function isAbsolutelyPositioned(el: HTMLElement) {
+  return (
+    el.style.position === 'absolute' ||
+    getComputedStyle(el).position === 'absolute'
+  );
+}
+
 // Validates that anchor element is a valid anchor for given floating element
 export function isValidAnchorElement(
   anchor: HTMLElement,
   floating: HTMLElement,
 ) {
-  // el has the same containing block as the querying element,
-  // el is not absolutely positioned
-  const anchorAbsolutelyPositioned =
-    anchor?.style.position === 'absolute' ||
-    getComputedStyle(anchor).position === 'absolute';
-
+  // If el has the same containing block as the querying element,
+  // el must not be absolutely positioned:
   if (
-    anchorAbsolutelyPositioned &&
+    isAbsolutelyPositioned(anchor) &&
     anchor.offsetParent === floating.offsetParent
   ) {
     return false;
   }
 
-  // el has a different containing block from the querying element,
-  // the last containing block in el’s containing block chain
-  // before reaching the querying element’s containing block
-  // is not absolutely positioned
-  if (anchor.offsetParent != floating.offsetParent) {
+  // If el has a different containing block from the querying element,
+  // the last containing block in el's containing block chain
+  // before reaching the querying element's containing block
+  // must not be absolutely positioned:
+  if (anchor.offsetParent !== floating.offsetParent) {
     let currentCB: HTMLElement | null;
     const anchorCBchain: HTMLElement[] = [];
 
-    currentCB = anchor.offsetParent as HTMLElement;
-    while (currentCB && currentCB != floating.offsetParent) {
+    currentCB = anchor.offsetParent as HTMLElement | null;
+    while (currentCB && currentCB !== floating.offsetParent) {
       anchorCBchain.push(currentCB);
-      currentCB = currentCB?.offsetParent as HTMLElement;
+      currentCB = currentCB.offsetParent as HTMLElement | null;
     }
 
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
-    if (
-      lastInChain?.style.position === 'absolute' ||
-      getComputedStyle(lastInChain).position === 'absolute'
-    ) {
+    if (lastInChain && isAbsolutelyPositioned(lastInChain)) {
       return false;
     }
   }
 
-  // el is a descendant of the querying element’s containing block,
-  // or the quering element’s containing block is the initial containing block
-  const descendant = floating?.offsetParent?.contains(anchor);
-  const floatingCBIsInitialCB = floating?.offsetParent === null;
+  // Either el must be a descendant of the querying element's containing block,
+  // or the querying element's containing block must be
+  // the initial containing block:
+  const isDescendant = Boolean(floating.offsetParent?.contains(anchor));
+  const floatingCBIsInitialCB = floating.offsetParent === null;
 
-  if (descendant || floatingCBIsInitialCB) {
+  if (isDescendant || floatingCBIsInitialCB) {
     return true;
   }
 

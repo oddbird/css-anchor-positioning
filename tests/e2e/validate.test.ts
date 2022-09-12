@@ -1,7 +1,7 @@
-// import { expect, Page, test } from '@playwright/test';
 import { type Page, expect, test } from '@playwright/test';
 
 import {
+  isAbsolutelyPositioned,
   isValidAnchorElement,
   validatedForPositioning,
 } from '../../src/validate.js';
@@ -12,7 +12,7 @@ test.beforeAll(async ({ browser }) => {
   sharedPage = await browser.newPage();
   await sharedPage.goto('/');
   await sharedPage.addScriptTag({
-    content: `${isValidAnchorElement}`,
+    content: `${isAbsolutelyPositioned}\n${isValidAnchorElement}`,
   });
 });
 
@@ -36,8 +36,9 @@ async function callValidFunction(sharedPage: Page) {
   );
 }
 
-// el is a descendant of the querying element’s containing block, or the quering element’s containing block is the initial containing block
-test('anchor is valid when its is a descendant of the query element CB', async () => {
+// el is a descendant of the querying element’s containing block,
+// or the querying element’s containing block is the initial containing block
+test("anchor is valid when it's is a descendant of the query element CB", async () => {
   await sharedPage.setContent(
     `
       <!DOCTYPE html>
@@ -62,8 +63,9 @@ test('anchor is valid when its is a descendant of the query element CB', async (
   expect(result).toBe(true);
 });
 
-// el is a descendant of the querying element’s containing block, or the quering element’s containing block is the initial containing block
-test('anchor is valid if its not descendant of query element CB but query element CB is ICB', async () => {
+// el is a descendant of the querying element’s containing block,
+// or the querying element’s containing block is the initial containing block
+test("anchor is valid if it's not descendant of query element CB but query element CB is ICB", async () => {
   await sharedPage.setContent(
     `
       <div style="position: relative>
@@ -84,7 +86,7 @@ test('anchor is valid if its not descendant of query element CB but query elemen
   expect(result).toBe(true);
 });
 
-test('anchor is valid if its not descendant of query element CB and query element CB is the ICB - position: fixed', async () => {
+test("anchor is valid if it's not descendant of query element CB and query element CB is the ICB - position: fixed", async () => {
   await sharedPage.setContent(
     `
       <div id="my-floating-positioning" style="position: fixed">
@@ -116,7 +118,7 @@ test('anchor not descendant of query element CB and query element CB is the ICB 
   expect(result).toBe(true);
 });
 
-test('anchor is NOT valid if its not descendant of query element CB AND query element CB is not ICB', async () => {
+test("anchor is NOT valid if it's not descendant of query element CB AND query element CB is not ICB", async () => {
   await sharedPage.setContent(
     `
       <div style="position: relative">
@@ -140,7 +142,8 @@ test('anchor is NOT valid if its not descendant of query element CB AND query el
   expect(result).toBe(false);
 });
 
-// if el has the same containing block as the querying element, el is not absolutely positioned
+// if el has the same containing block as the querying element,
+// el is not absolutely positioned
 test('anchor is valid when anchor has same CB as querying element and anchor is not absolutely positioned', async () => {
   await sharedPage.setContent(
     `
@@ -173,7 +176,10 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
   expect(result).toBe(false);
 });
 
-// if el has a different containing block from the querying element, the last containing block in el’s containing block chain before reaching the querying element’s containing block is not absolutely positioned
+// if el has a different containing block from the querying element,
+// the last containing block in el’s containing block chain
+// before reaching the querying element’s containing block
+// is not absolutely positioned
 test('anchor is valid if it has a different CB from the querying element, and the last CB in anchor CB chain block before the query element CB is not absolutely positioned', async () => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.tentative.html
   await sharedPage.setContent(
