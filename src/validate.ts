@@ -22,24 +22,30 @@ export function validatedForPositioning(
   return null;
 }
 
-export function isAbsolutelyPositioned(el: HTMLElement) {
-  return (
-    el.style.position === 'absolute' ||
-    getComputedStyle(el).position === 'absolute'
+export function isAbsolutelyPositioned(el?: HTMLElement | null) {
+  return Boolean(
+    el &&
+      (el.style.position === 'absolute' ||
+        getComputedStyle(el).position === 'absolute'),
   );
 }
 
-export function hasDisplayNone(el: HTMLElement) {
-  return el.style.display === 'none' || getComputedStyle(el).display === 'none';
+export function hasDisplayNone(el?: HTMLElement | null) {
+  return Boolean(
+    el &&
+      (el.style.display === 'none' || getComputedStyle(el).display === 'none'),
+  );
 }
 
-// Determines whether the containing block (CB) of the element is the initial containing block (ICB)
-// offsetParent returns null when the CB is the ICB, except in FF where offsetParent returns the body element
-// Excludes elements when they or their parents have display: none
+// Determines whether the containing block (CB) of the element
+// is the initial containing block (ICB):
+// - `offsetParent` returns `null` when the CB is the ICB,
+//   except in Firefox where `offsetParent` returns the `body` element
+// - Excludes elements when they or their parents have `display: none`
 export function isContainingBlockICB(floatingElement: HTMLElement) {
   const isDisplayNone =
     hasDisplayNone(floatingElement) ||
-    hasDisplayNone(floatingElement.parentElement as HTMLElement);
+    hasDisplayNone(floatingElement.parentElement);
 
   const cbIsBodyElementFromFF =
     floatingElement.offsetParent === document.querySelector('body') &&
@@ -83,7 +89,7 @@ export function isValidAnchorElement(
     }
 
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
-    if (lastInChain && isAbsolutelyPositioned(lastInChain)) {
+    if (isAbsolutelyPositioned(lastInChain)) {
       return false;
     }
   }
