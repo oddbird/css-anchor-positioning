@@ -185,8 +185,10 @@ export async function polyfill() {
     // apply polyfill
     // @@@ Wait for DOM load?
     // Or make `autoUpdate` work.
-    position(rules);
 
+    if (document.readyState) {
+      position(rules);
+    }
     // @@@ update source code
     // transformCSS(styleData);
   }
