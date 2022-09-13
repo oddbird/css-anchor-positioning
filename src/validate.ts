@@ -29,6 +29,31 @@ export function isAbsolutelyPositioned(el: HTMLElement) {
   );
 }
 
+export function hasDisplayNone(el: HTMLElement) {
+  return el.style.display === 'none' || getComputedStyle(el).display === 'none';
+}
+
+// Determines whether the containing block (CB) of the element is the initial containing block (ICB)
+// offsetParent returns null when the CB is the ICB, except in FF where offsetParent returns the body element
+// Excludes elements when they or their parents have display: none
+export function isContainingBlockICB(floatingElement: HTMLElement) {
+  const isDisplayNone =
+    hasDisplayNone(floatingElement) ||
+    hasDisplayNone(floatingElement.parentElement as HTMLElement);
+
+  const cbIsBodyElementFromFF =
+    floatingElement.offsetParent === document.querySelector('body') &&
+    navigator.userAgent.includes('Firefox');
+
+  const offsetParentNullOrBody =
+    floatingElement.offsetParent === null || cbIsBodyElementFromFF;
+
+  if (offsetParentNullOrBody && !isDisplayNone) {
+    return true;
+  }
+  return false;
+}
+
 // Validates that anchor element is a valid anchor for given floating element
 export function isValidAnchorElement(
   anchor: HTMLElement,
@@ -67,7 +92,7 @@ export function isValidAnchorElement(
   // or the querying element's containing block must be
   // the initial containing block:
   const isDescendant = Boolean(floating.offsetParent?.contains(anchor));
-  const floatingCBIsInitialCB = floating.offsetParent === null;
+  const floatingCBIsInitialCB = isContainingBlockICB(floating);
 
   if (isDescendant || floatingCBIsInitialCB) {
     return true;

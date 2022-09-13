@@ -1,7 +1,9 @@
 import { type Page, expect, test } from '@playwright/test';
 
 import {
+  hasDisplayNone,
   isAbsolutelyPositioned,
+  isContainingBlockICB,
   isValidAnchorElement,
   validatedForPositioning,
 } from '../../src/validate.js';
@@ -12,7 +14,7 @@ test.beforeAll(async ({ browser }) => {
   sharedPage = await browser.newPage();
   await sharedPage.goto('/');
   await sharedPage.addScriptTag({
-    content: `${isAbsolutelyPositioned}\n${isValidAnchorElement}`,
+    content: `${isAbsolutelyPositioned}\n${isValidAnchorElement}\n${isContainingBlockICB}\n${hasDisplayNone}`,
   });
 });
 
@@ -102,7 +104,7 @@ test("anchor is valid if it's not descendant of query element CB and query eleme
   expect(result).toBe(true);
 });
 
-test('anchor not descendant of query element CB and query element CB is the ICB - no positioned ancestor', async () => {
+test('anchor is valid if it is not descendant of query element CB and query element CB is the ICB - no positioned ancestor', async () => {
   await sharedPage.setContent(
     `
       <div id="my-floating-positioning">
@@ -133,6 +135,22 @@ test("anchor is NOT valid if it's not descendant of query element CB AND query e
       <div style="position: relative">
         <div id="my-floating-positioning">Floating<div>
       </div>
+  `,
+    { waitUntil: 'domcontentloaded' },
+  );
+
+  const result = await callValidFunction(sharedPage);
+
+  expect(result).toBe(false);
+});
+
+test("anchor is NOT valid if it's not descendant of query element CB AND query element CB is not ICB - display:none", async () => {
+  await sharedPage.setContent(
+    `
+      <div id="my-floating-positioning" style="display:none">
+        Floating
+      </div>
+      <div id="my-anchor-positioning">Anchor</div>
   `,
     { waitUntil: 'domcontentloaded' },
   );
