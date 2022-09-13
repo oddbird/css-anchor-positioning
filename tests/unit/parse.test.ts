@@ -9,6 +9,8 @@ describe('parseCSS', () => {
   });
 
   it('parses `anchor()` function (math)', () => {
+    document.body.innerHTML =
+      '<div id="my-floating"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
     const result = parseCSS(css);
     const expected = {
@@ -16,7 +18,7 @@ describe('parseCSS', () => {
         declarations: {
           '--center': {
             anchorName: '--my-anchor',
-            anchorEl: ['#my-anchor'],
+            anchorEl: document.getElementById('my-anchor'),
             anchorEdge: 50,
             fallbackValue: '0px',
           },
@@ -28,6 +30,9 @@ describe('parseCSS', () => {
   });
 
   it('parses `anchor()` function (positioning)', () => {
+    document.body.innerHTML =
+      '<div id="my-floating-positioning"></div><div id="my-anchor-positioning"></div>';
+    const anchorEl = document.getElementById('my-anchor-positioning');
     const css = getSampleCSS('anchor-positioning');
     const result = parseCSS(css);
     const expected = {
@@ -35,13 +40,13 @@ describe('parseCSS', () => {
         declarations: {
           top: {
             anchorName: '--my-anchor-positioning',
-            anchorEl: ['#my-anchor-positioning'],
+            anchorEl,
             anchorEdge: 'bottom',
             fallbackValue: '0px',
           },
           left: {
             anchorName: '--my-anchor-positioning',
-            anchorEl: ['#my-anchor-positioning'],
+            anchorEl,
             anchorEdge: 'right',
             fallbackValue: '50px',
           },
@@ -53,6 +58,9 @@ describe('parseCSS', () => {
   });
 
   it('parses `@position-fallback` strategy', () => {
+    document.body.innerHTML =
+      '<div id="my-floating-fallback"></div><div id="my-anchor-fallback"></div>';
+    const anchorEl = document.getElementById('my-anchor-fallback');
     const css = getSampleCSS('position-fallback');
     const result = parseCSS(css);
     const expected = {
@@ -60,7 +68,7 @@ describe('parseCSS', () => {
         declarations: {
           left: {
             anchorName: '--my-anchor-fallback',
-            anchorEl: ['#my-anchor-fallback'],
+            anchorEl,
             anchorEdge: 'left',
             fallbackValue: '0px',
           },
@@ -69,13 +77,13 @@ describe('parseCSS', () => {
           {
             left: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'right',
               fallbackValue: '10px',
             },
             top: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
@@ -83,13 +91,13 @@ describe('parseCSS', () => {
           {
             right: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'left',
               fallbackValue: '0px',
             },
             top: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
@@ -97,13 +105,13 @@ describe('parseCSS', () => {
           {
             left: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'left',
               fallbackValue: '0px',
             },
             top: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'bottom',
               fallbackValue: '0px',
             },
@@ -111,13 +119,13 @@ describe('parseCSS', () => {
           {
             left: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'left',
               fallbackValue: '0px',
             },
             bottom: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
@@ -125,13 +133,13 @@ describe('parseCSS', () => {
           {
             left: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'right',
               fallbackValue: '0px',
             },
             top: {
               anchorName: '--my-anchor-fallback',
-              anchorEl: ['#my-anchor-fallback'],
+              anchorEl,
               anchorEdge: 'top',
               fallbackValue: '0px',
             },
@@ -146,6 +154,8 @@ describe('parseCSS', () => {
   });
 
   it('handles duplicate anchor-names', () => {
+    document.body.innerHTML = '<div id="f1"></div><div id="a2"></div>';
+    const anchorEl = document.getElementById('a2');
     const css = `
       #a1 {
         anchor-name: --my-anchor;
@@ -164,7 +174,7 @@ describe('parseCSS', () => {
         declarations: {
           top: {
             anchorName: '--my-anchor',
-            anchorEl: ['#a1', '#a2'],
+            anchorEl,
             anchorEdge: 'bottom',
             fallbackValue: '0px',
           },

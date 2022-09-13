@@ -129,39 +129,34 @@ export function position(rules: AnchorPositions) {
 
     Object.entries(position.declarations || {}).forEach(
       ([property, anchorValue]) => {
-        // @@@ For now, assume the first element is valid
-        if (anchorValue.anchorEl) {
-          const anchor = document.querySelector(anchorValue.anchorEl[0]);
-          if (anchor) {
-            const promise = new Promise<{ [key: string]: string }>(
-              (resolve) => {
-                computePosition(anchor, floating, {
-                  middleware: [
-                    offset(({ elements, rects }) => {
-                      resolve({
-                        // @@@ Ideally we would directly replace these values
-                        // in the CSS, so that we don't worry about the cascade,
-                        // and we could usually ignore `property` entirely
-                        [property]: getPixelValue({
-                          floatingEl: elements.floating,
-                          anchorRect: rects.reference,
-                          anchorEdge: anchorValue.anchorEdge,
-                          floatingPosition: property,
-                          fallback: anchorValue.fallbackValue,
-                        }),
-                      });
-                      return 0;
+        const anchor = anchorValue.anchorEl;
+        if (anchor) {
+          const promise = new Promise<{ [key: string]: string }>((resolve) => {
+            computePosition(anchor, floating, {
+              middleware: [
+                offset(({ elements, rects }) => {
+                  resolve({
+                    // @@@ Ideally we would directly replace these values
+                    // in the CSS, so that we don't worry about the cascade,
+                    // and we could usually ignore `property` entirely
+                    [property]: getPixelValue({
+                      floatingEl: elements.floating,
+                      anchorRect: rects.reference,
+                      anchorEdge: anchorValue.anchorEdge,
+                      floatingPosition: property,
+                      fallback: anchorValue.fallbackValue,
                     }),
-                  ],
-                });
-              },
-            );
-            // @@@ Figure out how to handle `autoUpdate`
-            autoUpdate(anchor, floating, () => {
-              console.log('re-calculate');
+                  });
+                  return 0;
+                }),
+              ],
             });
-            promises.push(promise);
-          }
+          });
+          // @@@ Figure out how to handle `autoUpdate`
+          autoUpdate(anchor, floating, () => {
+            console.log('re-calculate');
+          });
+          promises.push(promise);
         }
       },
     );
