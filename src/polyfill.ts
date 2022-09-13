@@ -186,7 +186,7 @@ export async function polyfill() {
     // @@@ Wait for DOM load?
     // Or make `autoUpdate` work.
 
-    if (document.readyState) {
+    if (document.readyState === 'complete') {
       position(rules);
     }
     // @@@ update source code
