@@ -183,8 +183,11 @@ export async function polyfill() {
 
   if (Object.values(rules).length) {
     // apply polyfill
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
+    if (
+      document.readyState === 'loading' ||
+      document.readyState === 'interactive'
+    ) {
+      document.addEventListener('load', () => {
         position(rules);
       });
     } else {
