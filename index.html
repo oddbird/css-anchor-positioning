@@ -44,8 +44,6 @@
       >
     </p>
 
-    <button id="apply-polyfill">Apply Polyfill</button>
-
     <h2>Anchor Positioning via anchor() (stylesheet)</h2>
     <div style="position: relative">
       <div id="my-floating-positioning">Floating</div>
@@ -90,8 +88,7 @@
     <script type="module">
       import polyfill from '/src/index.ts';
 
-      const btn = document.getElementById('apply-polyfill');
-      btn.addEventListener('click', () => polyfill());
+      polyfill();
     </script>
   </body>
 </html>
