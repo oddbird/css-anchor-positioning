@@ -183,12 +183,14 @@ export async function polyfill() {
 
   if (Object.values(rules).length) {
     // apply polyfill
-    // @@@ Wait for DOM load?
-    // Or make `autoUpdate` work.
-
-    if (document.readyState === 'complete') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        position(rules);
+      });
+    } else {
       position(rules);
     }
+
     // @@@ update source code
     // transformCSS(styleData);
   }
