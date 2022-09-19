@@ -9,7 +9,6 @@ import {
 } from '../../src/validate.js';
 
 let sharedPage: Page;
-test.describe.configure({ mode: 'parallel' });
 test.beforeAll(async ({ browser }) => {
   sharedPage = await browser.newPage();
   await sharedPage.goto('/');
@@ -22,19 +21,21 @@ test.afterAll(async () => {
   await sharedPage.close();
 });
 
-const anchorName = '#my-anchor-positioning';
-const floatingName = '#my-floating-positioning';
+const anchorSelector = '#my-anchor-positioning';
+const floatingSelector = '#my-floating-positioning';
 
 async function callValidFunction(sharedPage: Page) {
   return await sharedPage.evaluate(
-    ([anchorName, floatingName]) => {
+    ([anchorSelector, floatingSelector]) => {
       const floatingElement = document.querySelector(
-        floatingName,
+        floatingSelector,
       ) as HTMLElement;
-      const anchorElement = document.querySelector(anchorName) as HTMLElement;
+      const anchorElement = document.querySelector(
+        anchorSelector,
+      ) as HTMLElement;
       return isValidAnchorElement(anchorElement, floatingElement);
     },
-    [anchorName, floatingName],
+    [anchorSelector, floatingSelector],
   );
 }
 
@@ -43,19 +44,10 @@ async function callValidFunction(sharedPage: Page) {
 test("anchor is valid when it's is a descendant of the query element CB", async () => {
   await sharedPage.setContent(
     `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
-      <body>
-        <div style="position: relative">
-          <div id="my-anchor-positioning">Anchor</div>
-          <div id="my-floating-positioning">Floating</div>
-        </div>
-      </body>
+      <div style="position: relative">
+        <div id="my-anchor-positioning">Anchor</div>
+        <div id="my-floating-positioning">Floating</div>
+      </div>
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -78,7 +70,6 @@ test("anchor is valid if it's not descendant of query element CB but query eleme
       <div id="my-anchor-positioning">Anchor</div>
 
       <div id="my-floating-positioning">Floating<div>
-
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -165,10 +156,10 @@ test("anchor is NOT valid if it's not descendant of query element CB AND query e
 test('anchor is valid when anchor has same CB as querying element and anchor is not absolutely positioned', async () => {
   await sharedPage.setContent(
     `
-  <div style="position: relative">
-    <div id="my-anchor-positioning">Anchor</div>
-    <div id="my-floating-positioning">Floating</div>
-  </div>;
+      <div style="position: relative">
+        <div id="my-anchor-positioning">Anchor</div>
+        <div id="my-floating-positioning">Floating</div>
+      </div>;
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -181,10 +172,10 @@ test('anchor is valid when anchor has same CB as querying element and anchor is 
 test('anchor is NOT valid when anchor has same CB as querying element, but anchor is absolutely positioned', async () => {
   await sharedPage.setContent(
     `
-  <div style="position: relative">
-    <div id="my-anchor-positioning" style="position: absolute">Anchor</div>
-    <div id="my-floating-positioning">Floating</div>
-  </div>;
+      <div style="position: relative">
+        <div id="my-anchor-positioning" style="position: absolute">Anchor</div>
+        <div id="my-floating-positioning">Floating</div>
+      </div>;
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -202,52 +193,52 @@ test('anchor is valid if it has a different CB from the querying element, and th
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.tentative.html
   await sharedPage.setContent(
     `
-    <style>
-      .relpos {
-        position: relative;
-      }
-      .abspos {
-        position: absolute;
-      }
-      .anchor1 {
-        anchor-name: --a1;
-        width: 10px;
-        height: 10px;
-        background: orange;
-      }
-      .target {
-        position: absolute;
-        width: anchor-size(--a1 width);
-        height: 10px;
-        background: lime;
-      }
-  </style>
+      <style>
+        .relpos {
+          position: relative;
+        }
+        .abspos {
+          position: absolute;
+        }
+        .anchor1 {
+          anchor-name: --a1;
+          width: 10px;
+          height: 10px;
+          background: orange;
+        }
+        .target {
+          position: absolute;
+          width: anchor-size(--a1 width);
+          height: 10px;
+          background: lime;
+        }
+      </style>
 
-    <div class="relpos">
-      <div>
-        <div class="relpos">
-          <div class="abspos">
-            <div class="relpos">
+      <div class="relpos">
+        <div>
+          <div class="relpos">
+            <div class="abspos">
+              <div class="relpos">
+                <div
+                  class="anchor1"
+                  style="position: absolute"
+                  id="my-anchor-positioning"
+                ></div>
+                <!-- This target should not find the anchor, because the anchor is
+                    positioned. -->
+                <div class="target" data-expected-width="0"></div>
+              </div>
+              <!-- This target should find the anchor, because the last containing
+                  block has position: relative. -->
               <div
-                class="anchor1"
-                style="position: absolute"
-                id="my-anchor-positioning"
+                class="target"
+                data-expected-width="10"
+                id="my-floating-positioning"
               ></div>
-              <!-- This target should not find the anchor, because the anchor is
-                  positioned. -->
-              <div class="target" data-expected-width="0"></div>
             </div>
-            <!-- This target should find the anchor, because the last containing
-                block has position: relative. -->
-            <div
-              class="target"
-              data-expected-width="10"
-              id="my-floating-positioning"
-            ></div>
           </div>
         </div>
       </div>
-    </div>
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -261,29 +252,27 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.tentative.html
   await sharedPage.setContent(
     `
-  <!DOCTYPE html>
+      <style>
+        .relpos {
+          position: relative;
+        }
+        .abspos {
+          position: absolute;
+        }
+        .anchor1 {
+          anchor-name: --a1;
+          width: 10px;
+          height: 10px;
+          background: orange;
+        }
+        .target {
+          position: absolute;
+          width: anchor-size(--a1 width);
+          height: 10px;
+          background: lime;
+        }
+      </style>
 
-    <style>
-      .relpos {
-        position: relative;
-      }
-      .abspos {
-        position: absolute;
-      }
-      .anchor1 {
-        anchor-name: --a1;
-        width: 10px;
-        height: 10px;
-        background: orange;
-      }
-      .target {
-        position: absolute;
-        width: anchor-size(--a1 width);
-        height: 10px;
-        background: lime;
-      }
-    </style>
-    <body>
       <div class="relpos"> Rel 1
         <div>
           <div class="relpos">Rel 1
@@ -309,7 +298,6 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
           </div>
         </div>
       </div>
-    </body>
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -323,24 +311,23 @@ test('when multiple anchor elements have the same name and are valid, the first 
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-001.tentative.html
   await sharedPage.setContent(
     `
-    <style>
-    .relpos {
-      position: relative;
-    }
-    .anchor1 {
-      anchor-name: --a1;
-      width: 10px;
-      height: 10px;
-      background: orange;
-    }
-    .target {
-      position: absolute;
-      width: anchor-size(--a1 width);
-      height: 10px;
-      background: lime;
-    }
-    </style>
-    <body onload="checkLayout('.target')">
+      <style>
+        .relpos {
+          position: relative;
+        }
+        .anchor1 {
+          anchor-name: --a1;
+          width: 10px;
+          height: 10px;
+          background: orange;
+        }
+        .target {
+          position: absolute;
+          width: anchor-size(--a1 width);
+          height: 10px;
+          background: lime;
+        }
+      </style>
       <!--
         All targets should find the 10px anchor, because it's the first
         one in the pre-order DFS from the 'relpos'.
@@ -354,7 +341,6 @@ test('when multiple anchor elements have the same name and are valid, the first 
         <div class="anchor1" id="my-anchor-positioning" style="width: 30px">Third Anchor Element</div>
         <div class="target" data-expected-width=10></div>
       <div>
-    </body>
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -367,7 +353,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
   expect(valid).toBe(true);
 
   const validationResults = await sharedPage.evaluate(
-    ([anchorName, floatingName]) => {
+    ([anchorSelector, floatingSelector]) => {
       interface Data {
         results: {
           anchor: HTMLElement | null;
@@ -377,11 +363,11 @@ test('when multiple anchor elements have the same name and are valid, the first 
       }
 
       const floatingElement = document.querySelector(
-        floatingName,
+        floatingSelector,
       ) as HTMLElement;
 
       const validatedData = {} as Data;
-      const anchor = validatedForPositioning(floatingElement, [anchorName]);
+      const anchor = validatedForPositioning(floatingElement, [anchorSelector]);
 
       validatedData.results = { anchor };
       validatedData.anchorWidth = anchor?.style.width;
@@ -389,7 +375,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
 
       return validatedData;
     },
-    [anchorName, floatingName],
+    [anchorSelector, floatingSelector],
   );
 
   expect(validationResults.results.anchor).toBeTruthy;

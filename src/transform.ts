@@ -1,6 +1,6 @@
 import * as csstree from 'css-tree';
 
-import { isStyleLink, StyleData } from './fetch.js';
+import { type StyleData, isStyleLink } from './fetch.js';
 import { getAST, isFallbackAtRule, isFallbackDeclaration } from './parse.js';
 
 export function removeAnchorCSS(originalCSS: string) {

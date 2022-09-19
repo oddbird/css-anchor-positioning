@@ -1,7 +1,12 @@
-import { autoUpdate, computePosition, offset, Rect } from '@floating-ui/dom';
+import {
+  type Rect,
+  autoUpdate,
+  computePosition,
+  offset,
+} from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
-import { AnchorPositions, AnchorSide, parseCSS } from './parse.js';
+import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
 
 export const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
   let percentage: number | undefined;
