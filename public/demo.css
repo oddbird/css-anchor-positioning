@@ -102,7 +102,7 @@ h2 [aria-hidden]:active {
 .float {
   border: thin solid var(--text);
   border-radius: var(--radius-1);
-  color: var(--gray-0);
+  color: var(--gray-9);
   font-weight: bold;
   padding: 0.5em;
 }
