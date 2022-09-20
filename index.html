@@ -5,7 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
-    <link type="text/css" href="/demo.css" />
+    <link rel="stylesheet" href="https://unpkg.com/open-props" />
+    <link rel="stylesheet" type="text/css" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link
       rel="stylesheet"
@@ -18,7 +19,7 @@
     <style>
       #my-anchor-inline {
         anchor-name: --my-anchor-inline;
-        background: orange;
+        background: var(--anchor-color);
         margin-left: 100px;
         margin-top: 100px;
         width: 100px;
@@ -26,65 +27,89 @@
       }
 
       #my-floating-inline {
+        background: var(--float);
         position: absolute;
         top: anchor(--my-anchor-inline end);
         left: anchor(--my-anchor-inline end);
-        background: green;
       }
     </style>
   </head>
   <body>
-    <h1>CSS Anchor Positioning Polyfill</h1>
-
-    <p>
-      See also:
-      <a
-        href="https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/web_tests/wpt_internal/css/css-anchor-position"
-        >WPT examples</a
-      >
-    </p>
-
-    <h2>Anchor Positioning via anchor() (stylesheet)</h2>
-    <div style="position: relative">
-      <div id="my-floating-positioning">Floating</div>
-      <div id="my-anchor-positioning">Anchor</div>
-    </div>
-
-    <h2>Anchor Positioning via anchor() (inline)</h2>
-    <div style="position: relative">
-      <div id="my-floating-inline">Floating</div>
-      <div id="my-anchor-inline">Anchor</div>
-    </div>
-
-    <h2>Anchor Positioning via position-fallback</h2>
-    <div style="position: relative">
-      <div id="my-floating-fallback">Floating</div>
-      <div id="my-anchor-fallback">Anchor</div>
-    </div>
-
-    <h2>Anchor Positioning (with scroll)</h2>
-    <div style="position: relative">
-      <div id="scroll-container">
-        <div id="scroll-contents">
-          <div id="placefiller-above-anchor"></div>
-          <div id="placefiller-before-anchor"></div>
-          <span id="scroll-anchor">anchor</span>
-          <div id="inner-anchored">inner-anchored</div>
-        </div>
+    <header>
+      <h1>CSS Anchor Positioning Polyfill</h1>
+      <p>
+        See also:
+        <a
+          href="https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/web_tests/wpt_internal/css/css-anchor-position"
+          >WPT examples</a
+        >
+      </p>
+    </header>
+    <section id="anchor-positioning">
+      <h2>
+        <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
+        Positioning via anchor() (stylesheet)
+      </h2>
+      <div style="position: relative">
+        <div id="my-floating-positioning" class="float">Floating</div>
+        <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
-      <div id="outer-anchored">outer-anchored</div>
-    </div>
-
-    <h2>Anchor() (used in math function)</h2>
-    <div style="position: relative">
-      <div id="my-anchor">Anchor</div>
-      <div id="my-floating">Floating</div>
-    </div>
-
-    <h2>Anchor Size</h2>
-    <div id="my-anchor-size">Anchor</div>
-    <div id="my-floating-size">Floating</div>
-
+    </section>
+    <section id="anchor-inline">
+      <h2>
+        <a href="#anchor-inline" aria-hidden="true">🔗</a>
+        Anchor Positioning via anchor() (inline)
+      </h2>
+      <div style="position: relative">
+        <div id="my-floating-inline" class="float">Floating</div>
+        <div id="my-anchor-inline" class="anchor">Anchor</div>
+      </div>
+    </section>
+    <section id="position-fallback">
+      <h2>
+        <a href="#position-fallback" aria-hidden="true">🔗</a>
+        Anchor Positioning via position-fallback
+      </h2>
+      <div style="position: relative">
+        <div id="my-floating-fallback" class="float">Floating</div>
+        <div id="my-anchor-fallback" class="anchor">Anchor</div>
+      </div>
+    </section>
+    <section id="anchor-scroll">
+      <h2>
+        <a href="#anchor-scroll" aria-hidden="true">🔗</a>
+        Anchor Positioning (with scroll)
+      </h2>
+      <div style="position: relative">
+        <div id="scroll-container">
+          <div id="scroll-contents">
+            <div id="placefiller-above-anchor"></div>
+            <div id="placefiller-before-anchor"></div>
+            <span id="scroll-anchor" class="anchor">anchor</span>
+            <div id="inner-anchored">inner-anchored</div>
+          </div>
+        </div>
+        <div id="outer-anchored" class="anchor">outer-anchored</div>
+      </div>
+    </section>
+    <section id="math-function">
+      <h2>
+        <a href="#math-function" aria-hidden="true">🔗</a>
+        Anchor() (used in math function)
+      </h2>
+      <div style="position: relative">
+        <div id="my-anchor" class="anchor">Anchor</div>
+        <div id="my-floating" class="float">Floating</div>
+      </div>
+    </section>
+    <section id="anchor-size">
+      <h2>
+        <a href="#anchor-size" aria-hidden="true">🔗</a>
+        Anchor Size
+      </h2>
+      <div id="my-anchor-size" class="anchor">Anchor</div>
+      <div id="my-floating-size" class="float">Floating</div>
+    </section>
     <script type="module">
       import polyfill from '/src/index.ts';
 

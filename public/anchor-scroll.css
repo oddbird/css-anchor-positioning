@@ -24,7 +24,6 @@
 }
 
 #inner-anchored {
-  color: green;
   position: absolute;
   left: anchor(--scroll-anchor left);
   bottom: anchor(--scroll-anchor top);

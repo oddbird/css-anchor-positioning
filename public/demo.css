@@ -1,1 +1,116 @@
-/* stylelint-disable no-empty-source */
+/* base styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background-color: var(--bg);
+
+  --anchor-color: var(--yellow-6);
+  --brand: var(--green-9);
+  --bg: var(--gray-1);
+  --float: var(--grad);
+  --text: var(--gray-9);
+  --grad: var(--green-7);
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    --brand: var(--green-3);
+    --bg: var(--gray-9);
+    --text: var(--gray-2);
+    --grad: var(--green-9);
+  }
+}
+
+body {
+  display: grid;
+  grid-template-columns:
+    [full-start] minmax(0, 1fr)
+    [main-start] minmax(0, 75ch) [main-end]
+    minmax(0, 1fr) [full-end];
+  margin: 0;
+}
+
+/* layout */
+header,
+section {
+  padding: 1em;
+}
+
+header {
+  background: linear-gradient(to top right, var(--bg), var(--grad));
+  border-block-end: thin dotted var(--text);
+  display: grid;
+  gap: 0.5em;
+  grid-column: full;
+}
+
+h1 {
+  margin: 0;
+}
+
+section {
+  grid-column: main;
+}
+
+/* links & buttons */
+
+[href*='://']::after {
+  content: ' ↗';
+}
+
+a:any-link {
+  color: var(--brand);
+}
+
+/* heading links */
+
+h2 {
+  position: relative;
+}
+
+h2 [aria-hidden]:any-link {
+  display: inline-block;
+  filter: grayscale(var(--grayscale, 100%));
+  text-decoration: none;
+  transform: scale(var(--scale, 0.75));
+  transition: all 200ms ease-in-out;
+  padding: 0.4em;
+  margin-block-start: -0.4em;
+}
+
+h2 [aria-hidden]:hover,
+h2 [aria-hidden]:focus,
+h2 [aria-hidden]:active {
+  --grayscale: 0;
+  --scale: 1;
+}
+
+@media (min-width: 50em) {
+  h2 [aria-hidden]:any-link {
+    position: absolute;
+    right: 100%;
+  }
+}
+
+/* components */
+
+.anchor,
+.float {
+  border: thin solid var(--text);
+  border-radius: var(--radius-1);
+  color: var(--gray-0);
+  font-weight: bold;
+  padding: 0.5em;
+}
+
+.anchor {
+  background: var(--anchor-color);
+}
+
+.float {
+  background: var(--float);
+}

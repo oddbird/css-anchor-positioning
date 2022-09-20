@@ -1,6 +1,5 @@
 #my-anchor {
   anchor-name: --my-anchor;
-  background: orange;
 }
 
 #my-floating {
@@ -9,5 +8,4 @@
   --center: anchor(--my-anchor 50%);
 
   left: calc(var(--center));
-  background: green;
 }

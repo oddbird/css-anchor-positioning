@@ -3,7 +3,6 @@
   margin-left: 45px;
   width: 100px;
   height: 30px;
-  background: orange;
 }
 
 #my-floating-fallback {
@@ -12,7 +11,6 @@
   left: anchor(--my-anchor-fallback left);
   width: 40px;
   height: 15px;
-  background: green;
 }
 
 @position-fallback --fallback1 {
