@@ -134,7 +134,7 @@ export function position(rules: AnchorPositions) {
       ([property, anchorValue]) => {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
-          const cleanup = autoUpdate(anchor, floating, () => {
+          autoUpdate(anchor, floating, () => {
             new Promise<{ [key: string]: string }>((resolve) => {
               computePosition(anchor, floating, {
                 middleware: [
@@ -156,13 +156,7 @@ export function position(rules: AnchorPositions) {
                 ],
               });
             }).then((result) => {
-              const floating: HTMLElement | null =
-                document.querySelector(floatingSel);
-              if (floating) {
-                Object.assign(floating.style, result);
-              } else {
-                cleanup();
-              }
+              Object.assign(floating.style, result);
             });
           });
         }
