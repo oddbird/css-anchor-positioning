@@ -3,6 +3,8 @@ export default {
   expect: {
     timeout: 1000, // Max execution time of single expect() calls
   },
+  reporter: 'dot',
+  fullyParallel: true,
   webServer: {
     command: 'npm run serve -- --port 4000 -l warn',
     url: 'http://localhost:4000/',

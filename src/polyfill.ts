@@ -1,7 +1,12 @@
-import { autoUpdate, computePosition, offset, Rect } from '@floating-ui/dom';
+import {
+  type Rect,
+  autoUpdate,
+  computePosition,
+  offset,
+} from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
-import { AnchorPositions, AnchorSide, parseCSS } from './parse.js';
+import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
 
 export const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
   let percentage: number | undefined;
@@ -118,59 +123,45 @@ export const getPixelValue = ({
 export function position(rules: AnchorPositions) {
   console.log(rules);
 
-  Object.entries(rules).forEach(([floatingEl, position]) => {
-    const floating: HTMLElement | null = document.querySelector(floatingEl);
+  Object.entries(rules).forEach(([floatingSel, position]) => {
+    const floating: HTMLElement | null = document.querySelector(floatingSel);
 
     if (!floating) {
       return;
     }
 
-    const promises: Promise<{ [key: string]: string }>[] = [];
-
     Object.entries(position.declarations || {}).forEach(
       ([property, anchorValue]) => {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
-          const promise = new Promise<{ [key: string]: string }>((resolve) => {
-            computePosition(anchor, floating, {
-              middleware: [
-                offset(({ elements, rects }) => {
-                  resolve({
-                    // @@@ Ideally we would directly replace these values
-                    // in the CSS, so that we don't worry about the cascade,
-                    // and we could usually ignore `property` entirely
-                    [property]: getPixelValue({
-                      floatingEl: elements.floating,
-                      anchorRect: rects.reference,
-                      anchorEdge: anchorValue.anchorEdge,
-                      floatingPosition: property,
-                      fallback: anchorValue.fallbackValue,
-                    }),
-                  });
-                  return 0;
-                }),
-              ],
+          autoUpdate(anchor, floating, () => {
+            new Promise<{ [key: string]: string }>((resolve) => {
+              computePosition(anchor, floating, {
+                middleware: [
+                  offset(({ elements, rects }) => {
+                    resolve({
+                      // @@@ Ideally we would directly replace these values
+                      // in the CSS, so that we don't worry about the cascade,
+                      // and we could usually ignore `property` entirely
+                      [property]: getPixelValue({
+                        floatingEl: elements.floating,
+                        anchorRect: rects.reference,
+                        anchorEdge: anchorValue.anchorEdge,
+                        floatingPosition: property,
+                        fallback: anchorValue.fallbackValue,
+                      }),
+                    });
+                    return 0;
+                  }),
+                ],
+              });
+            }).then((result) => {
+              Object.assign(floating.style, result);
             });
           });
-          // @@@ Figure out how to handle `autoUpdate`
-          autoUpdate(anchor, floating, () => {
-            console.log('re-calculate');
-          });
-          promises.push(promise);
         }
       },
     );
-
-    if (promises.length) {
-      Promise.all(promises).then((results) => {
-        const placement = results.reduce(
-          (prev, current) => ({ ...prev, ...current }),
-          {},
-        );
-        console.log(floating, placement);
-        Object.assign(floating.style, placement);
-      });
-    }
   });
 }
 
