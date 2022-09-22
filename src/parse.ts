@@ -95,6 +95,12 @@ export function isAnchorFunction(
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
+export function isVarFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(node && node.type === 'Function' && node.name === 'var');
+}
+
 export function isFallbackDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
@@ -171,7 +177,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
-const customProperties = [];
+const customProperties: AnchorFunctionDeclaration = {};
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -179,11 +185,12 @@ function getAnchorFunctionData(
   rule?: csstree.Raw,
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
+    const data = parseAnchorFn(node);
     if (declaration.property.startsWith('--')) {
-      customProperties.push(declaration.property);
+      customProperties[declaration.property] = data;
       return;
     }
-    return { [declaration.property]: parseAnchorFn(node) };
+    return { [declaration.property]: data };
   }
 }
 
@@ -296,9 +303,25 @@ export function parseCSS(css: string) {
     }
   });
 
-  if (customProperties.length > 0) {
+  // Find where CSS custom properties are used
+  if (Object.values(customProperties).length > 0) {
     csstree.walk(ast, function (node) {
       const rule = this.rule?.prelude as csstree.Raw | undefined;
+      if (
+        rule?.value &&
+        isVarFunction(node) &&
+        node.children.first &&
+        this.declaration
+      ) {
+        const name = node.children.first.name;
+        const anchorFnData = customProperties[name];
+        if (anchorFnData) {
+          anchorFunctions[rule.value] = {
+            ...anchorFunctions[rule.value],
+            [this.declaration.property]: anchorFnData,
+          };
+        }
+      }
     });
   }
 
