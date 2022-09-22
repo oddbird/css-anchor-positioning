@@ -49,11 +49,7 @@ interface AnchorFunctionDeclarations {
 }
 
 interface AnchorPosition {
-  declarations?: {
-    // `key` is the property being declared
-    // `value` is the anchor-positioning data for that property
-    [key: string]: AnchorFunction;
-  };
+  declarations?: AnchorFunctionDeclaration;
   fallbacks?: TryBlock[];
 }
 

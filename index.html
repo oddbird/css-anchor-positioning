@@ -46,7 +46,9 @@
       </p>
     </header>
     <section id="anchor-positioning">
-      <h2>
+      <button id="apply-polyfill">Apply Polyfill</button>
+
+    <h2>
         <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
         Positioning via anchor() (stylesheet)
       </h2>
@@ -113,7 +115,8 @@
     <script type="module">
       import polyfill from '/src/index.ts';
 
-      polyfill();
+      const btn = document.getElementById('apply-polyfill');
+      btn.addEventListener('click', () => polyfill());
     </script>
   </body>
 </html>

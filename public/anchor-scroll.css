@@ -27,7 +27,6 @@
   position: absolute;
   left: anchor(--scroll-anchor left);
   bottom: anchor(--scroll-anchor top);
-  anchor-scroll: --scroll-anchor;
 }
 
 #outer-anchored {
@@ -35,5 +34,4 @@
   position: absolute;
   left: anchor(--scroll-anchor left);
   top: anchor(--scroll-anchor bottom);
-  anchor-scroll: --scroll-anchor;
 }
