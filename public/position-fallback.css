@@ -8,9 +8,10 @@
 #my-floating-fallback {
   position: absolute;
   position-fallback: --fallback1;
-  left: anchor(--my-anchor-fallback left);
-  width: 40px;
-  height: 15px;
+  left: anchor(--my-anchor-fallback right);
+  bottom: anchor(--my-anchor-fallback 25%);
+  width: 60px;
+  height: 25px;
 }
 
 @position-fallback --fallback1 {

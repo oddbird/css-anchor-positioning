@@ -64,6 +64,7 @@ section {
 
 /* links & buttons */
 
+/* prettier-ignore */
 [href*='://']::after {
   content: ' ↗';
 }

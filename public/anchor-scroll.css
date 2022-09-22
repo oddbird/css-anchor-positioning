@@ -21,16 +21,21 @@
 
 #scroll-anchor {
   anchor-name: --scroll-anchor;
+  background: orange;
+  width: 100px;
+  height: 100px;
 }
 
 #inner-anchored {
   position: absolute;
-  left: anchor(--scroll-anchor left);
+  right: anchor(--scroll-anchor start);
   bottom: anchor(--scroll-anchor top);
+  background: green;
 }
 
 #outer-anchored {
   position: absolute;
-  left: anchor(--scroll-anchor left);
+  right: anchor(--scroll-anchor start);
   top: anchor(--scroll-anchor bottom);
+  background: lightblue;
 }

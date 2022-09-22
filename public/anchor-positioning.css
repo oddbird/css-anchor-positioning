@@ -9,5 +9,5 @@
 #my-floating-positioning {
   position: absolute;
   top: anchor(--my-anchor-positioning bottom);
-  left: anchor(--my-anchor-positioning right, 50px);
+  right: anchor(--my-anchor-positioning right, 50px);
 }
