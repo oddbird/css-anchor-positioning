@@ -10,8 +10,8 @@
   position-fallback: --fallback1;
   left: anchor(--my-anchor-fallback right);
   bottom: anchor(--my-anchor-fallback 25%);
-  width: 60px;
-  height: 25px;
+  width: 100px;
+  height: 30px;
 }
 
 @position-fallback --fallback1 {

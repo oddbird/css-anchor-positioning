@@ -13,12 +13,16 @@ async function applyPolyfill(page: Page) {
   return await btn.click();
 }
 
+async function getParentWidth(page: Page) {
+  return page
+    .locator(floatingSelector)
+    .evaluate((node: HTMLElement) => node.offsetParent?.clientWidth ?? 0);
+}
+
 test('applies polyfill', async ({ page }) => {
   const floating = page.locator(floatingSelector);
-  const pageWidth = await page
-    .locator('body')
-    .evaluate((node) => node.clientWidth);
-  const expected = `${pageWidth - 200}px`;
+  const parentWidth = await getParentWidth(page);
+  const expected = `${parentWidth - 200}px`;
 
   await expect(floating).toHaveCSS('top', '0px');
   await expect(floating).not.toHaveCSS('right', expected);
@@ -30,12 +34,10 @@ test('applies polyfill', async ({ page }) => {
 });
 
 test('updates when sizes change', async ({ page }) => {
-  const pageWidth = await page
-    .locator('body')
-    .evaluate((node) => node.clientWidth);
+  const parentWidth = await getParentWidth(page);
   const floating = page.locator(floatingSelector);
   await applyPolyfill(page);
-  let expected = `${pageWidth - 200}px`;
+  let expected = `${parentWidth - 200}px`;
 
   await expect(floating).toHaveCSS('top', '100px');
   await expect(floating).toHaveCSS('right', expected);
@@ -43,7 +45,7 @@ test('updates when sizes change', async ({ page }) => {
   await page
     .locator(anchorSelector)
     .evaluate((anchor) => (anchor.style.width = '50px'));
-  expected = `${pageWidth - 150}px`;
+  expected = `${parentWidth - 150}px`;
 
   await expect(floating).toHaveCSS('right', expected);
 });
