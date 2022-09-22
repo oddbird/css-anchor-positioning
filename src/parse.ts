@@ -171,12 +171,18 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
+const customProperties = [];
+
 function getAnchorFunctionData(
   node: csstree.CssNode,
   declaration: csstree.Declaration | null,
   rule?: csstree.Raw,
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
+    if (declaration.property.startsWith('--')) {
+      customProperties.push(declaration.property);
+      return;
+    }
     return { [declaration.property]: parseAnchorFn(node) };
   }
 }
@@ -289,6 +295,12 @@ export function parseCSS(css: string) {
       fallbacks[fbRuleName] = fbTryBlocks;
     }
   });
+
+  if (customProperties.length > 0) {
+    csstree.walk(ast, function (node) {
+      const rule = this.rule?.prelude as csstree.Raw | undefined;
+    });
+  }
 
   // Merge data together under floating-element selector key
   const validPositions: AnchorPositions = {};
