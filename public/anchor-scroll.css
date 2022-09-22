@@ -30,7 +30,6 @@
 }
 
 #outer-anchored {
-  color: blue;
   position: absolute;
   left: anchor(--scroll-anchor left);
   top: anchor(--scroll-anchor bottom);
