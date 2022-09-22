@@ -67,6 +67,10 @@ describe('getPixelValue', () => {
     width: 20,
     height: 40,
   };
+  const obj = {
+    anchorRect,
+    fallback: '0px',
+  };
 
   beforeAll(() => {
     Object.defineProperty(window, 'getComputedStyle', {
@@ -79,20 +83,27 @@ describe('getPixelValue', () => {
   });
 
   it.each([
-    [{ anchorRect, anchorEdge: 'left' }, '10px'],
-    [{ anchorRect, anchorEdge: 'right' }, '30px'],
-    [{ anchorRect, anchorEdge: 'top' }, '50px'],
-    [{ anchorRect, anchorEdge: 'bottom' }, '90px'],
-    [{ anchorRect, anchorEdge: 'center', floatingPosition: 'top' }, '70px'],
-    [{ anchorRect, anchorEdge: 'center', floatingPosition: 'left' }, '20px'],
-    [{ anchorRect, anchorEdge: 'center', fallback: '100px' }, '100px'],
+    [{ ...obj, anchorEdge: 'left', floatingPosition: 'left' }, '10px'],
+    [{ ...obj, anchorEdge: 'right', floatingPosition: 'left' }, '30px'],
+    [{ ...obj, anchorEdge: 'top', floatingPosition: 'top' }, '50px'],
+    [{ ...obj, anchorEdge: 'bottom', floatingPosition: 'top' }, '90px'],
+    [{ ...obj, anchorEdge: 'center', floatingPosition: 'top' }, '70px'],
+    [{ ...obj, anchorEdge: 'center', floatingPosition: 'left' }, '20px'],
     [
-      { anchorRect, anchorEdge: 25, floatingPosition: 'top', floatingEl: {} },
+      {
+        ...obj,
+        anchorEdge: 'center',
+        fallback: '100px',
+      },
+      '100px',
+    ],
+    [
+      { ...obj, anchorEdge: 25, floatingPosition: 'top', floatingEl: {} },
       '60px',
     ],
     [
       {
-        anchorRect,
+        ...obj,
         anchorEdge: 'end',
         floatingPosition: 'left',
         floatingEl: {},
@@ -101,7 +112,7 @@ describe('getPixelValue', () => {
     ],
     [
       {
-        anchorRect,
+        ...obj,
         anchorEdge: 'start',
         floatingEl: {},
         fallback: '100px',

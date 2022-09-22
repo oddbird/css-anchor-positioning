@@ -44,7 +44,7 @@ describe('parseCSS', () => {
             anchorEdge: 'bottom',
             fallbackValue: '0px',
           },
-          left: {
+          right: {
             anchorName: '--my-anchor-positioning',
             anchorEl,
             anchorEdge: 'right',
@@ -69,7 +69,13 @@ describe('parseCSS', () => {
           left: {
             anchorName: '--my-anchor-fallback',
             anchorEl,
-            anchorEdge: 'left',
+            anchorEdge: 'right',
+            fallbackValue: '0px',
+          },
+          bottom: {
+            anchorName: '--my-anchor-fallback',
+            anchorEl,
+            anchorEdge: 25,
             fallbackValue: '0px',
           },
         },

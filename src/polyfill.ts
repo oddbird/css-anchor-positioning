@@ -1,14 +1,39 @@
 import {
+  type ElementRects,
+  type FloatingElement,
+  type Platform,
   type Rect,
+  type ReferenceElement,
+  type Strategy,
   autoUpdate,
-  computePosition,
-  offset,
+  platform,
 } from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
 
-export const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
+// DOM platform does not have async methods
+interface DomPlatform extends Platform {
+  getDocumentElement: (element: Element) => HTMLElement;
+  getElementRects: (args: {
+    reference: ReferenceElement;
+    floating: FloatingElement;
+    strategy: Strategy;
+  }) => ElementRects;
+  getOffsetParent: (element: Element) => Element | Window;
+  isElement: (value: unknown) => boolean;
+  isRTL: (element: Element) => boolean;
+}
+
+const {
+  getDocumentElement,
+  getElementRects,
+  getOffsetParent,
+  isElement,
+  isRTL,
+} = platform as DomPlatform;
+
+export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
   switch (edge) {
     case 'start':
@@ -25,7 +50,7 @@ export const resolveLogicalKeyword = (edge: AnchorSide, isRTL: boolean) => {
       }
   }
   if (percentage !== undefined) {
-    return isRTL ? 100 - percentage : percentage;
+    return rtl ? 100 - percentage : percentage;
   }
   return undefined;
 };
@@ -56,65 +81,73 @@ export const getAxisProperty = (axis: 'x' | 'y' | null) => {
 
 export interface GetPixelValueOpts {
   floatingEl: HTMLElement;
+  floatingPosition: string;
   anchorRect: Rect;
   anchorEdge?: AnchorSide;
-  floatingPosition?: string;
   fallback: string;
 }
 
 export const getPixelValue = ({
   floatingEl,
+  floatingPosition,
   anchorRect,
   anchorEdge,
-  floatingPosition,
   fallback,
 }: GetPixelValueOpts) => {
   let percentage: number | undefined;
-  // This is required when the anchor edge is a logical keyword
-  // (`start/end/self-start/self-end/center`) or a percentage,
-  // not a physical keyword (`top/bottom/left/right`)
-  let axis: 'x' | 'y' | null = getAxis(floatingPosition);
+  let offsetParent: Element | Window | HTMLElement | undefined;
+  const axis = getAxis(floatingPosition);
 
   switch (anchorEdge) {
     case 'left':
       percentage = 0;
-      axis = 'x';
       break;
     case 'right':
       percentage = 100;
-      axis = 'x';
       break;
     case 'top':
       percentage = 0;
-      axis = 'y';
       break;
     case 'bottom':
       percentage = 100;
-      axis = 'y';
       break;
     case 'center':
       percentage = 50;
       break;
     default:
-      // Logical keywords require knowledge about the inset property,
-      // as well as the writing direction of the floating element
-      // (or its containing block)
+      // Logical keywords require checking the writing direction
+      // of the floating element (or its containing block)
       if (anchorEdge !== undefined && floatingEl) {
         // @@@ `start` and `end` should use the writing-mode of the element's
         // containing block, not the element itself
-        const isRTL = getComputedStyle(floatingEl).direction === 'rtl';
-        percentage = resolveLogicalKeyword(anchorEdge, isRTL);
+        const rtl = isRTL(floatingEl) || false;
+        percentage = resolveLogicalKeyword(anchorEdge, rtl);
       }
   }
 
+  const hasPercentage =
+    typeof percentage === 'number' && !Number.isNaN(percentage);
+
+  if (floatingPosition === 'bottom' || floatingPosition === 'right') {
+    offsetParent = getOffsetParent(floatingEl);
+    if (!isElement(offsetParent)) {
+      offsetParent = getDocumentElement(floatingEl);
+    }
+  }
+
   const dir = getAxisProperty(axis);
-  if (
-    axis &&
-    dir &&
-    typeof percentage === 'number' &&
-    !Number.isNaN(percentage)
-  ) {
-    return `${anchorRect[axis] + (anchorRect[dir] * percentage) / 100}px`;
+  if (hasPercentage && axis && dir) {
+    let value =
+      anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
+    switch (floatingPosition) {
+      case 'bottom':
+        value = (offsetParent as HTMLElement).clientHeight - value;
+        break;
+      case 'right':
+        value = (offsetParent as HTMLElement).clientWidth - value;
+        break;
+    }
+    return `${value}px`;
   }
 
   return fallback;
@@ -135,29 +168,19 @@ export function position(rules: AnchorPositions) {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
           autoUpdate(anchor, floating, () => {
-            new Promise<{ [key: string]: string }>((resolve) => {
-              computePosition(anchor, floating, {
-                middleware: [
-                  offset(({ elements, rects }) => {
-                    resolve({
-                      // @@@ Ideally we would directly replace these values
-                      // in the CSS, so that we don't worry about the cascade,
-                      // and we could usually ignore `property` entirely
-                      [property]: getPixelValue({
-                        floatingEl: elements.floating,
-                        anchorRect: rects.reference,
-                        anchorEdge: anchorValue.anchorEdge,
-                        floatingPosition: property,
-                        fallback: anchorValue.fallbackValue,
-                      }),
-                    });
-                    return 0;
-                  }),
-                ],
-              });
-            }).then((result) => {
-              Object.assign(floating.style, result);
+            const rects = getElementRects({
+              reference: anchor,
+              floating,
+              strategy: 'absolute',
             });
+            const resolved = getPixelValue({
+              floatingEl: floating,
+              floatingPosition: property,
+              anchorRect: rects.reference,
+              anchorEdge: anchorValue.anchorEdge,
+              fallback: anchorValue.fallbackValue,
+            });
+            Object.assign(floating.style, { [property]: resolved });
           });
         }
       },
