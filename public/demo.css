@@ -4,16 +4,16 @@
 }
 
 html {
-  font-family: var(--font-sans);
-  color: var(--text);
-  background-color: var(--bg);
-
   --anchor-color: var(--yellow-6);
   --brand: var(--green-9);
   --bg: var(--gray-1);
   --float: var(--grad);
   --text: var(--gray-9);
   --grad: var(--green-7);
+
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -52,6 +52,12 @@ h1 {
   margin: 0;
 }
 
+[data-controls='apply-polyfill'] {
+  grid-column: main;
+  margin: var(--size-7) 0;
+  padding-inline-start: 1em;
+}
+
 section {
   grid-column: main;
 }
@@ -66,6 +72,19 @@ a:any-link {
   color: var(--brand);
 }
 
+button {
+  background-color: var(--text);
+  border: thin solid transparent;
+  border-radius: 0.25em 0.5em;
+  color: var(--bg);
+  cursor: pointer;
+  font: inherit;
+  font-weight: bold;
+  grid-column: main;
+  max-width: max-content;
+  padding: 0.5em 1em;
+}
+
 /* heading links */
 
 h2 {
@@ -75,11 +94,11 @@ h2 {
 h2 [aria-hidden]:any-link {
   display: inline-block;
   filter: grayscale(var(--grayscale, 100%));
+  margin-block-start: -0.4em;
+  padding: 0.4em;
   text-decoration: none;
   transform: scale(var(--scale, 0.75));
   transition: all 200ms ease-in-out;
-  padding: 0.4em;
-  margin-block-start: -0.4em;
 }
 
 h2 [aria-hidden]:hover,
