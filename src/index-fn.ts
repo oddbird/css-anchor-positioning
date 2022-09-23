@@ -1,3 +1,3 @@
 import { polyfill } from './polyfill.js';
 
-polyfill();
+export default polyfill;
