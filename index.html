@@ -36,7 +36,9 @@
       import { polyfill } from '/src/polyfill.ts';
 
       const btn = document.getElementById('apply-polyfill');
-      btn.addEventListener('click', () => polyfill().then(() => console.log('polyfilled')));
+      btn.addEventListener('click', () =>
+        polyfill().then(() => console.log('polyfilled')),
+      );
     </script>
   </head>
   <body>
