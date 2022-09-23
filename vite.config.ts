@@ -14,7 +14,7 @@ export default defineConfig({
           ? // build that exposes the polyfill as a fn
             {
               entry: resolve(__dirname, 'src/index-fn.ts'),
-              formats: ['es'],
+              name: 'CssAnchorPositioning',
               // the proper extensions will be added
               fileName: 'css-anchor-positioning-fn',
             }

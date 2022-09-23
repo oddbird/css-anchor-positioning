@@ -29,7 +29,8 @@
     },
     "./fn": {
       "types": "./dist/index-fn.d.ts",
-      "default": "./dist/css-anchor-positioning-fn.js"
+      "import": "./dist/css-anchor-positioning-fn.js",
+      "require": "./dist/css-anchor-positioning-fn.umd.cjs"
     }
   },
   "typesVersions": {
