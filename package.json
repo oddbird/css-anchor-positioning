@@ -1,6 +1,6 @@
 {
   "name": "@oddbird/css-anchor-positioning",
-  "version": "0.0.0-development",
+  "version": "0.0.1-alpha.0",
   "description": "Polyfill for the proposed CSS anchor positioning spec",
   "license": "BSD-3-Clause",
   "publishConfig": {
@@ -12,10 +12,11 @@
     "url": "https://github.com/oddbird/css-anchor-positioning.git"
   },
   "bugs": "https://github.com/oddbird/css-anchor-positioning/issues",
-  "homepage": "https://polyfill.oddbird.net",
+  "homepage": "https://anchor-polyfill.netlify.app",
   "keywords": [
     "css",
-    "polyfill"
+    "polyfill",
+    "anchor-positioning"
   ],
   "type": "module",
   "main": "./dist/css-anchor-positioning.umd.cjs",
