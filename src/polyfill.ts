@@ -154,8 +154,6 @@ export const getPixelValue = ({
 };
 
 export function position(rules: AnchorPositions) {
-  console.log(rules);
-
   Object.entries(rules).forEach(([floatingSel, position]) => {
     const floating: HTMLElement | null = document.querySelector(floatingSel);
 
@@ -208,4 +206,6 @@ export async function polyfill() {
     // @@@ update source code
     // transformCSS(styleData);
   }
+
+  return rules;
 }

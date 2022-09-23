@@ -33,11 +33,11 @@
       }
     </style>
     <script type="module">
-      import { polyfill } from '/src/polyfill.ts';
+      import polyfill from '/src/index-fn.ts';
 
       const btn = document.getElementById('apply-polyfill');
       btn.addEventListener('click', () =>
-        polyfill().then(() => console.log('polyfilled')),
+        polyfill().then((rules) => console.log(rules)),
       );
     </script>
   </head>
