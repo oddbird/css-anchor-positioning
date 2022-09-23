@@ -33,6 +33,14 @@
         background: green;
       }
     </style>
+    <script type="module">
+      import polyfill from '/src/index-fn.ts';
+
+      const btn = document.getElementById('apply-polyfill');
+      btn.addEventListener('click', () =>
+        polyfill().then((rules) => console.log(rules)),
+      );
+    </script>
   </head>
   <body>
     <h1>CSS Anchor Positioning Polyfill</h1>
@@ -93,12 +101,5 @@
     <h2>Anchor Size</h2>
     <div id="my-anchor-size">Anchor</div>
     <div id="my-floating-size">Floating</div>
-
-    <script type="module">
-      import polyfill from '/src/index.ts';
-
-      const btn = document.getElementById('apply-polyfill');
-      btn.addEventListener('click', () => polyfill());
-    </script>
   </body>
 </html>

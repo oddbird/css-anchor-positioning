@@ -1,4 +1,10 @@
 import { polyfill } from './polyfill.js';
 
-// Expose API
-export default polyfill;
+// apply polyfill
+if (document.readyState !== 'complete') {
+  window.addEventListener('load', () => {
+    polyfill();
+  });
+} else {
+  polyfill();
+}
