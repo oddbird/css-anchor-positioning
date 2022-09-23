@@ -1,3 +1,10 @@
 import { polyfill } from './polyfill.js';
 
-polyfill();
+// apply polyfill
+if (document.readyState !== 'complete') {
+  window.addEventListener('load', () => {
+    polyfill();
+  });
+} else {
+  polyfill();
+}

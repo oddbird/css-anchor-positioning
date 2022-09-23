@@ -194,14 +194,7 @@ export async function polyfill() {
   const rules = parseCSS(styleData.map(({ css }) => css).join('\n'));
 
   if (Object.values(rules).length) {
-    // apply polyfill
-    if (document.readyState !== 'complete') {
-      window.addEventListener('load', () => {
-        position(rules);
-      });
-    } else {
-      position(rules);
-    }
+    position(rules);
 
     // @@@ update source code
     // transformCSS(styleData);
