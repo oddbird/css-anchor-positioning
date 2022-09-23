@@ -1,6 +1,6 @@
 {
   "name": "@oddbird/css-anchor-positioning",
-  "version": "0.0.1-alpha.0",
+  "version": "0.0.1-alpha.1",
   "description": "Polyfill for the proposed CSS anchor positioning spec",
   "license": "BSD-3-Clause",
   "publishConfig": {
@@ -21,6 +21,7 @@
   "type": "module",
   "main": "./dist/css-anchor-positioning.umd.cjs",
   "module": "./dist/css-anchor-positioning.js",
+  "unpkg": "./dist/css-anchor-positioning.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
