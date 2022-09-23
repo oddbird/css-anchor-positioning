@@ -1,6 +1,6 @@
 {
   "name": "@oddbird/css-anchor-positioning",
-  "version": "0.0.0-development",
+  "version": "0.0.1-alpha.1",
   "description": "Polyfill for the proposed CSS anchor positioning spec",
   "license": "BSD-3-Clause",
   "publishConfig": {
@@ -12,20 +12,34 @@
     "url": "https://github.com/oddbird/css-anchor-positioning.git"
   },
   "bugs": "https://github.com/oddbird/css-anchor-positioning/issues",
-  "homepage": "https://polyfill.oddbird.net",
+  "homepage": "https://anchor-polyfill.netlify.app",
   "keywords": [
     "css",
-    "polyfill"
+    "polyfill",
+    "anchor-positioning"
   ],
   "type": "module",
   "main": "./dist/css-anchor-positioning.umd.cjs",
   "module": "./dist/css-anchor-positioning.js",
+  "unpkg": "./dist/css-anchor-positioning.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/css-anchor-positioning.js",
-      "require": "./dist/css-anchor-positioning.umd.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/css-anchor-positioning.umd.cjs"
+    },
+    "./fn": {
+      "types": "./dist/index-fn.d.ts",
+      "import": "./dist/css-anchor-positioning-fn.js",
+      "require": "./dist/css-anchor-positioning-fn.umd.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "fn": [
+        "./dist/index-fn.d.ts"
+      ]
     }
   },
   "files": [
@@ -35,7 +49,9 @@
     "package.json"
   ],
   "scripts": {
-    "build": "vite build",
+    "build": "run-s build:dist build:fn",
+    "build:dist": "vite build",
+    "build:fn": "cross-env BUILD_FN=1 vite build",
     "preview": "vite preview",
     "serve": "vite dev",
     "dev": "npm run serve",
@@ -59,14 +75,18 @@
     "test": "run-p test:unit test:e2e",
     "test:ci": "run-p test:unit test:e2e:ci"
   },
-  "devDependencies": {
+  "dependencies": {
     "@floating-ui/dom": "^1.0.2",
+    "@types/css-tree": "^1.0.7",
+    "css-tree": "^2.2.1"
+  },
+  "devDependencies": {
     "@playwright/test": "^1.25.2",
     "@types/node": "*",
     "@typescript-eslint/eslint-plugin": "^5.37.0",
     "@typescript-eslint/parser": "^5.37.0",
     "@vitest/coverage-istanbul": "^0.23.4",
-    "css-tree": "^2.2.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.23.1",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.1",
@@ -89,7 +109,9 @@
   "resolutions": {
     "tslib": ">=2"
   },
-  "dependencies": {
-    "@types/css-tree": "^1.0.7"
-  }
+  "sideEffects": [
+    "./src/index.ts",
+    "./dist/css-anchor-positioning.js",
+    "./dist/css-anchor-positioning.umd.cjs"
+  ]
 }

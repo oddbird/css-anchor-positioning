@@ -33,6 +33,21 @@
         right: anchor(--my-anchor-inline left);
       }
     </style>
+    <script type="module">
+      import polyfill from '/src/index-fn.ts';
+
+      if (!('anchorName' in document.documentElement.style)) {
+        document
+          .getElementById('apply-polyfill')
+          .addEventListener('click', () =>
+            polyfill().then((rules) => console.log(rules)),
+          );
+      } else {
+        console.log(
+          'anchor-positioning is supported in this browser; polyfill skipped.',
+        );
+      }
+    </script>
   </head>
   <body>
     <header>
@@ -116,11 +131,5 @@
       <div id="my-anchor-size" class="anchor">Anchor</div>
       <div id="my-floating-size" class="float">Floating</div>
     </section>
-    <script type="module">
-      import polyfill from '/src/index.ts';
-
-      const btn = document.getElementById('apply-polyfill');
-      btn.addEventListener('click', () => polyfill());
-    </script>
   </body>
 </html>
