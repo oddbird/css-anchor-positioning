@@ -16,6 +16,8 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
+export type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
+
 export type AnchorSideKeyword =
   | 'top'
   | 'left'
@@ -36,11 +38,9 @@ interface AnchorFunction {
   fallbackValue: string;
 }
 
-interface AnchorFunctionDeclaration {
-  // `key` is the property being declared
-  // `value` is the anchor-positioning data for that property
-  [key: string]: AnchorFunction;
-}
+// `key` is the property being declared
+// `value` is the anchor-positioning data for that property
+type AnchorFunctionDeclaration = Partial<Record<InsetProperty, AnchorFunction>>;
 
 interface AnchorFunctionDeclarations {
   // `key` is the floating element selector
@@ -59,11 +59,11 @@ export interface AnchorPositions {
   [key: string]: AnchorPosition;
 }
 
-interface TryBlock {
-  // `key` is the property being declared
-  // `value` is the property value, or parsed anchor-fn data
-  [key: string]: string | AnchorFunction;
-}
+// `key` is the property being declared
+// `value` is the property value, or parsed anchor-fn data
+type TryBlock = Partial<
+  Record<string | InsetProperty, string | AnchorFunction>
+>;
 
 interface FallbackNames {
   // `key` is the floating element selector
@@ -177,7 +177,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
-const customProperties: AnchorFunctionDeclaration = {};
+const customProperties: Record<string, AnchorFunction> = {};
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -208,10 +208,10 @@ function getPositionFallbackDeclaration(
   return {};
 }
 
-function isInset(property: string) {
-  const insetProperties: string[] = ['left', 'right', 'top', 'bottom'];
+function isInset(property: string): property is InsetProperty {
+  const insetProperties: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
 
-  return insetProperties.includes(property);
+  return insetProperties.includes(property as InsetProperty);
 }
 
 function getPositionFallbackRules(node: csstree.CssNode) {
