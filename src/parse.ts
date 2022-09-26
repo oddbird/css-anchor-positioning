@@ -192,8 +192,6 @@ function getAnchorFunctionData(
     }
     if (isInset(declaration.property)) {
       return { [declaration.property]: data };
-    } else {
-      return;
     }
   }
 }
@@ -213,11 +211,7 @@ function getPositionFallbackDeclaration(
 function isInset(property: string) {
   const insetProperties: string[] = ['left', 'right', 'top', 'bottom'];
 
-  if (insetProperties.includes(property)) {
-    return true;
-  } else {
-    return false;
-  }
+  return insetProperties.includes(property);
 }
 
 function getPositionFallbackRules(node: csstree.CssNode) {
