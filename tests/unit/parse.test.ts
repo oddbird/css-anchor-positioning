@@ -16,10 +16,16 @@ describe('parseCSS', () => {
     const expected = {
       '#my-floating': {
         declarations: {
-          '--center': {
+          left: {
             anchorName: '--my-anchor',
             anchorEl: document.getElementById('my-anchor'),
             anchorEdge: 50,
+            fallbackValue: '0px',
+          },
+          top: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('my-anchor'),
+            anchorName: '--my-anchor',
             fallbackValue: '0px',
           },
         },
