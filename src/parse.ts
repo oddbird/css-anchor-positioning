@@ -190,7 +190,11 @@ function getAnchorFunctionData(
       customProperties[declaration.property] = data;
       return;
     }
-    return { [declaration.property]: data };
+    if (isInset(declaration.property)) {
+      return { [declaration.property]: data };
+    } else {
+      return;
+    }
   }
 }
 
@@ -204,6 +208,16 @@ function getPositionFallbackDeclaration(
     return { name, selector: rule.value };
   }
   return {};
+}
+
+function isInset(property: string) {
+  const insetProperties: string[] = ['left', 'right', 'top', 'bottom'];
+
+  if (insetProperties.includes(property)) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 function getPositionFallbackRules(node: csstree.CssNode) {
@@ -311,7 +325,8 @@ export function parseCSS(css: string) {
         rule?.value &&
         isVarFunction(node) &&
         node.children.first &&
-        this.declaration
+        this.declaration &&
+        isInset(this.declaration.property)
       ) {
         const name = node.children.first.name;
         const anchorFnData = customProperties[name];
