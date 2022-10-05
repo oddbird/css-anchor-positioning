@@ -17,14 +17,13 @@ Please follow the [OddBird Code of Conduct](https://www.oddbird.net/conduct/).
 
 - Clone the repository.
 - Install dependencies: `yarn install`.
-- Start dev server: `yarn dev`. Visit `localhost:3000`.
+- Start dev server: `yarn serve`. Visit `localhost:3000`.
 
 ## Code style
 
 JS code is formatted with prettier, and CSS is formatted with stylelint. You can
-lint the code by running `yarn lint` and format/lint it with
-`yarn format`. We recommend setting up your IDE to automatically format code
-for you.
+lint the code by running `yarn lint:ci` and format & lint it with `yarn lint`.
+We recommend setting up your IDE to automatically format code for you.
 
 ## Testing
 
