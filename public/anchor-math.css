@@ -8,9 +8,9 @@
 #my-floating-math {
   position: absolute;
 
-  --center-math: anchor(--my-anchor-math 50%);
+  --full-math: anchor(--my-anchor-math 100%);
 
-  top: var(--center-math);
-  left: calc(var(--center-math) + 100px);
+  top: calc(var(--full-math) - 50px);
+  left: var(--full-math);
   background: green;
 }

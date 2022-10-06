@@ -9,8 +9,9 @@
   position: absolute;
 
   --center: anchor(--my-anchor 50%);
+  --full: anchor(--my-anchor 100%);
 
   top: var(--center);
-  left: calc(var(--center));
+  right: var(--full);
   background: green;
 }
