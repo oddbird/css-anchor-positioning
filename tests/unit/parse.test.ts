@@ -8,7 +8,7 @@ describe('parseCSS', () => {
     expect(result).toEqual({});
   });
 
-  it('parses `anchor()` function (math)', () => {
+  it('parses `anchor()` function (custom properties)', () => {
     document.body.innerHTML =
       '<div id="my-floating"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
@@ -16,10 +16,74 @@ describe('parseCSS', () => {
     const expected = {
       '#my-floating': {
         declarations: {
-          '--center': {
+          right: {
             anchorName: '--my-anchor',
             anchorEl: document.getElementById('my-anchor'),
+            anchorEdge: 100,
+            fallbackValue: '0px',
+          },
+          top: {
             anchorEdge: 50,
+            anchorEl: document.getElementById('my-anchor'),
+            anchorName: '--my-anchor',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  // https://trello.com/c/yOP9vqxZ
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('parses `anchor()` function (custom property passed through)', () => {
+    document.body.innerHTML =
+      '<div id="my-floating-props"></div><div id="my-anchor-props"></div>';
+    const css = getSampleCSS('anchor-custom-props');
+    const result = parseCSS(css);
+    const expected = {
+      '#my-floating-props': {
+        declarations: {
+          left: {
+            anchorName: '--my-anchor-props',
+            anchorEl: document.getElementById('my-anchor-props'),
+            anchorEdge: 150,
+            fallbackValue: '0px',
+          },
+          top: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('my-anchor-props'),
+            anchorName: '--my-anchor-props',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  // https://trello.com/c/YAl95oDi
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('parses `anchor()` function (math)', () => {
+    document.body.innerHTML =
+      '<div id="my-floating-math"></div><div id="my-anchor-math"></div>';
+    const css = getSampleCSS('anchor-math');
+    const result = parseCSS(css);
+    const expected = {
+      '#my-floating-math': {
+        declarations: {
+          left: {
+            anchorName: '--my-anchor-math',
+            anchorEl: document.getElementById('my-anchor-math'),
+            anchorEdge: 100,
+            fallbackValue: '0px',
+          },
+          top: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('my-anchor-math'),
+            anchorName: '--my-anchor-math',
             fallbackValue: '0px',
           },
         },
