@@ -32,23 +32,25 @@ async function fetchLinkedStylesheets(
   );
 }
 
-// Searches for all elements with inline style attributes that include 'anchor'
-// For each element found, uses either the ID or classes as the selector and then format the styles in the same manner as CSS from style tags
-// A list of this formatted styles is returned, if no elements found with inline styles, an empty list is returned
+// Searches for all elements with inline style attributes that include `anchor`.
+// For each element found, uses either the ID or classes as the selector,
+// and then formats the styles in the same manner as CSS from style tags.
+// A list of this formatted styles is returned.
+// If no elements are found with inline styles, an empty list is returned.
 function fetchInlineStyles() {
   const elementsWithInlineAnchorStyles =
     document.querySelectorAll('[style*="anchor"]');
   const inlineStyles: string[] = [];
-  if (elementsWithInlineAnchorStyles.length) {
-    elementsWithInlineAnchorStyles.forEach((el: Element) => {
-      const selector = el.id
-        ? `#${el.id}`
-        : `.${el.classList.value.replaceAll(' ', '.')}`;
-      const styles = el.getAttribute('style');
-      const formattedEl = `${selector} { ${styles} }`;
-      inlineStyles.push(formattedEl);
-    });
-  }
+
+  elementsWithInlineAnchorStyles.forEach((el) => {
+    const selector = el.id
+      ? `#${el.id}`
+      : `.${el.classList.value.replaceAll(' ', '.')}`;
+    const styles = el.getAttribute('style');
+    const formattedEl = `${selector} { ${styles} }`;
+    inlineStyles.push(formattedEl);
+  });
+
   return inlineStyles;
 }
 
@@ -67,8 +69,9 @@ export async function fetchCSS(): Promise<StyleData[]> {
       sources.push(el.innerHTML);
     }
   });
+
   const inlines = fetchInlineStyles();
-  inlines.length && inlines.forEach((inlineStyle) => sources.push(inlineStyle));
+  inlines.forEach((inlineStyle) => sources.push(inlineStyle));
 
   return await fetchLinkedStylesheets(sources);
 }

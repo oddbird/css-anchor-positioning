@@ -18,7 +18,6 @@ describe('fetch stylesheet', () => {
 
   afterAll(() => {
     document.head.innerHTML = '';
-    document.body.innerHTML = '';
   });
 
   it('fetches CSS', async () => {
@@ -70,7 +69,7 @@ describe('fetch inline styles', () => {
         >
           Anchor
         </div>
-      </div> 
+      </div>
     `;
   });
 
