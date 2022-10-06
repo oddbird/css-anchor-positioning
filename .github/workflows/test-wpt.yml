@@ -1,0 +1,70 @@
+name: Run WPT
+
+on:
+  push:
+  pull_request:
+    types: [reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run WPT
+    runs-on: ubuntu-latest
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+      WPT_MANIFEST: ${{ github.workspace }}/wpt/MANIFEST.json
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - name: Clone WPT repo
+        uses: actions/checkout@v3
+        with:
+          repository: oddbird/wpt
+          path: wpt
+          ref: master
+
+      - name: Build polyfill
+        run: |
+          yarn install --immutable
+          yarn build
+
+      - name: Setup WPT
+        run: |
+          cd wpt
+          pip install virtualenv
+          ./wpt make-hosts-file | sudo tee -a /etc/hosts
+      - name: Run Tests
+        run: |
+          cd tests
+          python3 -m http.server 9606 &
+          cd ../wpt
+          ./wpt manifest
+          ./wpt serve --inject-script=${{ github.workspace }}/dist/css-anchor-positioning.umd.cjs &
+          cd ..
+          yarn test:wpt
+
+      - name: Push to results branch
+        env:
+          RESULTS_BRANCH: ${{ github.ref_name }}--wpt-results
+        run: |
+          mv test-results test-results.html /tmp
+          git fetch
+          BRANCH_EXISTS=$(git ls-remote --heads origin $RESULTS_BRANCH | wc -l)
+          if [ "$BRANCH_EXISTS" == "1" ]; then git switch $RESULTS_BRANCH; else git switch -c $RESULTS_BRANCH; fi
+          rm -rf test-results test-results.html
+          mv /tmp/test-results /tmp/test-results.html .
+          git add test-results test-results.html
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -m "WPT results from https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          git push origin $RESULTS_BRANCH
