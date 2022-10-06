@@ -20,10 +20,6 @@
       #my-anchor-inline {
         anchor-name: --my-anchor-inline;
         background: var(--anchor-color);
-        margin-left: 100px;
-        margin-top: 100px;
-        width: 100px;
-        height: 100px;
       }
 
       #my-floating-inline {
@@ -66,42 +62,42 @@
       <button id="apply-polyfill">Apply Polyfill</button>
     </div>
 
-    <section id="anchor-positioning">
+    <section id="anchor-positioning" class="demo-item">
       <h2>
         <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
         Positioning via anchor() (stylesheet)
       </h2>
-      <div style="position: relative">
+      <div style="position: relative" class="demo-elements">
         <div id="my-floating-positioning" class="float">Floating</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
     </section>
-    <section id="anchor-inline">
+    <section id="anchor-inline" class="demo-item">
       <h2>
         <a href="#anchor-inline" aria-hidden="true">🔗</a>
         Anchor Positioning via anchor() (inline)
       </h2>
-      <div style="position: relative">
+      <div style="position: relative" class="demo-elements">
         <div id="my-floating-inline" class="float">Floating</div>
         <div id="my-anchor-inline" class="anchor">Anchor</div>
       </div>
     </section>
-    <section id="position-fallback">
+    <section id="position-fallback" class="demo-item">
       <h2>
         <a href="#position-fallback" aria-hidden="true">🔗</a>
         Anchor Positioning via position-fallback
       </h2>
-      <div style="position: relative">
+      <div style="position: relative" class="demo-elements">
         <div id="my-floating-fallback" class="float">Floating</div>
         <div id="my-anchor-fallback" class="anchor">Anchor</div>
       </div>
     </section>
-    <section id="anchor-scroll">
+    <section id="anchor-scroll" class="demo-item">
       <h2>
         <a href="#anchor-scroll" aria-hidden="true">🔗</a>
         Anchor Positioning (with scroll)
       </h2>
-      <div style="position: relative">
+      <div style="position: relative" class="demo-elements">
         <div id="scroll-container">
           <div id="scroll-contents">
             <div id="placefiller-above-anchor"></div>

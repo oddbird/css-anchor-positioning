@@ -35,10 +35,6 @@ body {
 }
 
 /* layout */
-header,
-section {
-  padding: 1em;
-}
 
 header {
   background: linear-gradient(to top right, var(--bg), var(--grad));
@@ -46,6 +42,7 @@ header {
   display: grid;
   gap: 0.5em;
   grid-column: full;
+  padding: 1em;
 }
 
 h1 {
@@ -60,6 +57,24 @@ h1 {
 
 section {
   grid-column: main;
+  padding: 3em 1em;
+}
+
+.demo-item {
+  display: grid;
+  grid-template:
+    'heading heading heading' min-content
+    '. elements .' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
+  gap: 2rem;
+}
+
+/* stylelint-disable no-descending-specificity */
+.demo-item h2 {
+  grid-area: heading;
+}
+
+.demo-elements {
+  grid-area: elements;
 }
 
 /* links & buttons */
@@ -129,6 +144,7 @@ h2 [aria-hidden]:active {
 
 .anchor {
   background: var(--anchor-color);
+  text-align: center;
 }
 
 .float {

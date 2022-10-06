@@ -1,8 +1,5 @@
 #my-anchor-fallback {
   anchor-name: --my-anchor-fallback;
-  margin-left: 45px;
-  width: 100px;
-  height: 30px;
 }
 
 #my-floating-fallback {
@@ -10,8 +7,6 @@
   position-fallback: --fallback1;
   left: anchor(--my-anchor-fallback right);
   bottom: anchor(--my-anchor-fallback 25%);
-  width: 100px;
-  height: 30px;
 }
 
 @position-fallback --fallback1 {

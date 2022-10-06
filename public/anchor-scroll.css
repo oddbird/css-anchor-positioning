@@ -22,8 +22,6 @@
 #scroll-anchor {
   anchor-name: --scroll-anchor;
   background: orange;
-  width: 100px;
-  height: 100px;
 }
 
 #inner-anchored {
