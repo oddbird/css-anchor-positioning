@@ -16,6 +16,8 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
+export type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
+
 export type AnchorSideKeyword =
   | 'top'
   | 'left'
@@ -36,11 +38,9 @@ interface AnchorFunction {
   fallbackValue: string;
 }
 
-interface AnchorFunctionDeclaration {
-  // `key` is the property being declared
-  // `value` is the anchor-positioning data for that property
-  [key: string]: AnchorFunction;
-}
+// `key` is the property being declared
+// `value` is the anchor-positioning data for that property
+type AnchorFunctionDeclaration = Partial<Record<InsetProperty, AnchorFunction>>;
 
 interface AnchorFunctionDeclarations {
   // `key` is the floating element selector
@@ -59,11 +59,11 @@ export interface AnchorPositions {
   [key: string]: AnchorPosition;
 }
 
-interface TryBlock {
-  // `key` is the property being declared
-  // `value` is the property value, or parsed anchor-fn data
-  [key: string]: string | AnchorFunction;
-}
+// `key` is the property being declared
+// `value` is the property value, or parsed anchor-fn data
+type TryBlock = Partial<
+  Record<string | InsetProperty, string | AnchorFunction>
+>;
 
 interface FallbackNames {
   // `key` is the floating element selector
@@ -93,6 +93,12 @@ export function isAnchorFunction(
   node: csstree.CssNode | null,
 ): node is csstree.FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
+}
+
+export function isVarFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
 export function isFallbackDeclaration(
@@ -171,13 +177,22 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
+const customProperties: Record<string, AnchorFunction> = {};
+
 function getAnchorFunctionData(
   node: csstree.CssNode,
   declaration: csstree.Declaration | null,
   rule?: csstree.Raw,
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
-    return { [declaration.property]: parseAnchorFn(node) };
+    const data = parseAnchorFn(node);
+    if (declaration.property.startsWith('--')) {
+      customProperties[declaration.property] = data;
+      return;
+    }
+    if (isInset(declaration.property)) {
+      return { [declaration.property]: data };
+    }
   }
 }
 
@@ -191,6 +206,12 @@ function getPositionFallbackDeclaration(
     return { name, selector: rule.value };
   }
   return {};
+}
+
+function isInset(property: string): property is InsetProperty {
+  const insetProperties: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
+
+  return insetProperties.includes(property as InsetProperty);
 }
 
 function getPositionFallbackRules(node: csstree.CssNode) {
@@ -289,6 +310,29 @@ export function parseCSS(css: string) {
       fallbacks[fbRuleName] = fbTryBlocks;
     }
   });
+
+  // Find where CSS custom properties are used
+  if (Object.values(customProperties).length > 0) {
+    csstree.walk(ast, function (node) {
+      const rule = this.rule?.prelude as csstree.Raw | undefined;
+      if (
+        rule?.value &&
+        isVarFunction(node) &&
+        node.children.first &&
+        this.declaration &&
+        isInset(this.declaration.property)
+      ) {
+        const name = node.children.first.name;
+        const anchorFnData = customProperties[name];
+        if (anchorFnData) {
+          anchorFunctions[rule.value] = {
+            ...anchorFunctions[rule.value],
+            [this.declaration.property]: anchorFnData,
+          };
+        }
+      }
+    });
+  }
 
   // Merge data together under floating-element selector key
   const validPositions: AnchorPositions = {};
