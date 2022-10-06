@@ -1,7 +1,9 @@
 !.*
 .git/
+.pnp.*
 .vscode/
 .yarn/
+.yarnrc.yml
 coverage/
 dist/
 node_modules/
