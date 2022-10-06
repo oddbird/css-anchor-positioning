@@ -1,0 +1,12 @@
+#my-anchor-math {
+  anchor-name: --my-anchor-math;
+}
+
+#my-floating-math {
+  position: absolute;
+
+  --full-math: anchor(--my-anchor-math 100%);
+
+  top: calc(var(--full-math) - 50px);
+  left: var(--full-math);
+}

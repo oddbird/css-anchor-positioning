@@ -55,8 +55,9 @@ export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
   return undefined;
 };
 
-// @@@ This should also check the writing-mode
+// This should also check the writing-mode
 // See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
+// https://trello.com/c/KnqCnHx3
 export const getAxis = (position?: string) => {
   switch (position) {
     case 'top':
@@ -118,8 +119,9 @@ export const getPixelValue = ({
       // Logical keywords require checking the writing direction
       // of the floating element (or its containing block)
       if (anchorEdge !== undefined && floatingEl) {
-        // @@@ `start` and `end` should use the writing-mode of the element's
-        // containing block, not the element itself
+        // `start` and `end` should use the writing-mode of the element's
+        // containing block, not the element itself:
+        // https://trello.com/c/KnqCnHx3
         const rtl = isRTL(floatingEl) || false;
         percentage = resolveLogicalKeyword(anchorEdge, rtl);
       }
@@ -196,7 +198,8 @@ export async function polyfill() {
   if (Object.values(rules).length) {
     position(rules);
 
-    // @@@ update source code
+    // update source code
+    // https://trello.com/c/f1L7Ti8m
     // transformCSS(styleData);
   }
 

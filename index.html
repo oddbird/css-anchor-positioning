@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/position-fallback.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
+    <link rel="stylesheet" href="/anchor-math.css" />
     <style>
       #my-anchor-inline {
         anchor-name: --my-anchor-inline;
@@ -109,14 +110,24 @@
         <div id="outer-anchored" class="float">Outer-anchored</div>
       </div>
     </section>
+    <section id="custom-prop">
+      <h2>
+        <a href="#custom-prop" aria-hidden="true">🔗</a>
+        Anchor() [used in CSS custom property]
+      </h2>
+      <div style="position: relative">
+        <div id="my-anchor" class="anchor">Anchor</div>
+        <div id="my-floating" class="float">Floating</div>
+      </div>
+    </section>
     <section id="math-function">
       <h2>
         <a href="#math-function" aria-hidden="true">🔗</a>
         Anchor() [used in math function]
       </h2>
       <div style="position: relative">
-        <div id="my-anchor" class="anchor">Anchor</div>
-        <div id="my-floating" class="float">Floating</div>
+        <div id="my-anchor-math" class="anchor">Anchor</div>
+        <div id="my-floating-math" class="float">Floating</div>
       </div>
     </section>
     <section id="anchor-size">
