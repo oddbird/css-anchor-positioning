@@ -6,7 +6,7 @@ export default {
   reporter: 'dot',
   fullyParallel: true,
   webServer: {
-    command: 'npm run serve -- --port 4000 -l warn',
+    command: 'yarn serve --port 4000 -l warn',
     url: 'http://localhost:4000/',
     timeout: 10 * 1000,
     reuseExistingServer: !process.env.CI,
