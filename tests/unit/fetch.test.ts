@@ -46,7 +46,7 @@ describe('fetch inline styles', () => {
     document.body.innerHTML = `
       <div style="position: relative">
         <div
-          id="my-floating-in-line"
+          class="shared-class"
           style="
             position: absolute;
             top: anchor(--my-anchor-in-line end);
@@ -57,6 +57,7 @@ describe('fetch inline styles', () => {
           Floating
         </div>
         <div
+          class="shared-class"
           id="my-anchor-in-line"
           style="
             anchor-name: --my-anchor-in-line;
@@ -86,11 +87,11 @@ describe('fetch inline styles', () => {
     expect(styleData).toHaveLength(4);
     expect(styleData[2].source).toBe('style');
     expect(styleData[3].source).toBe('style');
-    expect(styleData[2].css.trim()).toContain('#my-floating-in-line');
+    expect(styleData[2].css.trim()).toContain('[data-anchor-polyfill=');
     expect(styleData[2].css.trim()).toContain(
       'top: anchor(--my-anchor-in-line end)',
     );
-    expect(styleData[3].css.trim()).toContain('#my-anchor-in-line');
+    expect(styleData[3].css.trim()).toContain('[data-anchor-polyfill=');
     expect(styleData[3].css.trim()).toContain(
       'anchor-name: --my-anchor-in-line',
     );

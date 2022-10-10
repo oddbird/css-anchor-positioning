@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export interface StyleData {
   source: 'style' | string;
   css: string;
@@ -33,7 +35,7 @@ async function fetchLinkedStylesheets(
 }
 
 // Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, uses either the ID or classes as the selector,
+// For each element found, adds a new 'data-anchor-polyfill' attribute with a random UUID value,
 // and then formats the styles in the same manner as CSS from style tags.
 // A list of this formatted styles is returned.
 // If no elements are found with inline styles, an empty list is returned.
@@ -43,11 +45,11 @@ function fetchInlineStyles() {
   const inlineStyles: string[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
-    const selector = el.id
-      ? `#${el.id}`
-      : `.${el.classList.value.replaceAll(' ', '.')}`;
+    const selector = uuidv4();
+    const dataAttribute = 'data-anchor-polyfill';
+    el.setAttribute(dataAttribute, selector);
     const styles = el.getAttribute('style');
-    const formattedEl = `${selector} { ${styles} }`;
+    const formattedEl = `[${dataAttribute}="${selector}"] { ${styles} }`;
     inlineStyles.push(formattedEl);
   });
 
