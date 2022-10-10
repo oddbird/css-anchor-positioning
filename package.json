@@ -91,7 +91,6 @@
     "async": "^3.2.4",
     "browserstack-local": "^1.5.1",
     "cross-env": "^7.0.3",
-    "css-tree": "^2.2.1",
     "eslint": "^8.25.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.1",
