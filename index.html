@@ -18,16 +18,14 @@
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <style>
-      #my-anchor-inline {
-        anchor-name: --my-anchor-inline;
-        background: var(--anchor-color);
+      #my-anchor-style-tag {
+        anchor-name: --my-anchor-style-tag;
       }
 
-      #my-floating-inline {
-        background: var(--float);
+      #my-floating-style-tag {
         position: absolute;
-        bottom: anchor(--my-anchor-inline start);
-        right: anchor(--my-anchor-inline left);
+        bottom: anchor(--my-anchor-style-tag start);
+        right: anchor(--my-anchor-style-tag left);
       }
     </style>
     <script type="module">
@@ -73,14 +71,36 @@
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
     </section>
+    <section id="anchor-style-tag" class="demo-item">
+      <h2>
+        <a href="#anchor-style-tag" aria-hidden="true">🔗</a>
+        Anchor Positioning via anchor() [&lt;style&gt; tag]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-floating-style-tag" class="float">Floating</div>
+        <div id="my-anchor-style-tag" class="anchor">Anchor</div>
+      </div>
+    </section>
     <section id="anchor-inline" class="demo-item">
       <h2>
         <a href="#anchor-inline" aria-hidden="true">🔗</a>
-        Anchor Positioning via anchor() [inline &lt;style&gt;]
+        Anchor Positioning via anchor() [inline styles]
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-floating-inline" class="float">Floating</div>
-        <div id="my-anchor-inline" class="anchor">Anchor</div>
+        <div
+          id="my-floating-inline"
+          class="float"
+          style="
+            position: absolute;
+            top: anchor(--my-anchor-in-line end);
+            left: anchor(--my-anchor-in-line end);
+          "
+        >Floating</div>
+        <div
+          id="my-anchor-inline"
+          class="anchor"
+          style="anchor-name: --my-anchor-in-line;"
+        >Anchor</div>
       </div>
     </section>
     <section id="position-fallback" class="demo-item">
