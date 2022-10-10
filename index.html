@@ -17,8 +17,8 @@
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <style>
-      #my-anchor-inline {
-        anchor-name: --my-anchor-inline;
+      #my-anchor-style-tag {
+        anchor-name: --my-anchor-style-tag;
         background: orange;
         margin-left: 100px;
         margin-top: 100px;
@@ -26,10 +26,10 @@
         height: 100px;
       }
 
-      #my-floating-inline {
+      #my-floating-style-tag {
         position: absolute;
-        bottom: anchor(--my-anchor-inline start);
-        right: anchor(--my-anchor-inline left);
+        bottom: anchor(--my-anchor-style-tag start);
+        right: anchor(--my-anchor-style-tag left);
         background: green;
       }
     </style>
@@ -61,10 +61,39 @@
       <div id="my-anchor-positioning">Anchor</div>
     </div>
 
+    <h2>Anchor Positioning via anchor() (style tag)</h2>
+    <div style="position: relative">
+      <div id="my-floating-style-tag">Floating</div>
+      <div id="my-anchor-style-tag">Anchor</div>
+    </div>
+
     <h2>Anchor Positioning via anchor() (inline)</h2>
     <div style="position: relative">
-      <div id="my-floating-inline">Floating</div>
-      <div id="my-anchor-inline">Anchor</div>
+      <div
+        id="my-floating-in-line"
+        class="floating-class"
+        style="
+          position: absolute;
+          top: anchor(--my-anchor-in-line end);
+          left: anchor(--my-anchor-in-line end);
+          background: green;
+        "
+      >
+        Floating
+      </div>
+      <div
+        id="my-anchor-in-line"
+        style="
+          anchor-name: --my-anchor-in-line;
+          background: orange;
+          margin-left: 100px;
+          margin-top: 100px;
+          width: 100px;
+          height: 100px;
+        "
+      >
+        Anchor
+      </div>
     </div>
 
     <h2>Anchor Positioning via position-fallback</h2>

@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export interface StyleData {
   source: 'style' | string;
   css: string;
@@ -32,6 +34,28 @@ async function fetchLinkedStylesheets(
   );
 }
 
+// Searches for all elements with inline style attributes that include `anchor`.
+// For each element found, adds a new 'data-anchor-polyfill' attribute with a random UUID value,
+// and then formats the styles in the same manner as CSS from style tags.
+// A list of this formatted styles is returned.
+// If no elements are found with inline styles, an empty list is returned.
+function fetchInlineStyles() {
+  const elementsWithInlineAnchorStyles =
+    document.querySelectorAll('[style*="anchor"]');
+  const inlineStyles: string[] = [];
+
+  elementsWithInlineAnchorStyles.forEach((el) => {
+    const selector = uuidv4();
+    const dataAttribute = 'data-anchor-polyfill';
+    el.setAttribute(dataAttribute, selector);
+    const styles = el.getAttribute('style');
+    const formattedEl = `[${dataAttribute}="${selector}"] { ${styles} }`;
+    inlineStyles.push(formattedEl);
+  });
+
+  return inlineStyles;
+}
+
 export async function fetchCSS(): Promise<StyleData[]> {
   const elements = document.querySelectorAll('link, style');
   const sources: (string | URL)[] = [];
@@ -47,6 +71,9 @@ export async function fetchCSS(): Promise<StyleData[]> {
       sources.push(el.innerHTML);
     }
   });
+
+  const inlines = fetchInlineStyles();
+  inlines.forEach((inlineStyle) => sources.push(inlineStyle));
 
   return await fetchLinkedStylesheets(sources);
 }
