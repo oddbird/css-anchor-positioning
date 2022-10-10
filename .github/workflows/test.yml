@@ -37,4 +37,4 @@ jobs:
       - name: Lint
         run: |
           yarn install --immutable
-          yarn lint
+          yarn lint:ci
