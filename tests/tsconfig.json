@@ -1,7 +1,6 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "target": "es2022",
     "isolatedModules": false,
     "types": ["vitest/globals"]
   },
