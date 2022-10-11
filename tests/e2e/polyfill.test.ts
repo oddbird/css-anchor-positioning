@@ -29,6 +29,18 @@ test('applies polyfill', async ({ page }) => {
   await expect(floating).toHaveCSS('right', expected);
 });
 
+test('applies polyfill from inline styles', async ({ page }) => {
+  const floatingInLine = page.locator('#my-floating-in-line');
+
+  await expect(floatingInLine).toHaveCSS('top', '0px');
+  await expect(floatingInLine).toHaveCSS('left', '0px');
+
+  await applyPolyfill(page);
+
+  await expect(floatingInLine).toHaveCSS('top', '100px');
+  await expect(floatingInLine).toHaveCSS('left', '200px');
+});
+
 test('updates when sizes change', async ({ page }) => {
   const pageWidth = await page
     .locator('body')
