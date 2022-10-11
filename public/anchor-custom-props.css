@@ -3,11 +3,10 @@
 }
 
 #my-floating-props {
-  position: absolute;
-
   --center: anchor(--my-anchor-props 50%);
   --half-distance: calc(var(--center) + 100px);
 
-  top: var(--center);
+  position: absolute;
   left: var(--half-distance);
+  top: var(--center);
 }

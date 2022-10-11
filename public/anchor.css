@@ -3,11 +3,10 @@
 }
 
 #my-floating {
-  position: absolute;
-
   --center: anchor(--my-anchor 50%);
   --full: anchor(--my-anchor 100%);
 
-  top: var(--center);
+  position: absolute;
   right: var(--full);
+  top: var(--center);
 }

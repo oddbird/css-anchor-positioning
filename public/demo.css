@@ -5,11 +5,15 @@
 
 html {
   --anchor-color: var(--yellow-6);
-  --brand: var(--green-9);
+  --action: var(--pink-8);
   --bg: var(--gray-1);
+  --brand: var(--green-9);
+  --button-border: var(--text);
+  --grad: var(--lime-8);
   --float: var(--grad);
+  --link-focus: var(--text);
+  --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
-  --grad: var(--green-7);
 
   background-color: var(--bg);
   color: var(--text);
@@ -18,10 +22,10 @@ html {
 
 @media (prefers-color-scheme: dark) {
   html {
-    --brand: var(--green-3);
+    --action: var(--pink-2);
     --bg: var(--gray-9);
+    --brand: var(--green-3);
     --text: var(--gray-2);
-    --grad: var(--green-9);
   }
 }
 
@@ -85,20 +89,32 @@ section {
 }
 
 a:any-link {
-  color: var(--brand);
+  color: var(--action);
 }
 
-button {
-  background-color: var(--text);
-  border: thin solid transparent;
+a:any-link:hover,
+a:any-link:focus {
+  color: var(--link-focus);
+}
+
+[data-button] {
+  background-color: var(--button-bg-color, var(--action));
+  border: thin solid var(--button-border, transparent);
   border-radius: 0.25em 0.5em;
-  color: var(--bg);
+  color: var(--button-text, var(--bg));
   cursor: pointer;
   font: inherit;
   font-weight: bold;
   grid-column: main;
   max-width: max-content;
   padding: 0.5em 1em;
+}
+
+[data-button]:hover,
+[data-button]:focus,
+[data-button]:active {
+  --button-bg-color: var(--gray-2);
+  --button-text: var(--pink-8);
 }
 
 /* heading links */
@@ -135,6 +151,7 @@ h2 [aria-hidden]:active {
 
 .anchor,
 .float {
+  background: var(--element-color);
   border: thin solid var(--text);
   border-radius: var(--radius-1);
   color: var(--gray-9);
@@ -143,10 +160,15 @@ h2 [aria-hidden]:active {
 }
 
 .anchor {
-  background: var(--anchor-color);
+  --element-color: var(--anchor-color);
+
   text-align: center;
 }
 
 .float {
-  background: var(--float);
+  --element-color: var(--float, var(--outer-anchored));
+}
+
+.outer-anchored {
+  --element-color: var(--outer-anchored);
 }
