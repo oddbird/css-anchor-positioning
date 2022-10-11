@@ -31,13 +31,19 @@
     <script type="module">
       import polyfill from '/src/index-fn.ts';
 
+      const btn = document.getElementById('apply-polyfill');
+
       if (!('anchorName' in document.documentElement.style)) {
-        document
-          .getElementById('apply-polyfill')
-          .addEventListener('click', () =>
-            polyfill().then((rules) => console.log(rules)),
-          );
+        btn.addEventListener('click', () =>
+          polyfill().then((rules) => {
+            btn.innerText = 'Polyfill Applied';
+            btn.setAttribute('disabled', '');
+            console.log(rules);
+          }),
+        );
       } else {
+        btn.innerText = 'No Polyfill Needed';
+        btn.setAttribute('disabled', '');
         console.log(
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
