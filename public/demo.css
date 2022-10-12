@@ -40,17 +40,27 @@ body {
 
 /* layout */
 
+header,
+footer {
+  grid-column: full;
+}
+
 header {
   background: linear-gradient(to top right, var(--bg), var(--grad));
   border-block-end: thin dotted var(--text);
   display: grid;
   gap: 0.5em;
-  grid-column: full;
   padding: 1em;
 }
 
 h1 {
   margin: 0;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
 }
 
 [data-controls='apply-polyfill'] {
@@ -62,6 +72,19 @@ h1 {
 section {
   grid-column: main;
   padding: 3em 1em;
+}
+
+footer {
+  background: linear-gradient(to bottom right, var(--bg), var(--grad));
+  border-block-start: thin dotted var(--text);
+  display: grid;
+  grid-template-columns: minmax(0, 75ch);
+  padding: 2em 0;
+  justify-content: center;
+}
+
+footer p {
+  padding-inline: 1em;
 }
 
 .demo-item {
@@ -86,6 +109,11 @@ section {
 /* prettier-ignore */
 [href*='://']::after {
   content: ' ↗';
+}
+
+nav a:any-link,
+nav span {
+  padding: 0.25em;
 }
 
 a:any-link {
