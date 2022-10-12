@@ -1,11 +1,11 @@
-// Given a floating element and CSS selector(s) for potential anchor element(s),
+// Given a target element and CSS selector(s) for potential anchor element(s),
 // returns the first element that passes validation,
 // or `null` if no valid anchor element is found
 export function validatedForPositioning(
-  floatingEl: HTMLElement | null,
+  targetEl: HTMLElement | null,
   anchorSelectors: string[],
 ) {
-  if (!floatingEl) {
+  if (!targetEl) {
     return null;
   }
 
@@ -14,7 +14,7 @@ export function validatedForPositioning(
   );
 
   for (const anchor of anchorElements) {
-    if (isValidAnchorElement(anchor, floatingEl)) {
+    if (isValidAnchorElement(anchor, targetEl)) {
       return anchor;
     }
   }
@@ -42,17 +42,17 @@ export function hasDisplayNone(el?: HTMLElement | null) {
 // - `offsetParent` returns `null` when the CB is the ICB,
 //   except in Firefox where `offsetParent` returns the `body` element
 // - Excludes elements when they or their parents have `display: none`
-export function isContainingBlockICB(floatingElement: HTMLElement) {
+export function isContainingBlockICB(targetElement: HTMLElement) {
   const isDisplayNone =
-    hasDisplayNone(floatingElement) ||
-    hasDisplayNone(floatingElement.parentElement);
+    hasDisplayNone(targetElement) ||
+    hasDisplayNone(targetElement.parentElement);
 
   const cbIsBodyElementFromFF =
-    floatingElement.offsetParent === document.querySelector('body') &&
+    targetElement.offsetParent === document.querySelector('body') &&
     navigator.userAgent.includes('Firefox');
 
   const offsetParentNullOrBody =
-    floatingElement.offsetParent === null || cbIsBodyElementFromFF;
+    targetElement.offsetParent === null || cbIsBodyElementFromFF;
 
   if (offsetParentNullOrBody && !isDisplayNone) {
     return true;
@@ -60,16 +60,13 @@ export function isContainingBlockICB(floatingElement: HTMLElement) {
   return false;
 }
 
-// Validates that anchor element is a valid anchor for given floating element
-export function isValidAnchorElement(
-  anchor: HTMLElement,
-  floating: HTMLElement,
-) {
+// Validates that anchor element is a valid anchor for given target element
+export function isValidAnchorElement(anchor: HTMLElement, target: HTMLElement) {
   // If el has the same containing block as the querying element,
   // el must not be absolutely positioned:
   if (
     isAbsolutelyPositioned(anchor) &&
-    anchor.offsetParent === floating.offsetParent
+    anchor.offsetParent === target.offsetParent
   ) {
     return false;
   }
@@ -78,12 +75,12 @@ export function isValidAnchorElement(
   // the last containing block in el's containing block chain
   // before reaching the querying element's containing block
   // must not be absolutely positioned:
-  if (anchor.offsetParent !== floating.offsetParent) {
+  if (anchor.offsetParent !== target.offsetParent) {
     let currentCB: HTMLElement | null;
     const anchorCBchain: HTMLElement[] = [];
 
     currentCB = anchor.offsetParent as HTMLElement | null;
-    while (currentCB && currentCB !== floating.offsetParent) {
+    while (currentCB && currentCB !== target.offsetParent) {
       anchorCBchain.push(currentCB);
       currentCB = currentCB.offsetParent as HTMLElement | null;
     }
@@ -97,10 +94,10 @@ export function isValidAnchorElement(
   // Either el must be a descendant of the querying element's containing block,
   // or the querying element's containing block must be
   // the initial containing block:
-  const isDescendant = Boolean(floating.offsetParent?.contains(anchor));
-  const floatingCBIsInitialCB = isContainingBlockICB(floating);
+  const isDescendant = Boolean(target.offsetParent?.contains(anchor));
+  const targetCBIsInitialCB = isContainingBlockICB(target);
 
-  if (isDescendant || floatingCBIsInitialCB) {
+  if (isDescendant || targetCBIsInitialCB) {
     return true;
   }
 

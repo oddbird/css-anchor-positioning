@@ -257,7 +257,7 @@ describe('parseCSS', () => {
 
   it('handles invalid/missing `position-fallback`', () => {
     const css = `
-      #floating {
+      #target {
         position: absolute;
         position-fallback: --fallback;
       }

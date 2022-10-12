@@ -22,20 +22,20 @@ test.afterAll(async () => {
 });
 
 const anchorSelector = '#my-anchor-positioning';
-const floatingSelector = '#my-target-positioning';
+const targetSelector = '#my-target-positioning';
 
 async function callValidFunction(sharedPage: Page) {
   return await sharedPage.evaluate(
-    ([anchorSelector, floatingSelector]) => {
-      const floatingElement = document.querySelector(
-        floatingSelector,
+    ([anchorSelector, targetSelector]) => {
+      const targetElement = document.querySelector(
+        targetSelector,
       ) as HTMLElement;
       const anchorElement = document.querySelector(
         anchorSelector,
       ) as HTMLElement;
-      return isValidAnchorElement(anchorElement, floatingElement);
+      return isValidAnchorElement(anchorElement, targetElement);
     },
-    [anchorSelector, floatingSelector],
+    [anchorSelector, targetSelector],
   );
 }
 
@@ -353,7 +353,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
   expect(valid).toBe(true);
 
   const validationResults = await sharedPage.evaluate(
-    ([anchorSelector, floatingSelector]) => {
+    ([anchorSelector, targetSelector]) => {
       interface Data {
         results: {
           anchor: HTMLElement | null;
@@ -362,12 +362,12 @@ test('when multiple anchor elements have the same name and are valid, the first 
         anchorText: string | undefined;
       }
 
-      const floatingElement = document.querySelector(
-        floatingSelector,
+      const targetElement = document.querySelector(
+        targetSelector,
       ) as HTMLElement;
 
       const validatedData = {} as Data;
-      const anchor = validatedForPositioning(floatingElement, [anchorSelector]);
+      const anchor = validatedForPositioning(targetElement, [anchorSelector]);
 
       validatedData.results = { anchor };
       validatedData.anchorWidth = anchor?.style.width;
@@ -375,7 +375,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
 
       return validatedData;
     },
-    [anchorSelector, floatingSelector],
+    [anchorSelector, targetSelector],
   );
 
   expect(validationResults.results.anchor).toBeTruthy;
