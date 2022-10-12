@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           yarn install --immutable
-          yarn dlx playwright install --with-deps
+          npx playwright install --with-deps
       - run: yarn test:ci
 
   lint:
