@@ -2,7 +2,7 @@
   anchor-name: --my-anchor;
 }
 
-#my-floating {
+#my-target {
   --center: anchor(--my-anchor 50%);
   --full: anchor(--my-anchor 100%);
 

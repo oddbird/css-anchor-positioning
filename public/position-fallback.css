@@ -2,7 +2,7 @@
   anchor-name: --my-anchor-fallback;
 }
 
-#my-floating-fallback {
+#my-target-fallback {
   bottom: anchor(--my-anchor-fallback 25%);
   left: anchor(--my-anchor-fallback right);
   position: absolute;

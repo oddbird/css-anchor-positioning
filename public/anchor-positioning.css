@@ -2,7 +2,7 @@
   anchor-name: --my-anchor-positioning;
 }
 
-#my-floating-positioning {
+#my-target-positioning {
   position: absolute;
   right: anchor(--my-anchor-positioning right, 50px);
   top: anchor(--my-anchor-positioning bottom);

@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const btnSelector = '#apply-polyfill';
-const floatingSelector = '#my-floating-positioning';
+const floatingSelector = '#my-target-positioning';
 const anchorSelector = '#my-anchor-positioning';
 
 async function applyPolyfill(page: Page) {
@@ -50,7 +50,7 @@ test('applies polyfill', async ({ page }) => {
 });
 
 test('applies polyfill from inline styles', async ({ page }) => {
-  const floatingInLine = page.locator('#my-floating-inline');
+  const floatingInLine = page.locator('#my-target-inline');
   const width = await getAnchorWidth(page);
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);

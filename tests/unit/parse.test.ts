@@ -10,11 +10,11 @@ describe('parseCSS', () => {
 
   it('parses `anchor()` function (custom properties)', () => {
     document.body.innerHTML =
-      '<div id="my-floating"></div><div id="my-anchor"></div>';
+      '<div id="my-target"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
     const result = parseCSS(css);
     const expected = {
-      '#my-floating': {
+      '#my-target': {
         declarations: {
           right: {
             anchorName: '--my-anchor',
@@ -39,11 +39,11 @@ describe('parseCSS', () => {
   // eslint-disable-next-line jest/no-disabled-tests
   it.skip('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
-      '<div id="my-floating-props"></div><div id="my-anchor-props"></div>';
+      '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
     const result = parseCSS(css);
     const expected = {
-      '#my-floating-props': {
+      '#my-target-props': {
         declarations: {
           left: {
             anchorName: '--my-anchor-props',
@@ -68,11 +68,11 @@ describe('parseCSS', () => {
   // eslint-disable-next-line jest/no-disabled-tests
   it.skip('parses `anchor()` function (math)', () => {
     document.body.innerHTML =
-      '<div id="my-floating-math"></div><div id="my-anchor-math"></div>';
+      '<div id="my-target-math"></div><div id="my-anchor-math"></div>';
     const css = getSampleCSS('anchor-math');
     const result = parseCSS(css);
     const expected = {
-      '#my-floating-math': {
+      '#my-target-math': {
         declarations: {
           left: {
             anchorName: '--my-anchor-math',
@@ -95,12 +95,12 @@ describe('parseCSS', () => {
 
   it('parses `anchor()` function (positioning)', () => {
     document.body.innerHTML =
-      '<div id="my-floating-positioning"></div><div id="my-anchor-positioning"></div>';
+      '<div id="my-target-positioning"></div><div id="my-anchor-positioning"></div>';
     const anchorEl = document.getElementById('my-anchor-positioning');
     const css = getSampleCSS('anchor-positioning');
     const result = parseCSS(css);
     const expected = {
-      '#my-floating-positioning': {
+      '#my-target-positioning': {
         declarations: {
           top: {
             anchorName: '--my-anchor-positioning',
@@ -123,12 +123,12 @@ describe('parseCSS', () => {
 
   it('parses `@position-fallback` strategy', () => {
     document.body.innerHTML =
-      '<div id="my-floating-fallback"></div><div id="my-anchor-fallback"></div>';
+      '<div id="my-target-fallback"></div><div id="my-anchor-fallback"></div>';
     const anchorEl = document.getElementById('my-anchor-fallback');
     const css = getSampleCSS('position-fallback');
     const result = parseCSS(css);
     const expected = {
-      '#my-floating-fallback': {
+      '#my-target-fallback': {
         declarations: {
           left: {
             anchorName: '--my-anchor-fallback',

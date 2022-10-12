@@ -22,7 +22,7 @@
         anchor-name: --my-anchor-style-tag;
       }
 
-      #my-floating-style-tag {
+      #my-target-style-tag {
         position: absolute;
         bottom: anchor(--my-anchor-style-tag start);
         right: anchor(--my-anchor-style-tag left);
@@ -75,7 +75,7 @@
         Positioning via anchor() [stylesheet]
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-floating-positioning" class="float">Floating</div>
+        <div id="my-target-positioning" class="target">Target</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
     </section>
@@ -85,7 +85,7 @@
         Anchor Positioning via anchor() [&lt;style&gt; tag]
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-floating-style-tag" class="float">Floating</div>
+        <div id="my-target-style-tag" class="target">Target</div>
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
     </section>
@@ -96,15 +96,15 @@
       </h2>
       <div style="position: relative" class="demo-elements">
         <div
-          id="my-floating-inline"
-          class="float"
+          id="my-target-inline"
+          class="target"
           style="
             position: absolute;
             top: anchor(--my-anchor-in-line bottom);
             right: anchor(--my-anchor-in-line right);
           "
         >
-          Floating
+          Target
         </div>
         <div
           id="my-anchor-inline"
@@ -121,7 +121,7 @@
         Anchor Positioning via position-fallback
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-floating-fallback" class="float">Floating</div>
+        <div id="my-target-fallback" class="target">Target</div>
         <div id="my-anchor-fallback" class="anchor">Anchor</div>
       </div>
     </section>
@@ -136,11 +136,11 @@
             <div id="placefiller-above-anchor"></div>
             <div id="placefiller-before-anchor"></div>
             <span id="scroll-anchor" class="anchor">Anchor</span>
-            <div id="inner-anchored" class="float">Inner-anchored</div>
+            <div id="inner-anchored" class="target">Inner-anchored Target</div>
           </div>
         </div>
-        <div id="outer-anchored" class="float outer-anchored">
-          Outer-anchored
+        <div id="outer-anchored" class="target outer-anchored">
+          Outer-anchored Target
         </div>
       </div>
     </section>
@@ -151,7 +151,7 @@
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor" class="anchor">Anchor</div>
-        <div id="my-floating" class="float">Floating</div>
+        <div id="my-target" class="target">Target</div>
       </div>
     </section>
     <section id="math-function" class="demo-item">
@@ -161,7 +161,7 @@
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-math" class="anchor">Anchor</div>
-        <div id="my-floating-math" class="float">Floating</div>
+        <div id="my-target-math" class="target">Target</div>
       </div>
     </section>
     <section id="anchor-size" class="demo-item">
@@ -170,7 +170,7 @@
         Anchor Size
       </h2>
       <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
-      <div id="my-floating-size" class="float">Floating</div>
+      <div id="my-target-size" class="target">Target</div>
     </section>
   </body>
 </html>

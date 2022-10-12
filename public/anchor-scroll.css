@@ -1,13 +1,13 @@
 #scroll-container {
-  width: 400px;
   height: 400px;
   overflow: scroll;
+  width: 400px;
 }
 
 #scroll-contents {
-  width: 1000px;
   height: 1000px;
   position: relative;
+  width: 1000px;
 }
 
 #placefiller-above-anchor {
@@ -24,9 +24,9 @@
 }
 
 #inner-anchored {
+  bottom: anchor(--scroll-anchor top);
   position: absolute;
   right: anchor(--scroll-anchor start);
-  bottom: anchor(--scroll-anchor top);
 }
 
 #outer-anchored {

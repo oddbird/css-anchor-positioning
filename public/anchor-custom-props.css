@@ -2,7 +2,7 @@
   anchor-name: --my-anchor-props;
 }
 
-#my-floating-props {
+#my-target-props {
   --center: anchor(--my-anchor-props 50%);
   --half-distance: calc(var(--center) + 100px);
 

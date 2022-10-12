@@ -3,6 +3,6 @@
   width: 5em;
 }
 
-#my-floating-size {
+#my-target-size {
   width: anchor-size(--my-anchor width);
 }

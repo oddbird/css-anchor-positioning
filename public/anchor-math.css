@@ -2,7 +2,7 @@
   anchor-name: --my-anchor-math;
 }
 
-#my-floating-math {
+#my-target-math {
   --full-math: anchor(--my-anchor-math 100%);
 
   position: absolute;

@@ -10,7 +10,7 @@ html {
   --brand: var(--green-9);
   --button-border: var(--text);
   --grad: var(--lime-8);
-  --float: var(--grad);
+  --target: var(--grad);
   --link-focus: var(--text);
   --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
@@ -150,7 +150,7 @@ h2 [aria-hidden]:active {
 /* components */
 
 .anchor,
-.float {
+.target {
   background: var(--element-color);
   border: thin solid var(--text);
   border-radius: var(--radius-1);
@@ -165,8 +165,8 @@ h2 [aria-hidden]:active {
   text-align: center;
 }
 
-.float {
-  --element-color: var(--float, var(--outer-anchored));
+.target {
+  --element-color: var(--target, var(--outer-anchored));
 }
 
 .outer-anchored {

@@ -386,7 +386,7 @@ export function parseCSS(css: string) {
 
   /* Example data shape:
     {
-      '#my-floating-element': {
+      '#my-target-element': {
         declarations: {
           top: {
             floatingEl: <HTMLElement>,
