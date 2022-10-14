@@ -9,6 +9,8 @@ html {
   --bg: var(--gray-1);
   --brand: var(--green-9);
   --button-border: var(--text);
+  --disabled-bg: var(--gray-6);
+  --disabled-text: var(--gray-2);
   --grad: var(--lime-8);
   --target: var(--grad);
   --link-focus: var(--text);
@@ -79,8 +81,8 @@ footer {
   border-block-start: thin dotted var(--text);
   display: grid;
   grid-template-columns: minmax(0, 75ch);
-  padding: 2em 0;
   justify-content: center;
+  padding: 2em 0;
 }
 
 footer p {
@@ -89,10 +91,10 @@ footer p {
 
 .demo-item {
   display: grid;
+  gap: 2rem;
   grid-template:
     'heading heading heading' min-content
     '. elements .' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
-  gap: 2rem;
 }
 
 /* stylelint-disable no-descending-specificity */
@@ -127,7 +129,7 @@ a:any-link:focus {
 
 [data-button] {
   background-color: var(--button-bg-color, var(--action));
-  border: thin solid var(--button-border, transparent);
+  border: medium solid var(--button-border, transparent);
   border-radius: 0.25em 0.5em;
   color: var(--button-text, var(--bg));
   cursor: pointer;
@@ -143,6 +145,18 @@ a:any-link:focus {
 [data-button]:active {
   --button-bg-color: var(--gray-2);
   --button-text: var(--pink-8);
+}
+
+[data-button]:disabled {
+  --button-bg-color: var(--disabled-bg);
+  --button-border: transparent;
+
+  cursor: not-allowed;
+}
+
+[data-button]:disabled,
+[data-button]:disabled:hover {
+  --button-text: var(--disabled-text);
 }
 
 /* heading links */
