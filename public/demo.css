@@ -4,15 +4,17 @@
 }
 
 html {
+  --action: var(--action-light);
+  --action-dark: var(--pink-2);
+  --action-light: hsl(339deg 68% 37%);
   --anchor-color: var(--yellow-6);
-  --action: var(--pink-8);
   --bg: var(--gray-1);
   --brand: var(--green-9);
   --button-border: var(--text);
   --disabled-bg: var(--gray-6);
   --disabled-text: var(--gray-2);
-  --grad: var(--lime-8);
-  --target: var(--grad);
+  --grad: var(--lime-0);
+  --target: var(--lime-8);
   --link-focus: var(--text);
   --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
@@ -24,9 +26,11 @@ html {
 
 @media (prefers-color-scheme: dark) {
   html {
-    --action: var(--pink-2);
+    --action: var(--action-dark);
     --bg: var(--gray-9);
     --brand: var(--green-3);
+    --grad: var(--lime-9);
+    --gradient-bg: var(--gradient-16);
     --text: var(--gray-2);
   }
 }
@@ -44,11 +48,11 @@ body {
 
 header,
 footer {
+  background: var(--gradient-bg, var(--grad));
   grid-column: full;
 }
 
 header {
-  background: linear-gradient(to top right, var(--bg), var(--grad));
   border-block-end: thin dotted var(--text);
   display: grid;
   gap: 0.5em;
@@ -77,7 +81,6 @@ section {
 }
 
 footer {
-  background: linear-gradient(to bottom right, var(--bg), var(--grad));
   border-block-start: thin dotted var(--text);
   display: grid;
   grid-template-columns: minmax(0, 75ch);
@@ -144,7 +147,7 @@ a:any-link:focus {
 [data-button]:focus,
 [data-button]:active {
   --button-bg-color: var(--gray-2);
-  --button-text: var(--pink-8);
+  --button-text: var(--action-light);
 }
 
 [data-button]:disabled {
