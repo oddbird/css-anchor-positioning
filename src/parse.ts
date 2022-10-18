@@ -170,8 +170,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
     node.value.children.first &&
     rule?.value
   ) {
-    const name = (node.value.children.first as unknown as csstree.Identifier)
-      .name;
+    const name = (node.value.children.first as csstree.Identifier).name;
     return { name, selector: rule.value };
   }
   return {};
@@ -201,8 +200,7 @@ function getPositionFallbackDeclaration(
   rule?: csstree.Raw,
 ) {
   if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
-    const name = (node.value.children.first as unknown as csstree.Identifier)
-      .name;
+    const name = (node.value.children.first as csstree.Identifier).name;
     return { name, selector: rule.value };
   }
   return {};
@@ -225,8 +223,7 @@ function getPositionFallbackRules(node: csstree.CssNode) {
         // Only declarations are allowed inside a `@try` block
         const declarations = atRule.block.children.filter(isDeclaration);
         declarations.forEach((child) => {
-          const firstChild = child.value.children
-            .first as unknown as csstree.CssNode;
+          const firstChild = child.value.children.first as csstree.CssNode;
           // Parse value if it's an `anchor()` fn; otherwise store it raw
           if (firstChild && isAnchorFunction(firstChild)) {
             tryBlock[child.property] = parseAnchorFn(firstChild);
@@ -322,7 +319,7 @@ export function parseCSS(css: string) {
         this.declaration &&
         isInset(this.declaration.property)
       ) {
-        const name = node.children.first.name;
+        const name = (node.children.first as csstree.Identifier).name;
         const anchorFnData = customProperties[name];
         if (anchorFnData) {
           anchorFunctions[rule.value] = {
