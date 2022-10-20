@@ -84,6 +84,20 @@
         <div id="my-target-positioning" class="target">Target</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
+      <pre>
+
+/* demo.css */
+
+#my-anchor-positioning {
+  anchor-name: --my-anchor-positioning;
+}
+
+#my-target-positioning {
+  position: absolute;
+  right: anchor(--my-anchor-positioning right, 50px);
+  top: anchor(--my-anchor-positioning bottom);
+}
+      </pre>
     </section>
     <section id="anchor-style-tag" class="demo-item">
       <h2>
@@ -94,6 +108,17 @@
         <div id="my-target-style-tag" class="target">Target</div>
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
+      <pre>
+#my-anchor-style-tag {
+  anchor-name: --my-anchor-style-tag;
+}
+
+#my-target-style-tag {
+  position: absolute;
+  bottom: anchor(--my-anchor-style-tag start);
+  right: anchor(--my-anchor-style-tag left);
+}
+      </pre>
     </section>
     <section id="anchor-inline" class="demo-item">
       <h2>
