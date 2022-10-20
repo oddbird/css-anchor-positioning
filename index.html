@@ -109,6 +109,9 @@
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
       <pre>
+
+/* from the inside of a <code>style</code> tag */
+
 #my-anchor-style-tag {
   anchor-name: --my-anchor-style-tag;
 }
@@ -145,6 +148,23 @@
           Anchor
         </div>
       </div>
+      <pre>
+
+/* anchor */
+
+  style="anchor-name: --my-anchor-in-line"
+
+      
+/* target */
+
+  style="
+    position: absolute;
+    top: anchor(--my-anchor-in-line bottom);
+    right: anchor(--my-anchor-in-line right);
+  "
+
+    </pre
+      >
     </section>
     <section id="position-fallback" class="demo-item">
       <h2>
@@ -155,6 +175,54 @@
         <div id="my-target-fallback" class="target">Target</div>
         <div id="my-anchor-fallback" class="anchor">Anchor</div>
       </div>
+      <pre>
+
+#my-anchor-fallback {
+  anchor-name: --my-anchor-fallback;
+}
+
+#my-target-fallback {
+  bottom: anchor(--my-anchor-fallback 25%);
+  left: anchor(--my-anchor-fallback right);
+  position: absolute;
+  position-fallback: --fallback1;
+}
+
+@position-fallback --fallback1 {
+  @try {
+    /* 1: Position to the right of the anchor. */
+    left: anchor(--my-anchor-fallback right, 10px);
+    top: anchor(--my-anchor-fallback top);
+}
+
+  @try {
+    /* 2: Position to the left of the anchor. */
+    right: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback top);
+}
+
+  @try {
+    /* 3: Position to the bottom of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback bottom);
+}
+
+  @try {
+    /* 4: Position to the top of the anchor. */
+    bottom: anchor(--my-anchor-fallback top);
+    left: anchor(--my-anchor-fallback left);
+}
+
+  @try {
+    /* 5: Position to the left with the narrower width. */
+    height: 40px;
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
+    width: 35px;
+  }
+}
+
+      </pre>
     </section>
     <section id="anchor-scroll" class="demo-item">
       <h2>
@@ -184,6 +252,21 @@
         <div id="my-anchor" class="anchor">Anchor</div>
         <div id="my-target" class="target">Target</div>
       </div>
+      <pre>
+
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-target {
+  --center: anchor(--my-anchor 50%);
+  --full: anchor(--my-anchor 100%);
+
+  position: absolute;
+  right: var(--full);
+  top: var(--center);
+}
+      </pre>
     </section>
     <section id="math-function" class="demo-item">
       <h2>
@@ -194,6 +277,15 @@
         <div id="my-anchor-math" class="anchor">Anchor</div>
         <div id="my-target-math" class="target">Target</div>
       </div>
+      <pre>
+#my-anchor-math {
+  . . .
+}
+
+#my-target-math {
+  . . .
+}
+      </pre>
     </section>
     <section id="anchor-size" class="demo-item">
       <h2>
@@ -202,6 +294,15 @@
       </h2>
       <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
       <div id="my-target-size" class="target">Target</div>
+      <pre>
+#my-anchor-size {
+  . . .
+}
+
+#my-target-size {
+  . . .
+}
+      </pre>
     </section>
     <footer>
       <p>

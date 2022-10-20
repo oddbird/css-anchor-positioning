@@ -96,7 +96,7 @@ footer p {
 
 .demo-item {
   display: grid;
-  gap: 2rem;
+  gap: 3em;
   grid-template:
     'heading heading heading' min-content
     '. elements .' min-content
