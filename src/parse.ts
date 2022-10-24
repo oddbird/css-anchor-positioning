@@ -43,7 +43,7 @@ interface AnchorFunction {
 type AnchorFunctionDeclaration = Partial<Record<InsetProperty, AnchorFunction>>;
 
 interface AnchorFunctionDeclarations {
-  // `key` is the floating element selector
+  // `key` is the target element selector
   // `value` is an object with all anchor-function declarations on that element
   [key: string]: AnchorFunctionDeclaration;
 }
@@ -54,7 +54,7 @@ interface AnchorPosition {
 }
 
 export interface AnchorPositions {
-  // `key` is the floating element selector
+  // `key` is the target element selector
   // `value` is an object with all anchor-positioning data for that element
   [key: string]: AnchorPosition;
 }
@@ -66,7 +66,7 @@ type TryBlock = Partial<
 >;
 
 interface FallbackNames {
-  // `key` is the floating element selector
+  // `key` is the target element selector
   // `value` is the `position-fallback` value (name)
   [key: string]: string;
 }
@@ -170,8 +170,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
     node.value.children.first &&
     rule?.value
   ) {
-    const name = (node.value.children.first as unknown as csstree.Identifier)
-      .name;
+    const name = (node.value.children.first as csstree.Identifier).name;
     return { name, selector: rule.value };
   }
   return {};
@@ -201,8 +200,7 @@ function getPositionFallbackDeclaration(
   rule?: csstree.Raw,
 ) {
   if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
-    const name = (node.value.children.first as unknown as csstree.Identifier)
-      .name;
+    const name = (node.value.children.first as csstree.Identifier).name;
     return { name, selector: rule.value };
   }
   return {};
@@ -225,8 +223,7 @@ function getPositionFallbackRules(node: csstree.CssNode) {
         // Only declarations are allowed inside a `@try` block
         const declarations = atRule.block.children.filter(isDeclaration);
         declarations.forEach((child) => {
-          const firstChild = child.value.children
-            .first as unknown as csstree.CssNode;
+          const firstChild = child.value.children.first as csstree.CssNode;
           // Parse value if it's an `anchor()` fn; otherwise store it raw
           if (firstChild && isAnchorFunction(firstChild)) {
             tryBlock[child.property] = parseAnchorFn(firstChild);
@@ -322,7 +319,7 @@ export function parseCSS(css: string) {
         this.declaration &&
         isInset(this.declaration.property)
       ) {
-        const name = node.children.first.name;
+        const name = (node.children.first as csstree.Identifier).name;
         const anchorFnData = customProperties[name];
         if (anchorFnData) {
           anchorFunctions[rule.value] = {
@@ -334,50 +331,46 @@ export function parseCSS(css: string) {
     });
   }
 
-  // Merge data together under floating-element selector key
+  // Merge data together under target-element selector key
   const validPositions: AnchorPositions = {};
 
   // Store any `position-fallback` declarations
-  for (const [floatingSel, fallbackName] of Object.entries(fallbackNames)) {
+  for (const [targetSel, fallbackName] of Object.entries(fallbackNames)) {
     const positionFallbacks = fallbacks[fallbackName];
     if (positionFallbacks) {
-      const floatingEl: HTMLElement | null =
-        document.querySelector(floatingSel);
+      const targetEl: HTMLElement | null = document.querySelector(targetSel);
       // Populate `anchorEl` for each fallback `anchor()` fn
       positionFallbacks.forEach((tryBlock) => {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
             const anchorName = (value as AnchorFunction).anchorName;
             const anchorSelectors = anchorName ? anchorNames[anchorName] : [];
-            const anchorEl = validatedForPositioning(
-              floatingEl,
-              anchorSelectors,
-            );
+            const anchorEl = validatedForPositioning(targetEl, anchorSelectors);
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
         }
       });
-      validPositions[floatingSel] = {
+      validPositions[targetSel] = {
         fallbacks: positionFallbacks,
       };
     }
   }
 
   // Store any `anchor()` fns
-  for (const [floatingSel, anchorFns] of Object.entries(anchorFunctions)) {
-    const floatingEl: HTMLElement | null = document.querySelector(floatingSel);
-    for (const [floatingEdge, anchorObj] of Object.entries(anchorFns)) {
+  for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
+    const targetEl: HTMLElement | null = document.querySelector(targetSel);
+    for (const [targetProperty, anchorObj] of Object.entries(anchorFns)) {
       // Populate `anchorEl` for each `anchor()` fn
       const anchorSelectors = anchorObj.anchorName
         ? anchorNames[anchorObj.anchorName]
         : [];
-      validPositions[floatingSel] = {
-        ...validPositions[floatingSel],
+      validPositions[targetSel] = {
+        ...validPositions[targetSel],
         declarations: {
-          ...validPositions[floatingSel]?.declarations,
-          [floatingEdge]: {
+          ...validPositions[targetSel]?.declarations,
+          [targetProperty]: {
             ...anchorObj,
-            anchorEl: validatedForPositioning(floatingEl, anchorSelectors),
+            anchorEl: validatedForPositioning(targetEl, anchorSelectors),
           },
         },
       };
@@ -386,10 +379,10 @@ export function parseCSS(css: string) {
 
   /* Example data shape:
     {
-      '#my-floating-element': {
+      '#my-target-element': {
         declarations: {
           top: {
-            floatingEl: <HTMLElement>,
+            targetEl: <HTMLElement>,
             anchorName: '--my-anchor',
             anchorEl: <HTMLElement>,
             anchorEdge: 'bottom',
@@ -399,7 +392,7 @@ export function parseCSS(css: string) {
         fallbacks: [
           {
             top: {
-              floatingEl: <HTMLElement>,
+              targetEl: <HTMLElement>,
               anchorName: '--my-anchor',
               anchorEl: <HTMLElement>,
               anchorEdge: 'top',

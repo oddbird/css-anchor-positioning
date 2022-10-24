@@ -5,7 +5,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
-    <link type="text/css" href="/demo.css" />
+    <link rel="stylesheet" href="https://unpkg.com/open-props" />
+    <link rel="stylesheet" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link
       rel="stylesheet"
@@ -19,116 +20,169 @@
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
-        background: orange;
-        margin-left: 100px;
-        margin-top: 100px;
-        width: 100px;
-        height: 100px;
       }
 
-      #my-floating-style-tag {
+      #my-target-style-tag {
         position: absolute;
         bottom: anchor(--my-anchor-style-tag start);
         right: anchor(--my-anchor-style-tag left);
-        background: green;
       }
     </style>
     <script type="module">
       import polyfill from '/src/index-fn.ts';
 
       const btn = document.getElementById('apply-polyfill');
-      btn.addEventListener('click', () =>
-        polyfill().then((rules) => console.log(rules)),
-      );
+
+      if (!('anchorName' in document.documentElement.style)) {
+        btn.addEventListener('click', () =>
+          polyfill().then((rules) => {
+            btn.innerText = 'Polyfill Applied';
+            btn.setAttribute('disabled', '');
+            console.log(rules);
+          }),
+        );
+      } else {
+        btn.innerText = 'No Polyfill Needed';
+        btn.setAttribute('disabled', '');
+        console.log(
+          'anchor-positioning is supported in this browser; polyfill skipped.',
+        );
+      }
     </script>
   </head>
   <body>
-    <h1>CSS Anchor Positioning Polyfill</h1>
-
-    <p>
-      See also:
-      <a
-        href="https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/web_tests/wpt_internal/css/css-anchor-position"
-        >WPT examples</a
-      >
-    </p>
-
-    <button id="apply-polyfill">Apply Polyfill</button>
-
-    <h2>Anchor Positioning via anchor() (stylesheet)</h2>
-    <div style="position: relative">
-      <div id="my-floating-positioning">Floating</div>
-      <div id="my-anchor-positioning">Anchor</div>
+    <header>
+      <h1>CSS Anchor Positioning Polyfill</h1>
+      <nav>
+        <span> See also: </span>
+        <a
+          href="https://github.com/web-platform-tests/wpt/tree/master/css/css-anchor-position"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT examples</a
+        >
+        <a
+          href="https://tabatkins.github.io/specs/css-anchor-position"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Draft Spec</a
+        >
+      </nav>
+    </header>
+    <div data-controls="apply-polyfill">
+      <button id="apply-polyfill" data-button="apply-polyfill" type="button">
+        Apply Polyfill
+      </button>
     </div>
 
-    <h2>Anchor Positioning via anchor() (style tag)</h2>
-    <div style="position: relative">
-      <div id="my-floating-style-tag">Floating</div>
-      <div id="my-anchor-style-tag">Anchor</div>
-    </div>
-
-    <h2>Anchor Positioning via anchor() (inline)</h2>
-    <div style="position: relative">
-      <div
-        id="my-floating-in-line"
-        class="floating-class"
-        style="
-          position: absolute;
-          top: anchor(--my-anchor-in-line end);
-          left: anchor(--my-anchor-in-line end);
-          background: green;
-        "
-      >
-        Floating
+    <section id="anchor-positioning" class="demo-item">
+      <h2>
+        <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
+        Positioning via anchor() [stylesheet]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-target-positioning" class="target">Target</div>
+        <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
-      <div
-        id="my-anchor-in-line"
-        style="
-          anchor-name: --my-anchor-in-line;
-          background: orange;
-          margin-left: 100px;
-          margin-top: 100px;
-          width: 100px;
-          height: 100px;
-        "
-      >
-        Anchor
+    </section>
+    <section id="anchor-style-tag" class="demo-item">
+      <h2>
+        <a href="#anchor-style-tag" aria-hidden="true">🔗</a>
+        Anchor Positioning via anchor() [&lt;style&gt; tag]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-target-style-tag" class="target">Target</div>
+        <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
-    </div>
-
-    <h2>Anchor Positioning via position-fallback</h2>
-    <div style="position: relative">
-      <div id="my-floating-fallback">Floating</div>
-      <div id="my-anchor-fallback">Anchor</div>
-    </div>
-
-    <h2>Anchor Positioning (with scroll)</h2>
-    <div style="position: relative">
-      <div id="scroll-container">
-        <div id="scroll-contents">
-          <div id="placefiller-above-anchor"></div>
-          <div id="placefiller-before-anchor"></div>
-          <span id="scroll-anchor">anchor</span>
-          <div id="inner-anchored">inner-anchored</div>
+    </section>
+    <section id="anchor-inline" class="demo-item">
+      <h2>
+        <a href="#anchor-inline" aria-hidden="true">🔗</a>
+        Anchor Positioning via anchor() [inline styles]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div
+          id="my-target-inline"
+          class="target"
+          style="
+            position: absolute;
+            top: anchor(--my-anchor-in-line bottom);
+            right: anchor(--my-anchor-in-line right);
+          "
+        >
+          Target
+        </div>
+        <div
+          id="my-anchor-inline"
+          class="anchor"
+          style="anchor-name: --my-anchor-in-line"
+        >
+          Anchor
         </div>
       </div>
-      <div id="outer-anchored">outer-anchored</div>
-    </div>
-
-    <h2>Anchor() (used in CSS custom property)</h2>
-    <div style="position: relative">
-      <div id="my-anchor">Anchor</div>
-      <div id="my-floating">Floating</div>
-    </div>
-
-    <h2>Anchor() (used in math function)</h2>
-    <div style="position: relative">
-      <div id="my-anchor-math">Anchor</div>
-      <div id="my-floating-math">Floating</div>
-    </div>
-
-    <h2>Anchor Size</h2>
-    <div id="my-anchor-size">Anchor</div>
-    <div id="my-floating-size">Floating</div>
+    </section>
+    <section id="position-fallback" class="demo-item">
+      <h2>
+        <a href="#position-fallback" aria-hidden="true">🔗</a>
+        Anchor Positioning via position-fallback
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-target-fallback" class="target">Target</div>
+        <div id="my-anchor-fallback" class="anchor">Anchor</div>
+      </div>
+    </section>
+    <section id="anchor-scroll" class="demo-item">
+      <h2>
+        <a href="#anchor-scroll" aria-hidden="true">🔗</a>
+        Anchor Positioning [with scroll]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="scroll-container">
+          <div id="scroll-contents">
+            <div id="placefiller-above-anchor"></div>
+            <div id="placefiller-before-anchor"></div>
+            <span id="scroll-anchor" class="anchor">Anchor</span>
+            <div id="inner-anchored" class="target">Inner-anchored Target</div>
+          </div>
+        </div>
+        <div id="outer-anchored" class="target outer-anchored">
+          Outer-anchored Target
+        </div>
+      </div>
+    </section>
+    <section id="custom-prop" class="demo-item">
+      <h2>
+        <a href="#custom-prop" aria-hidden="true">🔗</a>
+        Anchor() [used in CSS custom property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor" class="anchor">Anchor</div>
+        <div id="my-target" class="target">Target</div>
+      </div>
+    </section>
+    <section id="math-function" class="demo-item">
+      <h2>
+        <a href="#math-function" aria-hidden="true">🔗</a>
+        Anchor() [used in math function]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-math" class="anchor">Anchor</div>
+        <div id="my-target-math" class="target">Target</div>
+      </div>
+    </section>
+    <section id="anchor-size" class="demo-item">
+      <h2>
+        <a href="#anchor-size" aria-hidden="true">🔗</a>
+        Anchor Size
+      </h2>
+      <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
+      <div id="my-target-size" class="target">Target</div>
+    </section>
+    <footer>
+      <p>
+        Polyfill and demo by <a href="http://oddbird.net/">OddBird</a>. Designed
+        using <a href="https://open-props.style/">Open Props</a>.
+      </p>
+    </footer>
   </body>
 </html>

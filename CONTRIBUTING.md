@@ -37,6 +37,6 @@ Unit tests and end-to-end tests are available in the `tests/` folder.
 - Run end-to-end tests:
   - Configure Playwright (this step is only required once or when the version of
     `@playwright/test` changes in package.json):
-    `yarn dlx playwright install --with-deps`
+    `npx playwright install --with-deps`
   - Run tests (Chromium only): `yarn test:e2e`
   - Run tests (Chromium, Firefox & Webkit): `yarn test:e2e:ci`

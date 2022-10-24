@@ -1,19 +1,12 @@
 #my-anchor-fallback {
   anchor-name: --my-anchor-fallback;
-  margin-left: 45px;
-  width: 100px;
-  height: 30px;
-  background: orange;
 }
 
-#my-floating-fallback {
+#my-target-fallback {
+  bottom: anchor(--my-anchor-fallback 25%);
+  left: anchor(--my-anchor-fallback right);
   position: absolute;
   position-fallback: --fallback1;
-  left: anchor(--my-anchor-fallback right);
-  bottom: anchor(--my-anchor-fallback 25%);
-  width: 60px;
-  height: 25px;
-  background: green;
 }
 
 @position-fallback --fallback1 {
@@ -37,15 +30,15 @@
 
   @try {
     /* 4: Position to the top of the anchor. */
-    left: anchor(--my-anchor-fallback left);
     bottom: anchor(--my-anchor-fallback top);
+    left: anchor(--my-anchor-fallback left);
   }
 
   @try {
     /* 5: Position to the left with the narrower width. */
+    height: 40px;
     left: anchor(--my-anchor-fallback right);
     top: anchor(--my-anchor-fallback top);
     width: 35px;
-    height: 40px;
   }
 }

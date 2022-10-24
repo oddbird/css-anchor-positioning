@@ -1,17 +1,12 @@
 #my-anchor {
   anchor-name: --my-anchor;
-  background: orange;
-  width: 100px;
-  height: 100px;
 }
 
-#my-floating {
-  position: absolute;
-
+#my-target {
   --center: anchor(--my-anchor 50%);
   --full: anchor(--my-anchor 100%);
 
-  top: var(--center);
+  position: absolute;
   right: var(--full);
-  background: green;
+  top: var(--center);
 }

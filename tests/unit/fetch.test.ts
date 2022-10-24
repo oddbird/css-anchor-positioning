@@ -54,7 +54,7 @@ describe('fetch inline styles', () => {
             background: green;
           "
         >
-          Floating
+          Target
         </div>
         <div
           class="shared-class"
