@@ -22,20 +22,20 @@ test.afterAll(async () => {
 });
 
 const anchorSelector = '#my-anchor-positioning';
-const floatingSelector = '#my-floating-positioning';
+const targetSelector = '#my-target-positioning';
 
 async function callValidFunction(sharedPage: Page) {
   return await sharedPage.evaluate(
-    ([anchorSelector, floatingSelector]) => {
-      const floatingElement = document.querySelector(
-        floatingSelector,
+    ([anchorSelector, targetSelector]) => {
+      const targetElement = document.querySelector(
+        targetSelector,
       ) as HTMLElement;
       const anchorElement = document.querySelector(
         anchorSelector,
       ) as HTMLElement;
-      return isValidAnchorElement(anchorElement, floatingElement);
+      return isValidAnchorElement(anchorElement, targetElement);
     },
-    [anchorSelector, floatingSelector],
+    [anchorSelector, targetSelector],
   );
 }
 
@@ -46,7 +46,7 @@ test("anchor is valid when it's is a descendant of the query element CB", async 
     `
       <div style="position: relative">
         <div id="my-anchor-positioning">Anchor</div>
-        <div id="my-floating-positioning">Floating</div>
+        <div id="my-target-positioning">Target</div>
       </div>
   `,
     { waitUntil: 'domcontentloaded' },
@@ -64,12 +64,12 @@ test("anchor is valid if it's not descendant of query element CB but query eleme
     `
       <div style="position: relative>
         <div id="my-other-anchor-positioning">Anchor</div>
-        <div id="my-other-floating-positioning">Floating</div>
+        <div id="my-other-target-positioning">Target</div>
       </div>
 
       <div id="my-anchor-positioning">Anchor</div>
 
-      <div id="my-floating-positioning">Floating<div>
+      <div id="my-target-positioning">Target<div>
   `,
     { waitUntil: 'domcontentloaded' },
   );
@@ -82,8 +82,8 @@ test("anchor is valid if it's not descendant of query element CB but query eleme
 test("anchor is valid if it's not descendant of query element CB and query element CB is the ICB - position: fixed", async () => {
   await sharedPage.setContent(
     `
-      <div id="my-floating-positioning" style="position: fixed">
-        Floating
+      <div id="my-target-positioning" style="position: fixed">
+        Target
       </div>
       <div id="my-anchor-positioning">Anchor</div>
   `,
@@ -98,8 +98,8 @@ test("anchor is valid if it's not descendant of query element CB and query eleme
 test('anchor is valid if it is not descendant of query element CB and query element CB is the ICB - no positioned ancestor', async () => {
   await sharedPage.setContent(
     `
-      <div id="my-floating-positioning">
-        Floating
+      <div id="my-target-positioning">
+        Target
       </div>
       <div id="my-anchor-positioning">Anchor</div>
   `,
@@ -116,7 +116,7 @@ test("anchor is NOT valid if it's not descendant of query element CB AND query e
     `
       <div style="position: relative">
         <div id="my-other-anchor-positioning">Anchor</div>
-        <div id="my-other-floating-positioning">Floating</div>
+        <div id="my-other-target-positioning">Target</div>
       </div>
 
       <div style="position: relative">
@@ -124,7 +124,7 @@ test("anchor is NOT valid if it's not descendant of query element CB AND query e
       </div>
 
       <div style="position: relative">
-        <div id="my-floating-positioning">Floating<div>
+        <div id="my-target-positioning">Target<div>
       </div>
   `,
     { waitUntil: 'domcontentloaded' },
@@ -138,8 +138,8 @@ test("anchor is NOT valid if it's not descendant of query element CB AND query e
 test("anchor is NOT valid if it's not descendant of query element CB AND query element CB is not ICB - display:none", async () => {
   await sharedPage.setContent(
     `
-      <div id="my-floating-positioning" style="display:none">
-        Floating
+      <div id="my-target-positioning" style="display:none">
+        Target
       </div>
       <div id="my-anchor-positioning">Anchor</div>
   `,
@@ -158,7 +158,7 @@ test('anchor is valid when anchor has same CB as querying element and anchor is 
     `
       <div style="position: relative">
         <div id="my-anchor-positioning">Anchor</div>
-        <div id="my-floating-positioning">Floating</div>
+        <div id="my-target-positioning">Target</div>
       </div>;
   `,
     { waitUntil: 'domcontentloaded' },
@@ -174,7 +174,7 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
     `
       <div style="position: relative">
         <div id="my-anchor-positioning" style="position: absolute">Anchor</div>
-        <div id="my-floating-positioning">Floating</div>
+        <div id="my-target-positioning">Target</div>
       </div>;
   `,
     { waitUntil: 'domcontentloaded' },
@@ -233,7 +233,7 @@ test('anchor is valid if it has a different CB from the querying element, and th
               <div
                 class="target"
                 data-expected-width="10"
-                id="my-floating-positioning"
+                id="my-target-positioning"
               ></div>
             </div>
           </div>
@@ -292,7 +292,7 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
               <div
                 class="target"
                 data-expected-width="10"
-                id="my-floating-positioning"
+                id="my-target-positioning"
               ></div>
             </div>
           </div>
@@ -333,7 +333,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
         one in the pre-order DFS from the 'relpos'.
       -->
       <div class="relpos">
-        <div class="target" data-expected-width=10 id="my-floating-positioning">My Floating Element</div>
+        <div class="target" data-expected-width=10 id="my-target-positioning">My Target Element</div>
         <div class="anchor1" id="my-anchor-positioning" style="width: 10px">First Anchor Element
           <div class="anchor1" id="my-anchor-positioning" style="width: 20px">Second Anchor Element</div>
           <div class="target" data-expected-width=10></div>
@@ -353,7 +353,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
   expect(valid).toBe(true);
 
   const validationResults = await sharedPage.evaluate(
-    ([anchorSelector, floatingSelector]) => {
+    ([anchorSelector, targetSelector]) => {
       interface Data {
         results: {
           anchor: HTMLElement | null;
@@ -362,12 +362,12 @@ test('when multiple anchor elements have the same name and are valid, the first 
         anchorText: string | undefined;
       }
 
-      const floatingElement = document.querySelector(
-        floatingSelector,
+      const targetElement = document.querySelector(
+        targetSelector,
       ) as HTMLElement;
 
       const validatedData = {} as Data;
-      const anchor = validatedForPositioning(floatingElement, [anchorSelector]);
+      const anchor = validatedForPositioning(targetElement, [anchorSelector]);
 
       validatedData.results = { anchor };
       validatedData.anchorWidth = anchor?.style.width;
@@ -375,7 +375,7 @@ test('when multiple anchor elements have the same name and are valid, the first 
 
       return validatedData;
     },
-    [anchorSelector, floatingSelector],
+    [anchorSelector, targetSelector],
   );
 
   expect(validationResults.results.anchor).toBeTruthy;

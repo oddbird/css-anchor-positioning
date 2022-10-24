@@ -83,12 +83,12 @@ describe('getPixelValue', () => {
   });
 
   it.each([
-    [{ ...obj, anchorEdge: 'left', floatingPosition: 'left' }, '10px'],
-    [{ ...obj, anchorEdge: 'right', floatingPosition: 'left' }, '30px'],
-    [{ ...obj, anchorEdge: 'top', floatingPosition: 'top' }, '50px'],
-    [{ ...obj, anchorEdge: 'bottom', floatingPosition: 'top' }, '90px'],
-    [{ ...obj, anchorEdge: 'center', floatingPosition: 'top' }, '70px'],
-    [{ ...obj, anchorEdge: 'center', floatingPosition: 'left' }, '20px'],
+    [{ ...obj, anchorEdge: 'left', targetProperty: 'left' }, '10px'],
+    [{ ...obj, anchorEdge: 'right', targetProperty: 'left' }, '30px'],
+    [{ ...obj, anchorEdge: 'top', targetProperty: 'top' }, '50px'],
+    [{ ...obj, anchorEdge: 'bottom', targetProperty: 'top' }, '90px'],
+    [{ ...obj, anchorEdge: 'center', targetProperty: 'top' }, '70px'],
+    [{ ...obj, anchorEdge: 'center', targetProperty: 'left' }, '20px'],
     [
       {
         ...obj,
@@ -97,16 +97,13 @@ describe('getPixelValue', () => {
       },
       '100px',
     ],
-    [
-      { ...obj, anchorEdge: 25, floatingPosition: 'top', floatingEl: {} },
-      '60px',
-    ],
+    [{ ...obj, anchorEdge: 25, targetProperty: 'top', targetEl: {} }, '60px'],
     [
       {
         ...obj,
         anchorEdge: 'end',
-        floatingPosition: 'left',
-        floatingEl: {},
+        targetProperty: 'left',
+        targetEl: {},
       },
       '30px',
     ],
@@ -114,7 +111,7 @@ describe('getPixelValue', () => {
       {
         ...obj,
         anchorEdge: 'start',
-        floatingEl: {},
+        targetEl: {},
         fallback: '100px',
       },
       '100px',

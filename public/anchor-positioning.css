@@ -1,15 +1,9 @@
 #my-anchor-positioning {
   anchor-name: --my-anchor-positioning;
-  background: orange;
-  margin-left: 100px;
-  margin-top: 100px;
-  width: 100px;
-  height: 100px;
 }
 
-#my-floating-positioning {
+#my-target-positioning {
   position: absolute;
-  top: anchor(--my-anchor-positioning bottom);
   right: anchor(--my-anchor-positioning right, 50px);
-  background: green;
+  top: anchor(--my-anchor-positioning bottom);
 }

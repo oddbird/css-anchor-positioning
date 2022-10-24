@@ -1,17 +1,12 @@
 #my-anchor-props {
   anchor-name: --my-anchor-props;
-  background: orange;
-  width: 100px;
-  height: 100px;
 }
 
-#my-floating-props {
-  position: absolute;
-
+#my-target-props {
   --center: anchor(--my-anchor-props 50%);
   --half-distance: calc(var(--center) + 100px);
 
-  top: var(--center);
+  position: absolute;
   left: var(--half-distance);
-  background: green;
+  top: var(--center);
 }

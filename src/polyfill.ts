@@ -55,8 +55,9 @@ export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
   return undefined;
 };
 
-// @@@ This should also check the writing-mode
+// This should also check the writing-mode
 // See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
+// https://trello.com/c/KnqCnHx3
 export const getAxis = (position?: string) => {
   switch (position) {
     case 'top':
@@ -80,23 +81,23 @@ export const getAxisProperty = (axis: 'x' | 'y' | null) => {
 };
 
 export interface GetPixelValueOpts {
-  floatingEl: HTMLElement;
-  floatingPosition: string;
+  targetEl: HTMLElement;
+  targetProperty: string;
   anchorRect: Rect;
   anchorEdge?: AnchorSide;
   fallback: string;
 }
 
 export const getPixelValue = ({
-  floatingEl,
-  floatingPosition,
+  targetEl,
+  targetProperty,
   anchorRect,
   anchorEdge,
   fallback,
 }: GetPixelValueOpts) => {
   let percentage: number | undefined;
   let offsetParent: Element | Window | HTMLElement | undefined;
-  const axis = getAxis(floatingPosition);
+  const axis = getAxis(targetProperty);
 
   switch (anchorEdge) {
     case 'left':
@@ -116,11 +117,12 @@ export const getPixelValue = ({
       break;
     default:
       // Logical keywords require checking the writing direction
-      // of the floating element (or its containing block)
-      if (anchorEdge !== undefined && floatingEl) {
-        // @@@ `start` and `end` should use the writing-mode of the element's
-        // containing block, not the element itself
-        const rtl = isRTL(floatingEl) || false;
+      // of the target element (or its containing block)
+      if (anchorEdge !== undefined && targetEl) {
+        // `start` and `end` should use the writing-mode of the element's
+        // containing block, not the element itself:
+        // https://trello.com/c/KnqCnHx3
+        const rtl = isRTL(targetEl) || false;
         percentage = resolveLogicalKeyword(anchorEdge, rtl);
       }
   }
@@ -128,10 +130,10 @@ export const getPixelValue = ({
   const hasPercentage =
     typeof percentage === 'number' && !Number.isNaN(percentage);
 
-  if (floatingPosition === 'bottom' || floatingPosition === 'right') {
-    offsetParent = getOffsetParent(floatingEl);
+  if (targetProperty === 'bottom' || targetProperty === 'right') {
+    offsetParent = getOffsetParent(targetEl);
     if (!isElement(offsetParent)) {
-      offsetParent = getDocumentElement(floatingEl);
+      offsetParent = getDocumentElement(targetEl);
     }
   }
 
@@ -139,7 +141,7 @@ export const getPixelValue = ({
   if (hasPercentage && axis && dir) {
     let value =
       anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
-    switch (floatingPosition) {
+    switch (targetProperty) {
       case 'bottom':
         value = (offsetParent as HTMLElement).clientHeight - value;
         break;
@@ -154,10 +156,10 @@ export const getPixelValue = ({
 };
 
 export function position(rules: AnchorPositions) {
-  Object.entries(rules).forEach(([floatingSel, position]) => {
-    const floating: HTMLElement | null = document.querySelector(floatingSel);
+  Object.entries(rules).forEach(([targetSel, position]) => {
+    const target: HTMLElement | null = document.querySelector(targetSel);
 
-    if (!floating) {
+    if (!target) {
       return;
     }
 
@@ -165,20 +167,20 @@ export function position(rules: AnchorPositions) {
       ([property, anchorValue]) => {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
-          autoUpdate(anchor, floating, () => {
+          autoUpdate(anchor, target, () => {
             const rects = getElementRects({
               reference: anchor,
-              floating,
+              floating: target,
               strategy: 'absolute',
             });
             const resolved = getPixelValue({
-              floatingEl: floating,
-              floatingPosition: property,
+              targetEl: target,
+              targetProperty: property,
               anchorRect: rects.reference,
               anchorEdge: anchorValue.anchorEdge,
               fallback: anchorValue.fallbackValue,
             });
-            Object.assign(floating.style, { [property]: resolved });
+            Object.assign(target.style, { [property]: resolved });
           });
         }
       },
@@ -196,7 +198,8 @@ export async function polyfill() {
   if (Object.values(rules).length) {
     position(rules);
 
-    // @@@ update source code
+    // update source code
+    // https://trello.com/c/f1L7Ti8m
     // transformCSS(styleData);
   }
 
