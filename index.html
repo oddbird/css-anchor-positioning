@@ -69,12 +69,22 @@
         >
       </nav>
     </header>
+    <section>
+      <h2>Anchoring Elements Using CSS</h2>
+      <p>
+        The proposed <code>anchor()</code> and
+        <code>anchor-size()</code> functions add flexibility to how absolutely
+        positioned elements can be placed within a layout. Instead of being
+        sized and positioned based solely on the position of their containing
+        block, the proposed new functions allow absolutely positioned elements
+        to be placed relative to one or more author-defined anchor elements.
+      </p>
+    </section>
     <div data-controls="apply-polyfill">
       <button id="apply-polyfill" data-button="apply-polyfill" type="button">
         Apply Polyfill
       </button>
     </div>
-
     <section id="anchor-positioning" class="demo-item">
       <h2>
         <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
@@ -305,8 +315,22 @@
     </section>
     <footer>
       <p>
-        Polyfill and demo by <a href="http://oddbird.net/">OddBird</a>. Designed
-        using <a href="https://open-props.style/">Open Props</a>.
+        Spec proposal by
+        <a
+          href="https://tabatkins.github.io/specs/css-anchor-position"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Tab Atkins-Bittner</a
+        >. Polyfill and demo by
+        <a href="http://oddbird.net/" target="_blank" rel="noopener noreferrer"
+          >OddBird</a
+        >. Designed using
+        <a
+          href="https://open-props.style/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Open Props</a
+        >.
       </p>
     </footer>
   </body>
