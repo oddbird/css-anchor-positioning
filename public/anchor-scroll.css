@@ -16,7 +16,7 @@
 
 #placefiller-before-anchor {
   display: inline-block;
-  width: 500px;
+  width: 300px;
 }
 
 #scroll-anchor {
@@ -24,13 +24,13 @@
 }
 
 #inner-anchored {
-  bottom: anchor(--scroll-anchor top);
   position: absolute;
-  right: anchor(--scroll-anchor start);
+  bottom: anchor(--scroll-anchor top);
+  left: anchor(--scroll-anchor end);
 }
 
 #outer-anchored {
   position: absolute;
-  right: anchor(--scroll-anchor start);
   top: anchor(--scroll-anchor bottom);
+  right: anchor(--scroll-anchor start);
 }

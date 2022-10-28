@@ -95,11 +95,10 @@
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
       <p class="note">
-        With polyfill applied: Target and Anchor's right edges line up. And the
-        Target's top edge starts at the bottom of the Anchor.
+        With polyfill applied: Target and Anchor's right edges line up. Target's
+        top edge lines up with the bottom edge of the Anchor.
       </p>
       <pre>
-
 /* demo.css */
 
 #my-anchor-positioning {
@@ -108,10 +107,10 @@
 
 #my-target-positioning {
   position: absolute;
-  right: anchor(--my-anchor-positioning right, 50px);
   top: anchor(--my-anchor-positioning bottom);
-}
-      </pre>
+  right: anchor(--my-anchor-positioning right, 50px);
+}</pre
+      >
     </section>
     <section id="anchor-style-tag" class="demo-item">
       <h2>
@@ -123,11 +122,11 @@
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
       <p class="note">
-        With polyfill applied: Target sits at the top left corner of the Anchor.
+        With polyfill applied: Target is positioned at the top left corner of
+        the Anchor.
       </p>
       <pre>
-
-/* from the inside of a <code>style</code> tag */
+/* a <code>style</code> tag */
 
 #my-anchor-style-tag {
   anchor-name: --my-anchor-style-tag;
@@ -137,8 +136,8 @@
   position: absolute;
   bottom: anchor(--my-anchor-style-tag start);
   right: anchor(--my-anchor-style-tag left);
-}
-      </pre>
+}</pre
+      >
     </section>
     <section id="anchor-inline" class="demo-item">
       <h2>
@@ -167,26 +166,25 @@
       </div>
       <p class="note">
         With polyfill applied: Target and Anchor's right edges line up. Target's
-        top start's at Anchor's bottom.
+        top edge lines up with the bottom edge of the Anchor.
       </p>
       <pre>
+/* inline <code>style</code> attributes */
 
 /* anchor */
 
   style="anchor-name: --my-anchor-in-line"
- 
+
 /* target */
 
   style="
     position: absolute;
     top: anchor(--my-anchor-in-line bottom);
     right: anchor(--my-anchor-in-line right);
-  "
-
-    </pre
+  "</pre
       >
     </section>
-    <section id="position-fallback" class="demo-item">
+    <!-- <section id="position-fallback" class="demo-item">
       <h2>
         <a href="#position-fallback" aria-hidden="true">🔗</a>
         Anchor Positioning via position-fallback
@@ -204,7 +202,6 @@
         alternatives to try.
       </p>
       <pre>
-
 #my-anchor-fallback {
   anchor-name: --my-anchor-fallback;
 }
@@ -248,10 +245,8 @@
     top: anchor(--my-anchor-fallback top);
     width: 35px;
   }
-}
-
-      </pre>
-    </section>
+}</pre>
+    </section> -->
     <section id="anchor-scroll" class="demo-item">
       <h2>
         <a href="#anchor-scroll" aria-hidden="true">🔗</a>
@@ -271,30 +266,27 @@
         </div>
       </div>
       <p class="note">
-        With polyfill applied: The Inner-anchored Target's bottom aligns with
-        the top of the Anchor. The Outer-anchored Target's top is aligned with
-        the Anchor's bottom. The right sides of both Targets align with the
-        start of the Anchor.
+        With polyfill applied: The Inner-anchored Target is positioned at the
+        top right corner of the Anchor. The Outer-anchored Target is positioned
+        at the bottom left corner of the Anchor.
       </p>
       <pre>
-
 #scroll-anchor {
   anchor-name: --scroll-anchor;
 }
 
 #inner-anchored {
-  bottom: anchor(--scroll-anchor top);
   position: absolute;
-  right: anchor(--scroll-anchor start);
+  bottom: anchor(--scroll-anchor top);
+  left: anchor(--scroll-anchor end);
 }
 
 #outer-anchored {
   position: absolute;
-  right: anchor(--scroll-anchor start);
   top: anchor(--scroll-anchor bottom);
-}
-
-      </pre>
+  right: anchor(--scroll-anchor start);
+}</pre
+      >
     </section>
     <section id="custom-prop" class="demo-item">
       <h2>
@@ -306,12 +298,11 @@
         <div id="my-target" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's bottom sits at 50% of the height of the
-        Anchor. The right edge of the Target lines up with 100% of the width of
-        the Anchor.
+        With polyfill applied: Target's top edge is positioned at 50% of the
+        height of the Anchor. The right edge of the Target lines up with 100% of
+        the width of the Anchor (i.e. the Anchor's right edge).
       </p>
       <pre>
-
 #my-anchor {
   anchor-name: --my-anchor;
 }
@@ -321,12 +312,12 @@
   --full: anchor(--my-anchor 100%);
 
   position: absolute;
-  right: var(--full);
   top: var(--center);
-}
-      </pre>
+  right: var(--full);
+}</pre
+      >
     </section>
-    <section id="math-function" class="demo-item">
+    <!-- <section id="math-function" class="demo-item">
       <h2>
         <a href="#math-function" aria-hidden="true">🔗</a>
         Anchor() [used in math function]
@@ -335,13 +326,11 @@
         <div id="my-anchor-math" class="anchor">Anchor</div>
         <div id="my-target-math" class="target">Target</div>
       </div>
-      <!-- @@@ TODO: Make visible when positioning is working? @@@ -->
-      <!-- <p class="note">
+      <p class="note">
         With polyfill applied: Target's left edge is aligned with 100% of the width of
         the Anchor. The top edge of the Target lines up with 100% of the height of the Anchor, minus 50px.
       </p>
       <pre>
-
 #my-anchor-math {
   anchor-name: --my-anchor-math;
 }
@@ -350,22 +339,18 @@
   --full-math: anchor(--my-anchor-math 100%);
 
   position: absolute;
-  left: var(--full-math);
   top: calc(var(--full-math) - 50px);
-}
-
-      </pre> -->
-    </section>
-    <section id="anchor-size" class="demo-item">
+  left: var(--full-math);
+}</pre>
+    </section> -->
+    <!-- <section id="anchor-size" class="demo-item">
       <h2>
         <a href="#anchor-size" aria-hidden="true">🔗</a>
         Anchor Size
       </h2>
       <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
       <div id="my-target-size" class="target">Target</div>
-      <!-- @@@ TODO: Fill in when positioning is working? @@@ -->
-      <!-- <pre>
-       
+      <pre>
  #my-anchor-size {
   anchor-name: --my-anchor;
   width: 5em;
@@ -373,9 +358,8 @@
 
 #my-target-size {
   width: anchor-size(--my-anchor width);
-}
-      </pre> -->
-    </section>
+}</pre>
+    </section> -->
     <footer>
       <p>
         Spec proposal by
@@ -385,7 +369,10 @@
           rel="noopener noreferrer"
           >Tab Atkins-Bittner</a
         >. Polyfill and demo by
-        <a href="http://oddbird.net/" target="_blank" rel="noopener noreferrer"
+        <a
+          href="https://www.oddbird.net/"
+          target="_blank"
+          rel="noopener noreferrer"
           >OddBird</a
         >. Designed using
         <a
