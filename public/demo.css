@@ -19,6 +19,7 @@ html {
   --link-focus: var(--text);
   --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
+  --note-color: var(--target);
 
   background-color: var(--bg);
   color: var(--text);
@@ -100,6 +101,7 @@ footer p {
   grid-template:
     'heading heading heading' min-content
     '. elements .' min-content
+    'note note note' min-content
     'code code code' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
 }
 
@@ -110,6 +112,14 @@ footer p {
 
 .demo-elements {
   grid-area: elements;
+}
+
+.demo-item .note {
+  background-color: var(--callout);
+  border-left: 0.5em solid var(--note-color);
+  grid-area: note;
+  margin: 2em 0 0;
+  padding: 1em;
 }
 
 /* links & buttons */

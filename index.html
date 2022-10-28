@@ -94,6 +94,10 @@
         <div id="my-target-positioning" class="target">Target</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target and Anchor's right edges line up. And the
+        Target's top edge starts at the bottom of the Anchor.
+      </p>
       <pre>
 
 /* demo.css */
@@ -118,6 +122,9 @@
         <div id="my-target-style-tag" class="target">Target</div>
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target sits at the top left corner of the Anchor.
+      </p>
       <pre>
 
 /* from the inside of a <code>style</code> tag */
@@ -158,6 +165,10 @@
           Anchor
         </div>
       </div>
+      <p class="note">
+        With polyfill applied: Target and Anchor's right edges line up. Target's
+        top start's at Anchor's bottom.
+      </p>
       <pre>
 
 /* anchor */
@@ -184,6 +195,14 @@
         <div id="my-target-fallback" class="target">Target</div>
         <div id="my-anchor-fallback" class="anchor">Anchor</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target's bottom sits at 25% of the height of the
+        Anchor. The left edge of the Target is aligned with the right edge of
+        the Anchor. If there is no space for the Target element at the initial
+        position, the
+        <code>@position-fallback</code> block lists additional positioning
+        alternatives to try.
+      </p>
       <pre>
 
 #my-anchor-fallback {
@@ -261,6 +280,11 @@
         <div id="my-anchor" class="anchor">Anchor</div>
         <div id="my-target" class="target">Target</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target's bottom sits at 50% of the height of the
+        Anchor. The right edge of the Target lines up with 100% of the width of
+        the Anchor.
+      </p>
       <pre>
 
 #my-anchor {
