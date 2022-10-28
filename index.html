@@ -270,6 +270,31 @@
           Outer-anchored Target
         </div>
       </div>
+      <p class="note">
+        With polyfill applied: The Inner-anchored Target's bottom aligns with
+        the top of the Anchor. The Outer-anchored Target's top is aligned with
+        the Anchor's bottom. The right sides of both Targets align with the
+        start of the Anchor.
+      </p>
+      <pre>
+
+#scroll-anchor {
+  anchor-name: --scroll-anchor;
+}
+
+#inner-anchored {
+  bottom: anchor(--scroll-anchor top);
+  position: absolute;
+  right: anchor(--scroll-anchor start);
+}
+
+#outer-anchored {
+  position: absolute;
+  right: anchor(--scroll-anchor start);
+  top: anchor(--scroll-anchor bottom);
+}
+
+      </pre>
     </section>
     <section id="custom-prop" class="demo-item">
       <h2>
@@ -310,15 +335,26 @@
         <div id="my-anchor-math" class="anchor">Anchor</div>
         <div id="my-target-math" class="target">Target</div>
       </div>
+      <!-- @@@ TODO: Make visible when positioning is working? @@@ -->
+      <!-- <p class="note">
+        With polyfill applied: Target's left edge is aligned with 100% of the width of
+        the Anchor. The top edge of the Target lines up with 100% of the height of the Anchor, minus 50px.
+      </p>
       <pre>
+
 #my-anchor-math {
-  . . .
+  anchor-name: --my-anchor-math;
 }
 
 #my-target-math {
-  . . .
+  --full-math: anchor(--my-anchor-math 100%);
+
+  position: absolute;
+  left: var(--full-math);
+  top: calc(var(--full-math) - 50px);
 }
-      </pre>
+
+      </pre> -->
     </section>
     <section id="anchor-size" class="demo-item">
       <h2>
@@ -327,15 +363,18 @@
       </h2>
       <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
       <div id="my-target-size" class="target">Target</div>
-      <pre>
-#my-anchor-size {
-  . . .
+      <!-- @@@ TODO: Fill in when positioning is working? @@@ -->
+      <!-- <pre>
+       
+ #my-anchor-size {
+  anchor-name: --my-anchor;
+  width: 5em;
 }
 
 #my-target-size {
-  . . .
+  width: anchor-size(--my-anchor width);
 }
-      </pre>
+      </pre> -->
     </section>
     <footer>
       <p>
