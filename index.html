@@ -62,19 +62,85 @@
           >WPT examples</a
         >
         <a
-          href="https://tabatkins.github.io/specs/css-anchor-position"
+          href="https://drafts.csswg.org/css-anchor-1/"
           target="_blank"
           rel="noopener noreferrer"
           >Draft Spec</a
         >
       </nav>
     </header>
+    <section>
+      <h2>Anchoring Elements Using CSS</h2>
+      <p>
+        The CSS anchor positioning
+        <a
+          href="https://drafts.csswg.org/css-anchor-1/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >specification</a
+        >
+        defines anchor positioning, "where a positioned element can size and
+        position itself relative to one or more 'anchor elements' elsewhere on
+        the page." This CSS Anchor Positioning Polyfill supports and is based on
+        this specification.
+      </p>
+      <p>
+        The proposed <code>anchor()</code> and
+        <code>anchor-size()</code> functions add flexibility to how absolutely
+        positioned elements can be placed within a layout. Instead of being
+        sized and positioned based solely on the position of their containing
+        block, the proposed new functions allow absolutely positioned elements
+        to be placed relative to one or more author-defined anchor elements.
+      </p>
+      <ul>
+        <li>
+          View the polyfill on
+          <a
+            href="https://github.com/oddbird/css-anchor-positioning"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub</a
+          >
+          or browse
+          <a
+            href="https://github.com/oddbird/css-anchor-positioning/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            >open issues</a
+          >.
+        </li>
+        <li>
+          Find the polyfill on
+          <a
+            href="https://www.npmjs.com/package/@oddbird/css-anchor-positioning"
+            target="_blank"
+            rel="noopener noreferrer"
+            >npm</a
+          >.
+        </li>
+        <li>
+          Browse or open issues related to the specification
+          <a
+            href="https://github.com/w3c/csswg-drafts/labels/css-anchor-1"
+            target="_blank"
+            rel="noopener noreferrer"
+            >here</a
+          >
+          or
+          <a
+            href="https://github.com/tabatkins/specs/issues?q=is%3Aissue+is%3Aopen+%5Bcss-anchor-position%5D"
+            target="_blank"
+            rel="noopener noreferrer"
+            >here</a
+          >.
+        </li>
+      </ul>
+    </section>
     <div data-controls="apply-polyfill">
       <button id="apply-polyfill" data-button="apply-polyfill" type="button">
         Apply Polyfill
       </button>
     </div>
-
     <section id="anchor-positioning" class="demo-item">
       <h2>
         <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
@@ -84,6 +150,23 @@
         <div id="my-target-positioning" class="target">Target</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target and Anchor's right edges line up. Target's
+        top edge lines up with the bottom edge of the Anchor.
+      </p>
+      <pre>
+/* demo.css */
+
+#my-anchor-positioning {
+  anchor-name: --my-anchor-positioning;
+}
+
+#my-target-positioning {
+  position: absolute;
+  top: anchor(--my-anchor-positioning bottom);
+  right: anchor(--my-anchor-positioning right, 50px);
+}</pre
+      >
     </section>
     <section id="anchor-style-tag" class="demo-item">
       <h2>
@@ -94,6 +177,23 @@
         <div id="my-target-style-tag" class="target">Target</div>
         <div id="my-anchor-style-tag" class="anchor">Anchor</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the top left corner of
+        the Anchor.
+      </p>
+      <pre>
+/* a <code>style</code> tag */
+
+#my-anchor-style-tag {
+  anchor-name: --my-anchor-style-tag;
+}
+
+#my-target-style-tag {
+  position: absolute;
+  bottom: anchor(--my-anchor-style-tag start);
+  right: anchor(--my-anchor-style-tag left);
+}</pre
+      >
     </section>
     <section id="anchor-inline" class="demo-item">
       <h2>
@@ -120,8 +220,27 @@
           Anchor
         </div>
       </div>
+      <p class="note">
+        With polyfill applied: Target and Anchor's right edges line up. Target's
+        top edge lines up with the bottom edge of the Anchor.
+      </p>
+      <pre>
+/* inline <code>style</code> attributes */
+
+/* anchor */
+
+  style="anchor-name: --my-anchor-in-line"
+
+/* target */
+
+  style="
+    position: absolute;
+    top: anchor(--my-anchor-in-line bottom);
+    right: anchor(--my-anchor-in-line right);
+  "</pre
+      >
     </section>
-    <section id="position-fallback" class="demo-item">
+    <!-- <section id="position-fallback" class="demo-item">
       <h2>
         <a href="#position-fallback" aria-hidden="true">🔗</a>
         Anchor Positioning via position-fallback
@@ -130,7 +249,60 @@
         <div id="my-target-fallback" class="target">Target</div>
         <div id="my-anchor-fallback" class="anchor">Anchor</div>
       </div>
-    </section>
+      <p class="note">
+        With polyfill applied: Target's bottom sits at 25% of the height of the
+        Anchor. The left edge of the Target is aligned with the right edge of
+        the Anchor. If there is no space for the Target element at the initial
+        position, the
+        <code>@position-fallback</code> block lists additional positioning
+        alternatives to try.
+      </p>
+      <pre>
+#my-anchor-fallback {
+  anchor-name: --my-anchor-fallback;
+}
+
+#my-target-fallback {
+  bottom: anchor(--my-anchor-fallback 25%);
+  left: anchor(--my-anchor-fallback right);
+  position: absolute;
+  position-fallback: --fallback1;
+}
+
+@position-fallback --fallback1 {
+  @try {
+    /* 1: Position to the right of the anchor. */
+    left: anchor(--my-anchor-fallback right, 10px);
+    top: anchor(--my-anchor-fallback top);
+}
+
+  @try {
+    /* 2: Position to the left of the anchor. */
+    right: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback top);
+}
+
+  @try {
+    /* 3: Position to the bottom of the anchor. */
+    left: anchor(--my-anchor-fallback left);
+    top: anchor(--my-anchor-fallback bottom);
+}
+
+  @try {
+    /* 4: Position to the top of the anchor. */
+    bottom: anchor(--my-anchor-fallback top);
+    left: anchor(--my-anchor-fallback left);
+}
+
+  @try {
+    /* 5: Position to the left with the narrower width. */
+    height: 40px;
+    left: anchor(--my-anchor-fallback right);
+    top: anchor(--my-anchor-fallback top);
+    width: 35px;
+  }
+}</pre>
+    </section> -->
     <section id="anchor-scroll" class="demo-item">
       <h2>
         <a href="#anchor-scroll" aria-hidden="true">🔗</a>
@@ -149,6 +321,28 @@
           Outer-anchored Target
         </div>
       </div>
+      <p class="note">
+        With polyfill applied: The Inner-anchored Target is positioned at the
+        top right corner of the Anchor. The Outer-anchored Target is positioned
+        at the bottom left corner of the Anchor.
+      </p>
+      <pre>
+#scroll-anchor {
+  anchor-name: --scroll-anchor;
+}
+
+#inner-anchored {
+  position: absolute;
+  bottom: anchor(--scroll-anchor top);
+  left: anchor(--scroll-anchor end);
+}
+
+#outer-anchored {
+  position: absolute;
+  top: anchor(--scroll-anchor bottom);
+  right: anchor(--scroll-anchor start);
+}</pre
+      >
     </section>
     <section id="custom-prop" class="demo-item">
       <h2>
@@ -159,8 +353,27 @@
         <div id="my-anchor" class="anchor">Anchor</div>
         <div id="my-target" class="target">Target</div>
       </div>
+      <p class="note">
+        With polyfill applied: Target's top edge is positioned at 50% of the
+        height of the Anchor. The right edge of the Target lines up with 100% of
+        the width of the Anchor (i.e. the Anchor's right edge).
+      </p>
+      <pre>
+#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-target {
+  --center: anchor(--my-anchor 50%);
+  --full: anchor(--my-anchor 100%);
+
+  position: absolute;
+  top: var(--center);
+  right: var(--full);
+}</pre
+      >
     </section>
-    <section id="math-function" class="demo-item">
+    <!-- <section id="math-function" class="demo-item">
       <h2>
         <a href="#math-function" aria-hidden="true">🔗</a>
         Anchor() [used in math function]
@@ -169,19 +382,61 @@
         <div id="my-anchor-math" class="anchor">Anchor</div>
         <div id="my-target-math" class="target">Target</div>
       </div>
-    </section>
-    <section id="anchor-size" class="demo-item">
+      <p class="note">
+        With polyfill applied: Target's left edge is aligned with 100% of the width of
+        the Anchor. The top edge of the Target lines up with 100% of the height of the Anchor, minus 50px.
+      </p>
+      <pre>
+#my-anchor-math {
+  anchor-name: --my-anchor-math;
+}
+
+#my-target-math {
+  --full-math: anchor(--my-anchor-math 100%);
+
+  position: absolute;
+  top: calc(var(--full-math) - 50px);
+  left: var(--full-math);
+}</pre>
+    </section> -->
+    <!-- <section id="anchor-size" class="demo-item">
       <h2>
         <a href="#anchor-size" aria-hidden="true">🔗</a>
         Anchor Size
       </h2>
       <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
       <div id="my-target-size" class="target">Target</div>
-    </section>
+      <pre>
+ #my-anchor-size {
+  anchor-name: --my-anchor;
+  width: 5em;
+}
+
+#my-target-size {
+  width: anchor-size(--my-anchor width);
+}</pre>
+    </section> -->
     <footer>
       <p>
-        Polyfill and demo by <a href="http://oddbird.net/">OddBird</a>. Designed
-        using <a href="https://open-props.style/">Open Props</a>.
+        Spec proposal by
+        <a
+          href="http://xanthir.com/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Tab Atkins-Bittner</a
+        >. Polyfill and demo by
+        <a
+          href="https://www.oddbird.net/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >OddBird</a
+        >. Designed using
+        <a
+          href="https://open-props.style/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Open Props</a
+        >.
       </p>
     </footer>
   </body>
