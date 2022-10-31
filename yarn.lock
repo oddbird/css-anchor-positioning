@@ -474,7 +474,7 @@ __metadata:
     "@types/uuid": ^8.3.4
     "@typescript-eslint/eslint-plugin": ^5.41.0
     "@typescript-eslint/parser": ^5.41.0
-    "@vitest/coverage-istanbul": ^0.24.3
+    "@vitest/coverage-istanbul": ^0.24.4
     cross-env: ^7.0.3
     css-tree: ^2.2.1
     eslint: ^8.26.0
@@ -494,8 +494,8 @@ __metadata:
     ts-node: ^10.9.1
     typescript: ^4.8.4
     uuid: ^9.0.0
-    vite: ^3.2.1
-    vitest: ^0.24.3
+    vite: ^3.2.2
+    vitest: ^0.24.4
   languageName: unknown
   linkType: soft
 
@@ -758,9 +758,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/coverage-istanbul@npm:^0.24.3":
-  version: 0.24.3
-  resolution: "@vitest/coverage-istanbul@npm:0.24.3"
+"@vitest/coverage-istanbul@npm:^0.24.4":
+  version: 0.24.4
+  resolution: "@vitest/coverage-istanbul@npm:0.24.4"
   dependencies:
     istanbul-lib-coverage: ^3.2.0
     istanbul-lib-instrument: ^5.2.1
@@ -768,8 +768,8 @@ __metadata:
     istanbul-lib-source-maps: ^4.0.1
     istanbul-reports: ^3.1.5
     test-exclude: ^6.0.0
-    vitest: 0.24.3
-  checksum: 289b5d55ee815a941fbabf29de10d39b32af92741a6539f323dc8bbb308d1a4dfeddebb48b0db897acf89dd3ccd214362b6c4db1d7f5640add8096e424d99a8e
+    vitest: 0.24.4
+  checksum: ba93174d6a34f01688108d97e71906df4e42b2cfe1f4e8b55a8e303f95b3337d7c368d52ad6fe159b8639da00b39f9efbc783c7d74c584f2b938f8cd2b1c0f05
   languageName: node
   linkType: hard
 
@@ -4899,7 +4899,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinybench@npm:^2.3.0":
+"tinybench@npm:^2.3.1":
   version: 2.3.1
   resolution: "tinybench@npm:2.3.1"
   checksum: 74d45fa546d964a8123f98847fc59550945ed7f0d3e5a4ce0f9596d836b51c1d340c2ae0277a8023c15dc9ea3d7cb948a79173bfc46338c9b367c6323ea1eaf3
@@ -5231,9 +5231,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^3.0.0, vite@npm:^3.2.1":
-  version: 3.2.1
-  resolution: "vite@npm:3.2.1"
+"vite@npm:^3.0.0, vite@npm:^3.2.2":
+  version: 3.2.2
+  resolution: "vite@npm:3.2.2"
   dependencies:
     esbuild: ^0.15.9
     fsevents: ~2.3.2
@@ -5262,13 +5262,13 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: d33f6f4c80f85f327cf74c56d2189f1ba1d808987501eae9455c65bbb1ba5ea96af0f68647e18fe0c61e82126ea91f10480c1e80964a6836a751502647a42f2b
+  checksum: 7197ac91c612dda922367a95afa1b210353d6168d41845c186e2217bda1328d17b021b93d8089e336f9533b94645ae5dca18bb10937759f559c87006dd957fcd
   languageName: node
   linkType: hard
 
-"vitest@npm:0.24.3, vitest@npm:^0.24.3":
-  version: 0.24.3
-  resolution: "vitest@npm:0.24.3"
+"vitest@npm:0.24.4, vitest@npm:^0.24.4":
+  version: 0.24.4
+  resolution: "vitest@npm:0.24.4"
   dependencies:
     "@types/chai": ^4.3.3
     "@types/chai-subset": ^1.3.3
@@ -5277,7 +5277,7 @@ __metadata:
     debug: ^4.3.4
     local-pkg: ^0.4.2
     strip-literal: ^0.4.2
-    tinybench: ^2.3.0
+    tinybench: ^2.3.1
     tinypool: ^0.3.0
     tinyspy: ^1.0.2
     vite: ^3.0.0
@@ -5300,7 +5300,7 @@ __metadata:
       optional: true
   bin:
     vitest: vitest.mjs
-  checksum: dd954f57396b81df466dd4346aa6c95709a1b3c2409d5526d3172fa34ec684f756a855f885778929a6b903a22b2517ff79d22f936fb3e4d7d54ff24e8e577459
+  checksum: 5e6072ce6b85e8130a1a44012350887984577f6e120c3b13128a576b1c80c3bf7a5bcc458b3989e3f3ece70301f102781aaa53ea7c2cb0730ee7fc3dc51df300
   languageName: node
   linkType: hard
 
