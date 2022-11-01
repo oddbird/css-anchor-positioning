@@ -344,10 +344,9 @@ export function parseCSS(css: string) {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
             const anchorName = (value as AnchorFunction).anchorName;
-            const anchorSelectors =
-              anchorName && anchorName in anchorNames
-                ? anchorNames[anchorName]
-                : [];
+            const anchorSelectors = anchorName
+              ? anchorNames[anchorName] ?? []
+              : [];
             const anchorEl = validatedForPositioning(targetEl, anchorSelectors);
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
