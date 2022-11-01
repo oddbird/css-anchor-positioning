@@ -5,7 +5,7 @@ export function validatedForPositioning(
   targetEl: HTMLElement | null,
   anchorSelectors: string[],
 ) {
-  if (!targetEl || anchorSelectors.length == 0) {
+  if (!targetEl || anchorSelectors.length === 0) {
     return null;
   }
 
