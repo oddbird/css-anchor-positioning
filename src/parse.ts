@@ -363,10 +363,9 @@ export function parseCSS(css: string) {
     const targetEl: HTMLElement | null = document.querySelector(targetSel);
     for (const [targetProperty, anchorObj] of Object.entries(anchorFns)) {
       // Populate `anchorEl` for each `anchor()` fn
-      const anchorSelectors =
-        anchorObj.anchorName && anchorObj.anchorName in anchorNames
-          ? anchorNames[anchorObj.anchorName]
-          : [];
+      const anchorSelectors = anchorObj.anchorName
+        ? anchorNames[anchorObj.anchorName] ?? []
+        : [];
       validPositions[targetSel] = {
         ...validPositions[targetSel],
         declarations: {
