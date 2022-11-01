@@ -8,6 +8,31 @@ describe('parseCSS', () => {
     expect(result).toEqual({});
   });
 
+  it('parses `anchor()` function with unknown anchor name', () => {
+    document.body.innerHTML = '<div id="f1"></div>';
+    const css = `
+      #f1 {
+        position: absolute;
+        top: anchor(--my-anchor bottom);
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#f1': {
+        declarations: {
+          top: {
+            anchorName: '--my-anchor',
+            anchorEl: null,
+            anchorEdge: 'bottom',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
   it('parses `anchor()` function (custom properties)', () => {
     document.body.innerHTML =
       '<div id="my-target"></div><div id="my-anchor"></div>';
@@ -215,6 +240,46 @@ describe('parseCSS', () => {
             },
             width: '35px',
             height: '40px',
+          },
+        ],
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it('parses `@position-fallback` with unknown anchor name', () => {
+    document.body.innerHTML = '<div id="my-target-fallback"></div>';
+    const css = `
+      #my-target-fallback {
+        position: absolute;
+        position-fallback: --fallback1;
+      }
+
+      @position-fallback --fallback1 {
+        @try {
+          left: anchor(--my-anchor-fallback right, 10px);
+          top: anchor(--my-anchor-fallback top);
+        }
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#my-target-fallback': {
+        fallbacks: [
+          {
+            left: {
+              anchorName: '--my-anchor-fallback',
+              anchorEl: null,
+              anchorEdge: 'right',
+              fallbackValue: '10px',
+            },
+            top: {
+              anchorName: '--my-anchor-fallback',
+              anchorEl: null,
+              anchorEdge: 'top',
+              fallbackValue: '0px',
+            },
           },
         ],
       },
