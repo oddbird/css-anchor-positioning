@@ -344,7 +344,10 @@ export function parseCSS(css: string) {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
             const anchorName = (value as AnchorFunction).anchorName;
-            const anchorSelectors = anchorName ? anchorNames[anchorName] : [];
+            const anchorSelectors =
+              anchorName && anchorName in anchorNames
+                ? anchorNames[anchorName]
+                : [];
             const anchorEl = validatedForPositioning(targetEl, anchorSelectors);
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
@@ -361,9 +364,10 @@ export function parseCSS(css: string) {
     const targetEl: HTMLElement | null = document.querySelector(targetSel);
     for (const [targetProperty, anchorObj] of Object.entries(anchorFns)) {
       // Populate `anchorEl` for each `anchor()` fn
-      const anchorSelectors = anchorObj.anchorName
-        ? anchorNames[anchorObj.anchorName]
-        : [];
+      const anchorSelectors =
+        anchorObj.anchorName && anchorObj.anchorName in anchorNames
+          ? anchorNames[anchorObj.anchorName]
+          : [];
       validPositions[targetSel] = {
         ...validPositions[targetSel],
         declarations: {
