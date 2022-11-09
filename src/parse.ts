@@ -248,7 +248,7 @@ function getPositionFallbackRules(node: csstree.CssNode) {
 }
 
 function getCSSPropertyValue(el: HTMLElement, prop: string) {
-  return getComputedStyle(el).getPropertyValue(prop);
+  return getComputedStyle(el).getPropertyValue(prop).trim();
 }
 
 const anchorNames: AnchorNames = {};
