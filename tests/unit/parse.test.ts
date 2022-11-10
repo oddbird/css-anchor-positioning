@@ -60,6 +60,34 @@ describe('parseCSS', () => {
     expect(result).toEqual(expected);
   });
 
+  it('parses `anchor()` (name set via custom property)', () => {
+    document.body.innerHTML =
+      '<div id="my-target-name-prop" style="--anchor-var: --my-anchor-name-prop"></div>' +
+      '<div id="my-anchor-name-prop"></div>';
+    const css = getSampleCSS('anchor-name-custom-prop');
+    const result = parseCSS(css);
+    const expected = {
+      '#my-target-name-prop': {
+        declarations: {
+          right: {
+            customPropName: '--anchor-var',
+            anchorEl: document.getElementById('my-anchor-name-prop'),
+            anchorEdge: 'left',
+            fallbackValue: '0px',
+          },
+          bottom: {
+            anchorEdge: 'top',
+            anchorEl: document.getElementById('my-anchor-name-prop'),
+            customPropName: '--anchor-var',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
   // https://trello.com/c/yOP9vqxZ
   // eslint-disable-next-line jest/no-disabled-tests
   it.skip('parses `anchor()` function (custom property passed through)', () => {
@@ -80,6 +108,43 @@ describe('parseCSS', () => {
             anchorEdge: 50,
             anchorEl: document.getElementById('my-anchor-props'),
             anchorName: '--my-anchor-props',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  // https://trello.com/c/UGEMTfVc
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('parses `anchor()` function (multiple duplicate custom properties)', () => {
+    document.body.innerHTML = '<div id="target"></div><div id="anchor"></div>';
+    const css = `
+      #anchor {
+        anchor-name: --anchor;
+      }
+
+      #target {
+        --center: anchor(--anchor 50%);
+
+        position: absolute;
+        top: var(--center);
+      }
+
+      #other {
+        --center: anchor(--anchor 100%);
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#target': {
+        declarations: {
+          top: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('anchor'),
+            anchorName: '--anchor',
             fallbackValue: '0px',
           },
         },

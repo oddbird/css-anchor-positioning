@@ -8,15 +8,12 @@
     <link rel="stylesheet" href="https://unpkg.com/open-props" />
     <link rel="stylesheet" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
-    <link
-      rel="stylesheet"
-      data-style-anchor-positioning
-      href="/anchor-positioning.css"
-    />
+    <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/position-fallback.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
+    <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -347,7 +344,7 @@
     <section id="custom-prop" class="demo-item">
       <h2>
         <a href="#custom-prop" aria-hidden="true">🔗</a>
-        Anchor() [used in CSS custom property]
+        Anchor() [assigned to CSS custom property]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor" class="anchor">Anchor</div>
@@ -370,6 +367,33 @@
   position: absolute;
   top: var(--center);
   right: var(--full);
+}</pre
+      >
+    </section>
+    <section id="custom-prop-name" class="demo-item">
+      <h2>
+        <a href="#custom-prop-name" aria-hidden="true">🔗</a>
+        Anchor() [with anchor name set as CSS custom property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-name-prop" class="anchor">Anchor</div>
+        <div id="my-target-name-prop" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the top left corner of
+        the Anchor.
+      </p>
+      <pre>
+#my-anchor-name-prop {
+  anchor-name: --my-anchor-name-prop;
+}
+
+#my-target-name-prop {
+  --anchor-var: --my-anchor-name-prop;
+
+  position: absolute;
+  right: anchor(var(--anchor-var) left);
+  bottom: anchor(var(--anchor-var) top);
 }</pre
       >
     </section>
