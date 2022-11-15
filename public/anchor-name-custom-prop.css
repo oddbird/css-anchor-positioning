@@ -1,0 +1,11 @@
+#my-anchor-name-prop {
+  anchor-name: --my-anchor-name-prop;
+}
+
+#my-target-name-prop {
+  --anchor-var: --my-anchor-name-prop;
+
+  position: absolute;
+  right: anchor(var(--anchor-var) left);
+  bottom: anchor(var(--anchor-var) top);
+}

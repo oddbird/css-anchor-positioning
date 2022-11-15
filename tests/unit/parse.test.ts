@@ -8,6 +8,31 @@ describe('parseCSS', () => {
     expect(result).toEqual({});
   });
 
+  it('parses `anchor()` function with unknown anchor name', () => {
+    document.body.innerHTML = '<div id="f1"></div>';
+    const css = `
+      #f1 {
+        position: absolute;
+        top: anchor(--my-anchor bottom);
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#f1': {
+        declarations: {
+          top: {
+            anchorName: '--my-anchor',
+            anchorEl: null,
+            anchorEdge: 'bottom',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
   it('parses `anchor()` function (custom properties)', () => {
     document.body.innerHTML =
       '<div id="my-target"></div><div id="my-anchor"></div>';
@@ -26,6 +51,34 @@ describe('parseCSS', () => {
             anchorEdge: 50,
             anchorEl: document.getElementById('my-anchor'),
             anchorName: '--my-anchor',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it('parses `anchor()` (name set via custom property)', () => {
+    document.body.innerHTML =
+      '<div id="my-target-name-prop" style="--anchor-var: --my-anchor-name-prop"></div>' +
+      '<div id="my-anchor-name-prop"></div>';
+    const css = getSampleCSS('anchor-name-custom-prop');
+    const result = parseCSS(css);
+    const expected = {
+      '#my-target-name-prop': {
+        declarations: {
+          right: {
+            customPropName: '--anchor-var',
+            anchorEl: document.getElementById('my-anchor-name-prop'),
+            anchorEdge: 'left',
+            fallbackValue: '0px',
+          },
+          bottom: {
+            anchorEdge: 'top',
+            anchorEl: document.getElementById('my-anchor-name-prop'),
+            customPropName: '--anchor-var',
             fallbackValue: '0px',
           },
         },
@@ -55,6 +108,43 @@ describe('parseCSS', () => {
             anchorEdge: 50,
             anchorEl: document.getElementById('my-anchor-props'),
             anchorName: '--my-anchor-props',
+            fallbackValue: '0px',
+          },
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  // https://trello.com/c/UGEMTfVc
+  // eslint-disable-next-line jest/no-disabled-tests
+  it.skip('parses `anchor()` function (multiple duplicate custom properties)', () => {
+    document.body.innerHTML = '<div id="target"></div><div id="anchor"></div>';
+    const css = `
+      #anchor {
+        anchor-name: --anchor;
+      }
+
+      #target {
+        --center: anchor(--anchor 50%);
+
+        position: absolute;
+        top: var(--center);
+      }
+
+      #other {
+        --center: anchor(--anchor 100%);
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#target': {
+        declarations: {
+          top: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('anchor'),
+            anchorName: '--anchor',
             fallbackValue: '0px',
           },
         },
@@ -215,6 +305,46 @@ describe('parseCSS', () => {
             },
             width: '35px',
             height: '40px',
+          },
+        ],
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
+  it('parses `@position-fallback` with unknown anchor name', () => {
+    document.body.innerHTML = '<div id="my-target-fallback"></div>';
+    const css = `
+      #my-target-fallback {
+        position: absolute;
+        position-fallback: --fallback1;
+      }
+
+      @position-fallback --fallback1 {
+        @try {
+          left: anchor(--my-anchor-fallback right, 10px);
+          top: anchor(--my-anchor-fallback top);
+        }
+      }
+    `;
+    const result = parseCSS(css);
+    const expected = {
+      '#my-target-fallback': {
+        fallbacks: [
+          {
+            left: {
+              anchorName: '--my-anchor-fallback',
+              anchorEl: null,
+              anchorEdge: 'right',
+              fallbackValue: '10px',
+            },
+            top: {
+              anchorName: '--my-anchor-fallback',
+              anchorEl: null,
+              anchorEdge: 'top',
+              fallbackValue: '0px',
+            },
           },
         ],
       },

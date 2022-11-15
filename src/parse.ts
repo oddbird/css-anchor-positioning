@@ -36,6 +36,7 @@ interface AnchorFunction {
   anchorName?: string;
   anchorEdge?: AnchorSide;
   fallbackValue: string;
+  customPropName?: string;
 }
 
 // `key` is the property being declared
@@ -127,11 +128,12 @@ export function isPercentage(
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
-function parseAnchorFn(node: csstree.FunctionNode) {
+function parseAnchorFn(node: csstree.FunctionNode): AnchorFunction {
   let anchorName: string | undefined,
     anchorEdge: AnchorSide | undefined,
     fallbackValue = '',
-    foundComma = false;
+    foundComma = false,
+    customPropName: string | undefined;
   node.children.toArray().forEach((child, idx) => {
     if (foundComma) {
       fallbackValue = `${fallbackValue}${csstree.generate(child)}`;
@@ -144,7 +146,12 @@ function parseAnchorFn(node: csstree.FunctionNode) {
     switch (idx) {
       case 0:
         if (isIdentifier(child)) {
+          // Store anchor name
           anchorName = child.name;
+        } else if (isVarFunction(child) && child.children.first) {
+          // Store CSS custom prop for anchor name
+          const name = (child.children.first as csstree.Identifier).name;
+          customPropName = name;
         }
         break;
       case 1:
@@ -161,6 +168,7 @@ function parseAnchorFn(node: csstree.FunctionNode) {
     anchorName,
     anchorEdge,
     fallbackValue: fallbackValue || '0px',
+    customPropName,
   };
 }
 
@@ -176,7 +184,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
-const customProperties: Record<string, AnchorFunction> = {};
+const customPropAssignments: Record<string, AnchorFunction> = {};
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -186,7 +194,7 @@ function getAnchorFunctionData(
   if (isAnchorFunction(node) && rule?.value && declaration) {
     const data = parseAnchorFn(node);
     if (declaration.property.startsWith('--')) {
-      customProperties[declaration.property] = data;
+      customPropAssignments[declaration.property] = data;
       return;
     }
     if (isInset(declaration.property)) {
@@ -239,6 +247,22 @@ function getPositionFallbackRules(node: csstree.CssNode) {
   return {};
 }
 
+function getCSSPropertyValue(el: HTMLElement, prop: string) {
+  return getComputedStyle(el).getPropertyValue(prop).trim();
+}
+
+const anchorNames: AnchorNames = {};
+
+function getAnchorEl(targetEl: HTMLElement | null, anchorObj: AnchorFunction) {
+  let anchorName = anchorObj.anchorName;
+  const customPropName = anchorObj.customPropName;
+  if (targetEl && !anchorName && customPropName) {
+    anchorName = getCSSPropertyValue(targetEl, customPropName);
+  }
+  const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
+  return validatedForPositioning(targetEl, anchorSelectors);
+}
+
 export function getAST(cssText: string) {
   const ast = csstree.parse(cssText, {
     parseAtrulePrelude: false,
@@ -250,7 +274,6 @@ export function getAST(cssText: string) {
 }
 
 export function parseCSS(css: string) {
-  const anchorNames: AnchorNames = {};
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
@@ -308,8 +331,10 @@ export function parseCSS(css: string) {
     }
   });
 
+  const hasCustomPropAssignments =
+    Object.values(customPropAssignments).length > 0;
   // Find where CSS custom properties are used
-  if (Object.values(customProperties).length > 0) {
+  if (hasCustomPropAssignments) {
     csstree.walk(ast, function (node) {
       const rule = this.rule?.prelude as csstree.Raw | undefined;
       if (
@@ -320,7 +345,7 @@ export function parseCSS(css: string) {
         isInset(this.declaration.property)
       ) {
         const name = (node.children.first as csstree.Identifier).name;
-        const anchorFnData = customProperties[name];
+        const anchorFnData = customPropAssignments[name];
         if (anchorFnData) {
           anchorFunctions[rule.value] = {
             ...anchorFunctions[rule.value],
@@ -343,9 +368,7 @@ export function parseCSS(css: string) {
       positionFallbacks.forEach((tryBlock) => {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
-            const anchorName = (value as AnchorFunction).anchorName;
-            const anchorSelectors = anchorName ? anchorNames[anchorName] : [];
-            const anchorEl = validatedForPositioning(targetEl, anchorSelectors);
+            const anchorEl = getAnchorEl(targetEl, value as AnchorFunction);
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
         }
@@ -360,17 +383,15 @@ export function parseCSS(css: string) {
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     const targetEl: HTMLElement | null = document.querySelector(targetSel);
     for (const [targetProperty, anchorObj] of Object.entries(anchorFns)) {
+      const anchorEl = getAnchorEl(targetEl, anchorObj);
       // Populate `anchorEl` for each `anchor()` fn
-      const anchorSelectors = anchorObj.anchorName
-        ? anchorNames[anchorObj.anchorName]
-        : [];
       validPositions[targetSel] = {
         ...validPositions[targetSel],
         declarations: {
           ...validPositions[targetSel]?.declarations,
           [targetProperty]: {
             ...anchorObj,
-            anchorEl: validatedForPositioning(targetEl, anchorSelectors),
+            anchorEl,
           },
         },
       };

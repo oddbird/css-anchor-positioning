@@ -18,7 +18,7 @@ To use the polyfill, add this script tag to your document `<head>`:
 ```js
 <script type="module">
   if (!("anchorName" in document.documentElement.style)) {
-    import("https://unpkg.com/@oddbird/css-anchor-positioning@0.0.1-alpha.1");
+    import("https://unpkg.com/@oddbird/css-anchor-positioning@0.0.1");
   }
 </script>
 ```

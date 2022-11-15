@@ -11,6 +11,7 @@ html {
   --bg: var(--gray-1);
   --brand: var(--green-9);
   --button-border: var(--text);
+  --callout: var(--gray-3);
   --disabled-bg: var(--gray-6);
   --disabled-text: var(--gray-2);
   --grad: var(--lime-0);
@@ -18,6 +19,7 @@ html {
   --link-focus: var(--text);
   --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
+  --note-color: var(--target);
 
   background-color: var(--bg);
   color: var(--text);
@@ -29,6 +31,7 @@ html {
     --action: var(--action-dark);
     --bg: var(--gray-9);
     --brand: var(--green-3);
+    --callout: var(--gray-8);
     --grad: var(--lime-9);
     --gradient-bg: var(--gradient-16);
     --text: var(--gray-2);
@@ -94,10 +97,12 @@ footer p {
 
 .demo-item {
   display: grid;
-  gap: 2rem;
+  gap: 3em;
   grid-template:
     'heading heading heading' min-content
-    '. elements .' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
+    '. elements .' min-content
+    'note note note' min-content
+    'code code code' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
 }
 
 /* stylelint-disable no-descending-specificity */
@@ -107,6 +112,14 @@ footer p {
 
 .demo-elements {
   grid-area: elements;
+}
+
+.demo-item .note {
+  background-color: var(--callout);
+  border-left: 0.5em solid var(--note-color);
+  grid-area: note;
+  margin: 2em 0 0;
+  padding: 1em;
 }
 
 /* links & buttons */
@@ -216,4 +229,15 @@ h2 [aria-hidden]:active {
 
 .outer-anchored {
   --element-color: var(--outer-anchored);
+}
+
+/* code samples */
+pre {
+  border: thin dotted gray;
+  background-color: var(--callout);
+  font-family: var(--font-mono);
+  grid-area: code;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 1em;
 }

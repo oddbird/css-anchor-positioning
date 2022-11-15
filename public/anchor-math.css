@@ -6,6 +6,6 @@
   --full-math: anchor(--my-anchor-math 100%);
 
   position: absolute;
-  left: var(--full-math);
   top: calc(var(--full-math) - 50px);
+  left: var(--full-math);
 }

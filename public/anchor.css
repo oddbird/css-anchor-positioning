@@ -7,6 +7,6 @@
   --full: anchor(--my-anchor 100%);
 
   position: absolute;
-  right: var(--full);
   top: var(--center);
+  right: var(--full);
 }
