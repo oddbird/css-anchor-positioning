@@ -89,9 +89,7 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  // https://trello.com/c/yOP9vqxZ
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (custom property passed through)', () => {
+  it('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
@@ -118,26 +116,10 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  // https://trello.com/c/UGEMTfVc
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (multiple duplicate custom properties)', () => {
-    document.body.innerHTML = '<div id="target"></div><div id="anchor"></div>';
-    const css = `
-      #anchor {
-        anchor-name: --anchor;
-      }
-
-      #target {
-        --center: anchor(--anchor 50%);
-
-        position: absolute;
-        top: var(--center);
-      }
-
-      #other {
-        --center: anchor(--anchor 100%);
-      }
-    `;
+  it('parses `anchor()` function (multiple duplicate custom properties)', () => {
+    document.body.innerHTML =
+      '<div id="target-duplicate-custom-props"></div><div id="anchor-duplicate-custom-props"></div>';
+    const css = getSampleCSS('anchor-duplicate-custom-props');
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#target': {
