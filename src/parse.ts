@@ -40,6 +40,7 @@ interface AnchorFunction {
   fallbackValue: string;
   customPropName?: string;
   key: string;
+  original?: string;
 }
 
 // `key` is the property being declared
@@ -200,7 +201,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
-const customPropAssignments: Record<string, AnchorFunction> = {};
+const customPropAssignments: Record<string, AnchorFunction[]> = {};
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -210,7 +211,16 @@ function getAnchorFunctionData(
   if (isAnchorFunction(node) && rule?.value && declaration) {
     if (declaration.property.startsWith('--')) {
       const data = parseAnchorFn(node);
-      customPropAssignments[declaration.property] = data;
+      // Store the original anchor function so that when we find where this CSS
+      // custom property is used, we can compare to be sure this is the same
+      // custom property declaration that has cascaded to the location where
+      // it's used (and not a different anchor function call assigned to the
+      // same custom property name).
+      data.original = csstree.generate(declaration.value);
+      customPropAssignments[declaration.property] = [
+        ...(customPropAssignments[declaration.property] || []),
+        data,
+      ];
       return;
     }
     if (isInset(declaration.property)) {
@@ -372,23 +382,41 @@ export function parseCSS(styleData: StyleData[]) {
           isInset(this.declaration.property)
         ) {
           const child = node.children.first as csstree.Identifier;
-          const anchorFnData = customPropAssignments[child.name];
+          const anchorFns = customPropAssignments[child.name];
           const prop = this.declaration.property;
-          if (anchorFnData) {
-            const data = { ...anchorFnData };
-            // When `anchor()` is used multiple times in different inset
-            // properties, the value will be different each time.
-            // So we append the property to the key, and update the CSS property
-            // to point to the new key:
-            const key = `${data.key}-${prop}`;
-            data.key = key;
-            anchorFunctions[rule.value] = {
-              ...anchorFunctions[rule.value],
-              [prop]: data,
-            };
-            // Update CSS property to new name with declaration property added
-            child.name = key;
-            changed = true;
+          if (anchorFns?.length) {
+            // It's possible that there are multiple uses of the same CSS custom
+            // property name, with different anchor function calls. So we
+            // iterate over all anchor functions that were assigned to the given
+            // CSS custom property name, and find the first one where there's an
+            // existing DOM element matching the current declaration/selector,
+            // and that element has the same value (i.e. the same anchor
+            // function call) assigned to the given CSS custom property name.
+            const els: HTMLElement[] = Array.from(
+              document.querySelectorAll(rule.value),
+            );
+            const anchorFnData = anchorFns.find((data) =>
+              els.some((el) => {
+                const propValue = getCSSPropertyValue(el, child.name);
+                return data.original === propValue;
+              }),
+            );
+            if (anchorFnData) {
+              const data = { ...anchorFnData };
+              // When `anchor()` is used multiple times in different inset
+              // properties, the value will be different each time.
+              // So we append the property to the key, and update the CSS property
+              // to point to the new key:
+              const key = `${data.key}-${prop}`;
+              data.key = key;
+              anchorFunctions[rule.value] = {
+                ...anchorFunctions[rule.value],
+                [prop]: data,
+              };
+              // Update CSS property to new name with declaration property added
+              child.name = key;
+              changed = true;
+            }
           }
         }
       });
@@ -442,32 +470,5 @@ export function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  /* Example data shape:
-    {
-      '#my-target-element': {
-        declarations: {
-          top: {
-            targetEl: <HTMLElement>,
-            anchorName: '--my-anchor',
-            anchorEl: <HTMLElement>,
-            anchorEdge: 'bottom',
-            fallbackValue: '50px',
-          },
-        },
-        fallbacks: [
-          {
-            top: {
-              targetEl: <HTMLElement>,
-              anchorName: '--my-anchor',
-              anchorEl: <HTMLElement>,
-              anchorEdge: 'top',
-              fallbackValue: '0px',
-            },
-            width: '35px',
-          },
-        ],
-      },
-    }
-    */
   return validPositions;
 }

@@ -3,6 +3,11 @@ import { parseCSS } from '../../src/parse.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
+  afterAll(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '';
+  });
+
   it('handles missing `@position-fallback` at-rule or `anchor()` fn', () => {
     const result = parseCSS([{ css: sampleBaseCSS }] as StyleData[]);
 
@@ -38,6 +43,7 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target': {
@@ -63,9 +69,10 @@ describe('parseCSS', () => {
 
   it('parses `anchor()` (name set via custom property)', () => {
     document.body.innerHTML =
-      '<div id="my-target-name-prop" style="--anchor-var: --my-anchor-name-prop"></div>' +
+      '<div id="my-target-name-prop"></div>' +
       '<div id="my-anchor-name-prop"></div>';
     const css = getSampleCSS('anchor-name-custom-prop');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-name-prop': {
@@ -93,6 +100,7 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-props': {
@@ -120,14 +128,21 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="target-duplicate-custom-props"></div><div id="anchor-duplicate-custom-props"></div>';
     const css = getSampleCSS('anchor-duplicate-custom-props');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
-      '#target': {
+      '#target-duplicate-custom-props': {
         declarations: {
           top: {
             anchorEdge: 50,
-            anchorEl: document.getElementById('anchor'),
-            anchorName: '--anchor',
+            anchorEl: document.getElementById('anchor-duplicate-custom-props'),
+            anchorName: '--anchor-duplicate-custom-props',
+            fallbackValue: '0px',
+          },
+          left: {
+            anchorEdge: 50,
+            anchorEl: document.getElementById('anchor-duplicate-custom-props'),
+            anchorName: '--anchor-duplicate-custom-props',
             fallbackValue: '0px',
           },
         },
@@ -141,6 +156,7 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target-math"></div><div id="my-anchor-math"></div>';
     const css = getSampleCSS('anchor-math');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-math': {
