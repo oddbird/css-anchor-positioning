@@ -48,15 +48,6 @@ export interface BrowserDefinition {
   versions: BrowserVersion[];
 }
 
-export interface VersionResult {
-  name: string;
-  summary: [number, number];
-}
-
-export interface TestPathMap {
-  [key: string]: VersionResult[];
-}
-
 interface Subtest {
   name: string;
   properties: object;

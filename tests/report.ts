@@ -1,11 +1,16 @@
 import fs from 'fs';
 
-import type {
-  BrowserDefinition,
-  ResultData,
-  TestPathMap,
-  VersionResult,
-} from './wpt.js';
+import type { BrowserDefinition, ResultData } from './wpt.js';
+
+export interface VersionResult {
+  name: string;
+  summary: [number, number];
+}
+export interface TestPathMap {
+  [key: string]: VersionResult[];
+}
+
+const localDomain = 'http://web-platform.test:8000/';
 
 function gradientBar(active: number, total: number): string {
   const stop = `${((active / total) * 100).toFixed(0)}%`;
@@ -16,8 +21,13 @@ export default function writeReport(
   results: BrowserDefinition[],
   name?: string,
 ) {
+  const wptRepo: string = process.env.WPT_REPO || 'web-platform-tests/wpt';
+  const wptBranch: string = process.env.WPT_BRANCH || 'master';
+  const commitUrl: string | undefined = process.env.COMMIT_URL;
+
+  const timeStamp = new Date().toISOString();
   const testResultsFolder = 'test-results';
-  const fileName = name || new Date().toISOString().replace(':', '-');
+  const fileName = name || timeStamp.replace(':', '-');
   if (!fs.existsSync(testResultsFolder)) fs.mkdirSync(testResultsFolder);
 
   // Save the raw JSON data to debug / process further
@@ -32,7 +42,7 @@ export default function writeReport(
     browser.versions.forEach((version) => {
       const data = version.data as ResultData;
       data.results?.forEach(([longPath, result]) => {
-        const path = longPath.replace('http://web-platform.test:8000/', '');
+        const path = longPath.replace(localDomain, '');
         const passed = result.tests.reduce(
           (total, test) => total + (test.status ? 0 : 1),
           0,
@@ -51,9 +61,16 @@ export default function writeReport(
   // Each test gets a row, and the columns are the browser versions
   const tableHtml = `
   <style>
-  td {border: 1px solid}
-  .bar {color: white; background-color: maroon}
+    td {border: 1px solid}
+    .test-name {display: flex; justify-content: space-between; gap: 1em}
+    .test-bar {color: white; background-color: maroon}
   </style>
+  Generated at: ${timeStamp}
+  ${
+    commitUrl
+      ? `<br><a target="_blank" href="${commitUrl}">Source commit</a>`
+      : ''
+  }
   <table>
     <thead>
       <tr>
@@ -72,11 +89,19 @@ export default function writeReport(
           .map(
             (testPath) =>
               `<tr>
-                <td>${testPath}</td>
+                <td class="test-name">
+                  <a target="_blank" href="https://github.com/${wptRepo}/blob/${wptBranch}/${testPath}">
+                    ${testPath}
+                  </a>
+                  <span>
+                    <a target="_blank" href="https://wpt.live/${testPath}" title="Open in wpt.live">🌐</a>
+                    <a target="_blank" href="http://${localDomain}${testPath}" title="Open locally">🏠</a>
+                  </span>
+                </td>
                 ${byPath[testPath]
                   .map(
                     ({ summary: [pass, total] }) =>
-                      `<td class="bar" ${gradientBar(pass, total)}>
+                      `<td class="test-bar" ${gradientBar(pass, total)}>
                         ${pass} / ${total}
                       </td>`,
                   )
