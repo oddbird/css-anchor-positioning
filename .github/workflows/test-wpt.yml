@@ -32,7 +32,7 @@ jobs:
       - name: Clone WPT repo
         uses: actions/checkout@v3
         with:
-          repository: ${{ env.WPT_REPO }}}
+          repository: ${{ env.WPT_REPO }}
           ref: ${{ env.WPT_BRANCH }}
           path: wpt
 
