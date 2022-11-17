@@ -216,6 +216,11 @@ function getAnchorFunctionData(
       // custom property declaration that has cascaded to the location where
       // it's used (and not a different anchor function call assigned to the
       // same custom property name).
+      //
+      // Ideally we would add a new CSS custom property to this rule block,
+      // then check the target element to see if our property cascaded through.
+      // But that would require an additional round of updating stylesheets,
+      // then parsing and updating again -- not a high priority for now.
       data.original = csstree.generate(declaration.value);
       customPropAssignments[declaration.property] = [
         ...(customPropAssignments[declaration.property] || []),
@@ -372,53 +377,57 @@ export function parseCSS(styleData: StyleData[]) {
     for (const styleObj of styleData) {
       let changed = false;
       const ast = getAST(styleObj.css);
-      csstree.walk(ast, function (node) {
-        const rule = this.rule?.prelude as csstree.Raw | undefined;
-        if (
-          rule?.value &&
-          isVarFunction(node) &&
-          node.children.first &&
-          this.declaration &&
-          isInset(this.declaration.property)
-        ) {
-          const child = node.children.first as csstree.Identifier;
-          const anchorFns = customPropAssignments[child.name];
-          const prop = this.declaration.property;
-          if (anchorFns?.length) {
-            // It's possible that there are multiple uses of the same CSS custom
-            // property name, with different anchor function calls. So we
-            // iterate over all anchor functions that were assigned to the given
-            // CSS custom property name, and find the first one where there's an
-            // existing DOM element matching the current declaration/selector,
-            // and that element has the same value (i.e. the same anchor
-            // function call) assigned to the given CSS custom property name.
-            const els: HTMLElement[] = Array.from(
-              document.querySelectorAll(rule.value),
-            );
-            const anchorFnData = anchorFns.find((data) =>
-              els.some((el) => {
-                const propValue = getCSSPropertyValue(el, child.name);
-                return data.original === propValue;
-              }),
-            );
-            if (anchorFnData) {
-              const data = { ...anchorFnData };
-              // When `anchor()` is used multiple times in different inset
-              // properties, the value will be different each time.
-              // So we append the property to the key, and update the CSS property
-              // to point to the new key:
-              const key = `${data.key}-${prop}`;
-              data.key = key;
-              anchorFunctions[rule.value] = {
-                ...anchorFunctions[rule.value],
-                [prop]: data,
-              };
-              // Update CSS property to new name with declaration property added
-              child.name = key;
-              changed = true;
+      csstree.walk(ast, {
+        visit: 'Function',
+        enter(node) {
+          const rule = this.rule?.prelude as csstree.Raw | undefined;
+          if (
+            rule?.value &&
+            isVarFunction(node) &&
+            node.children.first &&
+            this.declaration &&
+            isInset(this.declaration.property)
+          ) {
+            const child = node.children.first as csstree.Identifier;
+            const anchorFns = customPropAssignments[child.name];
+            const prop = this.declaration.property;
+            if (anchorFns?.length) {
+              // It's possible that there are multiple uses of the same CSS
+              // custom property name, with different anchor function calls. So
+              // we iterate over all anchor functions that were assigned to the
+              // given CSS custom property name, and find the first one where
+              // there's an existing DOM element matching the target
+              // declaration/selector, and that element has the same value (i.e.
+              // the same anchor function call) assigned to the given CSS custom
+              // property name.
+              const els: HTMLElement[] = Array.from(
+                document.querySelectorAll(rule.value),
+              );
+              const anchorFnData = anchorFns.find((data) =>
+                els.some((el) => {
+                  const propValue = getCSSPropertyValue(el, child.name);
+                  return data.original === propValue;
+                }),
+              );
+              if (anchorFnData) {
+                const data = { ...anchorFnData };
+                // When `anchor()` is used multiple times in different inset
+                // properties, the value will be different each time. So we
+                // append the property to the key, and update the CSS property
+                // to point to the new key:
+                const key = `${data.key}-${prop}`;
+                data.key = key;
+                anchorFunctions[rule.value] = {
+                  ...anchorFunctions[rule.value],
+                  [prop]: data,
+                };
+                // Update CSS property to new name with declaration prop added
+                child.name = key;
+                changed = true;
+              }
             }
           }
-        }
+        },
       });
       if (changed) {
         // Update CSS
