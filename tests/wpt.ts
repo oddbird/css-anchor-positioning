@@ -490,17 +490,13 @@ async function main() {
   const server = await createLocalServer();
   try {
     await eachLimit(tests, 5, async (test) => await test());
-    console.info(`results.length=${results.length}`);
-
+    console.info(`Writing report for ${results.length} results`);
     writeReport(results);
 
-    let rows = '';
-    readdirSync(process.cwd() + '/test-results')
-      .sort((a: any, b: any) => (a > b ? -1 : 1))
-      .forEach((file: any) => {
-        console.log('> ' + file);
-        rows += `<li><a href="test-results/${file}">test-results/${file}</a></li>`;
-      });
+    const rows = readdirSync(`${process.cwd()}/test-results`)
+      .map((name) => `<li><a href="/${name}">${name}</a></li>`)
+      .sort()
+      .join('\n');
 
     const html = `
        <!doctype html>
@@ -515,7 +511,7 @@ async function main() {
        </body>
        </html>`;
 
-    writeFileSync('test-results.html', html);
+    writeFileSync('test-results/history.html', html);
   } finally {
     await stopLocalServer(server);
   }

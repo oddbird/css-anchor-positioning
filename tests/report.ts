@@ -26,13 +26,12 @@ export default function writeReport(
   const commitUrl: string | undefined = process.env.COMMIT_URL;
 
   const timeStamp = new Date().toISOString();
-  const testResultsFolder = 'test-results';
-  const fileName = name || timeStamp.replace(':', '-');
-  if (!fs.existsSync(testResultsFolder)) fs.mkdirSync(testResultsFolder);
+  const fileName = name || timeStamp.replaceAll(':', '-');
+  if (!fs.existsSync('test-results')) fs.mkdirSync('test-results');
 
   // Save the raw JSON data to debug / process further
   fs.writeFileSync(
-    `${testResultsFolder}/${fileName}.json`,
+    `test-results/${fileName}.json`,
     JSON.stringify(results, null, 2),
   );
 
@@ -43,14 +42,14 @@ export default function writeReport(
       const data = version.data as ResultData;
       data.results?.forEach(([longPath, result]) => {
         const path = longPath.replace(localDomain, '');
-        const passed = result.tests.reduce(
+        const passed = result.tests?.reduce(
           (total, test) => total + (test.status ? 0 : 1),
           0,
         );
-        const total = result.tests.length;
+        const total = result.tests?.length;
         const data: VersionResult = {
           name: `${browser.name} ${version.name}`,
-          summary: [passed, total],
+          summary: total === undefined ? [-1, -1] : [passed, total],
         };
         byPath[path] ? byPath[path].push(data) : (byPath[path] = [data]);
       });
@@ -60,17 +59,25 @@ export default function writeReport(
   // Render the HTML report
   // Each test gets a row, and the columns are the browser versions
   const tableHtml = `
-  <style>
-    td {border: 1px solid}
-    .test-name {display: flex; justify-content: space-between; gap: 1em}
-    .test-bar {color: white; background-color: maroon}
-  </style>
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>WPT Report</title>
+    <style>
+      td {border: 1px solid}
+      .test-name {display: flex; justify-content: space-between; gap: 1em}
+      .test-bar {color: white; background-color: maroon}
+    </style>
+  </head>
+  <body>
   Generated at: ${timeStamp}
   ${
     commitUrl
-      ? `<br><a target="_blank" href="${commitUrl}">Source commit</a>`
+      ? `(<a target="_blank" href="${commitUrl}">Source commit</a>)`
       : ''
   }
+  <br><a href="history.html">History</a>
   <table>
     <thead>
       <tr>
@@ -111,6 +118,11 @@ export default function writeReport(
           .join('')}
     </tbody>
   </table>
+  </body>
+  </html>
   `;
-  fs.writeFileSync(`${testResultsFolder}/${fileName}.html`, tableHtml);
+
+  // Save with timestamp and as `index.html` to load the latest report by default
+  fs.writeFileSync(`test-results/${fileName}.html`, tableHtml);
+  fs.writeFileSync(`test-results/index.html`, tableHtml);
 }

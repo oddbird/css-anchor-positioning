@@ -63,7 +63,7 @@ jobs:
           mv test-results test-results.html /tmp
           git fetch
           BRANCH_EXISTS=$(git ls-remote --heads origin $RESULTS_BRANCH | wc -l)
-          if [ "$BRANCH_EXISTS" == "1" ]; then git switch $RESULTS_BRANCH; else git switch -c $RESULTS_BRANCH; fi
+          if [ "$BRANCH_EXISTS" == "1" ]; then git switch $RESULTS_BRANCH; else git checkout -B $RESULTS_BRANCH --orphan; fi
           rm -rf test-results test-results.html
           mv /tmp/test-results /tmp/test-results.html .
           git add test-results test-results.html
