@@ -13,11 +13,12 @@
 
 import { eachLimit, retry } from 'async';
 import { Local } from 'browserstack-local';
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'fs';
+import { readdirSync, writeFileSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { Agent } from 'http';
 import { Builder, By, until } from 'selenium-webdriver';
 
+import writeReport from './report.js';
 type Capabilities = Record<string, unknown>;
 
 const enum DataType {
@@ -25,9 +26,10 @@ const enum DataType {
   Result,
 }
 
-interface ResultData {
+export interface ResultData {
   type: DataType.Result;
-  result: [number, number];
+  summary: [number, number];
+  results?: TestResult[];
 }
 
 interface FetchDescriptorData {
@@ -40,11 +42,50 @@ interface BrowserVersion {
   data: FetchDescriptorData | ResultData;
 }
 
-interface BrowserDefinition {
+export interface BrowserDefinition {
   name: string;
   logo: string;
   versions: BrowserVersion[];
 }
+
+export interface VersionResult {
+  name: string;
+  summary: [number, number];
+}
+
+export interface TestPathMap {
+  [key: string]: VersionResult[];
+}
+
+interface Subtest {
+  name: string;
+  properties: object;
+  index: number;
+  phase: number;
+  phases: object;
+  PASS: number;
+  FAIL: number;
+  TIMEOUT: number;
+  NOTRUN: number;
+  PRECONDITION_FAILED: number;
+  status: number;
+  message: string;
+  stack: string;
+}
+
+interface ResultDataDetail {
+  type: string;
+  tests: Subtest[];
+  status: object;
+  asserts: object;
+}
+
+type TestResult = [string, ResultDataDetail];
+
+type TestSuite = {
+  js: string[];
+  iframe: Array<[string, string]>;
+};
 
 const TEST_FOLDERS: Array<string> = ['css/css-anchor-position'];
 
@@ -64,8 +105,8 @@ const SUBTEST_FILTERS: Array<RegExp> = [
 const CHROME_DEFINITION: BrowserDefinition = {
   name: 'Chrome',
   logo: 'https://unpkg.com/@browser-logos/chrome@2.0.0/chrome.svg',
-  versions: Array.from({ length: 1 })
-    .map((_, i) => 100 + i)
+  versions: Array.from({ length: 2 })
+    .map((_, i) => 103 + i)
     .filter((version) => ![82].includes(version))
     .map((version) => `${version}.0`)
     .map((browserVersion) => ({
@@ -95,8 +136,8 @@ const SAFARI_IOS_DEFINITION: BrowserDefinition = {
       // ['15.0', '15'],
       // ['15.2', '15'],
       // ['15.4', '15'],
-      // ['15.5', '15'],
-      // ['15.6', '15'],
+      ['15.5', '15'],
+      ['15.6', '15'],
     ] as Array<[string, string]>
   ).map(([browserVersion, osVersion]) => ({
     name: browserVersion,
@@ -120,8 +161,8 @@ const SAFARI_MACOS_DEFINITION: BrowserDefinition = {
   versions: (
     [
       // ['13.1', 'Catalina'],
-      // ['14.1', 'Big Sur'],
-      // ['15.3', 'Monterey'],
+      ['14.1', 'Big Sur'],
+      ['15.3', 'Monterey'],
     ] as Array<[string, string]>
   ).map(([browserVersion, osVersion]) => ({
     name: browserVersion,
@@ -142,8 +183,8 @@ const SAFARI_MACOS_DEFINITION: BrowserDefinition = {
 const EDGE_DEFINITION: BrowserDefinition = {
   name: 'Edge',
   logo: 'https://unpkg.com/@browser-logos/edge@2.0.5/edge.svg',
-  versions: Array.from({ length: 0 /*102 - 80*/ })
-    .map((_, i) => 80 + i)
+  versions: Array.from({ length: 2 })
+    .map((_, i) => 102 + i)
     .filter((version) => ![82].includes(version))
     .map((version) => `${version}.0`)
     .map((browserVersion) => ({
@@ -165,8 +206,8 @@ const EDGE_DEFINITION: BrowserDefinition = {
 const FIREFOX_DEFINITION: BrowserDefinition = {
   name: 'Firefox',
   logo: 'https://unpkg.com/@browser-logos/firefox@3.0.9/firefox.svg',
-  versions: Array.from({ length: 0 /*101 - 69*/ })
-    .map((_, i) => 69 + i)
+  versions: Array.from({ length: 2 })
+    .map((_, i) => 103 + i)
     .map((version) => `${version}.0`)
     .map((browserVersion) => ({
       name: browserVersion,
@@ -220,7 +261,7 @@ const IE_DEFINITION: BrowserDefinition = {
     /*'9', '10', '11'*/
   ].map((browserVersion) => ({
     name: browserVersion,
-    data: { type: DataType.Result, result: [0, 0] },
+    data: { type: DataType.Result, summary: [0, 0] },
   })),
 };
 
@@ -233,25 +274,6 @@ const BROWSERS: BrowserDefinition[] = [
   SAMSUNG_INTERNET_DEFINITION,
   IE_DEFINITION,
 ];
-
-interface Subtest {
-  name: string;
-  status: number;
-  PASS: number;
-  PRECONDITION_FAILED: number;
-}
-
-interface TestResult {
-  0: string;
-  1: {
-    tests: Array<Subtest>;
-  };
-}
-
-type TestSuite = {
-  js: string[];
-  iframe: Array<[string, string]>;
-};
 
 function createLocalServer(): Promise<Local> {
   return new Promise((resolve, reject) => {
@@ -279,8 +301,6 @@ function stopLocalServer(server: Local): Promise<void> {
 
 function getValue(obj: any, path: string) {
   const paths = path.split('/');
-  // console.info(`paths => ${paths}`);
-
   for (let i = 0, len = paths.length; i < len; i++) obj = obj[paths[i]];
   return obj;
 }
@@ -299,8 +319,6 @@ async function getTests(manifestPath: string): Promise<TestSuite> {
     const refTests = getValue(manifest.items.reftest, folder_path);
 
     if (refTests) {
-      // console.info(`refTests: ${JSON.stringify(refTests)}`);
-
       Object.keys(refTests).forEach((name) => {
         const data = refTests[name][1][1][0];
         iframe.push(
@@ -317,8 +335,6 @@ async function getTests(manifestPath: string): Promise<TestSuite> {
     }
 
     if (htmlTests) {
-      // console.info(`htmlTests: ${JSON.stringify(htmlTests)}`);
-
       Object.keys(htmlTests)
         .filter((name) => !TEST_FILTERS.some((filter) => filter.test(name)))
         .map((name) => `http://web-platform.test:8000/${folder_path}/${name}`)
@@ -328,12 +344,7 @@ async function getTests(manifestPath: string): Promise<TestSuite> {
     }
   }
 
-  return {
-    // js: js.slice(0, 3), // Reducing the number of tests for now
-    // iframe: [], // Reducing the number of tests for now
-    js,
-    iframe,
-  };
+  return { js, iframe };
 }
 
 function createWebDriver(capabilities: Record<string, unknown>) {
@@ -418,27 +429,6 @@ async function tryOrDefault<T>(fn: () => Promise<T>, def: () => T): Promise<T> {
   }
 }
 
-function padTo2Digits(num: number) {
-  return num.toString().padStart(2, '0');
-}
-
-// Format as "YYYY-MM-DD_hh-mm-ss"
-function formatDate(date: Date) {
-  return (
-    [
-      date.getFullYear(),
-      padTo2Digits(date.getMonth() + 1),
-      padTo2Digits(date.getDate()),
-    ].join('-') +
-    '_' +
-    [
-      padTo2Digits(date.getHours()),
-      padTo2Digits(date.getMinutes()),
-      padTo2Digits(date.getSeconds()),
-    ].join('-')
-  );
-}
-
 async function main() {
   const manifestPath = process.env.WPT_MANIFEST;
   if (!manifestPath) {
@@ -446,9 +436,10 @@ async function main() {
   }
 
   const testSuite = await getTests(manifestPath);
-  console.info(`Using tests: ${JSON.stringify(testSuite, null, 4)}`);
-
-  // console.info(`BROWSERS: ${JSON.stringify(BROWSERS)}`);
+  console.info(`JS Tests:\n${testSuite.js.join('\n')}\n`);
+  console.info(
+    `Iframe Tests:\n${testSuite.iframe.map(([, path]) => path).join('\n')}\n`,
+  );
 
   const tests: Array<() => Promise<void>> = [];
   const results: BrowserDefinition[] = BROWSERS.map((browser) => ({
@@ -474,9 +465,6 @@ async function main() {
             () => [],
           );
 
-          // console.info(`results: ${results.length}`);
-          // console.info(`results: ${JSON.stringify(results)}`);
-
           let passed = 0;
           let failed = 0;
 
@@ -497,7 +485,11 @@ async function main() {
             }
           }
 
-          result.data = { type: DataType.Result, result: [passed, failed] };
+          result.data = {
+            type: DataType.Result,
+            summary: [passed, failed],
+            results,
+          };
         }
       });
       return result;
@@ -508,14 +500,8 @@ async function main() {
   try {
     await eachLimit(tests, 5, async (test) => await test());
     console.info(`results.length=${results.length}`);
-    const resultJson = JSON.stringify(results, null, 2);
 
-    const testResultsFolder = 'test-results';
-    const fileName = formatDate(new Date());
-    if (!existsSync(testResultsFolder)) mkdirSync(testResultsFolder);
-
-    console.log(resultJson);
-    writeFileSync(`${testResultsFolder}/${fileName}.json`, resultJson);
+    writeReport(results);
 
     let rows = '';
     readdirSync(process.cwd() + '/test-results')
