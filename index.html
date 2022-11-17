@@ -410,7 +410,7 @@
       </div>
       <p class="note">
         With polyfill applied: Target's left edge is 50px left of the Anchor's
-        right edge). The top edge of the Target is 50px above the top edge of
+        right edge). The top edge of the Target is 50px above the bottom edge of
         the Anchor.
       </p>
       <pre>
@@ -420,7 +420,7 @@
 
 #my-target-math {
   --full-math: anchor(--my-anchor-math 100%);
-  --full-minus-math: calc(anchor(--my-anchor-math 50%) - 50px);
+  --full-minus-math: calc(anchor(--my-anchor-math 100%) - 50px);
 
   position: absolute;
   top: calc(var(--full-math) - 50px);

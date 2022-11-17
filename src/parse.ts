@@ -202,6 +202,10 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
 }
 
 const customPropAssignments: Record<string, AnchorFunction[]> = {};
+const customPropReplacements: Record<
+  string,
+  Partial<Record<InsetProperty, string>>
+> = {};
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -210,7 +214,8 @@ function getAnchorFunctionData(
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
     if (declaration.property.startsWith('--')) {
-      const data = parseAnchorFn(node);
+      const original = csstree.generate(declaration.value);
+      const data = parseAnchorFn(node, true);
       // Store the original anchor function so that when we find where this CSS
       // custom property is used, we can compare to be sure this is the same
       // custom property declaration that has cascaded to the location where
@@ -221,12 +226,12 @@ function getAnchorFunctionData(
       // then check the target element to see if our property cascaded through.
       // But that would require an additional round of updating stylesheets,
       // then parsing and updating again -- not a high priority for now.
-      data.original = csstree.generate(declaration.value);
+      data.original = original;
       customPropAssignments[declaration.property] = [
         ...(customPropAssignments[declaration.property] || []),
         data,
       ];
-      return;
+      return null;
     }
     if (isInset(declaration.property)) {
       const data = parseAnchorFn(node, true);
@@ -340,6 +345,8 @@ export function parseCSS(styleData: StyleData[]) {
           ...anchorFunctions[rule.value],
           ...anchorFnData,
         };
+      }
+      if (anchorFnData !== undefined) {
         changed = true;
       }
 
@@ -416,13 +423,66 @@ export function parseCSS(styleData: StyleData[]) {
                 // append the property to the key, and update the CSS property
                 // to point to the new key:
                 const key = `${data.key}-${prop}`;
+                // Store new name with declaration prop appended,
+                // so that we can go back and update the original custom
+                // property value
+                customPropReplacements[data.key] = {
+                  ...customPropReplacements[data.key],
+                  [prop]: key,
+                };
                 data.key = key;
                 anchorFunctions[rule.value] = {
                   ...anchorFunctions[rule.value],
                   [prop]: data,
                 };
                 // Update CSS property to new name with declaration prop added
-                child.name = key;
+                child.name = `${child.name}-${prop}`;
+                changed = true;
+              }
+            }
+          }
+        },
+      });
+      if (changed) {
+        // Update CSS
+        styleObj.css = csstree.generate(ast);
+        styleObj.changed = true;
+      }
+    }
+  }
+
+  // Update CSS custom property values with new per-inset-property keys
+  if (Object.keys(customPropReplacements).length > 0) {
+    for (const styleObj of styleData) {
+      let changed = false;
+      const ast = getAST(styleObj.css);
+      csstree.walk(ast, {
+        visit: 'Function',
+        enter(node) {
+          if (
+            isVarFunction(node) &&
+            (node.children.first as csstree.Identifier)?.name?.startsWith(
+              '--',
+            ) &&
+            this.declaration?.property?.startsWith('--') &&
+            this.block
+          ) {
+            const child = node.children.first as csstree.Identifier;
+            const positions = customPropReplacements[child.name];
+            if (positions) {
+              for (const [pos, key] of Object.entries(positions)) {
+                // Add new inset-property-specific declaration
+                this.block.children.prependData({
+                  type: 'Declaration',
+                  important: false,
+                  property: `${this.declaration.property}-${pos}`,
+                  value: {
+                    type: 'Raw',
+                    value: csstree
+                      .generate(this.declaration.value)
+                      .replace(`var(${child.name})`, `var(${key})`),
+                  },
+                });
                 changed = true;
               }
             }

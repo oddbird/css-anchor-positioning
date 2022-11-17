@@ -53,12 +53,14 @@ describe('parseCSS', () => {
             anchorEl: document.getElementById('my-anchor'),
             anchorEdge: 100,
             fallbackValue: '0px',
+            original: 'anchor(--my-anchor 100%)',
           },
           top: {
             anchorEdge: 50,
             anchorEl: document.getElementById('my-anchor'),
             anchorName: '--my-anchor',
             fallbackValue: '0px',
+            original: 'anchor(--my-anchor 50%)',
           },
         },
       },
@@ -96,7 +98,7 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  it('parses `anchor()` function (custom property passed through)', () => {
+  it.skip('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
@@ -110,12 +112,14 @@ describe('parseCSS', () => {
             anchorEl: document.getElementById('my-anchor-props'),
             anchorEdge: 150,
             fallbackValue: '0px',
+            original: 'calc(var(--center) + 100px)',
           },
           top: {
             anchorEdge: 50,
             anchorEl: document.getElementById('my-anchor-props'),
             anchorName: '--my-anchor-props',
             fallbackValue: '0px',
+            original: 'anchor(--my-anchor-props 50%)',
           },
         },
       },
@@ -138,12 +142,14 @@ describe('parseCSS', () => {
             anchorEl: document.getElementById('anchor-duplicate-custom-props'),
             anchorName: '--anchor-duplicate-custom-props',
             fallbackValue: '0px',
+            original: 'anchor(--anchor-duplicate-custom-props 50%)',
           },
           left: {
             anchorEdge: 50,
             anchorEl: document.getElementById('anchor-duplicate-custom-props'),
             anchorName: '--anchor-duplicate-custom-props',
             fallbackValue: '0px',
+            original: 'anchor(--anchor-duplicate-custom-props 50%)',
           },
         },
       },
@@ -166,12 +172,14 @@ describe('parseCSS', () => {
             anchorEl: document.getElementById('my-anchor-math'),
             anchorEdge: 100,
             fallbackValue: '0px',
+            original: 'calc(anchor(--my-anchor-math 100%) - 50px)',
           },
           top: {
             anchorEdge: 100,
             anchorEl: document.getElementById('my-anchor-math'),
             anchorName: '--my-anchor-math',
             fallbackValue: '0px',
+            original: 'anchor(--my-anchor-math 100%)',
           },
         },
       },
