@@ -424,8 +424,8 @@ export function parseCSS(styleData: StyleData[]) {
                 // append the property to the key, and update the CSS property
                 // to point to the new key:
                 const origKey = data.key;
-                const key = `${origKey}-${prop}`;
-                data.key = key;
+                const newKey = `--anchor-${uuid()}-${prop}`;
+                data.key = newKey;
                 anchorFunctions[rule.value] = {
                   ...anchorFunctions[rule.value],
                   [prop]: data,
@@ -436,7 +436,7 @@ export function parseCSS(styleData: StyleData[]) {
                 const propKey = `${prop}-${uuid()}`;
                 customPropReplacements[origKey] = {
                   ...customPropReplacements[origKey],
-                  [propKey]: key,
+                  [propKey]: newKey,
                 };
                 // Update CSS property to new name with declaration prop added
                 child.name = `${child.name}-${propKey}`;
