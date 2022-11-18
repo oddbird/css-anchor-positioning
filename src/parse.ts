@@ -202,6 +202,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
 }
 
 const customPropAssignments: Record<string, AnchorFunction[]> = {};
+const customPropOriginals: Record<string, string> = {};
 const customPropReplacements: Record<
   string,
   Partial<Record<InsetProperty, string>>
@@ -226,7 +227,7 @@ function getAnchorFunctionData(
       // then check the target element to see if our property cascaded through.
       // But that would require an additional round of updating stylesheets,
       // then parsing and updating again -- not a high priority for now.
-      data.original = original;
+      data.original = customPropOriginals[data.key] = original;
       customPropAssignments[declaration.property] = [
         ...(customPropAssignments[declaration.property] || []),
         data,
@@ -422,21 +423,23 @@ export function parseCSS(styleData: StyleData[]) {
                 // properties, the value will be different each time. So we
                 // append the property to the key, and update the CSS property
                 // to point to the new key:
-                const key = `${data.key}-${prop}`;
-                // Store new name with declaration prop appended,
-                // so that we can go back and update the original custom
-                // property value
-                customPropReplacements[data.key] = {
-                  ...customPropReplacements[data.key],
-                  [prop]: key,
-                };
+                const origKey = data.key;
+                const key = `${origKey}-${prop}`;
                 data.key = key;
                 anchorFunctions[rule.value] = {
                   ...anchorFunctions[rule.value],
                   [prop]: data,
                 };
+                // Store new name with declaration prop appended,
+                // so that we can go back and update the original custom
+                // property value
+                const propKey = `${prop}-${uuid()}`;
+                customPropReplacements[origKey] = {
+                  ...customPropReplacements[origKey],
+                  [propKey]: key,
+                };
                 // Update CSS property to new name with declaration prop added
-                child.name = `${child.name}-${prop}`;
+                child.name = `${child.name}-${propKey}`;
                 changed = true;
               }
             }
@@ -484,6 +487,13 @@ export function parseCSS(styleData: StyleData[]) {
                   },
                 });
                 changed = true;
+              }
+              if (customPropOriginals[child.name]) {
+                // Restore original (unused) CSS custom property value
+                this.declaration.value = {
+                  type: 'Raw',
+                  value: customPropOriginals[child.name],
+                };
               }
             }
           }
