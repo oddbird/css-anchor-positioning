@@ -23,19 +23,6 @@ jobs:
       RESULTS_BRANCH: ${{ github.ref_name }}--wpt-results
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version-file: .nvmrc
-          cache: yarn
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.x'
-      - name: Clone WPT repo
-        uses: actions/checkout@v3
-        with:
-          repository: ${{ env.WPT_REPO }}
-          ref: ${{ env.WPT_BRANCH }}
-          path: wpt
       - name: Check if WPT results branch exists
         id: results-branch-exists
         run: echo "EXISTS=$(git ls-remote --heads origin $RESULTS_BRANCH | wc -l)" >> $GITHUB_OUTPUT
@@ -49,13 +36,27 @@ jobs:
           git add .
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git ci -m "Initial history commit"
+          git commit -m "Initial WPT history commit"
           git push origin $RESULTS_BRANCH
+          git switch ${{ github.ref_name }}
       - name: Clone WPT results branch
         uses: actions/checkout@v3
         with:
           ref: ${{ env.RESULTS_BRANCH }}
           path: wpt-results
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.x'
+      - name: Clone WPT repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.WPT_REPO }}
+          ref: ${{ env.WPT_BRANCH }}
+          path: wpt
 
       - name: Build polyfill
         run: |
