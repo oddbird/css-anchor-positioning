@@ -30,10 +30,7 @@ export default function writeReport(
   if (!fs.existsSync('test-results')) fs.mkdirSync('test-results');
 
   // Save the raw JSON data to debug / process further
-  fs.writeFileSync(
-    `test-results/${fileName}.json`,
-    JSON.stringify(results, null, 2),
-  );
+  fs.writeFileSync(`test-results/${fileName}.json`, JSON.stringify(results));
 
   // Create an object mapping each test path with the results for all versions
   const byPath: TestPathMap = {};
