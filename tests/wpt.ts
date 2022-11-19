@@ -13,7 +13,7 @@
 
 import { eachLimit, retry } from 'async';
 import { Local } from 'browserstack-local';
-import { readdirSync, writeFileSync } from 'fs';
+import fs from 'fs';
 import { readFile } from 'fs/promises';
 import { Agent } from 'http';
 import { Builder, By, until } from 'selenium-webdriver';
@@ -493,25 +493,27 @@ async function main() {
     console.info(`Writing report for ${results.length} results`);
     writeReport(results);
 
-    const rows = readdirSync(`${process.cwd()}/test-results`)
+    /* Write an HTML page with links to all historic WPT results */
+    const rows = fs
+      .readdirSync('test-results')
       .map((name) => `<li><a href="/${name}">${name}</a></li>`)
       .sort()
+      .reverse()
       .join('\n');
-
     const html = `
-       <!doctype html>
-       <html lang="en">
-       <head>
-           <title>Test Results</title>
-       </head>
-       <body>
-       <ul>
-       ${rows}
-       </ul>
-       </body>
-       </html>`;
-
-    writeFileSync('test-results/history.html', html);
+      <!doctype html>
+      <html lang="en">
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Test Results</title>
+      </head>
+      <body>
+        <ul>
+          ${rows}
+        </ul>
+      </body>
+      </html>`;
+    fs.writeFileSync('test-results/history.html', html);
   } finally {
     await stopLocalServer(server);
   }
