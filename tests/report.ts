@@ -21,10 +21,10 @@ export default function writeReport(
   results: BrowserDefinition[],
   name?: string,
 ) {
-  const wptRepo: string = process.env.WPT_REPO || 'web-platform-tests/wpt';
-  const wptBranch: string = process.env.WPT_BRANCH || 'master';
-  const commitUrl: string | undefined = process.env.COMMIT_URL;
-  const wptCommitUrl: string | undefined = process.env.WPT_COMMIT_URL;
+  const wptRepo: string | undefined = process.env.WPT_REPO;
+  const wptCommit: string | undefined = process.env.WPT_COMMIT;
+  const sourceRepo: string | undefined = process.env.SOURCE_REPO;
+  const sourceCommit: string | undefined = process.env.SOURCE_COMMIT;
 
   const timeStamp = new Date().toISOString();
   const fileName = name || timeStamp.replaceAll(':', '-');
@@ -69,11 +69,25 @@ export default function writeReport(
     </style>
   </head>
   <body>
-  Generated at: ${timeStamp}
-  ${commitUrl ? `<a target="_blank" href="${commitUrl}">Source commit</a>` : ''}
+  <p>Generated at: ${timeStamp}</p>
   ${
-    wptCommitUrl
-      ? `<a target="_blank" href="${wptCommitUrl}">WPT commit</a>`
+    sourceRepo && sourceCommit
+      ? `<p>
+          Source commit:
+          <a target="_blank" href="https://github.com/${sourceRepo}/commit/${sourceCommit}">
+            ${sourceCommit}
+          </a>
+        </p>`
+      : ''
+  }
+  ${
+    wptRepo && wptCommit
+      ? `<p>
+          WPT commit:
+          <a target="_blank" href="https://github.com/${wptRepo}/commit/${wptCommit}">
+            ${wptCommit}
+          </a>
+        </p>`
       : ''
   }
   <br><a href="history.html">History</a>
@@ -96,9 +110,13 @@ export default function writeReport(
             (testPath) =>
               `<tr>
                 <td class="test-name">
-                  <a target="_blank" href="https://github.com/${wptRepo}/blob/${wptBranch}/${testPath}">
-                    ${testPath}
-                  </a>
+                  ${
+                    wptRepo && wptCommit
+                      ? `<a target="_blank" href="https://github.com/${wptRepo}/blob/${wptCommit}/${testPath}">
+                          ${testPath}
+                        </a>`
+                      : testPath
+                  }
                   <span>
                     <a target="_blank" href="https://wpt.live/${testPath}" title="Open in wpt.live">🌐</a>
                     <a target="_blank" href="http://${localDomain}${testPath}" title="Open locally">🏠</a>
