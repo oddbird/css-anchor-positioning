@@ -57,6 +57,8 @@ jobs:
           repository: ${{ env.WPT_REPO }}
           ref: ${{ env.WPT_BRANCH }}
           path: wpt
+      - name: Get WPT commit link
+        run: echo "WPT_COMMIT_URL=https://github.com/$WPT_REPO/commit/$(cd wpt; git rev-parse HEAD)" >> $GITHUB_ENV
 
       - name: Build polyfill
         run: |

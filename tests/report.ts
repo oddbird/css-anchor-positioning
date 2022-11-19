@@ -24,6 +24,7 @@ export default function writeReport(
   const wptRepo: string = process.env.WPT_REPO || 'web-platform-tests/wpt';
   const wptBranch: string = process.env.WPT_BRANCH || 'master';
   const commitUrl: string | undefined = process.env.COMMIT_URL;
+  const wptCommitUrl: string | undefined = process.env.WPT_COMMIT_URL;
 
   const timeStamp = new Date().toISOString();
   const fileName = name || timeStamp.replaceAll(':', '-');
@@ -69,9 +70,10 @@ export default function writeReport(
   </head>
   <body>
   Generated at: ${timeStamp}
+  ${commitUrl ? `<a target="_blank" href="${commitUrl}">Source commit</a>` : ''}
   ${
-    commitUrl
-      ? `(<a target="_blank" href="${commitUrl}">Source commit</a>)`
+    wptCommitUrl
+      ? `<a target="_blank" href="${wptCommitUrl}">WPT commit</a>`
       : ''
   }
   <br><a href="history.html">History</a>
