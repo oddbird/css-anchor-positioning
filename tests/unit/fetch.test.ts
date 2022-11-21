@@ -26,9 +26,9 @@ describe('fetch stylesheet', () => {
     const styleData = await fetchCSS();
 
     expect(styleData).toHaveLength(2);
-    expect(styleData[0].source).toBe(`${location.origin}/sample.css`);
+    expect(styleData[0].url?.toString()).toBe(`${location.origin}/sample.css`);
     expect(styleData[0].css).toEqual(css);
-    expect(styleData[1].source).toBe('style');
+    expect(styleData[1].url).toBeUndefined();
     expect(styleData[1].css.trim()).toBe('p { color: red; }');
   });
 });
@@ -85,8 +85,8 @@ describe('fetch inline styles', () => {
     const styleData = await fetchCSS();
 
     expect(styleData).toHaveLength(4);
-    expect(styleData[2].source).toBe('style');
-    expect(styleData[3].source).toBe('style');
+    expect(styleData[2].url).toBeUndefined();
+    expect(styleData[3].url).toBeUndefined();
     expect(styleData[2].css.trim()).toContain('[data-anchor-polyfill=');
     expect(styleData[2].css.trim()).toContain(
       'top: anchor(--my-anchor-in-line end)',

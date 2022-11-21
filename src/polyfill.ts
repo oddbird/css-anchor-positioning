@@ -11,6 +11,7 @@ import {
 
 import { fetchCSS } from './fetch.js';
 import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
+import { transformCSS } from './transform.js';
 
 // DOM platform does not have async methods
 interface DomPlatform extends Platform {
@@ -156,6 +157,8 @@ export const getPixelValue = ({
 };
 
 export function position(rules: AnchorPositions) {
+  const root = document.documentElement;
+
   Object.entries(rules).forEach(([targetSel, position]) => {
     const target: HTMLElement | null = document.querySelector(targetSel);
 
@@ -180,7 +183,7 @@ export function position(rules: AnchorPositions) {
               anchorEdge: anchorValue.anchorEdge,
               fallback: anchorValue.fallbackValue,
             });
-            Object.assign(target.style, { [property]: resolved });
+            root.style.setProperty(anchorValue.key, resolved);
           });
         }
       },
@@ -193,14 +196,14 @@ export async function polyfill() {
   const styleData = await fetchCSS();
 
   // parse CSS
-  const rules = parseCSS(styleData.map(({ css }) => css).join('\n'));
+  const rules = parseCSS(styleData);
 
   if (Object.values(rules).length) {
+    // calculate position values
     position(rules);
 
     // update source code
-    // https://trello.com/c/f1L7Ti8m
-    // transformCSS(styleData);
+    transformCSS(styleData);
   }
 
   return rules;
