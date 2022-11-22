@@ -386,7 +386,7 @@ async function runTestSuite(
 
     console.info(`[${name}] Running tests...`);
     await driver.executeScript(
-      `window.RUN_CQ_TESTS(${JSON.stringify(testSuite)})`,
+      `window.RUN_TESTS(${JSON.stringify(testSuite)})`,
     );
 
     const resultsElem = await driver.wait(

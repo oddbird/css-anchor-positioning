@@ -29,7 +29,7 @@
         });
       }
 
-      async function runCqTests(tests) {
+      async function runTests(tests) {
         const testHarness = document.createElement('iframe');
         testHarness.className = 'test-harness';
         document.body.appendChild(testHarness);
@@ -64,7 +64,7 @@
         document.body.appendChild(scriptElem);
       }
 
-      window.RUN_CQ_TESTS = runCqTests;
+      window.RUN_TESTS = runTests;
     </script>
   </body>
 </html>
