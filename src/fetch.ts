@@ -1,11 +1,13 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuid } from 'uuid';
 
 export interface StyleData {
-  source: 'style' | string;
+  el: HTMLElement;
   css: string;
+  url?: URL;
+  changed?: boolean;
 }
 
-export function isStyleLink(link: HTMLLinkElement) {
+export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
   return Boolean(
     (link.type === 'text/css' || link.rel === 'stylesheet') && link.href,
   );
@@ -19,61 +21,60 @@ function getStylesheetUrl(link: HTMLLinkElement): URL | undefined {
 }
 
 async function fetchLinkedStylesheets(
-  sources: (string | URL)[],
+  sources: Partial<StyleData>[],
 ): Promise<StyleData[]> {
   return Promise.all(
-    sources.map(async (src) => {
-      if (typeof src === 'string') {
-        return { source: 'style', css: src };
+    sources.map(async (data) => {
+      if (!data.url) {
+        return data as StyleData;
       }
-      // fetch css and push into array of strings
-      const response = await fetch(src.toString());
+      // fetch css and add to array
+      const response = await fetch(data.url.toString());
       const css = await response.text();
-      return { source: src.toString(), css };
+      return { ...data, css } as StyleData;
     }),
   );
 }
 
 // Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, adds a new 'data-anchor-polyfill' attribute with a random UUID value,
-// and then formats the styles in the same manner as CSS from style tags.
-// A list of this formatted styles is returned.
-// If no elements are found with inline styles, an empty list is returned.
+// For each element found, adds a new 'data-anchor-polyfill' attribute with a
+// random UUID value, and then formats the styles in the same manner as CSS from
+// style tags.
 function fetchInlineStyles() {
-  const elementsWithInlineAnchorStyles =
+  const elementsWithInlineAnchorStyles: NodeListOf<HTMLElement> =
     document.querySelectorAll('[style*="anchor"]');
-  const inlineStyles: string[] = [];
+  const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
-    const selector = uuidv4();
+    const selector = uuid();
     const dataAttribute = 'data-anchor-polyfill';
     el.setAttribute(dataAttribute, selector);
     const styles = el.getAttribute('style');
-    const formattedEl = `[${dataAttribute}="${selector}"] { ${styles} }`;
-    inlineStyles.push(formattedEl);
+    const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
+    inlineStyles.push({ el, css });
   });
 
   return inlineStyles;
 }
 
 export async function fetchCSS(): Promise<StyleData[]> {
-  const elements = document.querySelectorAll('link, style');
-  const sources: (string | URL)[] = [];
+  const elements: NodeListOf<HTMLElement> =
+    document.querySelectorAll('link, style');
+  const sources: Partial<StyleData>[] = [];
 
   elements.forEach((el) => {
     if (el.tagName.toLowerCase() === 'link') {
       const url = getStylesheetUrl(el as HTMLLinkElement);
       if (url) {
-        sources.push(url);
+        sources.push({ el, url });
       }
     }
     if (el.tagName.toLowerCase() === 'style') {
-      sources.push(el.innerHTML);
+      sources.push({ el, css: el.innerHTML });
     }
   });
 
   const inlines = fetchInlineStyles();
-  inlines.forEach((inlineStyle) => sources.push(inlineStyle));
 
-  return await fetchLinkedStylesheets(sources);
+  return await fetchLinkedStylesheets([...sources, ...inlines]);
 }

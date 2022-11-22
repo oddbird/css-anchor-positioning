@@ -1,9 +1,10 @@
+import { type StyleData } from '../../src/fetch.js';
 import { parseCSS } from '../../src/parse.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
   it('handles missing `@position-fallback` at-rule or `anchor()` fn', () => {
-    const result = parseCSS(sampleBaseCSS);
+    const result = parseCSS([{ css: sampleBaseCSS }] as StyleData[]);
 
     expect(result).toEqual({});
   });
@@ -16,7 +17,7 @@ describe('parseCSS', () => {
         top: anchor(--my-anchor bottom);
       }
     `;
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#f1': {
         declarations: {
@@ -30,14 +31,14 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('parses `anchor()` function (custom properties)', () => {
     document.body.innerHTML =
       '<div id="my-target"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target': {
         declarations: {
@@ -57,7 +58,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('parses `anchor()` (name set via custom property)', () => {
@@ -65,7 +66,7 @@ describe('parseCSS', () => {
       '<div id="my-target-name-prop" style="--anchor-var: --my-anchor-name-prop"></div>' +
       '<div id="my-anchor-name-prop"></div>';
     const css = getSampleCSS('anchor-name-custom-prop');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-name-prop': {
         declarations: {
@@ -85,7 +86,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   // https://trello.com/c/yOP9vqxZ
@@ -94,7 +95,7 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-props': {
         declarations: {
@@ -114,7 +115,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   // https://trello.com/c/UGEMTfVc
@@ -137,7 +138,7 @@ describe('parseCSS', () => {
         --center: anchor(--anchor 100%);
       }
     `;
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#target': {
         declarations: {
@@ -151,16 +152,14 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
-  // https://trello.com/c/YAl95oDi
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (math)', () => {
+  it('parses `anchor()` function (math)', () => {
     document.body.innerHTML =
       '<div id="my-target-math"></div><div id="my-anchor-math"></div>';
     const css = getSampleCSS('anchor-math');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-math': {
         declarations: {
@@ -171,7 +170,7 @@ describe('parseCSS', () => {
             fallbackValue: '0px',
           },
           top: {
-            anchorEdge: 50,
+            anchorEdge: 100,
             anchorEl: document.getElementById('my-anchor-math'),
             anchorName: '--my-anchor-math',
             fallbackValue: '0px',
@@ -180,7 +179,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('parses `anchor()` function (positioning)', () => {
@@ -188,7 +187,7 @@ describe('parseCSS', () => {
       '<div id="my-target-positioning"></div><div id="my-anchor-positioning"></div>';
     const anchorEl = document.getElementById('my-anchor-positioning');
     const css = getSampleCSS('anchor-positioning');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-positioning': {
         declarations: {
@@ -208,7 +207,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('parses `@position-fallback` strategy', () => {
@@ -216,7 +215,7 @@ describe('parseCSS', () => {
       '<div id="my-target-fallback"></div><div id="my-anchor-fallback"></div>';
     const anchorEl = document.getElementById('my-anchor-fallback');
     const css = getSampleCSS('position-fallback');
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-fallback': {
         declarations: {
@@ -310,7 +309,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('parses `@position-fallback` with unknown anchor name', () => {
@@ -328,7 +327,7 @@ describe('parseCSS', () => {
         }
       }
     `;
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-fallback': {
         fallbacks: [
@@ -350,7 +349,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('handles duplicate anchor-names', () => {
@@ -368,7 +367,7 @@ describe('parseCSS', () => {
         top: anchor(--my-anchor bottom);
       }
     `;
-    const result = parseCSS(css);
+    const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#f1': {
         declarations: {
@@ -382,7 +381,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(result).toEqual(expected);
+    expect(result).toMatchObject(expected);
   });
 
   it('handles invalid/missing `position-fallback`', () => {
@@ -392,9 +391,8 @@ describe('parseCSS', () => {
         position-fallback: --fallback;
       }
     `;
-    const result = parseCSS(css);
-    const expected = {};
+    const result = parseCSS([{ css }] as StyleData[]);
 
-    expect(result).toEqual(expected);
+    expect(result).toEqual({});
   });
 });

@@ -1,5 +1,7 @@
 import * as csstree from 'css-tree';
+import { v4 as uuid } from 'uuid';
 
+import { StyleData } from './fetch.js';
 import { validatedForPositioning } from './validate.js';
 
 interface DeclarationWithValue extends csstree.Declaration {
@@ -16,9 +18,9 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
-export type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
+type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
 
-export type AnchorSideKeyword =
+type AnchorSideKeyword =
   | 'top'
   | 'left'
   | 'right'
@@ -37,6 +39,7 @@ interface AnchorFunction {
   anchorEdge?: AnchorSide;
   fallbackValue: string;
   customPropName?: string;
+  key: string;
 }
 
 // `key` is the property being declared
@@ -78,62 +81,60 @@ interface Fallbacks {
   [key: string]: TryBlock[];
 }
 
-export function isDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
+function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
 
-export function isAnchorNameDeclaration(
+function isAnchorNameDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-name';
 }
 
-export function isAnchorFunction(
+function isAnchorFunction(
   node: csstree.CssNode | null,
 ): node is csstree.FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
-export function isVarFunction(
+function isVarFunction(
   node: csstree.CssNode | null,
 ): node is csstree.FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
-export function isFallbackDeclaration(
+function isFallbackDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-fallback';
 }
 
-export function isFallbackAtRule(node: csstree.CssNode): node is AtRuleRaw {
+function isFallbackAtRule(node: csstree.CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'position-fallback';
 }
 
-export function isTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
+function isTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'try';
 }
 
-export function isIdentifier(
-  node: csstree.CssNode,
-): node is csstree.Identifier {
+function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
   return Boolean(node.type === 'Identifier' && node.name);
 }
 
-export function isPercentage(
-  node: csstree.CssNode,
-): node is csstree.Percentage {
+function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
-function parseAnchorFn(node: csstree.FunctionNode): AnchorFunction {
+function parseAnchorFn(
+  node: csstree.FunctionNode,
+  replaceCss?: boolean,
+): AnchorFunction {
   let anchorName: string | undefined,
     anchorEdge: AnchorSide | undefined,
     fallbackValue = '',
     foundComma = false,
     customPropName: string | undefined;
+
   node.children.toArray().forEach((child, idx) => {
     if (foundComma) {
       fallbackValue = `${fallbackValue}${csstree.generate(child)}`;
@@ -164,11 +165,26 @@ function parseAnchorFn(node: csstree.FunctionNode): AnchorFunction {
         break;
     }
   });
+
+  const key = `--anchor-${uuid()}`;
+  if (replaceCss) {
+    // Replace anchor function with unique CSS custom property.
+    // This allows us to update the value of the new custom property
+    // every time the position changes.
+    Object.assign(node, {
+      type: 'Raw',
+      value: `var(${key})`,
+      children: null,
+    });
+    Reflect.deleteProperty(node, 'name');
+  }
+
   return {
     anchorName,
     anchorEdge,
     fallbackValue: fallbackValue || '0px',
     customPropName,
+    key,
   };
 }
 
@@ -192,12 +208,13 @@ function getAnchorFunctionData(
   rule?: csstree.Raw,
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
-    const data = parseAnchorFn(node);
     if (declaration.property.startsWith('--')) {
+      const data = parseAnchorFn(node);
       customPropAssignments[declaration.property] = data;
       return;
     }
     if (isInset(declaration.property)) {
+      const data = parseAnchorFn(node, true);
       return { [declaration.property]: data };
     }
   }
@@ -263,7 +280,7 @@ function getAnchorEl(targetEl: HTMLElement | null, anchorObj: AnchorFunction) {
   return validatedForPositioning(targetEl, anchorSelectors);
 }
 
-export function getAST(cssText: string) {
+function getAST(cssText: string) {
   const ast = csstree.parse(cssText, {
     parseAtrulePrelude: false,
     parseRulePrelude: false,
@@ -273,87 +290,114 @@ export function getAST(cssText: string) {
   return ast;
 }
 
-export function parseCSS(css: string) {
+export function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
-  const ast = getAST(css);
-  csstree.walk(ast, function (node) {
-    const rule = this.rule?.prelude as csstree.Raw | undefined;
-
-    // Parse `anchor-name` declaration
-    const { name: anchorName, selector: anchorSelector } = getAnchorNameData(
-      node,
-      rule,
-    );
-    if (anchorName && anchorSelector) {
-      if (anchorNames[anchorName]) {
-        anchorNames[anchorName].push(anchorSelector);
-      } else {
-        anchorNames[anchorName] = [anchorSelector];
-      }
-    }
-
-    // Parse `anchor()` function
-    const anchorFnData = getAnchorFunctionData(node, this.declaration, rule);
-    if (anchorFnData && rule?.value) {
-      // This will override earlier declarations
-      // with the same exact rule selector
-      // *and* the same exact declaration property:
-      // (e.g. multiple `top: anchor(...)` declarations
-      // for the same `.foo {...}` selector)
-      anchorFunctions[rule.value] = {
-        ...anchorFunctions[rule.value],
-        ...anchorFnData,
-      };
-    }
-
-    // Parse `position-fallback` declaration
-    const { name: fbName, selector: fbSelector } =
-      getPositionFallbackDeclaration(node, rule);
-    if (fbName && fbSelector) {
-      // This will override earlier `position-fallback` declarations
-      // with the same rule selector:
-      // (e.g. multiple `position-fallback:` declarations
-      // for the same `.foo {...}` selector)
-      fallbackNames[fbSelector] = fbName;
-    }
-
-    // Parse `@position-fallback` rule
-    const { name: fbRuleName, fallbacks: fbTryBlocks } =
-      getPositionFallbackRules(node);
-    if (fbRuleName && fbTryBlocks.length) {
-      // This will override earlier `@position-fallback` lists
-      // with the same name:
-      // (e.g. multiple `@position-fallback --my-fallback {...}` uses
-      // with the same `--my-fallback` name)
-      fallbacks[fbRuleName] = fbTryBlocks;
-    }
-  });
-
-  const hasCustomPropAssignments =
-    Object.values(customPropAssignments).length > 0;
-  // Find where CSS custom properties are used
-  if (hasCustomPropAssignments) {
+  for (const styleObj of styleData) {
+    let changed = false;
+    const ast = getAST(styleObj.css);
     csstree.walk(ast, function (node) {
       const rule = this.rule?.prelude as csstree.Raw | undefined;
-      if (
-        rule?.value &&
-        isVarFunction(node) &&
-        node.children.first &&
-        this.declaration &&
-        isInset(this.declaration.property)
-      ) {
-        const name = (node.children.first as csstree.Identifier).name;
-        const anchorFnData = customPropAssignments[name];
-        if (anchorFnData) {
-          anchorFunctions[rule.value] = {
-            ...anchorFunctions[rule.value],
-            [this.declaration.property]: anchorFnData,
-          };
+
+      // Parse `anchor-name` declaration
+      const { name: anchorName, selector: anchorSelector } = getAnchorNameData(
+        node,
+        rule,
+      );
+      if (anchorName && anchorSelector) {
+        if (anchorNames[anchorName]) {
+          anchorNames[anchorName].push(anchorSelector);
+        } else {
+          anchorNames[anchorName] = [anchorSelector];
         }
       }
+
+      // Parse `anchor()` function
+      const anchorFnData = getAnchorFunctionData(node, this.declaration, rule);
+      if (anchorFnData && rule?.value) {
+        // This will override earlier declarations
+        // with the same exact rule selector
+        // *and* the same exact declaration property:
+        // (e.g. multiple `top: anchor(...)` declarations
+        // for the same `.foo {...}` selector)
+        anchorFunctions[rule.value] = {
+          ...anchorFunctions[rule.value],
+          ...anchorFnData,
+        };
+        changed = true;
+      }
+
+      // Parse `position-fallback` declaration
+      const { name: fbName, selector: fbSelector } =
+        getPositionFallbackDeclaration(node, rule);
+      if (fbName && fbSelector) {
+        // This will override earlier `position-fallback` declarations
+        // with the same rule selector:
+        // (e.g. multiple `position-fallback:` declarations
+        // for the same `.foo {...}` selector)
+        fallbackNames[fbSelector] = fbName;
+      }
+
+      // Parse `@position-fallback` rule
+      const { name: fbRuleName, fallbacks: fbTryBlocks } =
+        getPositionFallbackRules(node);
+      if (fbRuleName && fbTryBlocks.length) {
+        // This will override earlier `@position-fallback` lists
+        // with the same name:
+        // (e.g. multiple `@position-fallback --my-fallback {...}` uses
+        // with the same `--my-fallback` name)
+        fallbacks[fbRuleName] = fbTryBlocks;
+      }
     });
+    if (changed) {
+      // Update CSS
+      styleObj.css = csstree.generate(ast);
+      styleObj.changed = true;
+    }
+  }
+
+  // Find where CSS custom properties are used
+  if (Object.values(customPropAssignments).length > 0) {
+    for (const styleObj of styleData) {
+      let changed = false;
+      const ast = getAST(styleObj.css);
+      csstree.walk(ast, function (node) {
+        const rule = this.rule?.prelude as csstree.Raw | undefined;
+        if (
+          rule?.value &&
+          isVarFunction(node) &&
+          node.children.first &&
+          this.declaration &&
+          isInset(this.declaration.property)
+        ) {
+          const child = node.children.first as csstree.Identifier;
+          const anchorFnData = customPropAssignments[child.name];
+          const prop = this.declaration.property;
+          if (anchorFnData) {
+            const data = { ...anchorFnData };
+            // When `anchor()` is used multiple times in different inset
+            // properties, the value will be different each time.
+            // So we append the property to the key, and update the CSS property
+            // to point to the new key:
+            const key = `${data.key}-${prop}`;
+            data.key = key;
+            anchorFunctions[rule.value] = {
+              ...anchorFunctions[rule.value],
+              [prop]: data,
+            };
+            // Update CSS property to new name with declaration property added
+            child.name = key;
+            changed = true;
+          }
+        }
+      });
+      if (changed) {
+        // Update CSS
+        styleObj.css = csstree.generate(ast);
+        styleObj.changed = true;
+      }
+    }
   }
 
   // Merge data together under target-element selector key

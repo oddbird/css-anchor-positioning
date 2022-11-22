@@ -76,23 +76,24 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.0.4",
+    "@floating-ui/dom": "^1.0.6",
     "@types/css-tree": "^2.0.0",
-    "css-tree": "^2.2.1"
+    "css-tree": "^2.2.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.27.1",
+    "@playwright/test": "^1.28.0",
     "@types/async": "^3.2.15",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.6",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.42.1",
-    "@typescript-eslint/parser": "^5.42.1",
-    "@vitest/coverage-istanbul": "^0.25.1",
+    "@typescript-eslint/eslint-plugin": "^5.43.0",
+    "@typescript-eslint/parser": "^5.43.0",
+    "@vitest/coverage-istanbul": "^0.25.2",
     "async": "^3.2.4",
     "browserstack-local": "^1.5.1",
     "cross-env": "^7.0.3",
-    "eslint": "^8.27.0",
+    "eslint": "^8.28.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-typescript": "^3.5.2",
     "eslint-plugin-import": "^2.26.0",
@@ -100,7 +101,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^8.0.0",
     "fetch-mock": "^9.11.0",
-    "jsdom": "^20.0.2",
+    "jsdom": "^20.0.3",
     "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.7.1",
@@ -108,10 +109,9 @@
     "stylelint": "^14.15.0",
     "stylelint-config-standard": "^29.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.4",
-    "uuid": "^9.0.0",
-    "vite": "^3.2.3",
-    "vitest": "^0.25.1"
+    "typescript": "^4.9.3",
+    "vite": "^3.2.4",
+    "vitest": "^0.25.2"
   },
   "resolutions": {
     "tslib": ">=2"
