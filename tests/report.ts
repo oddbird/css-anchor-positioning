@@ -119,7 +119,7 @@ export default function writeReport(
                   }
                   <span>
                     <a target="_blank" href="https://wpt.live/${testPath}" title="Open in wpt.live">🌐</a>
-                    <a target="_blank" href="http://${localDomain}${testPath}" title="Open locally">🏠</a>
+                    <a target="_blank" href="${localDomain}${testPath}" title="Open locally">🏠</a>
                   </span>
                 </td>
                 ${byPath[testPath]
