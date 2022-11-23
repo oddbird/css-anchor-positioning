@@ -290,6 +290,7 @@ function stopLocalServer(server: Local): Promise<void> {
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function getValue(obj: any, path: string) {
   const paths = path.split('/');
   for (let i = 0, len = paths.length; i < len; i++) obj = obj[paths[i]];

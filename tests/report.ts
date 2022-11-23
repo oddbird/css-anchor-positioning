@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { Liquid } from 'liquidjs';
+
 import type { BrowserDefinition, ResultData } from './wpt.js';
 
 export interface VersionResult {
