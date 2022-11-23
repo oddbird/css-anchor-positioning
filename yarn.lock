@@ -490,6 +490,7 @@ __metadata:
     eslint-plugin-simple-import-sort: ^8.0.0
     fetch-mock: ^9.11.0
     jsdom: ^20.0.3
+    liquidjs: ^9.42.1
     node-fetch: ^2.6.7
     npm-run-all: ^4.1.5
     prettier: ^2.7.1
@@ -3379,6 +3380,16 @@ __metadata:
   version: 1.2.4
   resolution: "lines-and-columns@npm:1.2.4"
   checksum: 0c37f9f7fa212b38912b7145e1cd16a5f3cd34d782441c3e6ca653485d326f58b3caccda66efce1c5812bde4961bbde3374fae4b0d11bf1226152337f3894aa5
+  languageName: node
+  linkType: hard
+
+"liquidjs@npm:^9.42.1":
+  version: 9.42.1
+  resolution: "liquidjs@npm:9.42.1"
+  bin:
+    liquid: bin/liquid.js
+    liquidjs: bin/liquid.js
+  checksum: 5d05e3d696230282080da2b410c1da5964b8fdcefb386153367705b9ec1412754206356a8f7c533a3f3f25cf46b65bfe7a4165f87e3bfca15ed0af5a922fea5b
   languageName: node
   linkType: hard
 
