@@ -35,7 +35,7 @@ export default function writeReport(
         const total = result.tests?.length;
         const data: VersionResult = {
           name: `${browser.name} ${version.name}`,
-          summary: total === undefined ? [-1, -1] : [passed, total],
+          summary: total === undefined ? [0, -1] : [passed, total],
         };
         resultsByPath[path] = [...(resultsByPath[path] || []), data];
       });
