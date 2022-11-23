@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>[WPT Report] {{ featureName }}</title>
+  <title>[WPT Report] {{ sourceBranch }}</title>
   <style>
     td {border: 1px solid}
     .test-name {display: flex; justify-content: space-between; gap: 1em}
@@ -15,7 +15,7 @@
 </head>
 <body>
 <ul>
-  <h1>[WPT Report] {{ featureName }}</h1>
+  <h1>[WPT Report] {{ sourceBranch }}</h1>
   <li>Generated at: {{ timeStamp }}</li>
   {%- if sourceRepo and sourceCommit %}
     <li>

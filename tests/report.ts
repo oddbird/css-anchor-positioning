@@ -48,7 +48,7 @@ export default function writeReport(
     wptCommit: process.env.WPT_COMMIT,
     sourceRepo: process.env.SOURCE_REPO,
     sourceCommit: process.env.SOURCE_COMMIT,
-    featureName: process.env.FEATURE_NAME || process.env.SOURCE_REPO,
+    sourceBranch: process.env.SOURCE_BRANCH,
     timeStamp,
     localDomain,
     results,

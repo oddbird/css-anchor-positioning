@@ -2,9 +2,8 @@ name: Run WPT
 
 on:
   push:
-    branches: [main]
   pull_request:
-    types: [reopened, synchronize]
+    types: [reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,8 +17,8 @@ env:
   WPT_REF: master
   SOURCE_REPO: ${{ github.repository }}
   SOURCE_COMMIT: ${{ github.sha }}
+  SOURCE_BRANCH: ${{ github.ref_name }}
   RESULTS_BRANCH: ${{ github.ref_name }}--wpt-results
-  FEATURE_NAME: ${{ github.event.pull_request.title }}
 
 jobs:
   test:
