@@ -14,7 +14,7 @@ env:
   BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
   WPT_MANIFEST: ${{ github.workspace }}/wpt/MANIFEST.json
   WPT_REPO: oddbird/wpt
-  WPT_REF: master
+  WPT_REF: anchor-position-polyfill
   SOURCE_REPO: ${{ github.repository }}
   SOURCE_COMMIT: ${{ github.sha }}
   SOURCE_BRANCH: ${{ github.ref_name }}
