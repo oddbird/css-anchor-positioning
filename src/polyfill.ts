@@ -1,38 +1,8 @@
-import {
-  type ElementRects,
-  type FloatingElement,
-  type Platform,
-  type Rect,
-  type ReferenceElement,
-  type Strategy,
-  autoUpdate,
-  platform,
-} from '@floating-ui/dom';
+import { type Rect, autoUpdate, platform } from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
 import { transformCSS } from './transform.js';
-
-// DOM platform does not have async methods
-interface DomPlatform extends Platform {
-  getDocumentElement: (element: Element) => HTMLElement;
-  getElementRects: (args: {
-    reference: ReferenceElement;
-    floating: FloatingElement;
-    strategy: Strategy;
-  }) => ElementRects;
-  getOffsetParent: (element: Element) => Element | Window;
-  isElement: (value: unknown) => boolean;
-  isRTL: (element: Element) => boolean;
-}
-
-const {
-  getDocumentElement,
-  getElementRects,
-  getOffsetParent,
-  isElement,
-  isRTL,
-} = platform as DomPlatform;
 
 export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -89,7 +59,7 @@ export interface GetPixelValueOpts {
   fallback: string;
 }
 
-export const getPixelValue = ({
+export const getPixelValue = async ({
   targetEl,
   targetProperty,
   anchorRect,
@@ -123,7 +93,7 @@ export const getPixelValue = ({
         // `start` and `end` should use the writing-mode of the element's
         // containing block, not the element itself:
         // https://trello.com/c/KnqCnHx3
-        const rtl = isRTL(targetEl) || false;
+        const rtl = (await platform.isRTL?.(targetEl)) || false;
         percentage = resolveLogicalKeyword(anchorEdge, rtl);
       }
   }
@@ -132,9 +102,11 @@ export const getPixelValue = ({
     typeof percentage === 'number' && !Number.isNaN(percentage);
 
   if (targetProperty === 'bottom' || targetProperty === 'right') {
-    offsetParent = getOffsetParent(targetEl);
-    if (!isElement(offsetParent)) {
-      offsetParent = getDocumentElement(targetEl);
+    offsetParent = await platform.getOffsetParent?.(targetEl);
+    if (!(await platform.isElement?.(offsetParent))) {
+      offsetParent =
+        (await platform.getDocumentElement?.(targetEl)) ||
+        window.document.documentElement;
     }
   }
 
@@ -156,7 +128,7 @@ export const getPixelValue = ({
   return fallback;
 };
 
-export function position(rules: AnchorPositions) {
+function position(rules: AnchorPositions) {
   const root = document.documentElement;
 
   Object.entries(rules).forEach(([targetSel, position]) => {
@@ -170,13 +142,13 @@ export function position(rules: AnchorPositions) {
       ([property, anchorValue]) => {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
-          autoUpdate(anchor, target, () => {
-            const rects = getElementRects({
+          autoUpdate(anchor, target, async () => {
+            const rects = await platform.getElementRects({
               reference: anchor,
               floating: target,
               strategy: 'absolute',
             });
-            const resolved = getPixelValue({
+            const resolved = await getPixelValue({
               targetEl: target,
               targetProperty: property,
               anchorRect: rects.reference,
