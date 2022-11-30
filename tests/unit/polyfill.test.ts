@@ -118,8 +118,8 @@ describe('getPixelValue', () => {
     ],
   ] as [GetPixelValueOpts, string][])(
     'returns pixel value for anchor fn',
-    (opts, expected) => {
-      const result = getPixelValue(opts);
+    async (opts, expected) => {
+      const result = await getPixelValue(opts);
 
       expect(result).toEqual(expected);
     },
