@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>[WPT Report] {{ sourceBranch }}</title>
+  <style>
+    td {border: 1px solid}
+    .test-name {display: flex; justify-content: space-between; gap: 1em}
+    td[style*='--progress:'] {
+      color: white;
+      background-color: maroon;
+      background-image: linear-gradient(to right, darkgreen var(--progress), maroon var(--progress));
+    }
+  </style>
+</head>
+<body>
+<ul>
+  <h1>[WPT Report] {{ sourceBranch }}</h1>
+  <li>Generated at: {{ timeStamp }}</li>
+  {%- if sourceRepo and sourceCommit %}
+    <li>
+      Source repository:
+      <a target="_blank" href="https://github.com/{{ sourceRepo }}">{{ sourceRepo }}</a>
+    </li>
+    <li>
+      Source commit:
+      <a target="_blank" href="https://github.com/{{ sourceRepo }}/commit/{{ sourceCommit }}">
+        {{ sourceCommit }}
+      </a>
+    </li>
+  {% endif -%}
+  {%- if wptRepo and wptCommit %}
+    <li>
+      WPT repository:
+      <a target="_blank" href="https://github.com/{{ wptRepo }}">{{ wptRepo }}</a>
+    </li>
+    <li>
+      WPT commit:
+      <a target="_blank" href="https://github.com/{{ wptRepo }}/commit/{{ wptCommit }}">
+        {{ wptCommit }}
+      </a>
+    </li>
+  {% endif -%}
+  <li><a href="history.html">Report history for this branch</a></li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Test</th>
+      {%- for browser in results %}
+        {%- for version in browser.versions %}
+          <th>{{ browser.name }}<br>{{ version.name }}
+        {% endfor -%}
+      {% endfor -%}
+    </tr>
+  </thead>
+  <tbody>
+    {%- for item in resultsByPath %}
+      {%- assign testPath = item[0] -%}
+      {%- assign testResults = item[1] -%}
+      <tr>
+        <td class="test-name">
+          {%- if wptRepo and wptCommit %}
+            <a target="_blank" href="https://github.com/{{ wptRepo }}/blob/{{ wptCommit }}/{{ testPath }}">
+              {{ testPath }}
+            </a>
+          {% else %}
+            {{ testPath }}
+          {% endif -%}
+          <span>
+            <a target="_blank" href="https://wpt.live/{{ testPath }}" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="{{ localDomain }}{{ testPath }}" title="Open locally">🏠</a>
+          </span>
+        </td>
+        {%- for result in testResults %}
+          {%- assign pass = result.summary[0] -%}
+          {%- assign total = result.summary[1] -%}
+          <td style="--progress: {{ pass | divided_by: total | times: 100 | round }}%">
+            {{ pass }} / {{ total }}
+          </td>
+        {% endfor -%}
+      </tr>
+    {% endfor -%}
+  </tbody>
+</table>
+</body>
+</html>
