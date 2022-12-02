@@ -98,7 +98,7 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  it.skip('parses `anchor()` function (custom property passed through)', () => {
+  it('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');

@@ -61,6 +61,12 @@
           >WPT examples</a
         >
         <a
+          href="https://anchor-position-wpt.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT results</a
+        >
+        <a
           href="https://drafts.csswg.org/css-anchor-1/"
           target="_blank"
           rel="noopener noreferrer"
@@ -438,9 +444,9 @@
         <div id="my-target-props" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's left edge is positioned 100px to the
-        right of the Anchor's horizontal center. Target's top edge is positioned
-        at 50% of the height of the Anchor.
+        With polyfill applied: Target's left edge is positioned in Anchor's
+        horizontal center. Target's bottom edge is 10% above the bottom edge of
+        Anchor.
       </p>
       <pre>
 #my-anchor-props {
@@ -448,12 +454,13 @@
 }
 
 #my-target-props {
-  --center: anchor(--my-anchor-props 50%);
-  --half-distance: calc(var(--center) + 100px);
+  --half: anchor(--my-anchor-props 50%);
+  --quarter: calc(var(--half) / 2);
+  --tenth: calc(var(--quarter) / 2.5);
 
   position: absolute;
-  left: var(--half-distance);
-  top: var(--center);
+  left: var(--half);
+  bottom: var(--tenth);
 }</pre
       >
     </section>
@@ -464,7 +471,7 @@
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="anchor-duplicate-custom-props" class="anchor">Anchor</div>
-        <div id="target-duplicate-custom-props" class="target">Target</div>
+        <div id="target-duplicate-custom-props" class="target one">Target</div>
       </div>
       <p class="note">
         With polyfill applied: Target's top left corner is positioned in the
