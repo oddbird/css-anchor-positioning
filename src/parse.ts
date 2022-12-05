@@ -204,15 +204,24 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
 
 // Mapping of custom property names, to anchor function data objects referenced
 // in their values
-const customPropAssignments: Record<string, AnchorFunction[]> = {};
+let customPropAssignments: Record<string, AnchorFunction[]> = {};
 // Mapping of custom property names, to the original values that have been
 // replaced in the CSS
-const customPropOriginals: Record<string, string> = {};
+let customPropOriginals: Record<string, string> = {};
 // Top-level key (`uuid`) is the original uuid to find in the updated CSS
 // - `key` (`propUuid`) is the new inset-property-specific uuid to append to the
 //   original custom property name
 // - `value` is the new inset-property-specific custom property value to use
-const customPropReplacements: Record<string, Record<string, string>> = {};
+let customPropReplacements: Record<string, Record<string, string>> = {};
+
+// Objects are declared at top-level to keep code cleaner,
+// but we reset them on every `parseCSS()` call
+// to prevent data leaking from one call to another.
+function resetStores() {
+  customPropAssignments = {};
+  customPropOriginals = {};
+  customPropReplacements = {};
+}
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -313,6 +322,7 @@ export function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
+  resetStores();
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);

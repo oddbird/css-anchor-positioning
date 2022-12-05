@@ -26,12 +26,14 @@ describe('parseCSS', () => {
     const expected = {
       '#f1': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor',
-            anchorEl: null,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl: null,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -48,20 +50,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target': {
         declarations: {
-          right: {
-            anchorName: '--my-anchor',
-            anchorEl: document.getElementById('my-anchor'),
-            anchorEdge: 100,
-            fallbackValue: '0px',
-            original: 'anchor(--my-anchor 100%)',
-          },
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('my-anchor'),
-            anchorName: '--my-anchor',
-            fallbackValue: '0px',
-            original: 'anchor(--my-anchor 50%)',
-          },
+          right: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl: document.getElementById('my-anchor'),
+              anchorEdge: 100,
+              fallbackValue: '0px',
+            },
+          ],
+          top: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById('my-anchor'),
+              anchorName: '--my-anchor',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -79,18 +83,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-name-prop': {
         declarations: {
-          right: {
-            customPropName: '--anchor-var',
-            anchorEl: document.getElementById('my-anchor-name-prop'),
-            anchorEdge: 'left',
-            fallbackValue: '0px',
-          },
-          bottom: {
-            anchorEdge: 'top',
-            anchorEl: document.getElementById('my-anchor-name-prop'),
-            customPropName: '--anchor-var',
-            fallbackValue: '0px',
-          },
+          right: [
+            {
+              customPropName: '--anchor-var',
+              anchorEl: document.getElementById('my-anchor-name-prop'),
+              anchorEdge: 'left',
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorEdge: 'top',
+              anchorEl: document.getElementById('my-anchor-name-prop'),
+              customPropName: '--anchor-var',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -107,20 +115,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-props': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-props',
-            anchorEl: document.getElementById('my-anchor-props'),
-            anchorEdge: 150,
-            fallbackValue: '0px',
-            original: 'calc(var(--center) + 100px)',
-          },
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('my-anchor-props'),
-            anchorName: '--my-anchor-props',
-            fallbackValue: '0px',
-            original: 'anchor(--my-anchor-props 50%)',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-props',
+              anchorEl: document.getElementById('my-anchor-props'),
+              anchorEdge: 50,
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById('my-anchor-props'),
+              anchorName: '--my-anchor-props',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -137,20 +147,42 @@ describe('parseCSS', () => {
     const expected = {
       '#target-duplicate-custom-props': {
         declarations: {
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('anchor-duplicate-custom-props'),
-            anchorName: '--anchor-duplicate-custom-props',
-            fallbackValue: '0px',
-            original: 'anchor(--anchor-duplicate-custom-props 50%)',
-          },
-          left: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('anchor-duplicate-custom-props'),
-            anchorName: '--anchor-duplicate-custom-props',
-            fallbackValue: '0px',
-            original: 'anchor(--anchor-duplicate-custom-props 50%)',
-          },
+          top: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+          ],
+          left: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -167,20 +199,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-math': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-math',
-            anchorEl: document.getElementById('my-anchor-math'),
-            anchorEdge: 100,
-            fallbackValue: '0px',
-            original: 'calc(anchor(--my-anchor-math 100%) - 50px)',
-          },
-          top: {
-            anchorEdge: 100,
-            anchorEl: document.getElementById('my-anchor-math'),
-            anchorName: '--my-anchor-math',
-            fallbackValue: '0px',
-            original: 'anchor(--my-anchor-math 100%)',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-math',
+              anchorEl: document.getElementById('my-anchor-math'),
+              anchorEdge: 100,
+              fallbackValue: '0px',
+            },
+          ],
+          top: [
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById('my-anchor-math'),
+              anchorName: '--my-anchor-math',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -197,18 +231,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-positioning': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor-positioning',
-            anchorEl,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
-          right: {
-            anchorName: '--my-anchor-positioning',
-            anchorEl,
-            anchorEdge: 'right',
-            fallbackValue: '50px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor-positioning',
+              anchorEl,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
+          right: [
+            {
+              anchorName: '--my-anchor-positioning',
+              anchorEl,
+              anchorEdge: 'right',
+              fallbackValue: '50px',
+            },
+          ],
         },
       },
     };
@@ -225,18 +263,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-fallback': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-fallback',
-            anchorEl,
-            anchorEdge: 'right',
-            fallbackValue: '0px',
-          },
-          bottom: {
-            anchorName: '--my-anchor-fallback',
-            anchorEl,
-            anchorEdge: 25,
-            fallbackValue: '0px',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorEl,
+              anchorEdge: 'right',
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorEl,
+              anchorEdge: 25,
+              fallbackValue: '0px',
+            },
+          ],
         },
         fallbacks: [
           {
@@ -377,12 +419,14 @@ describe('parseCSS', () => {
     const expected = {
       '#f1': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor',
-            anchorEl,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
