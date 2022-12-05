@@ -80,7 +80,19 @@ type TestSuite = {
 
 const TEST_FOLDERS: Array<string> = ['css/css-anchor-position'];
 
-const TEST_FILTERS = TEST_FOLDERS.map((folder) => new RegExp(folder));
+// Tests that check DOM implementation details instead of user-facing behavior
+const TEST_BLOCKLIST = [
+  'anchor-name-basics.html',
+  'anchor-parse-invalid.html',
+  'anchor-parse-valid.html',
+  'anchor-query-custom-property-registration.html',
+  'anchor-size-parse-invalid.html',
+  'anchor-size-parse-valid.html',
+  'at-fallback-position-allowed-declarations.html',
+  'at-fallback-position-parse.html',
+  'position-fallback-basics.html',
+];
+const TEST_FILTERS = [new RegExp(TEST_BLOCKLIST.join('|'))];
 
 const SUBTEST_FILTERS: Array<RegExp> = [
   //   /calc\(.*\)/,
@@ -311,28 +323,31 @@ async function getTests(manifestPath: string): Promise<TestSuite> {
     const refTests = getValue(manifest.items.reftest, folder_path);
 
     if (refTests) {
-      Object.keys(refTests).forEach((name) => {
+      Object.keys(refTests).forEach((name, index) => {
         const data = refTests[name][1][1][0];
         iframe.push(
           [
-            `ref${iframe.length}_test`,
+            `ref${index}_test`,
             `http://web-platform.test:8000/${folder_path}/${name}`,
           ],
-          [
-            `ref${iframe.length}_match`,
-            `http://web-platform.test:8000${data[0]}`,
-          ],
+          [`ref${index}_match`, `http://web-platform.test:8000${data[0]}`],
         );
       });
     }
 
     if (htmlTests) {
-      Object.keys(htmlTests)
-        .filter((name) => !TEST_FILTERS.some((filter) => filter.test(name)))
-        .map((name) => `http://web-platform.test:8000/${folder_path}/${name}`)
-        .forEach((test) => {
-          js.push(test);
-        });
+      js.push(
+        ...Object.keys(htmlTests)
+          .filter((name) => !TEST_FILTERS.some((filter) => filter.test(name)))
+          .map(
+            (name) => `http://web-platform.test:8000/${folder_path}/${name}`,
+          ),
+      );
+      // Object.keys(htmlTests).forEach((name) => {
+      //   const match = !TEST_FILTERS.some((filter) => filter.test(name));
+      //   if (match)
+      //     js.push(`http://web-platform.test:8000/${folder_path}/${name}`);
+      // });
     }
   }
 
