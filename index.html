@@ -16,6 +16,7 @@
     <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
+    <link rel="stylesheet" href="/anchor-implicit.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -67,7 +68,7 @@
           >WPT results</a
         >
         <a
-          href="https://drafts.csswg.org/css-anchor-1/"
+          href="https://w3c.github.io/csswg-drafts/css-anchor/"
           target="_blank"
           rel="noopener noreferrer"
           >Draft Spec</a
@@ -79,7 +80,7 @@
       <p>
         The CSS anchor positioning
         <a
-          href="https://drafts.csswg.org/css-anchor-1/"
+          href="https://w3c.github.io/csswg-drafts/css-anchor/"
           target="_blank"
           rel="noopener noreferrer"
           >specification</a
@@ -160,8 +161,6 @@
         top edge lines up with the bottom edge of the Anchor.
       </p>
       <pre>
-/* demo.css */
-
 #my-anchor-positioning {
   anchor-name: --my-anchor-positioning;
 }
@@ -243,6 +242,57 @@
     top: anchor(--my-anchor-in-line bottom);
     right: anchor(--my-anchor-in-line right);
   "</pre
+      >
+    </section>
+    <section id="implicit-name" class="demo-item">
+      <h2>
+        <a href="#implicit-name" aria-hidden="true">🔗</a>
+        Anchor() [with implicit anchor via "anchor" attribute]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-implicit-anchor" class="anchor">Anchor</div>
+        <div id="my-implicit-target" class="target" anchor="my-implicit-anchor">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the top left corner of
+        the Anchor.
+      </p>
+      <pre>
+&lt;div id="my-implicit-anchor"&gt;Anchor&lt;/div&gt;
+&lt;div id="my-implicit-target" anchor="my-implicit-anchor"&gt;Target&lt;/div&gt;
+
+#my-implicit-target {
+  position: absolute;
+  right: anchor(left);
+  bottom: anchor(top);
+}</pre
+      >
+    </section>
+    <section id="custom-prop-name" class="demo-item">
+      <h2>
+        <a href="#custom-prop-name" aria-hidden="true">🔗</a>
+        Anchor() [with anchor name set as CSS custom property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-name-prop" class="anchor">Anchor</div>
+        <div id="my-target-name-prop" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the top left corner of
+        the Anchor.
+      </p>
+      <pre>
+#my-anchor-name-prop {
+  anchor-name: --my-anchor-name-prop;
+}
+
+#my-target-name-prop {
+  --anchor-var: --my-anchor-name-prop;
+
+  position: absolute;
+  right: anchor(var(--anchor-var) left);
+  bottom: anchor(var(--anchor-var) top);
+}</pre
       >
     </section>
     <!-- <section id="position-fallback" class="demo-item">
@@ -375,33 +425,6 @@
   position: absolute;
   top: var(--center);
   right: var(--full);
-}</pre
-      >
-    </section>
-    <section id="custom-prop-name" class="demo-item">
-      <h2>
-        <a href="#custom-prop-name" aria-hidden="true">🔗</a>
-        Anchor() [with anchor name set as CSS custom property]
-      </h2>
-      <div style="position: relative" class="demo-elements">
-        <div id="my-anchor-name-prop" class="anchor">Anchor</div>
-        <div id="my-target-name-prop" class="target">Target</div>
-      </div>
-      <p class="note">
-        With polyfill applied: Target is positioned at the top left corner of
-        the Anchor.
-      </p>
-      <pre>
-#my-anchor-name-prop {
-  anchor-name: --my-anchor-name-prop;
-}
-
-#my-target-name-prop {
-  --anchor-var: --my-anchor-name-prop;
-
-  position: absolute;
-  right: anchor(var(--anchor-var) left);
-  bottom: anchor(var(--anchor-var) top);
 }</pre
       >
     </section>

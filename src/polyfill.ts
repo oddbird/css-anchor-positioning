@@ -4,9 +4,9 @@ import { fetchCSS } from './fetch.js';
 import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
 import { transformCSS } from './transform.js';
 
-export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
+export const resolveLogicalKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
-  switch (edge) {
+  switch (side) {
     case 'start':
     case 'self-start':
       percentage = 0;
@@ -16,8 +16,8 @@ export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
       percentage = 100;
       break;
     default:
-      if (typeof edge === 'number' && !Number.isNaN(edge)) {
-        percentage = edge;
+      if (typeof side === 'number' && !Number.isNaN(side)) {
+        percentage = side;
       }
   }
   if (percentage !== undefined) {
@@ -55,7 +55,7 @@ export interface GetPixelValueOpts {
   targetEl: HTMLElement;
   targetProperty: string;
   anchorRect: Rect;
-  anchorEdge?: AnchorSide;
+  anchorSide?: AnchorSide;
   fallback: string;
 }
 
@@ -63,14 +63,14 @@ export const getPixelValue = async ({
   targetEl,
   targetProperty,
   anchorRect,
-  anchorEdge,
+  anchorSide,
   fallback,
 }: GetPixelValueOpts) => {
   let percentage: number | undefined;
   let offsetParent: Element | Window | HTMLElement | undefined;
   const axis = getAxis(targetProperty);
 
-  switch (anchorEdge) {
+  switch (anchorSide) {
     case 'left':
       percentage = 0;
       break;
@@ -89,12 +89,12 @@ export const getPixelValue = async ({
     default:
       // Logical keywords require checking the writing direction
       // of the target element (or its containing block)
-      if (anchorEdge !== undefined && targetEl) {
+      if (anchorSide !== undefined && targetEl) {
         // `start` and `end` should use the writing-mode of the element's
         // containing block, not the element itself:
         // https://trello.com/c/KnqCnHx3
         const rtl = (await platform.isRTL?.(targetEl)) || false;
-        percentage = resolveLogicalKeyword(anchorEdge, rtl);
+        percentage = resolveLogicalKeyword(anchorSide, rtl);
       }
   }
 
@@ -158,7 +158,7 @@ function position(rules: AnchorPositions) {
               targetEl: target,
               targetProperty: property,
               anchorRect: rects.reference,
-              anchorEdge: anchorValue.anchorEdge,
+              anchorSide: anchorValue.anchorSide,
               fallback: anchorValue.fallbackValue,
             });
             root.style.setProperty(anchorValue.uuid, resolved);
