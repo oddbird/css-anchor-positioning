@@ -3,10 +3,11 @@
 }
 
 #my-target-props {
-  --center: anchor(--my-anchor-props 50%);
-  --half-distance: calc(var(--center) + 100px);
+  --half: anchor(--my-anchor-props 50%);
+  --quarter: calc(var(--half) / 2);
+  --tenth: calc(var(--quarter) / 2.5);
 
   position: absolute;
-  left: var(--half-distance);
-  top: var(--center);
+  left: var(--half);
+  bottom: var(--tenth);
 }

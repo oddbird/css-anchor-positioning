@@ -14,6 +14,8 @@
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
+    <link rel="stylesheet" href="/anchor-custom-props.css" />
+    <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -57,6 +59,12 @@
           target="_blank"
           rel="noopener noreferrer"
           >WPT examples</a
+        >
+        <a
+          href="https://anchor-position-wpt.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT results</a
         >
         <a
           href="https://drafts.csswg.org/css-anchor-1/"
@@ -407,9 +415,9 @@
         <div id="my-target-math" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's left edge is aligned with 100% of the
-        width of the Anchor (i.e. the Anchor's right edge). The top edge of the
-        Target is 50px above the top edge of the Anchor.
+        With polyfill applied: Target's left edge is 50px left of the Anchor's
+        right edge). The top edge of the Target is 50px above the bottom edge of
+        the Anchor.
       </p>
       <pre>
 #my-anchor-math {
@@ -418,10 +426,72 @@
 
 #my-target-math {
   --full-math: anchor(--my-anchor-math 100%);
+  --full-minus-math: calc(anchor(--my-anchor-math 100%) - 50px);
 
   position: absolute;
   top: calc(var(--full-math) - 50px);
-  left: var(--full-math);
+  left: var(--full-minus-math);
+}</pre
+      >
+    </section>
+    <section id="custom-prop-passthrough" class="demo-item">
+      <h2>
+        <a href="#custom-prop-passthrough" aria-hidden="true">🔗</a>
+        Anchor() [passed through multiple CSS custom properties]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-props" class="anchor">Anchor</div>
+        <div id="my-target-props" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target's left edge is positioned in Anchor's
+        horizontal center. Target's bottom edge is 10% above the bottom edge of
+        Anchor.
+      </p>
+      <pre>
+#my-anchor-props {
+  anchor-name: --my-anchor-props;
+}
+
+#my-target-props {
+  --half: anchor(--my-anchor-props 50%);
+  --quarter: calc(var(--half) / 2);
+  --tenth: calc(var(--quarter) / 2.5);
+
+  position: absolute;
+  left: var(--half);
+  bottom: var(--tenth);
+}</pre
+      >
+    </section>
+    <section id="duplicate-custom-props" class="demo-item">
+      <h2>
+        <a href="#duplicate-custom-props" aria-hidden="true">🔗</a>
+        Anchor() [with duplicate CSS custom properties]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="anchor-duplicate-custom-props" class="anchor">Anchor</div>
+        <div id="target-duplicate-custom-props" class="target one">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target's top left corner is positioned in the
+        center (vertically and horizontally) of the Anchor.
+      </p>
+      <pre>
+#anchor-duplicate-custom-props {
+  anchor-name: --anchor-duplicate-custom-props;
+}
+
+#target-duplicate-custom-props {
+  --center: anchor(--anchor-duplicate-custom-props 50%);
+
+  position: absolute;
+  top: var(--center);
+  left: var(--center);
+}
+
+#other {
+  --center: anchor(--anchor-duplicate-custom-props 100%);
 }</pre
       >
     </section>

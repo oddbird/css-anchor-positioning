@@ -3,6 +3,11 @@ import { parseCSS } from '../../src/parse.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
+  afterAll(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '';
+  });
+
   it('handles missing `@position-fallback` at-rule or `anchor()` fn', () => {
     const result = parseCSS([{ css: sampleBaseCSS }] as StyleData[]);
 
@@ -21,12 +26,14 @@ describe('parseCSS', () => {
     const expected = {
       '#f1': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor',
-            anchorEl: null,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl: null,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -38,22 +45,27 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target"></div><div id="my-anchor"></div>';
     const css = getSampleCSS('anchor');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target': {
         declarations: {
-          right: {
-            anchorName: '--my-anchor',
-            anchorEl: document.getElementById('my-anchor'),
-            anchorEdge: 100,
-            fallbackValue: '0px',
-          },
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('my-anchor'),
-            anchorName: '--my-anchor',
-            fallbackValue: '0px',
-          },
+          right: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl: document.getElementById('my-anchor'),
+              anchorEdge: 100,
+              fallbackValue: '0px',
+            },
+          ],
+          top: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById('my-anchor'),
+              anchorName: '--my-anchor',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -63,25 +75,30 @@ describe('parseCSS', () => {
 
   it('parses `anchor()` (name set via custom property)', () => {
     document.body.innerHTML =
-      '<div id="my-target-name-prop" style="--anchor-var: --my-anchor-name-prop"></div>' +
+      '<div id="my-target-name-prop"></div>' +
       '<div id="my-anchor-name-prop"></div>';
     const css = getSampleCSS('anchor-name-custom-prop');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-name-prop': {
         declarations: {
-          right: {
-            customPropName: '--anchor-var',
-            anchorEl: document.getElementById('my-anchor-name-prop'),
-            anchorEdge: 'left',
-            fallbackValue: '0px',
-          },
-          bottom: {
-            anchorEdge: 'top',
-            anchorEl: document.getElementById('my-anchor-name-prop'),
-            customPropName: '--anchor-var',
-            fallbackValue: '0px',
-          },
+          right: [
+            {
+              customPropName: '--anchor-var',
+              anchorEl: document.getElementById('my-anchor-name-prop'),
+              anchorEdge: 'left',
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorEdge: 'top',
+              anchorEl: document.getElementById('my-anchor-name-prop'),
+              customPropName: '--anchor-var',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -89,28 +106,31 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  // https://trello.com/c/yOP9vqxZ
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (custom property passed through)', () => {
+  it('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-props': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-props',
-            anchorEl: document.getElementById('my-anchor-props'),
-            anchorEdge: 150,
-            fallbackValue: '0px',
-          },
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('my-anchor-props'),
-            anchorName: '--my-anchor-props',
-            fallbackValue: '0px',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-props',
+              anchorEl: document.getElementById('my-anchor-props'),
+              anchorEdge: 50,
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById('my-anchor-props'),
+              anchorName: '--my-anchor-props',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -118,36 +138,51 @@ describe('parseCSS', () => {
     expect(result).toMatchObject(expected);
   });
 
-  // https://trello.com/c/UGEMTfVc
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (multiple duplicate custom properties)', () => {
-    document.body.innerHTML = '<div id="target"></div><div id="anchor"></div>';
-    const css = `
-      #anchor {
-        anchor-name: --anchor;
-      }
-
-      #target {
-        --center: anchor(--anchor 50%);
-
-        position: absolute;
-        top: var(--center);
-      }
-
-      #other {
-        --center: anchor(--anchor 100%);
-      }
-    `;
+  it('parses `anchor()` function (multiple duplicate custom properties)', () => {
+    document.body.innerHTML =
+      '<div id="target-duplicate-custom-props"></div><div id="anchor-duplicate-custom-props"></div>';
+    const css = getSampleCSS('anchor-duplicate-custom-props');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
-      '#target': {
+      '#target-duplicate-custom-props': {
         declarations: {
-          top: {
-            anchorEdge: 50,
-            anchorEl: document.getElementById('anchor'),
-            anchorName: '--anchor',
-            fallbackValue: '0px',
-          },
+          top: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+          ],
+          left: [
+            {
+              anchorEdge: 50,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById(
+                'anchor-duplicate-custom-props',
+              ),
+              anchorName: '--anchor-duplicate-custom-props',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -159,22 +194,27 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div id="my-target-math"></div><div id="my-anchor-math"></div>';
     const css = getSampleCSS('anchor-math');
+    document.head.innerHTML = `<style>${css}</style>`;
     const result = parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#my-target-math': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-math',
-            anchorEl: document.getElementById('my-anchor-math'),
-            anchorEdge: 100,
-            fallbackValue: '0px',
-          },
-          top: {
-            anchorEdge: 100,
-            anchorEl: document.getElementById('my-anchor-math'),
-            anchorName: '--my-anchor-math',
-            fallbackValue: '0px',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-math',
+              anchorEl: document.getElementById('my-anchor-math'),
+              anchorEdge: 100,
+              fallbackValue: '0px',
+            },
+          ],
+          top: [
+            {
+              anchorEdge: 100,
+              anchorEl: document.getElementById('my-anchor-math'),
+              anchorName: '--my-anchor-math',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };
@@ -191,18 +231,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-positioning': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor-positioning',
-            anchorEl,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
-          right: {
-            anchorName: '--my-anchor-positioning',
-            anchorEl,
-            anchorEdge: 'right',
-            fallbackValue: '50px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor-positioning',
+              anchorEl,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
+          right: [
+            {
+              anchorName: '--my-anchor-positioning',
+              anchorEl,
+              anchorEdge: 'right',
+              fallbackValue: '50px',
+            },
+          ],
         },
       },
     };
@@ -219,18 +263,22 @@ describe('parseCSS', () => {
     const expected = {
       '#my-target-fallback': {
         declarations: {
-          left: {
-            anchorName: '--my-anchor-fallback',
-            anchorEl,
-            anchorEdge: 'right',
-            fallbackValue: '0px',
-          },
-          bottom: {
-            anchorName: '--my-anchor-fallback',
-            anchorEl,
-            anchorEdge: 25,
-            fallbackValue: '0px',
-          },
+          left: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorEl,
+              anchorEdge: 'right',
+              fallbackValue: '0px',
+            },
+          ],
+          bottom: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorEl,
+              anchorEdge: 25,
+              fallbackValue: '0px',
+            },
+          ],
         },
         fallbacks: [
           {
@@ -371,12 +419,14 @@ describe('parseCSS', () => {
     const expected = {
       '#f1': {
         declarations: {
-          top: {
-            anchorName: '--my-anchor',
-            anchorEl,
-            anchorEdge: 'bottom',
-            fallbackValue: '0px',
-          },
+          top: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl,
+              anchorEdge: 'bottom',
+              fallbackValue: '0px',
+            },
+          ],
         },
       },
     };

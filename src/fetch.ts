@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid/non-secure';
 
 export interface StyleData {
   el: HTMLElement;
@@ -46,7 +46,7 @@ function fetchInlineStyles() {
   const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
-    const selector = uuid();
+    const selector = nanoid(12);
     const dataAttribute = 'data-anchor-polyfill';
     el.setAttribute(dataAttribute, selector);
     const styles = el.getAttribute('style');

@@ -134,12 +134,18 @@ function position(rules: AnchorPositions) {
   Object.entries(rules).forEach(([targetSel, position]) => {
     const target: HTMLElement | null = document.querySelector(targetSel);
 
-    if (!target) {
+    if (
+      !target ||
+      !position.declarations ||
+      !Object.keys(position.declarations).length
+    ) {
       return;
     }
 
-    Object.entries(position.declarations || {}).forEach(
-      ([property, anchorValue]) => {
+    for (const [property, anchorValues] of Object.entries(
+      position.declarations,
+    )) {
+      for (const anchorValue of anchorValues) {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
           autoUpdate(anchor, target, async () => {
@@ -155,11 +161,11 @@ function position(rules: AnchorPositions) {
               anchorEdge: anchorValue.anchorEdge,
               fallback: anchorValue.fallbackValue,
             });
-            root.style.setProperty(anchorValue.key, resolved);
+            root.style.setProperty(anchorValue.uuid, resolved);
           });
         }
-      },
-    );
+      }
+    }
   });
 }
 

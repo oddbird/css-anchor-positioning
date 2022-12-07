@@ -1,5 +1,5 @@
 import * as csstree from 'css-tree';
-import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid/non-secure';
 
 import { StyleData } from './fetch.js';
 import { validatedForPositioning } from './validate.js';
@@ -39,12 +39,14 @@ interface AnchorFunction {
   anchorEdge?: AnchorSide;
   fallbackValue: string;
   customPropName?: string;
-  key: string;
+  uuid: string;
 }
 
 // `key` is the property being declared
 // `value` is the anchor-positioning data for that property
-type AnchorFunctionDeclaration = Partial<Record<InsetProperty, AnchorFunction>>;
+type AnchorFunctionDeclaration = Partial<
+  Record<InsetProperty, AnchorFunction[]>
+>;
 
 interface AnchorFunctionDeclarations {
   // `key` is the target element selector
@@ -166,14 +168,14 @@ function parseAnchorFn(
     }
   });
 
-  const key = `--anchor-${uuid()}`;
+  const uuid = `--anchor-${nanoid(12)}`;
   if (replaceCss) {
     // Replace anchor function with unique CSS custom property.
     // This allows us to update the value of the new custom property
     // every time the position changes.
     Object.assign(node, {
       type: 'Raw',
-      value: `var(${key})`,
+      value: `var(${uuid})`,
       children: null,
     });
     Reflect.deleteProperty(node, 'name');
@@ -184,7 +186,7 @@ function parseAnchorFn(
     anchorEdge,
     fallbackValue: fallbackValue || '0px',
     customPropName,
-    key,
+    uuid,
   };
 }
 
@@ -200,7 +202,26 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
-const customPropAssignments: Record<string, AnchorFunction> = {};
+// Mapping of custom property names, to anchor function data objects referenced
+// in their values
+let customPropAssignments: Record<string, AnchorFunction[]> = {};
+// Mapping of custom property names, to the original values that have been
+// replaced in the CSS
+let customPropOriginals: Record<string, string> = {};
+// Top-level key (`uuid`) is the original uuid to find in the updated CSS
+// - `key` (`propUuid`) is the new inset-property-specific uuid to append to the
+//   original custom property name
+// - `value` is the new inset-property-specific custom property value to use
+let customPropReplacements: Record<string, Record<string, string>> = {};
+
+// Objects are declared at top-level to keep code cleaner,
+// but we reset them on every `parseCSS()` call
+// to prevent data leaking from one call to another.
+function resetStores() {
+  customPropAssignments = {};
+  customPropOriginals = {};
+  customPropReplacements = {};
+}
 
 function getAnchorFunctionData(
   node: csstree.CssNode,
@@ -209,15 +230,22 @@ function getAnchorFunctionData(
 ) {
   if (isAnchorFunction(node) && rule?.value && declaration) {
     if (declaration.property.startsWith('--')) {
-      const data = parseAnchorFn(node);
-      customPropAssignments[declaration.property] = data;
-      return;
+      const original = csstree.generate(declaration.value);
+      const data = parseAnchorFn(node, true);
+      // Store the original anchor function so that we can restore it later
+      customPropOriginals[data.uuid] = original;
+      customPropAssignments[declaration.property] = [
+        ...(customPropAssignments[declaration.property] ?? []),
+        data,
+      ];
+      return { changed: true };
     }
     if (isInset(declaration.property)) {
       const data = parseAnchorFn(node, true);
-      return { [declaration.property]: data };
+      return { prop: declaration.property, data, changed: true };
     }
   }
+  return {};
 }
 
 function getPositionFallbackDeclaration(
@@ -294,6 +322,7 @@ export function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
+  resetStores();
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -314,8 +343,12 @@ export function parseCSS(styleData: StyleData[]) {
       }
 
       // Parse `anchor()` function
-      const anchorFnData = getAnchorFunctionData(node, this.declaration, rule);
-      if (anchorFnData && rule?.value) {
+      const {
+        prop,
+        data,
+        changed: updated,
+      } = getAnchorFunctionData(node, this.declaration, rule);
+      if (prop && data && rule?.value) {
         // This will override earlier declarations
         // with the same exact rule selector
         // *and* the same exact declaration property:
@@ -323,8 +356,10 @@ export function parseCSS(styleData: StyleData[]) {
         // for the same `.foo {...}` selector)
         anchorFunctions[rule.value] = {
           ...anchorFunctions[rule.value],
-          ...anchorFnData,
+          [prop]: [...(anchorFunctions[rule.value]?.[prop] ?? []), data],
         };
+      }
+      if (updated) {
         changed = true;
       }
 
@@ -357,40 +392,308 @@ export function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  // Find where CSS custom properties are used
-  if (Object.values(customPropAssignments).length > 0) {
+  // List of CSS custom properties that include anchor fns
+  const customPropsToCheck = new Set(Object.keys(customPropAssignments));
+  // Mapping of a custom property name, to the name(s) and uuid(s) of other
+  // custom properties "up" the chain that contain (eventually) a reference to
+  // an anchor function
+  const customPropsMapping: Record<
+    // custom property name
+    string,
+    // other custom property name(s) and uuid(s) referenced by this custom prop
+    { names: string[]; uuids: string[] }
+  > = {};
+
+  // Find (recursively) anchor data assigned to another custom property, and
+  // that custom property is referenced by (i.e. passed through) the given
+  // custom property
+  const getReferencedFns = (prop: string) => {
+    const referencedFns: AnchorFunction[] = [];
+    const ancestorProps = new Set(customPropsMapping[prop]?.names ?? []);
+    while (ancestorProps.size > 0) {
+      for (const prop of ancestorProps) {
+        referencedFns.push(...(customPropAssignments[prop] ?? []));
+        ancestorProps.delete(prop);
+        if (customPropsMapping[prop]?.names?.length) {
+          // Continue checking recursively "up" the chain of custom properties
+          customPropsMapping[prop].names.forEach((n) => ancestorProps.add(n));
+        }
+      }
+    }
+    return referencedFns;
+  };
+
+  // First find where CSS custom properties are used in other custom properties
+  while (customPropsToCheck.size > 0) {
+    const toCheckAgain: string[] = [];
     for (const styleObj of styleData) {
       let changed = false;
       const ast = getAST(styleObj.css);
-      csstree.walk(ast, function (node) {
+      csstree.walk(ast, {
+        visit: 'Function',
+        enter(node) {
+          const rule = this.rule?.prelude as csstree.Raw | undefined;
+          const declaration = this.declaration;
+          const prop = declaration?.property;
+          if (
+            rule?.value &&
+            isVarFunction(node) &&
+            declaration &&
+            prop &&
+            node.children.first &&
+            customPropsToCheck.has(
+              (node.children.first as csstree.Identifier).name,
+            ) &&
+            // For now, we only want assignments to other CSS custom properties
+            prop.startsWith('--')
+          ) {
+            const child = node.children.first as csstree.Identifier;
+            // Find anchor data assigned to this custom property
+            const anchorFns = customPropAssignments[child.name] ?? [];
+            // Find anchor data assigned to another custom property referenced
+            // by this custom property (recursively)
+            const referencedFns = getReferencedFns(child.name);
+
+            // Return if there are no anchor fns related to this custom property
+            if (!(anchorFns.length || referencedFns.length)) {
+              return;
+            }
+
+            // An anchor fn was assigned to a custom property, which is
+            // now being re-assigned to another custom property...
+            const uuid = `${child.name}-anchor-${nanoid(12)}`;
+            // Store the original declaration so that we can restore it later
+            const original = csstree.generate(declaration.value);
+            customPropOriginals[uuid] = original;
+            // Store a mapping of the new property to the original property
+            // name, as well as the unique uuid(s) temporarily used to replace
+            // the original property value.
+            if (!customPropsMapping[prop]) {
+              customPropsMapping[prop] = { names: [], uuids: [] };
+            }
+            const mapping = customPropsMapping[prop];
+            if (!mapping.names.includes(child.name)) {
+              mapping.names.push(child.name);
+            }
+            mapping.uuids.push(uuid);
+            // Note that we need to do another pass of the CSS looking for
+            // usage of the new property name:
+            toCheckAgain.push(prop);
+            // Temporarily replace the original property with a new unique key
+            child.name = uuid;
+            changed = true;
+          }
+        },
+      });
+      if (changed) {
+        // Update CSS
+        styleObj.css = csstree.generate(ast);
+        styleObj.changed = true;
+      }
+    }
+    customPropsToCheck.clear();
+    toCheckAgain.forEach((s) => customPropsToCheck.add(s));
+  }
+
+  // Then find where CSS custom properties are used in inset properties...
+  for (const styleObj of styleData) {
+    let changed = false;
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Function',
+      enter(node) {
         const rule = this.rule?.prelude as csstree.Raw | undefined;
+        const declaration = this.declaration;
+        const prop = declaration?.property;
         if (
           rule?.value &&
           isVarFunction(node) &&
+          declaration &&
+          prop &&
           node.children.first &&
-          this.declaration &&
-          isInset(this.declaration.property)
+          // Now we only want assignments to inset properties
+          isInset(prop)
         ) {
           const child = node.children.first as csstree.Identifier;
-          const anchorFnData = customPropAssignments[child.name];
-          const prop = this.declaration.property;
-          if (anchorFnData) {
+          // Find anchor data assigned to this custom property
+          const anchorFns = customPropAssignments[child.name] ?? [];
+          // Find anchor data assigned to another custom property referenced
+          // by this custom property (recursively)
+          const referencedFns = getReferencedFns(child.name);
+
+          // Return if there are no anchor fns related to this custom property
+          if (!(anchorFns.length || referencedFns.length)) {
+            return;
+          }
+
+          /*
+
+            An anchor fn was assigned to an inset property.
+
+            It's possible that there are multiple uses of the same CSS
+            custom property name, with different anchor function calls
+            assigned to them. Instead of trying to figure out which one has
+            cascaded to the given location, we iterate over all anchor
+            functions that were assigned to the given CSS custom property
+            name. For each one, we add a new custom prop with the value
+            for that target and inset property, and let CSS determine which
+            one cascades through to where it's used.
+
+            For example, this:
+
+              .one {
+                --center: anchor(--anchor-name 50%);
+              }
+
+              .two {
+                --center: anchor(--anchor-name 100%);
+              }
+
+              #target {
+                top: var(--center);
+              }
+
+            Becomes this:
+
+              .one {
+                --center-top-EnmDEkZ5mBLp: var(--anchor-aPyy7qLK9f38-top);
+                --center: anchor(--anchor-name 50%);
+              }
+
+              .two {
+                --center-top-EnmDEkZ5mBLp: var(--anchor-SgrF5vARDf6H-top);
+                --center: anchor(--anchor-name 100%);
+              }
+
+              #target {
+                top: var(--center-top-EnmDEkZ5mBLp);
+              }
+
+            */
+          const propUuid = `${prop}-${nanoid(12)}`;
+
+          // If this is a custom property which was assigned a value from
+          // another custom property (and not a direct reference to an anchor
+          // fn), we want to replace the reference to its "parent" property with
+          // a direct reference to the resolved value of the parent property for
+          // this given inset property (e.g. top or left). We do this
+          // recursively back up the chain of references...
+          if (referencedFns.length) {
+            const ancestorProps = new Set([child.name]);
+            while (ancestorProps.size > 0) {
+              for (const propToCheck of ancestorProps) {
+                const mapping = customPropsMapping[propToCheck];
+                if (mapping?.names?.length && mapping?.uuids?.length) {
+                  for (const name of mapping.names) {
+                    for (const uuid of mapping.uuids) {
+                      // Top-level key (`uuid`) is the original uuid to find in
+                      // the updated CSS
+                      customPropReplacements[uuid] = {
+                        ...customPropReplacements[uuid],
+                        // - `key` (`propUuid`) is the inset-property-specific
+                        //   uuid to append to the new custom property name
+                        // - `value` is the new inset-property-specific custom
+                        //   property value to use
+                        [propUuid]: `${name}-${propUuid}`,
+                      };
+                    }
+                  }
+                }
+                ancestorProps.delete(propToCheck);
+                // Check (recursively) for custom properties up the chain...
+                if (mapping?.names?.length) {
+                  mapping.names.forEach((n) => ancestorProps.add(n));
+                }
+              }
+            }
+          }
+
+          // When `anchor()` is used multiple times in different inset
+          // properties, the value will be different each time. So we append
+          // the property to the uuid, and update the CSS property to point
+          // to the new uuid...
+          for (const anchorFnData of [...anchorFns, ...referencedFns]) {
             const data = { ...anchorFnData };
-            // When `anchor()` is used multiple times in different inset
-            // properties, the value will be different each time.
-            // So we append the property to the key, and update the CSS property
-            // to point to the new key:
-            const key = `${data.key}-${prop}`;
-            data.key = key;
+            const uuidWithProp = `--anchor-${nanoid(12)}-${prop}`;
+            const uuid = data.uuid;
+            data.uuid = uuidWithProp;
             anchorFunctions[rule.value] = {
               ...anchorFunctions[rule.value],
-              [prop]: data,
+              [prop]: [...(anchorFunctions[rule.value]?.[prop] ?? []), data],
             };
-            // Update CSS property to new name with declaration property added
-            child.name = key;
-            changed = true;
+            // Store new name with declaration prop appended,
+            // so that we can go back and update the original custom
+            // property value...
+            // Top-level key (`uuid`) is the original uuid to find in
+            // the updated CSS:
+            customPropReplacements[uuid] = {
+              ...customPropReplacements[uuid],
+              // - `key` (`propUuid`) is the inset-property-specific
+              //   uuid to append to the new custom property name
+              // - `value` is the new inset-property-specific custom
+              //   property value to use
+              [propUuid]: uuidWithProp,
+            };
           }
+          // Update CSS property to new name with declaration prop added
+          child.name = `${child.name}-${propUuid}`;
+          changed = true;
         }
+      },
+    });
+    if (changed) {
+      // Update CSS
+      styleObj.css = csstree.generate(ast);
+      styleObj.changed = true;
+    }
+  }
+
+  // Add new CSS custom properties, and restore original values of
+  // previously-replaced custom properties
+  if (Object.keys(customPropReplacements).length > 0) {
+    for (const styleObj of styleData) {
+      let changed = false;
+      const ast = getAST(styleObj.css);
+      csstree.walk(ast, {
+        visit: 'Function',
+        enter(node) {
+          if (
+            isVarFunction(node) &&
+            (node.children.first as csstree.Identifier)?.name?.startsWith(
+              '--',
+            ) &&
+            this.declaration?.property?.startsWith('--') &&
+            this.block
+          ) {
+            const child = node.children.first as csstree.Identifier;
+            const positions = customPropReplacements[child.name];
+            if (positions) {
+              for (const [propUuid, value] of Object.entries(positions)) {
+                // Add new inset-property-specific declarations
+                this.block.children.appendData({
+                  type: 'Declaration',
+                  important: false,
+                  property: `${this.declaration.property}-${propUuid}`,
+                  value: {
+                    type: 'Raw',
+                    value: csstree
+                      .generate(this.declaration.value)
+                      .replace(`var(${child.name})`, `var(${value})`),
+                  },
+                });
+                changed = true;
+              }
+            }
+            if (customPropOriginals[child.name]) {
+              // Restore original (now unused) CSS custom property value
+              this.declaration.value = {
+                type: 'Raw',
+                value: customPropOriginals[child.name],
+              };
+              changed = true;
+            }
+          }
+        },
       });
       if (changed) {
         // Update CSS
@@ -426,48 +729,28 @@ export function parseCSS(styleData: StyleData[]) {
   // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     const targetEl: HTMLElement | null = document.querySelector(targetSel);
-    for (const [targetProperty, anchorObj] of Object.entries(anchorFns)) {
-      const anchorEl = getAnchorEl(targetEl, anchorObj);
-      // Populate `anchorEl` for each `anchor()` fn
-      validPositions[targetSel] = {
-        ...validPositions[targetSel],
-        declarations: {
-          ...validPositions[targetSel]?.declarations,
-          [targetProperty]: {
-            ...anchorObj,
-            anchorEl,
+    for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
+      for (const anchorObj of anchorObjects) {
+        const anchorEl = getAnchorEl(targetEl, anchorObj);
+        // Populate `anchorEl` for each `anchor()` fn
+        validPositions[targetSel] = {
+          ...validPositions[targetSel],
+          declarations: {
+            ...validPositions[targetSel]?.declarations,
+            [targetProperty]: [
+              ...(validPositions[targetSel]?.declarations?.[
+                targetProperty as InsetProperty
+              ] ?? []),
+              {
+                ...anchorObj,
+                anchorEl,
+              },
+            ],
           },
-        },
-      };
+        };
+      }
     }
   }
 
-  /* Example data shape:
-    {
-      '#my-target-element': {
-        declarations: {
-          top: {
-            targetEl: <HTMLElement>,
-            anchorName: '--my-anchor',
-            anchorEl: <HTMLElement>,
-            anchorEdge: 'bottom',
-            fallbackValue: '50px',
-          },
-        },
-        fallbacks: [
-          {
-            top: {
-              targetEl: <HTMLElement>,
-              anchorName: '--my-anchor',
-              anchorEl: <HTMLElement>,
-              anchorEdge: 'top',
-              fallbackValue: '0px',
-            },
-            width: '35px',
-          },
-        ],
-      },
-    }
-    */
   return validPositions;
 }
