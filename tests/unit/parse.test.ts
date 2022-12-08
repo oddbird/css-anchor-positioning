@@ -89,8 +89,7 @@ describe('parseCSS', () => {
   });
 
   // https://trello.com/c/yOP9vqxZ
-  // eslint-disable-next-line jest/no-disabled-tests
-  it.skip('parses `anchor()` function (custom property passed through)', () => {
+  it('parses `anchor()` function (custom property passed through)', () => {
     document.body.innerHTML =
       '<div id="my-target-props"></div><div id="my-anchor-props"></div>';
     const css = getSampleCSS('anchor-custom-props');

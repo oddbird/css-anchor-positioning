@@ -56,6 +56,8 @@ footer {
 }
 
 header {
+  position: sticky;
+  top: 0;
   border-block-end: thin dotted var(--text);
   display: grid;
   gap: 0.5em;
@@ -70,12 +72,6 @@ nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5em;
-}
-
-[data-controls='apply-polyfill'] {
-  grid-column: main;
-  margin: var(--size-7) 0;
-  padding-inline-start: 1em;
 }
 
 section {
