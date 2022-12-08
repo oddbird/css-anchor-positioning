@@ -20,6 +20,8 @@ interface AnchorNames {
 
 type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
 
+const INSET_PROPS: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
+
 type AnchorSideKeyword =
   | 'top'
   | 'left'
@@ -31,12 +33,24 @@ type AnchorSideKeyword =
   | 'self-end'
   | 'center';
 
+const ANCHOR_SIDES: AnchorSideKeyword[] = [
+  'top',
+  'left',
+  'right',
+  'bottom',
+  'start',
+  'end',
+  'self-start',
+  'self-end',
+  'center',
+];
+
 export type AnchorSide = AnchorSideKeyword | number;
 
 interface AnchorFunction {
   anchorEl?: HTMLElement | null;
   anchorName?: string;
-  anchorEdge?: AnchorSide;
+  anchorSide?: AnchorSide;
   fallbackValue: string;
   customPropName?: string;
   uuid: string;
@@ -127,17 +141,26 @@ function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
+function isInset(property: string): property is InsetProperty {
+  return INSET_PROPS.includes(property as InsetProperty);
+}
+
+function isAnchorSide(property: string): property is AnchorSideKeyword {
+  return ANCHOR_SIDES.includes(property as AnchorSideKeyword);
+}
+
 function parseAnchorFn(
   node: csstree.FunctionNode,
   replaceCss?: boolean,
 ): AnchorFunction {
   let anchorName: string | undefined,
-    anchorEdge: AnchorSide | undefined,
+    anchorSide: AnchorSide | undefined,
     fallbackValue = '',
     foundComma = false,
     customPropName: string | undefined;
 
-  node.children.toArray().forEach((child, idx) => {
+  const args: csstree.CssNode[] = [];
+  node.children.toArray().forEach((child) => {
     if (foundComma) {
       fallbackValue = `${fallbackValue}${csstree.generate(child)}`;
       return;
@@ -146,27 +169,32 @@ function parseAnchorFn(
       foundComma = true;
       return;
     }
-    switch (idx) {
-      case 0:
-        if (isIdentifier(child)) {
-          // Store anchor name
-          anchorName = child.name;
-        } else if (isVarFunction(child) && child.children.first) {
-          // Store CSS custom prop for anchor name
-          const name = (child.children.first as csstree.Identifier).name;
-          customPropName = name;
-        }
-        break;
-      case 1:
-        if (isIdentifier(child)) {
-          anchorEdge = child.name as AnchorSideKeyword;
-        } else if (isPercentage(child)) {
-          const number = Number(child.value);
-          anchorEdge = Number.isNaN(number) ? undefined : number;
-        }
-        break;
-    }
+    args.push(child);
   });
+
+  let [name, side]: (csstree.CssNode | undefined)[] = args;
+  if (!side) {
+    // If we only have one argument, assume it is the (required) anchor-side
+    side = name;
+    name = undefined;
+  }
+  if (name) {
+    if (isIdentifier(name) && name.name.startsWith('--')) {
+      // Store anchor name
+      anchorName = name.name;
+    } else if (isVarFunction(name) && name.children.first) {
+      // Store CSS custom prop for anchor name
+      customPropName = (name.children.first as csstree.Identifier).name;
+    }
+  }
+  if (side) {
+    if (isIdentifier(side) && isAnchorSide(side.name)) {
+      anchorSide = side.name;
+    } else if (isPercentage(side)) {
+      const number = Number(side.value);
+      anchorSide = Number.isNaN(number) ? undefined : number;
+    }
+  }
 
   const uuid = `--anchor-${nanoid(12)}`;
   if (replaceCss) {
@@ -183,7 +211,7 @@ function parseAnchorFn(
 
   return {
     anchorName,
-    anchorEdge,
+    anchorSide,
     fallbackValue: fallbackValue || '0px',
     customPropName,
     uuid,
@@ -202,6 +230,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   return {};
 }
 
+let anchorNames: AnchorNames = {};
 // Mapping of custom property names, to anchor function data objects referenced
 // in their values
 let customPropAssignments: Record<string, AnchorFunction[]> = {};
@@ -218,6 +247,7 @@ let customPropReplacements: Record<string, Record<string, string>> = {};
 // but we reset them on every `parseCSS()` call
 // to prevent data leaking from one call to another.
 function resetStores() {
+  anchorNames = {};
   customPropAssignments = {};
   customPropOriginals = {};
   customPropReplacements = {};
@@ -259,12 +289,6 @@ function getPositionFallbackDeclaration(
   return {};
 }
 
-function isInset(property: string): property is InsetProperty {
-  const insetProperties: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
-
-  return insetProperties.includes(property as InsetProperty);
-}
-
 function getPositionFallbackRules(node: csstree.CssNode) {
   if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
     const name = node.prelude.value;
@@ -296,13 +320,16 @@ function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
 
-const anchorNames: AnchorNames = {};
-
 function getAnchorEl(targetEl: HTMLElement | null, anchorObj: AnchorFunction) {
   let anchorName = anchorObj.anchorName;
   const customPropName = anchorObj.customPropName;
-  if (targetEl && !anchorName && customPropName) {
-    anchorName = getCSSPropertyValue(targetEl, customPropName);
+  if (targetEl && !anchorName) {
+    const anchorAttr = targetEl.getAttribute('anchor');
+    if (customPropName) {
+      anchorName = getCSSPropertyValue(targetEl, customPropName);
+    } else if (anchorAttr) {
+      return validatedForPositioning(targetEl, [`#${anchorAttr}`]);
+    }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
   return validatedForPositioning(targetEl, anchorSelectors);

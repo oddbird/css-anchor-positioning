@@ -22,8 +22,8 @@ describe('resolveLogicalKeyword', () => {
     [10, true, 90],
   ] as [AnchorSide, boolean, number | undefined][])(
     'resolves logical keyword %s to %i',
-    (edge, rtl, expected) => {
-      const result = resolveLogicalKeyword(edge, rtl);
+    (side, rtl, expected) => {
+      const result = resolveLogicalKeyword(side, rtl);
 
       expect(result).toEqual(expected);
     },
@@ -83,25 +83,25 @@ describe('getPixelValue', () => {
   });
 
   it.each([
-    [{ ...obj, anchorEdge: 'left', targetProperty: 'left' }, '10px'],
-    [{ ...obj, anchorEdge: 'right', targetProperty: 'left' }, '30px'],
-    [{ ...obj, anchorEdge: 'top', targetProperty: 'top' }, '50px'],
-    [{ ...obj, anchorEdge: 'bottom', targetProperty: 'top' }, '90px'],
-    [{ ...obj, anchorEdge: 'center', targetProperty: 'top' }, '70px'],
-    [{ ...obj, anchorEdge: 'center', targetProperty: 'left' }, '20px'],
+    [{ ...obj, anchorSide: 'left', targetProperty: 'left' }, '10px'],
+    [{ ...obj, anchorSide: 'right', targetProperty: 'left' }, '30px'],
+    [{ ...obj, anchorSide: 'top', targetProperty: 'top' }, '50px'],
+    [{ ...obj, anchorSide: 'bottom', targetProperty: 'top' }, '90px'],
+    [{ ...obj, anchorSide: 'center', targetProperty: 'top' }, '70px'],
+    [{ ...obj, anchorSide: 'center', targetProperty: 'left' }, '20px'],
     [
       {
         ...obj,
-        anchorEdge: 'center',
+        anchorSide: 'center',
         fallback: '100px',
       },
       '100px',
     ],
-    [{ ...obj, anchorEdge: 25, targetProperty: 'top', targetEl: {} }, '60px'],
+    [{ ...obj, anchorSide: 25, targetProperty: 'top', targetEl: {} }, '60px'],
     [
       {
         ...obj,
-        anchorEdge: 'end',
+        anchorSide: 'end',
         targetProperty: 'left',
         targetEl: {},
       },
@@ -110,7 +110,7 @@ describe('getPixelValue', () => {
     [
       {
         ...obj,
-        anchorEdge: 'start',
+        anchorSide: 'start',
         targetEl: {},
         fallback: '100px',
       },
