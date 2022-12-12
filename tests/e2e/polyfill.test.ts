@@ -36,7 +36,7 @@ async function getParentHeight(page: Page) {
 
 function getRoundedMatcher(val: number) {
   const rounded = Math.round((val + Number.EPSILON) * 100) / 100;
-  return new RegExp(`${rounded.toString().replace('.', '\\.')}.*px`);
+  return new RegExp(`^${rounded.toString().replace('.', '\\.')}.*px$`);
 }
 
 test('applies polyfill', async ({ page }) => {
