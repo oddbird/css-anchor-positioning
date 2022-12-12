@@ -59,8 +59,6 @@ header {
   position: sticky;
   top: 0;
   border-block-end: thin dotted var(--text);
-  display: grid;
-  gap: 0.5em;
   padding: 1em;
 }
 
@@ -72,6 +70,8 @@ nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5em;
+  z-index: 1;
+  padding: 1em 0;
 }
 
 section {
