@@ -34,12 +34,17 @@ async function getParentHeight(page: Page) {
     .evaluate((node: HTMLElement) => node.offsetParent?.clientHeight ?? 0);
 }
 
+function getRoundedMatcher(val: number) {
+  const rounded = Math.round((val + Number.EPSILON) * 100) / 100;
+  return new RegExp(`${rounded.toString().replace('.', '\\.')}.*px`);
+}
+
 test('applies polyfill', async ({ page }) => {
   const target = page.locator(targetSelector);
   const width = await getAnchorWidth(page);
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
-  const expected = `${parentWidth - width}px`;
+  const expected = getRoundedMatcher(parentWidth - width);
 
   await expect(target).toHaveCSS('top', '0px');
   await expect(target).not.toHaveCSS('right', expected);
@@ -55,7 +60,7 @@ test('applies polyfill from inline styles', async ({ page }) => {
   const width = await getAnchorWidth(page);
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
-  const expected = `${parentWidth - width}px`;
+  const expected = getRoundedMatcher(parentWidth - width);
 
   await expect(targetInLine).toHaveCSS('top', '0px');
   await expect(targetInLine).not.toHaveCSS('right', expected);
@@ -72,7 +77,7 @@ test('updates when sizes change', async ({ page }) => {
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
   await applyPolyfill(page);
-  let expected = `${parentWidth - width}px`;
+  let expected = getRoundedMatcher(parentWidth - width);
 
   await expect(target).toHaveCSS('top', `${parentHeight}px`);
   await expect(target).toHaveCSS('right', expected);
@@ -80,7 +85,7 @@ test('updates when sizes change', async ({ page }) => {
   await page
     .locator(anchorSelector)
     .evaluate((anchor) => (anchor.style.width = '50px'));
-  expected = `${parentWidth - 50}px`;
+  expected = getRoundedMatcher(parentWidth - 50);
 
   await expect(target).toHaveCSS('right', expected);
 });
