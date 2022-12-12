@@ -35,7 +35,7 @@ async function getParentHeight(page: Page) {
 }
 
 function getRoundedMatcher(val: number) {
-  const rounded = Math.round((val + Number.EPSILON) * 100) / 100;
+  const rounded = Math.round((val + Number.EPSILON) * 10) / 10;
   return new RegExp(`^${rounded.toString().replace('.', '\\.')}.*px$`);
 }
 
