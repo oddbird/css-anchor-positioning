@@ -1,46 +1,24 @@
-import * as csstree from 'css-tree';
-
-import { type StyleData, isStyleLink } from './fetch.js';
-import { getAST, isFallbackAtRule, isFallbackDeclaration } from './parse.js';
-
-export function removeAnchorCSS(originalCSS: string) {
-  const ast = getAST(originalCSS);
-  csstree.walk(ast, function (node, item, list) {
-    if (list) {
-      // remove position fallback declaration
-      // e.g. `position-fallback: --button-popup;`
-      if (isFallbackDeclaration(node)) {
-        list.remove(item);
-      }
-
-      // remove position fallback at-rules
-      // e.g. `@position-fallback --button-popup {...}`
-      if (isFallbackAtRule(node)) {
-        list.remove(item);
-      }
-    }
-  });
-  return csstree.generate(ast);
-}
+import { type StyleData } from './fetch.js';
 
 export function transformCSS(styleData: StyleData[]) {
-  // Handle inline stylesheets
-  const styleTagCSS = document.querySelectorAll('style');
-  styleTagCSS.forEach((element) => {
-    element.innerHTML = removeAnchorCSS(element.innerHTML);
-  });
-
-  // Handle linked stylesheets
-  styleData.forEach(({ source, css }) => {
-    if (source !== 'style') {
-      const updatedCSS = removeAnchorCSS(css);
-      const blob = new Blob([updatedCSS], { type: 'text/css' });
-      const linkTags = document.querySelectorAll('link');
-      linkTags.forEach((link) => {
-        if (isStyleLink(link) && source.includes(link.href)) {
-          link.href = URL.createObjectURL(blob);
-        }
-      });
+  styleData.forEach(({ el, css, changed }) => {
+    if (!changed) {
+      return;
+    }
+    if (el.tagName.toLowerCase() === 'style') {
+      // Handle inline stylesheets
+      el.innerHTML = css;
+    } else if (el.tagName.toLowerCase() === 'link') {
+      // Handle linked stylesheets
+      const blob = new Blob([css], { type: 'text/css' });
+      (el as HTMLLinkElement).href = URL.createObjectURL(blob);
+    } else if (el.hasAttribute('data-anchor-polyfill')) {
+      // Handle inline styles
+      const attr = el.getAttribute('data-anchor-polyfill');
+      const pre = `[data-anchor-polyfill="${attr}"]{`;
+      const post = `}`;
+      const inlineStyles = css.slice(pre.length, 0 - post.length);
+      el.setAttribute('style', inlineStyles);
     }
   });
 }

@@ -2,6 +2,7 @@ import { type Page, expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   // Listen for all console logs
+  // eslint-disable-next-line no-console
   page.on('console', (msg) => console.log(msg.text()));
   await page.goto('/');
 });
@@ -33,12 +34,19 @@ async function getParentHeight(page: Page) {
     .evaluate((node: HTMLElement) => node.offsetParent?.clientHeight ?? 0);
 }
 
+function getNumberMatcher(val: number) {
+  if (val.toString().includes('.')) {
+    return new RegExp(`^${val < 0 ? '-' : ''}${Math.trunc(val)}\\..*px$`);
+  }
+  return new RegExp(`^${val}px$`);
+}
+
 test('applies polyfill', async ({ page }) => {
   const target = page.locator(targetSelector);
   const width = await getAnchorWidth(page);
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
-  const expected = `${parentWidth - width}px`;
+  const expected = getNumberMatcher(parentWidth - width);
 
   await expect(target).toHaveCSS('top', '0px');
   await expect(target).not.toHaveCSS('right', expected);
@@ -54,7 +62,7 @@ test('applies polyfill from inline styles', async ({ page }) => {
   const width = await getAnchorWidth(page);
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
-  const expected = `${parentWidth - width}px`;
+  const expected = getNumberMatcher(parentWidth - width);
 
   await expect(targetInLine).toHaveCSS('top', '0px');
   await expect(targetInLine).not.toHaveCSS('right', expected);
@@ -71,7 +79,7 @@ test('updates when sizes change', async ({ page }) => {
   const parentWidth = await getParentWidth(page);
   const parentHeight = await getParentHeight(page);
   await applyPolyfill(page);
-  let expected = `${parentWidth - width}px`;
+  let expected = getNumberMatcher(parentWidth - width);
 
   await expect(target).toHaveCSS('top', `${parentHeight}px`);
   await expect(target).toHaveCSS('right', expected);
@@ -79,7 +87,7 @@ test('updates when sizes change', async ({ page }) => {
   await page
     .locator(anchorSelector)
     .evaluate((anchor) => (anchor.style.width = '50px'));
-  expected = `${parentWidth - 50}px`;
+  expected = getNumberMatcher(parentWidth - 50);
 
   await expect(target).toHaveCSS('right', expected);
 });

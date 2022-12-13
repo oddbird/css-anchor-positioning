@@ -1,0 +1,95 @@
+name: Run WPT
+
+on:
+  push:
+  pull_request:
+    types: [reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+  BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+  WPT_MANIFEST: ${{ github.workspace }}/wpt/MANIFEST.json
+  WPT_REPO: web-platform-tests/wpt
+  WPT_REF: master
+  SOURCE_REPO: ${{ github.repository }}
+  SOURCE_COMMIT: ${{ github.sha }}
+  SOURCE_BRANCH: ${{ github.ref_name }}
+  RESULTS_BRANCH: ${{ github.ref_name }}--wpt-results
+
+jobs:
+  test:
+    name: Run WPT
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check if WPT results branch exists
+        id: results-branch-exists
+        run: echo "EXISTS=$(git ls-remote --heads origin $RESULTS_BRANCH | wc -l)" >> $GITHUB_OUTPUT
+      - name: Create WPT results branch
+        if: steps.results-branch-exists.outputs.EXISTS == '0'
+        run: |
+          git checkout --orphan $RESULTS_BRANCH
+          git rm -rf .
+          mkdir test-results
+          touch test-results/history.html
+          git add .
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -m "Initial WPT history commit"
+          git push origin $RESULTS_BRANCH
+          git switch ${{ github.ref_name }}
+      - name: Clone WPT results branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RESULTS_BRANCH }}
+          path: wpt-results
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Clone WPT repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.WPT_REPO }}
+          ref: ${{ env.WPT_REF }}
+          path: wpt
+      - name: Get WPT commit SHA
+        run: echo "WPT_COMMIT=$(cd wpt; git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Build polyfill
+        run: |
+          yarn install --immutable
+          yarn build
+
+      - name: Setup WPT
+        run: |
+          cd wpt
+          pip install virtualenv
+          ./wpt make-hosts-file | sudo tee -a /etc/hosts
+      - name: Run Tests
+        run: |
+          cd tests
+          python3 -m http.server 9606 &
+          cd ../wpt
+          ./wpt manifest
+          ./wpt serve --inject-script=${{ github.workspace }}/dist/css-anchor-positioning.umd.cjs &
+          cd ..
+          cp -r wpt-results/test-results .
+          yarn test:wpt
+
+      - name: Push to WPT results branch
+        run: |
+          rsync -a test-results/ wpt-results/test-results/
+          cd wpt-results
+          git add test-results
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -m "WPT results from https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
+          git push origin $RESULTS_BRANCH

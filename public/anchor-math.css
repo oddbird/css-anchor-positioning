@@ -4,8 +4,9 @@
 
 #my-target-math {
   --full-math: anchor(--my-anchor-math 100%);
+  --full-minus-math: calc(anchor(--my-anchor-math 100%) - 50px);
 
   position: absolute;
   top: calc(var(--full-math) - 50px);
-  left: var(--full-math);
+  left: var(--full-minus-math);
 }

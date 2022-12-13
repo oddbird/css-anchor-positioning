@@ -1,0 +1,15 @@
+#anchor-duplicate-custom-props {
+  anchor-name: --anchor-duplicate-custom-props;
+}
+
+#target-duplicate-custom-props {
+  --center: anchor(--anchor-duplicate-custom-props 50%);
+
+  position: absolute;
+  top: var(--center);
+  left: var(--center);
+}
+
+#other {
+  --center: anchor(--anchor-duplicate-custom-props 100%);
+}

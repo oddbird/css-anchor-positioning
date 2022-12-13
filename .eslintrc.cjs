@@ -15,6 +15,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     sourceType: 'module',
+    warnOnUnsupportedTypeScriptVersion: false,
   },
   plugins: ['@typescript-eslint', 'simple-import-sort'],
   settings: {
@@ -25,6 +26,7 @@ module.exports = {
   rules: {
     'import/order': 0,
     'simple-import-sort/imports': 1,
+    'no-console': 1,
     'no-warning-comments': [1, { terms: ['todo', 'fixme', '@@@'] }],
   },
 };

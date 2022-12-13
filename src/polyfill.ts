@@ -1,41 +1,12 @@
-import {
-  type ElementRects,
-  type FloatingElement,
-  type Platform,
-  type Rect,
-  type ReferenceElement,
-  type Strategy,
-  autoUpdate,
-  platform,
-} from '@floating-ui/dom';
+import { type Rect, autoUpdate, platform } from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import { type AnchorPositions, type AnchorSide, parseCSS } from './parse.js';
+import { transformCSS } from './transform.js';
 
-// DOM platform does not have async methods
-interface DomPlatform extends Platform {
-  getDocumentElement: (element: Element) => HTMLElement;
-  getElementRects: (args: {
-    reference: ReferenceElement;
-    floating: FloatingElement;
-    strategy: Strategy;
-  }) => ElementRects;
-  getOffsetParent: (element: Element) => Element | Window;
-  isElement: (value: unknown) => boolean;
-  isRTL: (element: Element) => boolean;
-}
-
-const {
-  getDocumentElement,
-  getElementRects,
-  getOffsetParent,
-  isElement,
-  isRTL,
-} = platform as DomPlatform;
-
-export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
+export const resolveLogicalKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
-  switch (edge) {
+  switch (side) {
     case 'start':
     case 'self-start':
       percentage = 0;
@@ -45,8 +16,8 @@ export const resolveLogicalKeyword = (edge: AnchorSide, rtl: boolean) => {
       percentage = 100;
       break;
     default:
-      if (typeof edge === 'number' && !Number.isNaN(edge)) {
-        percentage = edge;
+      if (typeof side === 'number' && !Number.isNaN(side)) {
+        percentage = side;
       }
   }
   if (percentage !== undefined) {
@@ -84,22 +55,22 @@ export interface GetPixelValueOpts {
   targetEl: HTMLElement;
   targetProperty: string;
   anchorRect: Rect;
-  anchorEdge?: AnchorSide;
+  anchorSide?: AnchorSide;
   fallback: string;
 }
 
-export const getPixelValue = ({
+export const getPixelValue = async ({
   targetEl,
   targetProperty,
   anchorRect,
-  anchorEdge,
+  anchorSide,
   fallback,
 }: GetPixelValueOpts) => {
   let percentage: number | undefined;
   let offsetParent: Element | Window | HTMLElement | undefined;
   const axis = getAxis(targetProperty);
 
-  switch (anchorEdge) {
+  switch (anchorSide) {
     case 'left':
       percentage = 0;
       break;
@@ -118,12 +89,12 @@ export const getPixelValue = ({
     default:
       // Logical keywords require checking the writing direction
       // of the target element (or its containing block)
-      if (anchorEdge !== undefined && targetEl) {
+      if (anchorSide !== undefined && targetEl) {
         // `start` and `end` should use the writing-mode of the element's
         // containing block, not the element itself:
         // https://trello.com/c/KnqCnHx3
-        const rtl = isRTL(targetEl) || false;
-        percentage = resolveLogicalKeyword(anchorEdge, rtl);
+        const rtl = (await platform.isRTL?.(targetEl)) || false;
+        percentage = resolveLogicalKeyword(anchorSide, rtl);
       }
   }
 
@@ -131,9 +102,11 @@ export const getPixelValue = ({
     typeof percentage === 'number' && !Number.isNaN(percentage);
 
   if (targetProperty === 'bottom' || targetProperty === 'right') {
-    offsetParent = getOffsetParent(targetEl);
-    if (!isElement(offsetParent)) {
-      offsetParent = getDocumentElement(targetEl);
+    offsetParent = await platform.getOffsetParent?.(targetEl);
+    if (!(await platform.isElement?.(offsetParent))) {
+      offsetParent =
+        (await platform.getDocumentElement?.(targetEl)) ||
+        window.document.documentElement;
     }
   }
 
@@ -155,36 +128,44 @@ export const getPixelValue = ({
   return fallback;
 };
 
-export function position(rules: AnchorPositions) {
+function position(rules: AnchorPositions) {
+  const root = document.documentElement;
+
   Object.entries(rules).forEach(([targetSel, position]) => {
     const target: HTMLElement | null = document.querySelector(targetSel);
 
-    if (!target) {
+    if (
+      !target ||
+      !position.declarations ||
+      !Object.keys(position.declarations).length
+    ) {
       return;
     }
 
-    Object.entries(position.declarations || {}).forEach(
-      ([property, anchorValue]) => {
+    for (const [property, anchorValues] of Object.entries(
+      position.declarations,
+    )) {
+      for (const anchorValue of anchorValues) {
         const anchor = anchorValue.anchorEl;
         if (anchor) {
-          autoUpdate(anchor, target, () => {
-            const rects = getElementRects({
+          autoUpdate(anchor, target, async () => {
+            const rects = await platform.getElementRects({
               reference: anchor,
               floating: target,
               strategy: 'absolute',
             });
-            const resolved = getPixelValue({
+            const resolved = await getPixelValue({
               targetEl: target,
               targetProperty: property,
               anchorRect: rects.reference,
-              anchorEdge: anchorValue.anchorEdge,
+              anchorSide: anchorValue.anchorSide,
               fallback: anchorValue.fallbackValue,
             });
-            Object.assign(target.style, { [property]: resolved });
+            root.style.setProperty(anchorValue.uuid, resolved);
           });
         }
-      },
-    );
+      }
+    }
   });
 }
 
@@ -193,14 +174,14 @@ export async function polyfill() {
   const styleData = await fetchCSS();
 
   // parse CSS
-  const rules = parseCSS(styleData.map(({ css }) => css).join('\n'));
+  const rules = parseCSS(styleData);
 
   if (Object.values(rules).length) {
+    // calculate position values
     position(rules);
 
     // update source code
-    // https://trello.com/c/f1L7Ti8m
-    // transformCSS(styleData);
+    transformCSS(styleData);
   }
 
   return rules;

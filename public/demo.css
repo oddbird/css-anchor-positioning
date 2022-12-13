@@ -211,6 +211,7 @@ h2 [aria-hidden]:active {
   color: var(--gray-9);
   font-weight: bold;
   padding: 0.5em;
+  white-space: nowrap;
 }
 
 .anchor {
