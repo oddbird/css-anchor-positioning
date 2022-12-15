@@ -24,7 +24,7 @@ jobs:
   test:
     name: Run WPT
     runs-on: ubuntu-latest
-    if: github.event_name == "push" || github.event.action == "reopened"
+    if: github.event_name == 'push' || github.event.action == 'reopened'
     steps:
       - uses: actions/checkout@v3
       - name: Check if WPT results branch exists
@@ -98,7 +98,7 @@ jobs:
   link-to-report:
     name: Link to report
     runs-on: ubuntu-latest
-    if: github.event.action == "opened"
+    if: github.event.action == 'opened'
     steps:
       - name: Link to WPT report (only on first run)
         continue-on-error: true
