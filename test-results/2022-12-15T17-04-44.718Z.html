@@ -1,0 +1,2392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>[WPT Report] sticky-header</title>
+  <style>
+    td {border: 1px solid}
+    .test-name {display: flex; justify-content: space-between; gap: 1em}
+    td[style*='--progress:'] {
+      color: white;
+      background-color: maroon;
+      background-image: linear-gradient(to right, darkgreen var(--progress), maroon var(--progress));
+    }
+  </style>
+</head>
+<body>
+<ul>
+  <h1>[WPT Report] sticky-header</h1>
+  <li>Generated at: 2022-12-15T17:04:44.718Z</li>
+    <li>
+      Source repository:
+      <a target="_blank" href="https://github.com/oddbird/css-anchor-positioning">oddbird/css-anchor-positioning</a>
+    </li>
+    <li>
+      Source commit:
+      <a target="_blank" href="https://github.com/oddbird/css-anchor-positioning/commit/496dd04d59aeedf275fbe2874ee211d2ad1550e4">
+        496dd04d59aeedf275fbe2874ee211d2ad1550e4
+      </a>
+    </li>
+  
+    <li>
+      WPT repository:
+      <a target="_blank" href="https://github.com/web-platform-tests/wpt">web-platform-tests/wpt</a>
+    </li>
+    <li>
+      WPT commit:
+      <a target="_blank" href="https://github.com/web-platform-tests/wpt/commit/02088dcde8140914961d94a1eeff1e4e7a26d091">
+        02088dcde8140914961d94a1eeff1e4e7a26d091
+      </a>
+    </li>
+  <li><a href="history.html">Report history for this branch</a></li>
+</ul>
+
+<table>
+  <thead>
+    <tr>
+      <th>Test</th>
+          <th>Chrome<br>103.0
+        
+          <th>Chrome<br>104.0
+        
+          <th>Safari (iOS)<br>15.5
+        
+          <th>Safari (iOS)<br>15.6
+        
+          <th>Safari (macOS)<br>14.1
+        
+          <th>Safari (macOS)<br>15.3
+        
+          <th>Edge<br>102.0
+        
+          <th>Edge<br>103.0
+        
+          <th>Firefox<br>103.0
+        
+          <th>Firefox<br>104.0
+        </tr>
+  </thead>
+  <tbody><tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-001.html">
+              css/css-anchor-position/anchor-name-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-002.html">
+              css/css-anchor-position/anchor-name-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-003.html">
+              css/css-anchor-position/anchor-name-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        <td style="--progress: 16%">
+            4 / 25
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-cross-shadow.html">
+              css/css-anchor-position/anchor-name-cross-shadow.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-cross-shadow.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-cross-shadow.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-in-shadow.html">
+              css/css-anchor-position/anchor-name-in-shadow.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-in-shadow.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-in-shadow.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-inline-001.html">
+              css/css-anchor-position/anchor-name-inline-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-inline-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-inline-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-multicol-001.html">
+              css/css-anchor-position/anchor-name-multicol-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-multicol-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-multicol-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-multicol-002.html">
+              css/css-anchor-position/anchor-name-multicol-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-multicol-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-multicol-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-multicol-003.html">
+              css/css-anchor-position/anchor-name-multicol-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-multicol-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-multicol-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-name-multicol-004.html">
+              css/css-anchor-position/anchor-name-multicol-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-name-multicol-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-name-multicol-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-001.html">
+              css/css-anchor-position/anchor-position-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-002.html">
+              css/css-anchor-position/anchor-position-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 67%">
+            2 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        <td style="--progress: 100%">
+            3 / 3
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-003.html">
+              css/css-anchor-position/anchor-position-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        <td style="--progress: 80%">
+            4 / 5
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-004.html">
+              css/css-anchor-position/anchor-position-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        <td style="--progress: 100%">
+            32 / 32
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-borders-001.html">
+              css/css-anchor-position/anchor-position-borders-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-borders-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-borders-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-borders-002.html">
+              css/css-anchor-position/anchor-position-borders-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-borders-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-borders-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-dynamic-001.html">
+              css/css-anchor-position/anchor-position-dynamic-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-dynamic-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-dynamic-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-dynamic-002.html">
+              css/css-anchor-position/anchor-position-dynamic-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-dynamic-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-dynamic-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        <td style="--progress: 0%">
+            0 / 8
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-dynamic-003.html">
+              css/css-anchor-position/anchor-position-dynamic-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-dynamic-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-dynamic-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        <td style="--progress: 0%">
+            0 / 10
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-dynamic-004.html">
+              css/css-anchor-position/anchor-position-dynamic-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-dynamic-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-dynamic-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-grid-001.html">
+              css/css-anchor-position/anchor-position-grid-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-grid-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-grid-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-inline-001.html">
+              css/css-anchor-position/anchor-position-inline-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-inline-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-inline-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-inline-002.html">
+              css/css-anchor-position/anchor-position-inline-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-inline-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-inline-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-inline-003.html">
+              css/css-anchor-position/anchor-position-inline-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-inline-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-inline-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-inline-004.html">
+              css/css-anchor-position/anchor-position-inline-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-inline-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-inline-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-001.html">
+              css/css-anchor-position/anchor-position-multicol-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-002.html">
+              css/css-anchor-position/anchor-position-multicol-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-003.html">
+              css/css-anchor-position/anchor-position-multicol-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        <td style="--progress: 29%">
+            2 / 7
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-004.html">
+              css/css-anchor-position/anchor-position-multicol-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-005.html">
+              css/css-anchor-position/anchor-position-multicol-005.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-005.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-005.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-006.html">
+              css/css-anchor-position/anchor-position-multicol-006.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-006.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-006.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-colspan-001.html">
+              css/css-anchor-position/anchor-position-multicol-colspan-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-colspan-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-colspan-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-colspan-002.html">
+              css/css-anchor-position/anchor-position-multicol-colspan-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-colspan-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-colspan-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-fixed-001.html">
+              css/css-anchor-position/anchor-position-multicol-fixed-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-fixed-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-fixed-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-multicol-nested-001.html">
+              css/css-anchor-position/anchor-position-multicol-nested-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-multicol-nested-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-multicol-nested-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-principal-box.html">
+              css/css-anchor-position/anchor-position-principal-box.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-principal-box.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-principal-box.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        <td style="--progress: 100%">
+            1 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-writing-modes-001.html">
+              css/css-anchor-position/anchor-position-writing-modes-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-writing-modes-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-writing-modes-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        <td style="--progress: 0%">
+            0 / 1296
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-position-writing-modes-002.html">
+              css/css-anchor-position/anchor-position-writing-modes-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-position-writing-modes-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-position-writing-modes-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        <td style="--progress: 0%">
+            0 / 48
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-query-fallback.html">
+              css/css-anchor-position/anchor-query-fallback.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-query-fallback.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-query-fallback.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        <td style="--progress: 7%">
+            1 / 14
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-fallback-position-001.html">
+              css/css-anchor-position/anchor-scroll-fallback-position-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-fallback-position-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-fallback-position-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        <td style="--progress: 0%">
+            0 / 5
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-fallback-position-002.html">
+              css/css-anchor-position/anchor-scroll-fallback-position-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-fallback-position-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-fallback-position-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-fallback-position-003.html">
+              css/css-anchor-position/anchor-scroll-fallback-position-003.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-fallback-position-003.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-fallback-position-003.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-fallback-position-004.html">
+              css/css-anchor-position/anchor-scroll-fallback-position-004.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-fallback-position-004.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-fallback-position-004.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        <td style="--progress: 0%">
+            0 / 3
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-fallback-position-005.html">
+              css/css-anchor-position/anchor-scroll-fallback-position-005.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-fallback-position-005.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-fallback-position-005.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-scroll-js-expose.tentative.html">
+              css/css-anchor-position/anchor-scroll-js-expose.tentative.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-scroll-js-expose.tentative.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-scroll-js-expose.tentative.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            4 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        <td style="--progress: 25%">
+            1 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-size-001.html">
+              css/css-anchor-position/anchor-size-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-size-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-size-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        <td style="--progress: 0%">
+            0 / 12
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-size-minmax-001.html">
+              css/css-anchor-position/anchor-size-minmax-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-size-minmax-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-size-minmax-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        <td style="--progress: 0%">
+            0 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-size-replaced-001.html">
+              css/css-anchor-position/anchor-size-replaced-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-size-replaced-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-size-replaced-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        <td style="--progress: 33%">
+            4 / 12
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/anchor-size-writing-modes-001.html">
+              css/css-anchor-position/anchor-size-writing-modes-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/anchor-size-writing-modes-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/anchor-size-writing-modes-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        <td style="--progress: 0%">
+            0 / 24
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/at-position-fallback-invalidation-shadow-dom.html">
+              css/css-anchor-position/at-position-fallback-invalidation-shadow-dom.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/at-position-fallback-invalidation-shadow-dom.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/at-position-fallback-invalidation-shadow-dom.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        <td style="--progress: 100%">
+            2 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/at-position-fallback-invalidation.html">
+              css/css-anchor-position/at-position-fallback-invalidation.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/at-position-fallback-invalidation.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/at-position-fallback-invalidation.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        <td style="--progress: 50%">
+            2 / 4
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-001.html">
+              css/css-anchor-position/position-fallback-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        <td style="--progress: 0%">
+            0 / 6
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-002.html">
+              css/css-anchor-position/position-fallback-002.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-002.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-002.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-cascade-layer-reorder.html">
+              css/css-anchor-position/position-fallback-cascade-layer-reorder.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-cascade-layer-reorder.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-cascade-layer-reorder.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-custom-property.html">
+              css/css-anchor-position/position-fallback-custom-property.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-custom-property.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-custom-property.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        <td style="--progress: 0%">
+            0 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-dynamic.html">
+              css/css-anchor-position/position-fallback-dynamic.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-dynamic.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-dynamic.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        <td style="--progress: 50%">
+            1 / 2
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-grid-001.html">
+              css/css-anchor-position/position-fallback-grid-001.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-grid-001.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-grid-001.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        <td style="--progress: 0%">
+            0 / 1
+          </td>
+        </tr>
+    <tr>
+        <td class="test-name">
+            <a target="_blank" href="https://github.com/web-platform-tests/wpt/blob/02088dcde8140914961d94a1eeff1e4e7a26d091/css/css-anchor-position/position-fallback-tree-scoped.html">
+              css/css-anchor-position/position-fallback-tree-scoped.html
+            </a>
+          <span>
+            <a target="_blank" href="https://wpt.live/css/css-anchor-position/position-fallback-tree-scoped.html" title="Open in wpt.live">🌐</a>
+            <a target="_blank" href="http://web-platform.test:8000/css/css-anchor-position/position-fallback-tree-scoped.html" title="Open locally">🏠</a>
+          </span>
+        </td><td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        <td style="--progress: 25%">
+            3 / 12
+          </td>
+        </tr>
+    </tbody>
+</table>
+</body>
+</html>
