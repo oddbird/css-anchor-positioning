@@ -320,7 +320,10 @@ function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
 
-function getAnchorEl(targetEl: HTMLElement | null, anchorObj: AnchorFunction) {
+async function getAnchorEl(
+  targetEl: HTMLElement | null,
+  anchorObj: AnchorFunction,
+) {
   let anchorName = anchorObj.anchorName;
   const customPropName = anchorObj.customPropName;
   if (targetEl && !anchorName) {
@@ -328,11 +331,11 @@ function getAnchorEl(targetEl: HTMLElement | null, anchorObj: AnchorFunction) {
     if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
-      return validatedForPositioning(targetEl, [`#${anchorAttr}`]);
+      return await validatedForPositioning(targetEl, [`#${anchorAttr}`]);
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
-  return validatedForPositioning(targetEl, anchorSelectors);
+  return await validatedForPositioning(targetEl, anchorSelectors);
 }
 
 function getAST(cssText: string) {
@@ -345,7 +348,7 @@ function getAST(cssText: string) {
   return ast;
 }
 
-export function parseCSS(styleData: StyleData[]) {
+export async function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const fallbackNames: FallbackNames = {};
   const fallbacks: Fallbacks = {};
@@ -739,10 +742,13 @@ export function parseCSS(styleData: StyleData[]) {
     if (positionFallbacks) {
       const targetEl: HTMLElement | null = document.querySelector(targetSel);
       // Populate `anchorEl` for each fallback `anchor()` fn
-      positionFallbacks.forEach((tryBlock) => {
+      positionFallbacks.forEach(async (tryBlock) => {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
-            const anchorEl = getAnchorEl(targetEl, value as AnchorFunction);
+            const anchorEl = await getAnchorEl(
+              targetEl,
+              value as AnchorFunction,
+            );
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
         }
@@ -758,7 +764,7 @@ export function parseCSS(styleData: StyleData[]) {
     const targetEl: HTMLElement | null = document.querySelector(targetSel);
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
       for (const anchorObj of anchorObjects) {
-        const anchorEl = getAnchorEl(targetEl, anchorObj);
+        const anchorEl = await getAnchorEl(targetEl, anchorObj);
         // Populate `anchorEl` for each `anchor()` fn
         validPositions[targetSel] = {
           ...validPositions[targetSel],

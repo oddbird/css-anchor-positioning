@@ -1,7 +1,9 @@
+import { platform } from '@floating-ui/dom';
+
 // Given a target element and CSS selector(s) for potential anchor element(s),
 // returns the first element that passes validation,
 // or `null` if no valid anchor element is found
-export function validatedForPositioning(
+export async function validatedForPositioning(
   targetEl: HTMLElement | null,
   anchorSelectors: string[],
 ) {
@@ -14,7 +16,7 @@ export function validatedForPositioning(
   );
 
   for (const anchor of anchorElements) {
-    if (isValidAnchorElement(anchor, targetEl)) {
+    if (await isValidAnchorElement(anchor, targetEl)) {
       return anchor;
     }
   }
@@ -22,11 +24,22 @@ export function validatedForPositioning(
   return null;
 }
 
+export async function callGetOffsetParent(element: Element | Window) {
+  return platform.getOffsetParent?.(element as Element);
+}
+
+export function isFixedPositioned(el: HTMLElement) {
+  return Boolean(
+    el.style.position === 'fixed' || getComputedStyle(el).position === 'fixed',
+  );
+}
+
 export function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
     el &&
       (el.style.position === 'absolute' ||
-        getComputedStyle(el).position === 'absolute'),
+        getComputedStyle(el).position === 'absolute' ||
+        isFixedPositioned(el)),
   );
 }
 
@@ -42,31 +55,27 @@ export function hasDisplayNone(el?: HTMLElement | null) {
 // - `offsetParent` returns `null` when the CB is the ICB,
 //   except in Firefox where `offsetParent` returns the `body` element
 // - Excludes elements when they or their parents have `display: none`
-export function isContainingBlockICB(targetElement: HTMLElement) {
-  const isDisplayNone =
-    hasDisplayNone(targetElement) ||
-    hasDisplayNone(targetElement.parentElement);
-
-  const cbIsBodyElementFromFF =
-    targetElement.offsetParent === document.querySelector('body') &&
-    navigator.userAgent.includes('Firefox');
-
-  const offsetParentNullOrBody =
-    targetElement.offsetParent === null || cbIsBodyElementFromFF;
-
-  if (offsetParentNullOrBody && !isDisplayNone) {
-    return true;
-  }
-  return false;
+export async function isContainingBlockICB(
+  targetContainingBlock: Element | Window | undefined,
+) {
+  return Boolean(targetContainingBlock === window);
 }
 
 // Validates that anchor element is a valid anchor for given target element
-export function isValidAnchorElement(anchor: HTMLElement, target: HTMLElement) {
+export async function isValidAnchorElement(
+  anchor: HTMLElement,
+  target: HTMLElement,
+) {
+  const anchorContainingBlock = await platform.getOffsetParent?.(anchor);
+  const targetContainingBlock = await platform.getOffsetParent?.(target);
+
   // If el has the same containing block as the querying element,
   // el must not be absolutely positioned:
+  // A separate check for fixed positioning is added here because it's offsetParent will always resolve to null: https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-htmlelement-interface
   if (
-    isAbsolutelyPositioned(anchor) &&
-    anchor.offsetParent === target.offsetParent
+    (isAbsolutelyPositioned(anchor) &&
+      anchorContainingBlock === targetContainingBlock) ||
+    isFixedPositioned(anchor)
   ) {
     return false;
   }
@@ -75,18 +84,22 @@ export function isValidAnchorElement(anchor: HTMLElement, target: HTMLElement) {
   // the last containing block in el's containing block chain
   // before reaching the querying element's containing block
   // must not be absolutely positioned:
-  if (anchor.offsetParent !== target.offsetParent) {
-    let currentCB: HTMLElement | null;
-    const anchorCBchain: HTMLElement[] = [];
+  if (anchorContainingBlock !== targetContainingBlock) {
+    let currentCB: Element | Window | undefined;
+    const anchorCBchain: typeof currentCB[] = [];
 
-    currentCB = anchor.offsetParent as HTMLElement | null;
-    while (currentCB && currentCB !== target.offsetParent) {
+    currentCB = anchorContainingBlock;
+    while (
+      currentCB &&
+      currentCB !== targetContainingBlock &&
+      currentCB != window
+    ) {
       anchorCBchain.push(currentCB);
-      currentCB = currentCB.offsetParent as HTMLElement | null;
+      currentCB = await platform.getOffsetParent?.(currentCB as HTMLElement);
     }
-
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
-    if (isAbsolutelyPositioned(lastInChain)) {
+
+    if (lastInChain && isAbsolutelyPositioned(lastInChain as HTMLElement)) {
       return false;
     }
   }
@@ -95,7 +108,7 @@ export function isValidAnchorElement(anchor: HTMLElement, target: HTMLElement) {
   // or the querying element's containing block must be
   // the initial containing block:
   const isDescendant = Boolean(target.offsetParent?.contains(anchor));
-  const targetCBIsInitialCB = isContainingBlockICB(target);
+  const targetCBIsInitialCB = await isContainingBlockICB(targetContainingBlock);
 
   if (isDescendant || targetCBIsInitialCB) {
     return true;
