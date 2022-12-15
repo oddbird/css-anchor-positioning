@@ -3,7 +3,7 @@ name: Run WPT
 on:
   push:
   pull_request:
-    types: [reopened]
+    types: [opened, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -24,6 +24,7 @@ jobs:
   test:
     name: Run WPT
     runs-on: ubuntu-latest
+    if: github.event_name == "push" || github.event.action == "reopened"
     steps:
       - uses: actions/checkout@v3
       - name: Check if WPT results branch exists
@@ -42,13 +43,6 @@ jobs:
           git commit -m "Initial WPT history commit"
           git push origin $RESULTS_BRANCH
           git switch ${{ github.ref_name }}
-      - name: Link to WPT results (only on first run)
-        if: steps.results-branch-exists.outputs.EXISTS == '0'
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh pr comment $SOURCE_BRANCH --body "WPT results: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
       - name: Clone WPT results branch
         uses: actions/checkout@v3
         with:
@@ -100,3 +94,15 @@ jobs:
           git config user.email github-actions@github.com
           git commit -m "WPT results from https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
           git push origin $RESULTS_BRANCH
+
+  link-to-report:
+    name: Link to report
+    runs-on: ubuntu-latest
+    if: github.event.action == "opened"
+    steps:
+      - name: Link to WPT report (only on first run)
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr comment $SOURCE_BRANCH --body "WPT results: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
