@@ -24,10 +24,6 @@ export async function validatedForPositioning(
   return null;
 }
 
-export async function callGetOffsetParent(element: Element | Window) {
-  return platform.getOffsetParent?.(element as Element);
-}
-
 export function isFixedPositioned(el: HTMLElement) {
   return Boolean(
     el.style.position === 'fixed' || getComputedStyle(el).position === 'fixed',
@@ -40,13 +36,6 @@ export function isAbsolutelyPositioned(el?: HTMLElement | null) {
       (el.style.position === 'absolute' ||
         getComputedStyle(el).position === 'absolute' ||
         isFixedPositioned(el)),
-  );
-}
-
-export function hasDisplayNone(el?: HTMLElement | null) {
-  return Boolean(
-    el &&
-      (el.style.display === 'none' || getComputedStyle(el).display === 'none'),
   );
 }
 
@@ -104,10 +93,13 @@ export async function isValidAnchorElement(
     }
   }
 
-  // Either el must be a descendant of the querying element's containing block,
-  // or the querying element's containing block must be
-  // the initial containing block:
-  const isDescendant = Boolean(target.offsetParent?.contains(anchor));
+  let isDescendant;
+  if (targetContainingBlock && targetContainingBlock === window) {
+    isDescendant = (targetContainingBlock as Window).document.contains(anchor);
+  } else if (targetContainingBlock) {
+    isDescendant = (targetContainingBlock as HTMLElement).contains(anchor);
+  }
+
   const targetCBIsInitialCB = await isContainingBlockICB(targetContainingBlock);
 
   if (isDescendant || targetCBIsInitialCB) {

@@ -742,7 +742,7 @@ export async function parseCSS(styleData: StyleData[]) {
     if (positionFallbacks) {
       const targetEl: HTMLElement | null = document.querySelector(targetSel);
       // Populate `anchorEl` for each fallback `anchor()` fn
-      positionFallbacks.forEach(async (tryBlock) => {
+      for (const tryBlock of positionFallbacks) {
         for (const [prop, value] of Object.entries(tryBlock)) {
           if (typeof value === 'object') {
             const anchorEl = await getAnchorEl(
@@ -752,7 +752,7 @@ export async function parseCSS(styleData: StyleData[]) {
             (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
           }
         }
-      });
+      }
       validPositions[targetSel] = {
         fallbacks: positionFallbacks,
       };
