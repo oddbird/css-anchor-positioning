@@ -42,6 +42,11 @@ jobs:
           git commit -m "Initial WPT history commit"
           git push origin $RESULTS_BRANCH
           git switch ${{ github.ref_name }}
+      - name: Link to WPT results (only on first run)
+        if: steps.results-branch-exists.outputs.EXISTS == '0'
+        continue-on-error: true
+        run: |
+          gh pr comment $SOURCE_BRANCH --body "WPT results: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
       - name: Clone WPT results branch
         uses: actions/checkout@v3
         with:
