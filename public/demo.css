@@ -60,6 +60,8 @@ header {
   top: 0;
   border-block-end: thin dotted var(--text);
   padding: 1em;
+  gap: 0.5em;
+  z-index: 1;
 }
 
 h1 {
@@ -69,8 +71,6 @@ h1 {
 nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5em;
-  z-index: 1;
   padding: 1em 0;
 }
 
