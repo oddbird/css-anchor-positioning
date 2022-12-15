@@ -98,7 +98,7 @@ jobs:
   link-to-report:
     name: Link to report
     runs-on: ubuntu-latest
-    # if: github.event.action == 'opened'
+    if: github.event.action == 'opened'
     steps:
       - name: Link to WPT report (only on first run)
         continue-on-error: true
@@ -107,4 +107,4 @@ jobs:
         run: >
           gh --repo ${{ github.repository }}
           pr comment $SOURCE_BRANCH
-          --body "WPT results: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
+          --body "WPT report for this branch: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
