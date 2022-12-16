@@ -106,5 +106,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: >
           gh --repo ${{ github.repository }}
-          pr comment $SOURCE_BRANCH
-          --body "WPT report for this branch: https://$SOURCE_BRANCH-wpt-results--anchor-position-wpt.netlify.app"
+          pr comment ${{ github.event.pull_request.number }}
+          --body "WPT report for this branch: https://${{ github.head_ref }}-wpt-results--anchor-position-wpt.netlify.app"
