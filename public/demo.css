@@ -20,6 +20,7 @@ html {
   --outer-anchored: var(--blue-2);
   --text: var(--gray-9);
   --note-color: var(--target);
+  --page-margin: calc(var(--size-3) + 4vw);
 
   background-color: var(--bg);
   color: var(--text);
@@ -41,10 +42,15 @@ html {
 body {
   display: grid;
   grid-template-columns:
-    [full-start] minmax(0, 1fr)
+    [full-start] minmax(var(--page-margin), 1fr)
     [main-start] minmax(0, 75ch) [main-end]
-    minmax(0, 1fr) [full-end];
+    minmax(var(--page-margin), 1fr) [full-end];
   margin: 0;
+  overflow-x: hidden;
+
+  @media (min-width: 30em) {
+    --page-margin: calc(var(--size-6) + 4vw);
+  }
 }
 
 /* layout */
@@ -63,7 +69,7 @@ header {
     'title title' auto
     'nav nav' auto
     'button .' auto;
-  padding: 1em;
+  padding: var(--header-padding, 1em);
   position: sticky;
   top: 0;
   z-index: 1;
@@ -71,12 +77,14 @@ header {
 
 @media (min-width: 30em) {
   header {
+    --header-padding: 1em 0;
+
     display: grid;
     gap: 0.5em;
     grid-template:
       '. title title .' auto
       '. nav button .' minmax(2rem, auto)
-      / minmax(3rem, auto) minmax(min-content, 1fr) minmax(2rem, auto) minmax(3rem, auto);
+      / var(--page-margin) minmax(min-content, 1fr) minmax(2rem, auto) var(--page-margin);
   }
 
   [data-button] {
@@ -92,8 +100,8 @@ h1 {
 
 nav {
   display: flex;
-  grid-area: nav;
   flex-wrap: wrap;
+  grid-area: nav;
   padding: 1em 0;
 }
 
@@ -121,7 +129,7 @@ footer p {
     'heading heading heading' min-content
     '. elements .' min-content
     'note note note' min-content
-    'code code code' min-content/minmax(0, 5rem) 1fr minmax(0, 5rem);
+    'code code code' min-content/minmax(0, 5rem) minmax(0, 1fr) minmax(0, 5rem);
 }
 
 /* stylelint-disable no-descending-specificity */
