@@ -59,8 +59,10 @@ export async function isValidAnchorElement(
   const targetContainingBlock = await platform.getOffsetParent?.(target);
 
   // If el has the same containing block as the querying element,
-  // el must not be absolutely positioned:
-  // A separate check for fixed positioning is added here because it's offsetParent will always resolve to null: https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-htmlelement-interface
+  // el must not be absolutely positioned.
+  // A separate check for fixed positioning is added here
+  // because its offsetParent will always resolve to null:
+  // https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-htmlelement-interface
   if (
     (isAbsolutelyPositioned(anchor) &&
       anchorContainingBlock === targetContainingBlock) ||
