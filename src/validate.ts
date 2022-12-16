@@ -44,7 +44,7 @@ export function isAbsolutelyPositioned(el?: HTMLElement | null) {
 // - `offsetParent` returns `null` when the CB is the ICB,
 //   except in Firefox where `offsetParent` returns the `body` element
 // - Excludes elements when they or their parents have `display: none`
-export async function isContainingBlockICB(
+export function isContainingBlockICB(
   targetContainingBlock: Element | Window | undefined,
 ) {
   return Boolean(targetContainingBlock === window);
