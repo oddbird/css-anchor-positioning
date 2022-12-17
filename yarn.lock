@@ -617,6 +617,7 @@ __metadata:
     "@typescript-eslint/parser": ^5.46.0
     "@vitest/coverage-istanbul": ^0.25.7
     async: ^3.2.4
+    browserslist: ^4.21.4
     browserstack-local: ^1.5.1
     cross-env: ^7.0.3
     css-tree: ^2.3.0
@@ -1205,7 +1206,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.21.3":
+"browserslist@npm:^4.21.3, browserslist@npm:^4.21.4":
   version: 4.21.4
   resolution: "browserslist@npm:4.21.4"
   dependencies:
