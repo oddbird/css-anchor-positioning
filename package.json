@@ -90,6 +90,7 @@
     "@typescript-eslint/parser": "^5.46.0",
     "@vitest/coverage-istanbul": "^0.25.7",
     "async": "^3.2.4",
+    "browserslist": "^4.21.4",
     "browserstack-local": "^1.5.1",
     "cross-env": "^7.0.3",
     "eslint": "^8.29.0",
