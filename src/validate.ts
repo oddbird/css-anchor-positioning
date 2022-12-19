@@ -40,10 +40,7 @@ export function isAbsolutelyPositioned(el?: HTMLElement | null) {
 }
 
 // Determines whether the containing block (CB) of the element
-// is the initial containing block (ICB):
-// - `offsetParent` returns `null` when the CB is the ICB,
-//   except in Firefox where `offsetParent` returns the `body` element
-// - Excludes elements when they or their parents have `display: none`
+// is the initial containing block (ICB)
 export function isContainingBlockICB(
   targetContainingBlock: Element | Window | undefined,
 ) {
@@ -60,13 +57,9 @@ export async function isValidAnchorElement(
 
   // If el has the same containing block as the querying element,
   // el must not be absolutely positioned.
-  // A separate check for fixed positioning is added here
-  // because its offsetParent will always resolve to null:
-  // https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-htmlelement-interface
   if (
-    (isAbsolutelyPositioned(anchor) &&
-      anchorContainingBlock === targetContainingBlock) ||
-    isFixedPositioned(anchor)
+    isAbsolutelyPositioned(anchor) &&
+    anchorContainingBlock === targetContainingBlock
   ) {
     return false;
   }
@@ -95,6 +88,9 @@ export async function isValidAnchorElement(
     }
   }
 
+  // Either el is a descendant of query el’s containing block,
+  // or query el’s containing block is the initial containing block
+  // https://drafts4.csswg.org/css-anchor-1/#determining
   let isDescendant;
   if (targetContainingBlock && targetContainingBlock === window) {
     isDescendant = (targetContainingBlock as Window).document.contains(anchor);
@@ -102,7 +98,7 @@ export async function isValidAnchorElement(
     isDescendant = (targetContainingBlock as HTMLElement).contains(anchor);
   }
 
-  const targetCBIsInitialCB = await isContainingBlockICB(targetContainingBlock);
+  const targetCBIsInitialCB = isContainingBlockICB(targetContainingBlock);
 
   if (isDescendant || targetCBIsInitialCB) {
     return true;

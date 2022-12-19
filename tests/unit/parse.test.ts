@@ -50,7 +50,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(expected).toEqual(result);
+    expect(result).toEqual(expected);
   });
 
   it('parses `anchor()` (implicit name via `anchor` attr)', async () => {
