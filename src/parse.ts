@@ -316,7 +316,7 @@ function getPositionFallbackRules(node: csstree.CssNode) {
   return {};
 }
 
-function getCSSPropertyValue(el: HTMLElement, prop: string) {
+export function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
 

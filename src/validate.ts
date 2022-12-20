@@ -1,5 +1,14 @@
 import { platform } from '@floating-ui/dom';
 
+import { getCSSPropertyValue } from './parse.js';
+
+function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
+  return (
+    element.style[cssProperty] === value ||
+    getCSSPropertyValue(element, cssProperty) === value
+  );
+}
+
 // Given a target element and CSS selector(s) for potential anchor element(s),
 // returns the first element that passes validation,
 // or `null` if no valid anchor element is found
@@ -25,17 +34,14 @@ export async function validatedForPositioning(
 }
 
 export function isFixedPositioned(el: HTMLElement) {
-  return Boolean(
-    el.style.position === 'fixed' || getComputedStyle(el).position === 'fixed',
-  );
+  return hasStyle(el, 'position', 'fixed');
 }
 
 export function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
     el &&
-      (el.style.position === 'absolute' ||
-        getComputedStyle(el).position === 'absolute' ||
-        isFixedPositioned(el)),
+      (hasStyle(el, 'position', 'fixed') ||
+        hasStyle(el, 'position', 'absolute')),
   );
 }
 
