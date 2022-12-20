@@ -4,7 +4,7 @@ import { getCSSPropertyValue } from './parse.js';
 
 function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
   return (
-    element.style[cssProperty] === value ||
+    element.style.getPropertyValue(cssProperty) === value ||
     getCSSPropertyValue(element, cssProperty) === value
   );
 }
