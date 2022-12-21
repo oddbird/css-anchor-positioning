@@ -274,7 +274,7 @@ test('anchor is valid if it has a different CB from the querying element, and th
 test('anchor is NOT valid if it has a different CB from the querying element, and the last CB in anchor CB chain before the query element CB is absolutely positioned', async ({
   browser,
 }) => {
-  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.tentative.html
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.html
   const page = await buildPage(browser);
   await page.setContent(
     `
@@ -336,7 +336,7 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
 test('when multiple anchor elements have the same name and are valid, the first is returned', async ({
   browser,
 }) => {
-  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-001.tentative.html
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-001.html
   const page = await buildPage(browser);
   await page.setContent(
     `
@@ -409,4 +409,87 @@ test('when multiple anchor elements have the same name and are valid, the first 
   expect(validationResults.results.anchor).toBeTruthy;
   expect(validationResults.anchorText).toContain('First Anchor Element');
   expect(validationResults.anchorWidth).toBe('10px');
+});
+
+test('target anchor element is first element el in tree order.', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-003.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        .cb {
+          position: relative;
+        }
+        .not-positioned-cb {
+          transform: translate(0, 0);  /* Make it a containing block. */
+        }
+        .anchor1 {
+          anchor-name: --a1;
+        }
+        .size5x7 {
+          width: 5px;
+          height: 7px;
+          background: orange;
+        }
+        .size9x11 {
+          width: 9px;
+          height: 11px;
+          background: blue;
+        }
+        .target {
+          position: absolute;
+        }
+      </style>
+      <!--
+        To determine the target anchor element, find the first element el in tree
+        order.
+        https://drafts.csswg.org/css-anchor-1/#determining
+      -->
+      <body>
+        <div class="cb">
+          <div class="anchor1 size5x7 not-positioned-cb" id="my-anchor-positioning5">
+            <div class="anchor1 size9x11" id="my-anchor-positioning"></div>
+            <div class="target9" style="left: anchor(--a1 right)" id="my-target-positioning" data-offset-x=9></div>
+          </div>
+          <div class="target" style="left: anchor(--a1 right)" data-offset-x=5></div>
+        </div>
+      </body>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  const validationResults = await page.evaluate(
+    async ([anchorSelector, targetSelector]) => {
+      interface Data {
+        results: {
+          anchor: HTMLElement | null;
+        };
+        anchorWidth: string | undefined;
+        anchorText: string | undefined;
+      }
+
+      const targetElement = document.querySelector(
+        targetSelector,
+      ) as HTMLElement;
+
+      const validatedData = {} as Data;
+      const anchor = await validatedForPositioning(targetElement, [
+        anchorSelector,
+      ]).then((value) => value);
+
+      validatedData.results = { anchor };
+      validatedData.anchorWidth = getComputedStyle(anchor).width;
+
+      return validatedData;
+    },
+    ['.anchor1', '.target9'],
+  );
+
+  await page.close();
+  expect(valid).toBe(true);
+  expect(validationResults.results.anchor).toBeTruthy;
+  expect(validationResults.anchorWidth).toBe('9px');
 });

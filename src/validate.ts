@@ -93,10 +93,16 @@ export async function isValidAnchorElement(
   // or query el’s containing block is the initial containing block
   // https://drafts4.csswg.org/css-anchor-1/#determining
   let isDescendant;
-  if (targetContainingBlock && targetContainingBlock === window) {
-    isDescendant = (targetContainingBlock as Window).document.contains(anchor);
-  } else if (targetContainingBlock) {
-    isDescendant = (targetContainingBlock as HTMLElement).contains(anchor);
+  if (targetContainingBlock && targetContainingBlock !== anchor) {
+    if (targetContainingBlock === window) {
+      isDescendant = (targetContainingBlock as Window).document.contains(
+        anchor,
+      );
+    } else {
+      isDescendant = (targetContainingBlock as HTMLElement).contains(anchor);
+    }
+  } else {
+    isDescendant = false;
   }
 
   const targetCBIsInitialCB = isContainingBlockICB(targetContainingBlock);
