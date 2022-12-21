@@ -40,7 +40,7 @@ export function isFixedPositioned(el: HTMLElement) {
 export function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
     el &&
-      (hasStyle(el, 'position', 'fixed') ||
+      (isFixedPositioned(el) ||
         hasStyle(el, 'position', 'absolute')),
   );
 }
