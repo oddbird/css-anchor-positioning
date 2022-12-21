@@ -2,8 +2,29 @@ import { platform } from '@floating-ui/dom';
 
 import { getCSSPropertyValue } from './parse.js';
 
+// Given an element and CSS style property,
+// checks if the CSS property equals a certain value
 function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
   return getCSSPropertyValue(element, cssProperty) === value;
+}
+
+// Given a target element's containing block (CB) and an anchor element,
+// determines if the anchor element is a descendant of the target CB.
+// An additional check is added to the early return for when the target CB is the anchor because .contains() will return true since "a node is contained inside itself."
+// https://developer.mozilla.org/en-US/docs/Web/API/Node/contains
+function isContainingBlockDescendant(
+  containingBlock: Element | Window | undefined,
+  anchor: Element,
+): boolean {
+  if (!containingBlock || containingBlock === anchor) {
+    return false;
+  }
+
+  if (containingBlock === window) {
+    return (containingBlock as Window).document.contains(anchor);
+  } else {
+    return (containingBlock as HTMLElement).contains(anchor);
+  }
 }
 
 // Given a target element and CSS selector(s) for potential anchor element(s),
@@ -89,25 +110,13 @@ export async function isValidAnchorElement(
     }
   }
 
-  // Either el is a descendant of query el’s containing block,
+  // Either anchor el is a descendant of query el’s containing block,
   // or query el’s containing block is the initial containing block
   // https://drafts4.csswg.org/css-anchor-1/#determining
-  let isDescendant;
-  if (targetContainingBlock && targetContainingBlock !== anchor) {
-    if (targetContainingBlock === window) {
-      isDescendant = (targetContainingBlock as Window).document.contains(
-        anchor,
-      );
-    } else {
-      isDescendant = (targetContainingBlock as HTMLElement).contains(anchor);
-    }
-  } else {
-    isDescendant = false;
-  }
-
-  const targetCBIsInitialCB = isContainingBlockICB(targetContainingBlock);
-
-  if (isDescendant || targetCBIsInitialCB) {
+  if (
+    isContainingBlockDescendant(targetContainingBlock, anchor) ||
+    isContainingBlockICB(targetContainingBlock)
+  ) {
     return true;
   }
 
