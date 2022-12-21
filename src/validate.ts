@@ -10,7 +10,8 @@ function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
-// An additional check is added to the early return for when the target CB is the anchor because .contains() will return true since "a node is contained inside itself."
+// An additional check is added to see if the target CB is the anchor,
+// because `.contains()` will return true: "a node is contained inside itself."
 // https://developer.mozilla.org/en-US/docs/Web/API/Node/contains
 function isContainingBlockDescendant(
   containingBlock: Element | Window | undefined,
@@ -27,28 +28,12 @@ function isContainingBlockDescendant(
   }
 }
 
-// Given a target element and CSS selector(s) for potential anchor element(s),
-// returns the first element that passes validation,
-// or `null` if no valid anchor element is found
-export async function validatedForPositioning(
-  targetEl: HTMLElement | null,
-  anchorSelectors: string[],
+// Determines whether the containing block (CB) of the element
+// is the initial containing block (ICB)
+export function isContainingBlockICB(
+  targetContainingBlock: Element | Window | undefined,
 ) {
-  if (!targetEl || anchorSelectors.length === 0) {
-    return null;
-  }
-
-  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
-    anchorSelectors.join(', '),
-  );
-
-  for (const anchor of anchorElements) {
-    if (await isValidAnchorElement(anchor, targetEl)) {
-      return anchor;
-    }
-  }
-
-  return null;
+  return Boolean(targetContainingBlock === window);
 }
 
 export function isFixedPositioned(el: HTMLElement) {
@@ -59,14 +44,6 @@ export function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
     el && (isFixedPositioned(el) || hasStyle(el, 'position', 'absolute')),
   );
-}
-
-// Determines whether the containing block (CB) of the element
-// is the initial containing block (ICB)
-export function isContainingBlockICB(
-  targetContainingBlock: Element | Window | undefined,
-) {
-  return Boolean(targetContainingBlock === window);
 }
 
 // Validates that anchor element is a valid anchor for given target element
@@ -121,4 +98,28 @@ export async function isValidAnchorElement(
   }
 
   return false;
+}
+
+// Given a target element and CSS selector(s) for potential anchor element(s),
+// returns the first element that passes validation,
+// or `null` if no valid anchor element is found
+export async function validatedForPositioning(
+  targetEl: HTMLElement | null,
+  anchorSelectors: string[],
+) {
+  if (!targetEl || anchorSelectors.length === 0) {
+    return null;
+  }
+
+  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
+    anchorSelectors.join(', '),
+  );
+
+  for (const anchor of anchorElements) {
+    if (await isValidAnchorElement(anchor, targetEl)) {
+      return anchor;
+    }
+  }
+
+  return null;
 }
