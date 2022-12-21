@@ -3,10 +3,7 @@ import { platform } from '@floating-ui/dom';
 import { getCSSPropertyValue } from './parse.js';
 
 function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
-  return (
-    element.style.getPropertyValue(cssProperty) === value ||
-    getCSSPropertyValue(element, cssProperty) === value
-  );
+  return getCSSPropertyValue(element, cssProperty) === value;
 }
 
 // Given a target element and CSS selector(s) for potential anchor element(s),
@@ -39,9 +36,7 @@ export function isFixedPositioned(el: HTMLElement) {
 
 export function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
-    el &&
-      (isFixedPositioned(el) ||
-        hasStyle(el, 'position', 'absolute')),
+    el && (isFixedPositioned(el) || hasStyle(el, 'position', 'absolute')),
   );
 }
 
@@ -82,7 +77,7 @@ export async function isValidAnchorElement(
     while (
       currentCB &&
       currentCB !== targetContainingBlock &&
-      currentCB != window
+      currentCB !== window
     ) {
       anchorCBchain.push(currentCB);
       currentCB = await platform.getOffsetParent?.(currentCB as HTMLElement);
