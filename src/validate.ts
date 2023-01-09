@@ -69,7 +69,7 @@ export async function isValidAnchorElement(
   // must not be absolutely positioned:
   if (anchorContainingBlock !== targetContainingBlock) {
     let currentCB: Element | Window | undefined;
-    const anchorCBchain: typeof currentCB[] = [];
+    const anchorCBchain: (typeof currentCB)[] = [];
 
     currentCB = anchorContainingBlock;
     while (
