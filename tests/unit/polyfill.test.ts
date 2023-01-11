@@ -4,10 +4,10 @@ import {
   getAxisProperty,
   getPixelValue,
   GetPixelValueOpts,
-  resolveLogicalKeyword,
+  resolveLogicalSideKeyword,
 } from '../../src/polyfill.js';
 
-describe('resolveLogicalKeyword', () => {
+describe('resolveLogicalSideKeyword', () => {
   it.each([
     ['start', false, 0],
     ['start', true, 100],
@@ -23,7 +23,7 @@ describe('resolveLogicalKeyword', () => {
   ] as [AnchorSide, boolean, number | undefined][])(
     'resolves logical keyword %s to %i',
     (side, rtl, expected) => {
-      const result = resolveLogicalKeyword(side, rtl);
+      const result = resolveLogicalSideKeyword(side, rtl);
 
       expect(result).toEqual(expected);
     },
