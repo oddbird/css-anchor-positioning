@@ -76,6 +76,7 @@ export const getAxisProperty = (axis: 'x' | 'y' | null) => {
 };
 
 export interface GetPixelValueOpts {
+  anchorEl: HTMLElement;
   targetEl: HTMLElement;
   targetProperty: string;
   anchorRect: Rect;
@@ -85,6 +86,7 @@ export interface GetPixelValueOpts {
 }
 
 export const getPixelValue = async ({
+  anchorEl,
   targetEl,
   targetProperty,
   anchorRect,
@@ -116,7 +118,9 @@ export const getPixelValue = async ({
       }
     }
     if (size) {
-      return `${anchorRect[size]}px`;
+      // Why this instead of `anchorRect[size]`? Should we use this throughout?
+      // https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-multicol-004.html
+      return `${anchorEl.getBoundingClientRect()[size]}px`;
     }
   } else if (anchorSide !== undefined) {
     // Calculate value for `anchor()` fn...
@@ -210,6 +214,7 @@ function position(rules: AnchorPositions) {
               strategy: 'absolute',
             });
             const resolved = await getPixelValue({
+              anchorEl: anchor,
               targetEl: target,
               targetProperty: property,
               anchorRect: rects.reference,
