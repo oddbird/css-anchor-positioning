@@ -170,10 +170,10 @@ export const getPixelValue = async ({
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
         case 'bottom':
-          value = (offsetParent as HTMLElement).clientHeight - value;
+          value = (offsetParent as HTMLElement).offsetHeight - value;
           break;
         case 'right':
-          value = (offsetParent as HTMLElement).clientWidth - value;
+          value = (offsetParent as HTMLElement).offsetWidth - value;
           break;
       }
       return `${value}px`;
@@ -187,6 +187,7 @@ function position(rules: AnchorPositions) {
   const root = document.documentElement;
 
   Object.entries(rules).forEach(([targetSel, position]) => {
+    // @@@ This needs to be done for _every_ target element separately
     const target: HTMLElement | null = document.querySelector(targetSel);
 
     if (
