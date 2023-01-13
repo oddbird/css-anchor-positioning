@@ -1,10 +1,11 @@
-import { AnchorSide } from '../../src/parse.js';
+import { AnchorSide, AnchorSize } from '../../src/parse.js';
 import {
   getAxis,
   getAxisProperty,
   getPixelValue,
   GetPixelValueOpts,
   resolveLogicalSideKeyword,
+  resolveLogicalSizeKeyword,
 } from '../../src/polyfill.js';
 
 describe('resolveLogicalSideKeyword', () => {
@@ -21,9 +22,29 @@ describe('resolveLogicalSideKeyword', () => {
     [10, false, 10],
     [10, true, 90],
   ] as [AnchorSide, boolean, number | undefined][])(
-    'resolves logical keyword %s to %i',
+    'resolves logical side keyword %s to %i',
     (side, rtl, expected) => {
       const result = resolveLogicalSideKeyword(side, rtl);
+
+      expect(result).toEqual(expected);
+    },
+  );
+});
+
+describe('resolveLogicalSizeKeyword', () => {
+  it.each([
+    ['block', false, 'height'],
+    ['block', true, 'width'],
+    ['self-block', false, 'height'],
+    ['self-block', true, 'width'],
+    ['inline', false, 'width'],
+    ['inline', true, 'height'],
+    ['self-inline', false, 'width'],
+    ['self-inline', true, 'height'],
+  ] as [AnchorSize, boolean, string | undefined][])(
+    'resolves logical size keyword %s to %s',
+    (size, vertical, expected) => {
+      const result = resolveLogicalSizeKeyword(size, vertical);
 
       expect(result).toEqual(expected);
     },
@@ -60,7 +81,7 @@ describe('getAxisProperty', () => {
   );
 });
 
-describe('getPixelValue', () => {
+describe('getPixelValue [anchor() fn]', () => {
   const anchorRect = {
     x: 10,
     y: 50,
@@ -116,6 +137,41 @@ describe('getPixelValue', () => {
       },
       '100px',
     ],
+  ] as [GetPixelValueOpts, string][])(
+    'returns pixel value for anchor fn',
+    async (opts, expected) => {
+      const result = await getPixelValue(opts);
+
+      expect(result).toEqual(expected);
+    },
+  );
+});
+
+describe('getPixelValue [anchor-size() fn]', () => {
+  const anchorRect = {
+    x: 10,
+    y: 50,
+    width: 20,
+    height: 40,
+  };
+  const obj = {
+    anchorRect,
+    fallback: '0px',
+  };
+
+  beforeAll(() => {
+    Object.defineProperty(window, 'getComputedStyle', {
+      value: () => ({
+        getPropertyValue: () => {
+          return 'horizontal-tb';
+        },
+      }),
+    });
+  });
+
+  it.each([
+    [{ ...obj, anchorSize: 'width', targetProperty: 'width' }, '20px'],
+    [{ ...obj, anchorSize: 'block', targetProperty: 'height' }, '40px'],
   ] as [GetPixelValueOpts, string][])(
     'returns pixel value for anchor fn',
     async (opts, expected) => {
