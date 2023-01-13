@@ -75,6 +75,22 @@ export const getAxisProperty = (axis: 'x' | 'y' | null) => {
   return null;
 };
 
+const isInline = (el: HTMLElement) =>
+  getCSSPropertyValue(el, 'display') === 'inline';
+
+const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
+  const props =
+    axis === 'x'
+      ? ['border-left-width', 'border-right-width']
+      : ['border-top-width', 'border-bottom-width'];
+  return (
+    props.reduce(
+      (total, prop) => total + parseInt(getCSSPropertyValue(el, prop), 10),
+      0,
+    ) || 0
+  );
+};
+
 export interface GetPixelValueOpts {
   targetEl: HTMLElement;
   targetProperty: string;
@@ -169,12 +185,26 @@ export const getPixelValue = async ({
       let value =
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
-        case 'bottom':
-          value = (offsetParent as HTMLElement).offsetHeight - value;
+        case 'bottom': {
+          let offsetHeight = (offsetParent as HTMLElement).clientHeight;
+          // @@@ This is a hack for inline elements with `clientHeight: 0`
+          if (offsetHeight === 0 && isInline(offsetParent as HTMLElement)) {
+            const border = getBorders(offsetParent as HTMLElement, axis);
+            offsetHeight = (offsetParent as HTMLElement).offsetHeight - border;
+          }
+          value = offsetHeight - value;
           break;
-        case 'right':
-          value = (offsetParent as HTMLElement).offsetWidth - value;
+        }
+        case 'right': {
+          let offsetWidth = (offsetParent as HTMLElement).clientWidth;
+          // @@@ This is a hack for inline elements with `clientWidth: 0`
+          if (offsetWidth === 0 && isInline(offsetParent as HTMLElement)) {
+            const border = getBorders(offsetParent as HTMLElement, axis);
+            offsetWidth = (offsetParent as HTMLElement).offsetWidth - border;
+          }
+          value = offsetWidth - value;
           break;
+        }
       }
       return `${value}px`;
     }
