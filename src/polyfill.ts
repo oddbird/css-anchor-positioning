@@ -124,9 +124,10 @@ export const getPixelValue = async ({
           // `block` and `inline` should use the writing-mode of the element's
           // containing block, not the element itself:
           // https://trello.com/c/KnqCnHx3
-          vertical = getCSSPropertyValue(targetEl, 'writing-mode').startsWith(
-            'vertical-',
-          );
+          const writingMode = getCSSPropertyValue(targetEl, 'writing-mode');
+          vertical =
+            writingMode.startsWith('vertical-') ||
+            writingMode.startsWith('sideways-');
         }
         size = resolveLogicalSizeKeyword(anchorSize, vertical);
       }
