@@ -82,6 +82,7 @@ const ANCHOR_SIZES: AnchorSize[] = [
 ];
 
 interface AnchorFunction {
+  targetEl?: HTMLElement | null;
   anchorEl?: HTMLElement | null;
   anchorName?: string;
   anchorSide?: AnchorSide;
@@ -837,38 +838,22 @@ export async function parseCSS(styleData: StyleData[]) {
       document.querySelectorAll(targetSel);
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
       for (const anchorObj of anchorObjects) {
-        const validAnchors = new Map<HTMLElement, string>();
         for (const targetEl of targets) {
           // For every target element, find a valid anchor element
           const anchorEl = await getAnchorEl(targetEl, anchorObj);
-          const newObj = { ...anchorObj, anchorEl };
-          let uuid: string | undefined;
-          let newAnchor = false;
-          if (anchorEl) {
-            uuid = validAnchors.get(anchorEl);
-          }
-          if (!uuid) {
-            newAnchor = true;
-            uuid = `--anchor-${nanoid(12)}`;
-            if (anchorEl) {
-              validAnchors.set(anchorEl, uuid);
-            }
-          }
+          const uuid = `--anchor-${nanoid(12)}`;
           const style = targetEl.getAttribute('style');
           // Store in a data-attr in case inline styles are overwritten
           const oldMapping = targetEl.getAttribute(
             'data-anchor-polyfill-mapping',
           );
-          const mapping = `${anchorObj.uuid}: var(${uuid}); ${
-            oldMapping ?? ''
-          }`;
-          targetEl.setAttribute('data-anchor-polyfill-mapping', mapping);
-          targetEl.setAttribute('style', `${mapping} ${style}`);
-          if (!newAnchor) {
-            continue;
-          }
+          const mapping = `${anchorObj.uuid}: var(${uuid});`;
+          targetEl.setAttribute(
+            'data-anchor-polyfill-mapping',
+            `${mapping} ${oldMapping ?? ''}`,
+          );
+          targetEl.setAttribute('style', `${mapping} ${style ?? ''}`);
           // Populate `anchorEl` and new `uuid` for each anchor/target combo
-          newObj.uuid = uuid;
           validPositions[targetSel] = {
             ...validPositions[targetSel],
             declarations: {
@@ -877,7 +862,7 @@ export async function parseCSS(styleData: StyleData[]) {
                 ...(validPositions[targetSel]?.declarations?.[
                   targetProperty as InsetProperty
                 ] ?? []),
-                newObj,
+                { ...anchorObj, anchorEl, targetEl, uuid },
               ],
             },
           };
