@@ -1,6 +1,9 @@
 import { type StyleData } from './fetch.js';
 
-export function transformCSS(styleData: StyleData[]) {
+export function transformCSS(
+  styleData: StyleData[],
+  inlineStyles: Map<HTMLElement, Record<string, string>>,
+) {
   styleData.forEach(({ el, css, changed }) => {
     if (changed) {
       if (el.tagName.toLowerCase() === 'style') {
@@ -14,22 +17,24 @@ export function transformCSS(styleData: StyleData[]) {
         // Handle inline styles
         const attr = el.getAttribute('data-anchor-polyfill');
         if (attr) {
-          // Check for custom anchor-element mapping, so it is not overwritten
-          // when inline styles are updated
-          const mapping = el.getAttribute('data-anchor-polyfill-mapping');
           const pre = `[data-anchor-polyfill="${attr}"]{`;
           const post = `}`;
-          const inlineStyles = css.slice(pre.length, 0 - post.length);
-          el.setAttribute('style', `${mapping ?? ''} ${inlineStyles}`);
+          let styles = css.slice(pre.length, 0 - post.length);
+          // Check for custom anchor-element mapping, so it is not overwritten
+          // when inline styles are updated
+          const mappings = inlineStyles.get(el);
+          if (mappings) {
+            for (const [key, val] of Object.entries(mappings)) {
+              styles = `${key}: var(${val}); ${styles}`;
+            }
+          }
+          el.setAttribute('style', styles);
         }
       }
     }
     // Remove no-longer-needed data-attributes
     if (el.hasAttribute('data-anchor-polyfill')) {
       el.removeAttribute('data-anchor-polyfill');
-    }
-    if (el.hasAttribute('data-anchor-polyfill-mapping')) {
-      el.removeAttribute('data-anchor-polyfill-mapping');
     }
   });
 }

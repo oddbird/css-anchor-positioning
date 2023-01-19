@@ -833,6 +833,7 @@ export async function parseCSS(styleData: StyleData[]) {
   }
 
   // Store any `anchor()` fns
+  const inlineStyles = new Map<HTMLElement, Record<string, string>>();
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     const targets: NodeListOf<HTMLElement> =
       document.querySelectorAll(targetSel);
@@ -842,17 +843,18 @@ export async function parseCSS(styleData: StyleData[]) {
           // For every target element, find a valid anchor element
           const anchorEl = await getAnchorEl(targetEl, anchorObj);
           const uuid = `--anchor-${nanoid(12)}`;
-          const style = targetEl.getAttribute('style');
-          // Store in a data-attr in case inline styles are overwritten
-          const oldMapping = targetEl.getAttribute(
-            'data-anchor-polyfill-mapping',
-          );
-          const mapping = `${anchorObj.uuid}: var(${uuid});`;
+          // Store new mapping, in case inline styles have changed and will
+          // be overwritten -- in which case new mappings will be re-added
+          inlineStyles.set(targetEl, {
+            ...(inlineStyles.get(targetEl) ?? {}),
+            [anchorObj.uuid]: uuid,
+          });
           targetEl.setAttribute(
-            'data-anchor-polyfill-mapping',
-            `${mapping} ${oldMapping ?? ''}`,
+            'style',
+            `${anchorObj.uuid}: var(${uuid}); ${
+              targetEl.getAttribute('style') ?? ''
+            }`,
           );
-          targetEl.setAttribute('style', `${mapping} ${style ?? ''}`);
           // Populate `anchorEl` and new `uuid` for each anchor/target combo
           validPositions[targetSel] = {
             ...validPositions[targetSel],
@@ -871,5 +873,5 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  return validPositions;
+  return { rules: validPositions, inlineStyles };
 }

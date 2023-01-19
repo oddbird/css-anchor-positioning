@@ -266,14 +266,14 @@ export async function polyfill() {
   const styleData = await fetchCSS();
 
   // parse CSS
-  const rules = await parseCSS(styleData);
+  const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // calculate position values
     await position(rules);
 
     // update source code
-    transformCSS(styleData);
+    transformCSS(styleData, inlineStyles);
   }
 
   return rules;
