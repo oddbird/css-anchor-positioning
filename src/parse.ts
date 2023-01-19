@@ -833,26 +833,55 @@ export async function parseCSS(styleData: StyleData[]) {
 
   // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
-    const targetEl: HTMLElement | null = document.querySelector(targetSel);
+    const targets: NodeListOf<HTMLElement> =
+      document.querySelectorAll(targetSel);
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
       for (const anchorObj of anchorObjects) {
-        const anchorEl = await getAnchorEl(targetEl, anchorObj);
-        // Populate `anchorEl` for each `anchor()` fn
-        validPositions[targetSel] = {
-          ...validPositions[targetSel],
-          declarations: {
-            ...validPositions[targetSel]?.declarations,
-            [targetProperty]: [
-              ...(validPositions[targetSel]?.declarations?.[
-                targetProperty as InsetProperty
-              ] ?? []),
-              {
-                ...anchorObj,
-                anchorEl,
-              },
-            ],
-          },
-        };
+        const validAnchors = new Map<HTMLElement, string>();
+        for (const targetEl of targets) {
+          // For every target element, find a valid anchor element
+          const anchorEl = await getAnchorEl(targetEl, anchorObj);
+          const newObj = { ...anchorObj, anchorEl };
+          let uuid: string | undefined;
+          let newAnchor = false;
+          if (anchorEl) {
+            uuid = validAnchors.get(anchorEl);
+          }
+          if (!uuid) {
+            newAnchor = true;
+            uuid = `--anchor-${nanoid(12)}`;
+            if (anchorEl) {
+              validAnchors.set(anchorEl, uuid);
+            }
+          }
+          const style = targetEl.getAttribute('style');
+          // Store in a data-attr in case inline styles are overwritten
+          const oldMapping = targetEl.getAttribute(
+            'data-anchor-polyfill-mapping',
+          );
+          const mapping = `${anchorObj.uuid}: var(${uuid}); ${
+            oldMapping ?? ''
+          }`;
+          targetEl.setAttribute('data-anchor-polyfill-mapping', mapping);
+          targetEl.setAttribute('style', `${mapping} ${style}`);
+          if (!newAnchor) {
+            continue;
+          }
+          // Populate `anchorEl` and new `uuid` for each anchor/target combo
+          newObj.uuid = uuid;
+          validPositions[targetSel] = {
+            ...validPositions[targetSel],
+            declarations: {
+              ...validPositions[targetSel]?.declarations,
+              [targetProperty]: [
+                ...(validPositions[targetSel]?.declarations?.[
+                  targetProperty as InsetProperty
+                ] ?? []),
+                newObj,
+              ],
+            },
+          };
+        }
       }
     }
   }

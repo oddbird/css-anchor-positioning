@@ -188,7 +188,7 @@ export const getPixelValue = async ({
       switch (targetProperty) {
         case 'bottom': {
           let offsetHeight = (offsetParent as HTMLElement).clientHeight;
-          // @@@ This is a hack for inline elements with `clientHeight: 0`
+          // This is a hack for inline elements with `clientHeight: 0`
           if (offsetHeight === 0 && isInline(offsetParent as HTMLElement)) {
             const border = getBorders(offsetParent as HTMLElement, axis);
             offsetHeight = (offsetParent as HTMLElement).offsetHeight - border;
@@ -198,7 +198,7 @@ export const getPixelValue = async ({
         }
         case 'right': {
           let offsetWidth = (offsetParent as HTMLElement).clientWidth;
-          // @@@ This is a hack for inline elements with `clientWidth: 0`
+          // This is a hack for inline elements with `clientWidth: 0`
           if (offsetWidth === 0 && isInline(offsetParent as HTMLElement)) {
             const border = getBorders(offsetParent as HTMLElement, axis);
             offsetWidth = (offsetParent as HTMLElement).offsetWidth - border;
@@ -218,7 +218,6 @@ function position(rules: AnchorPositions) {
   const root = document.documentElement;
 
   Object.entries(rules).forEach(([targetSel, position]) => {
-    // @@@ This needs to be done for _every_ target element separately
     const target: HTMLElement | null = document.querySelector(targetSel);
 
     if (
