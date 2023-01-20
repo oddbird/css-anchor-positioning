@@ -92,9 +92,9 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
 };
 
 export interface GetPixelValueOpts {
-  targetEl: HTMLElement;
+  targetEl?: HTMLElement;
   targetProperty: string;
-  anchorRect: Rect;
+  anchorRect?: Rect;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
   fallback: string;
@@ -132,10 +132,13 @@ export const getPixelValue = async ({
         size = resolveLogicalSizeKeyword(anchorSize, vertical);
       }
     }
-    if (size) {
+    if (anchorRect && size) {
       return `${anchorRect[size]}px`;
     }
-  } else if (anchorSide !== undefined) {
+    return fallback;
+  }
+
+  if (anchorSide !== undefined) {
     // Calculate value for `anchor()` fn...
     let percentage: number | undefined;
     let offsetParent: Element | Window | HTMLElement | undefined;
@@ -172,17 +175,16 @@ export const getPixelValue = async ({
     const hasPercentage =
       typeof percentage === 'number' && !Number.isNaN(percentage);
 
-    if (targetProperty === 'bottom' || targetProperty === 'right') {
-      offsetParent = await platform.getOffsetParent?.(targetEl);
-      if (!(await platform.isElement?.(offsetParent))) {
-        offsetParent =
-          (await platform.getDocumentElement?.(targetEl)) ||
-          window.document.documentElement;
-      }
-    }
-
     const dir = getAxisProperty(axis);
-    if (hasPercentage && axis && dir) {
+    if (hasPercentage && axis && dir && targetEl && anchorRect) {
+      if (targetProperty === 'bottom' || targetProperty === 'right') {
+        offsetParent = await platform.getOffsetParent?.(targetEl);
+        if (!(await platform.isElement?.(offsetParent))) {
+          offsetParent =
+            (await platform.getDocumentElement?.(targetEl)) ||
+            window.document.documentElement;
+        }
+      }
       let value =
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
@@ -216,19 +218,12 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-function position(rules: AnchorPositions) {
+async function position(rules: AnchorPositions) {
   const root = document.documentElement;
 
-  Object.entries(rules).forEach(([targetSel, position]) => {
-    // This needs to be done for _every_ target element separately
-    const target: HTMLElement | null = document.querySelector(targetSel);
-
-    if (
-      !target ||
-      !position.declarations ||
-      !Object.keys(position.declarations).length
-    ) {
-      return;
+  for (const position of Object.values(rules)) {
+    if (!position.declarations || !Object.keys(position.declarations).length) {
+      continue;
     }
 
     for (const [property, anchorValues] of Object.entries(
@@ -236,7 +231,8 @@ function position(rules: AnchorPositions) {
     )) {
       for (const anchorValue of anchorValues) {
         const anchor = anchorValue.anchorEl;
-        if (anchor) {
+        const target = anchorValue.targetEl;
+        if (anchor && target) {
           autoUpdate(anchor, target, async () => {
             const rects = await platform.getElementRects({
               reference: anchor,
@@ -253,10 +249,19 @@ function position(rules: AnchorPositions) {
             });
             root.style.setProperty(anchorValue.uuid, resolved);
           });
+        } else {
+          // Use fallback value
+          const resolved = await getPixelValue({
+            targetProperty: property,
+            anchorSide: anchorValue.anchorSide,
+            anchorSize: anchorValue.anchorSize,
+            fallback: anchorValue.fallbackValue,
+          });
+          root.style.setProperty(anchorValue.uuid, resolved);
         }
       }
     }
-  });
+  }
 }
 
 export async function polyfill() {
@@ -264,14 +269,14 @@ export async function polyfill() {
   const styleData = await fetchCSS();
 
   // parse CSS
-  const rules = await parseCSS(styleData);
+  const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // calculate position values
-    position(rules);
+    await position(rules);
 
     // update source code
-    transformCSS(styleData);
+    transformCSS(styleData, inlineStyles);
   }
 
   return rules;

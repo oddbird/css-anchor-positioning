@@ -82,6 +82,7 @@ const ANCHOR_SIZES: AnchorSize[] = [
 ];
 
 interface AnchorFunction {
+  targetEl?: HTMLElement | null;
   anchorEl?: HTMLElement | null;
   anchorName?: string;
   anchorSide?: AnchorSide;
@@ -831,31 +832,48 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
+  // Store inline style custom property mappings for each target element
+  const inlineStyles = new Map<HTMLElement, Record<string, string>>();
   // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
-    const targetEl: HTMLElement | null = document.querySelector(targetSel);
+    const targets: NodeListOf<HTMLElement> =
+      document.querySelectorAll(targetSel);
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
       for (const anchorObj of anchorObjects) {
-        const anchorEl = await getAnchorEl(targetEl, anchorObj);
-        // Populate `anchorEl` for each `anchor()` fn
-        validPositions[targetSel] = {
-          ...validPositions[targetSel],
-          declarations: {
-            ...validPositions[targetSel]?.declarations,
-            [targetProperty]: [
-              ...(validPositions[targetSel]?.declarations?.[
-                targetProperty as InsetProperty
-              ] ?? []),
-              {
-                ...anchorObj,
-                anchorEl,
-              },
-            ],
-          },
-        };
+        for (const targetEl of targets) {
+          // For every target element, find a valid anchor element
+          const anchorEl = await getAnchorEl(targetEl, anchorObj);
+          const uuid = `--anchor-${nanoid(12)}`;
+          // Store new mapping, in case inline styles have changed and will
+          // be overwritten -- in which case new mappings will be re-added
+          inlineStyles.set(targetEl, {
+            ...(inlineStyles.get(targetEl) ?? {}),
+            [anchorObj.uuid]: uuid,
+          });
+          // Point original uuid to new uuid
+          targetEl.setAttribute(
+            'style',
+            `${anchorObj.uuid}: var(${uuid}); ${
+              targetEl.getAttribute('style') ?? ''
+            }`,
+          );
+          // Populate new data for each anchor/target combo
+          validPositions[targetSel] = {
+            ...validPositions[targetSel],
+            declarations: {
+              ...validPositions[targetSel]?.declarations,
+              [targetProperty]: [
+                ...(validPositions[targetSel]?.declarations?.[
+                  targetProperty as InsetProperty
+                ] ?? []),
+                { ...anchorObj, anchorEl, targetEl, uuid },
+              ],
+            },
+          };
+        }
       }
     }
   }
 
-  return validPositions;
+  return { rules: validPositions, inlineStyles };
 }

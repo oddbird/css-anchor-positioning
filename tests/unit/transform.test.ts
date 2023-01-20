@@ -13,7 +13,7 @@ describe('transformCSS', () => {
       </style>
     `;
     document.body.innerHTML = `
-      <div id="div" data-anchor-polyfill="key" style="color: red;" />
+      <div id="div" data-anchor-polyfill="key" style="--foo: var(--bar); color: red;" />
       <div id="div2" data-anchor-polyfill="key2" style="color: red;" />
     `;
     const link = document.querySelector('link') as HTMLLinkElement;
@@ -34,11 +34,15 @@ describe('transformCSS', () => {
         changed: false,
       },
     ];
-    transformCSS(styleData);
+    const inlineStyles = new Map();
+    inlineStyles.set(div, { '--foo': '--bar' });
+    transformCSS(styleData, inlineStyles);
 
     expect(link.href).toContain('/updated.css');
     expect(style.innerHTML).toBe('html { padding: 0; }');
-    expect(div.style.color).toBe('blue');
-    expect(div2.style.color).toBe('red');
+    expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue;');
+    expect(div2.getAttribute('style')).toBe('color: red;');
+    expect(div.hasAttribute('data-anchor-polyfill')).toBeFalsy();
+    expect(div2.hasAttribute('data-anchor-polyfill')).toBeFalsy();
   });
 });
