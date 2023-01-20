@@ -37,6 +37,7 @@ This polyfill doesn't (yet) support the following:
 - anchors in multi-column layouts
 - dynamically added/removed anchors or targets
 - top layer anchor elements
+- anchor functions used as the fallback value for another anchor function
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - anchor functions assigned to `bottom` or `right` properties on inline targets
