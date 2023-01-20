@@ -832,8 +832,9 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  // Store any `anchor()` fns
+  // Store inline style custom property mappings for each target element
   const inlineStyles = new Map<HTMLElement, Record<string, string>>();
+  // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     const targets: NodeListOf<HTMLElement> =
       document.querySelectorAll(targetSel);
@@ -849,13 +850,14 @@ export async function parseCSS(styleData: StyleData[]) {
             ...(inlineStyles.get(targetEl) ?? {}),
             [anchorObj.uuid]: uuid,
           });
+          // Point original uuid to new uuid
           targetEl.setAttribute(
             'style',
             `${anchorObj.uuid}: var(${uuid}); ${
               targetEl.getAttribute('style') ?? ''
             }`,
           );
-          // Populate `anchorEl` and new `uuid` for each anchor/target combo
+          // Populate new data for each anchor/target combo
           validPositions[targetSel] = {
             ...validPositions[targetSel],
             declarations: {

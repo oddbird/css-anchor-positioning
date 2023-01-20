@@ -248,6 +248,7 @@ async function position(rules: AnchorPositions) {
             root.style.setProperty(anchorValue.uuid, resolved);
           });
         } else {
+          // Use fallback value
           const resolved = await getPixelValue({
             targetProperty: property,
             anchorSide: anchorValue.anchorSide,

@@ -21,19 +21,15 @@ function isContainingBlockDescendant(
     return false;
   }
 
-  if (containingBlock === window) {
-    return (containingBlock as Window).document.contains(anchor);
+  if (isWindow(containingBlock)) {
+    return containingBlock.document.contains(anchor);
   } else {
-    return (containingBlock as HTMLElement).contains(anchor);
+    return containingBlock.contains(anchor);
   }
 }
 
-// Determines whether the containing block (CB) of the element
-// is the initial containing block (ICB)
-export function isContainingBlockICB(
-  targetContainingBlock: Element | Window | undefined,
-) {
-  return Boolean(targetContainingBlock === window);
+export function isWindow(el: Element | Window | undefined): el is Window {
+  return Boolean(el && el === (el as Window).window);
 }
 
 export function isFixedPositioned(el: HTMLElement) {
@@ -82,7 +78,11 @@ export async function isValidAnchorElement(
     }
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
 
-    if (lastInChain && isAbsolutelyPositioned(lastInChain as HTMLElement)) {
+    if (
+      lastInChain &&
+      lastInChain instanceof HTMLElement &&
+      isAbsolutelyPositioned(lastInChain)
+    ) {
       return false;
     }
   }
@@ -92,7 +92,7 @@ export async function isValidAnchorElement(
   // https://drafts4.csswg.org/css-anchor-1/#determining
   if (
     isContainingBlockDescendant(targetContainingBlock, anchor) ||
-    isContainingBlockICB(targetContainingBlock)
+    isWindow(targetContainingBlock)
   ) {
     return true;
   }

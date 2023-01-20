@@ -2,7 +2,7 @@ import { type StyleData } from './fetch.js';
 
 export function transformCSS(
   styleData: StyleData[],
-  inlineStyles: Map<HTMLElement, Record<string, string>>,
+  inlineStyles?: Map<HTMLElement, Record<string, string>>,
 ) {
   styleData.forEach(({ el, css, changed }) => {
     if (changed) {
@@ -22,7 +22,7 @@ export function transformCSS(
           let styles = css.slice(pre.length, 0 - post.length);
           // Check for custom anchor-element mapping, so it is not overwritten
           // when inline styles are updated
-          const mappings = inlineStyles.get(el);
+          const mappings = inlineStyles?.get(el);
           if (mappings) {
             for (const [key, val] of Object.entries(mappings)) {
               styles = `${key}: var(${val}); ${styles}`;
@@ -32,7 +32,7 @@ export function transformCSS(
         }
       }
     }
-    // Remove no-longer-needed data-attributes
+    // Remove no-longer-needed data-attribute
     if (el.hasAttribute('data-anchor-polyfill')) {
       el.removeAttribute('data-anchor-polyfill');
     }

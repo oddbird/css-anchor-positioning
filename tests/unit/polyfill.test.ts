@@ -91,6 +91,7 @@ describe('getPixelValue [anchor() fn]', () => {
   const obj = {
     anchorRect,
     fallback: '0px',
+    targetEl: {},
   };
 
   beforeAll(() => {
@@ -105,6 +106,10 @@ describe('getPixelValue [anchor() fn]', () => {
 
   it.each([
     [{ ...obj, anchorSide: 'left', targetProperty: 'left' }, '10px'],
+    [
+      { ...obj, anchorSide: 'left', targetProperty: 'left', targetEl: null },
+      '0px',
+    ],
     [{ ...obj, anchorSide: 'right', targetProperty: 'left' }, '30px'],
     [{ ...obj, anchorSide: 'top', targetProperty: 'top' }, '50px'],
     [{ ...obj, anchorSide: 'bottom', targetProperty: 'top' }, '90px'],
@@ -118,13 +123,12 @@ describe('getPixelValue [anchor() fn]', () => {
       },
       '100px',
     ],
-    [{ ...obj, anchorSide: 25, targetProperty: 'top', targetEl: {} }, '60px'],
+    [{ ...obj, anchorSide: 25, targetProperty: 'top' }, '60px'],
     [
       {
         ...obj,
         anchorSide: 'end',
         targetProperty: 'left',
-        targetEl: {},
       },
       '30px',
     ],
@@ -132,7 +136,6 @@ describe('getPixelValue [anchor() fn]', () => {
       {
         ...obj,
         anchorSide: 'start',
-        targetEl: {},
         fallback: '100px',
       },
       '100px',
