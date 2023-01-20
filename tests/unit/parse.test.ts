@@ -454,7 +454,7 @@ describe('parseCSS', () => {
         <div id="my-target-size" class="target">Target</div>
         <div id="my-anchor-size" class="anchor">Anchor</div>
       </div>
-  `;
+    `;
     const anchorEl = document.getElementById('my-anchor-size');
     const css = getSampleCSS('anchor-size');
     document.head.innerHTML = `<style>${css}</style>`;
