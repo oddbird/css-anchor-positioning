@@ -18,11 +18,11 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
-type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
+export type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
 
 const INSET_PROPS: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
 
-type SizingProperty =
+export type SizingProperty =
   | 'width'
   | 'height'
   | 'min-width'
@@ -81,7 +81,7 @@ const ANCHOR_SIZES: AnchorSize[] = [
   'self-inline',
 ];
 
-interface AnchorFunction {
+export interface AnchorFunction {
   targetEl?: HTMLElement | null;
   anchorEl?: HTMLElement | null;
   anchorName?: string;
@@ -185,7 +185,9 @@ function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
-function isInsetProp(property: string): property is InsetProperty {
+export function isInsetProp(
+  property: string | AnchorSide,
+): property is InsetProperty {
   return INSET_PROPS.includes(property as InsetProperty);
 }
 
@@ -193,7 +195,7 @@ function isAnchorSide(property: string): property is AnchorSideKeyword {
   return ANCHOR_SIDES.includes(property as AnchorSideKeyword);
 }
 
-function isSizingProp(property: string): property is SizingProperty {
+export function isSizingProp(property: string): property is SizingProperty {
   return SIZING_PROPS.includes(property as SizingProperty);
 }
 
@@ -838,7 +840,10 @@ export async function parseCSS(styleData: StyleData[]) {
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     const targets: NodeListOf<HTMLElement> =
       document.querySelectorAll(targetSel);
-    for (const [targetProperty, anchorObjects] of Object.entries(anchorFns)) {
+    for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
+      InsetProperty | SizingProperty,
+      AnchorFunction[],
+    ][]) {
       for (const anchorObj of anchorObjects) {
         for (const targetEl of targets) {
           // For every target element, find a valid anchor element
