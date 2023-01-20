@@ -518,23 +518,29 @@
 }</pre
       >
     </section>
-    <!-- <section id="anchor-size" class="demo-item">
+    <section id="anchor-size" class="demo-item">
       <h2>
         <a href="#anchor-size" aria-hidden="true">🔗</a>
         Anchor Size
       </h2>
-      <div id="my-anchor-size" class="anchor" class="demo-elements">Anchor</div>
-      <div id="my-target-size" class="target">Target</div>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-size" class="anchor">Anchor</div>
+        <div id="my-target-size" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target has the same width as the Anchor.
+      </p>
       <pre>
- #my-anchor-size {
+#my-anchor-size {
   anchor-name: --my-anchor;
   width: 5em;
 }
 
 #my-target-size {
   width: anchor-size(--my-anchor width);
-}</pre>
-    </section> -->
+}</pre
+      >
+    </section>
     <footer>
       <p>
         Spec proposal by

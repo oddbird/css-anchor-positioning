@@ -347,6 +347,37 @@ describe('parseCSS', () => {
     expect(result).toEqual(expected);
   });
 
+  it('parses `anchor-size()` function', async () => {
+    document.body.innerHTML = `
+      <div style="position: relative">
+        <div id="my-target-size" class="target">Target</div>
+        <div id="my-anchor-size" class="anchor">Anchor</div>
+      </div>
+  `;
+    const anchorEl = document.getElementById('my-anchor-size');
+    const css = getSampleCSS('anchor-size');
+    const result = await parseCSS([{ css }] as StyleData[]);
+
+    const expected = {
+      '#my-target-size': {
+        declarations: {
+          width: [
+            {
+              anchorName: '--my-anchor',
+              anchorEl,
+              anchorSide: undefined,
+              anchorSize: 'width',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(result).toEqual(expected);
+  });
+
   it('parses `@position-fallback` strategy', async () => {
     document.body.innerHTML =
       '<div style="position: relative"><div id="my-target-fallback"></div><div id="my-anchor-fallback"></div></div>';

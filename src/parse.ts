@@ -22,6 +22,23 @@ type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
 
 const INSET_PROPS: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
 
+type SizingProperty =
+  | 'width'
+  | 'height'
+  | 'min-width'
+  | 'min-height'
+  | 'max-width'
+  | 'max-height';
+
+const SIZING_PROPS: SizingProperty[] = [
+  'width',
+  'height',
+  'min-width',
+  'min-height',
+  'max-width',
+  'max-height',
+];
+
 type AnchorSideKeyword =
   | 'top'
   | 'left'
@@ -47,10 +64,28 @@ const ANCHOR_SIDES: AnchorSideKeyword[] = [
 
 export type AnchorSide = AnchorSideKeyword | number;
 
+export type AnchorSize =
+  | 'width'
+  | 'height'
+  | 'block'
+  | 'inline'
+  | 'self-block'
+  | 'self-inline';
+
+const ANCHOR_SIZES: AnchorSize[] = [
+  'width',
+  'height',
+  'block',
+  'inline',
+  'self-block',
+  'self-inline',
+];
+
 interface AnchorFunction {
   anchorEl?: HTMLElement | null;
   anchorName?: string;
   anchorSide?: AnchorSide;
+  anchorSize?: AnchorSize;
   fallbackValue: string;
   customPropName?: string;
   uuid: string;
@@ -59,7 +94,7 @@ interface AnchorFunction {
 // `key` is the property being declared
 // `value` is the anchor-positioning data for that property
 type AnchorFunctionDeclaration = Partial<
-  Record<InsetProperty, AnchorFunction[]>
+  Record<InsetProperty | SizingProperty, AnchorFunction[]>
 >;
 
 interface AnchorFunctionDeclarations {
@@ -82,7 +117,7 @@ export interface AnchorPositions {
 // `key` is the property being declared
 // `value` is the property value, or parsed anchor-fn data
 type TryBlock = Partial<
-  Record<string | InsetProperty, string | AnchorFunction>
+  Record<string | InsetProperty | SizingProperty, string | AnchorFunction>
 >;
 
 interface FallbackNames {
@@ -113,6 +148,14 @@ function isAnchorFunction(
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
+function isAnchorSizeFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(
+    node && node.type === 'Function' && node.name === 'anchor-size',
+  );
+}
+
 function isVarFunction(
   node: csstree.CssNode | null,
 ): node is csstree.FunctionNode {
@@ -141,12 +184,20 @@ function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
-function isInset(property: string): property is InsetProperty {
+function isInsetProp(property: string): property is InsetProperty {
   return INSET_PROPS.includes(property as InsetProperty);
 }
 
 function isAnchorSide(property: string): property is AnchorSideKeyword {
   return ANCHOR_SIDES.includes(property as AnchorSideKeyword);
+}
+
+function isSizingProp(property: string): property is SizingProperty {
+  return SIZING_PROPS.includes(property as SizingProperty);
+}
+
+function isAnchorSize(property: string): property is AnchorSize {
+  return ANCHOR_SIZES.includes(property as AnchorSize);
 }
 
 function parseAnchorFn(
@@ -155,6 +206,7 @@ function parseAnchorFn(
 ): AnchorFunction {
   let anchorName: string | undefined,
     anchorSide: AnchorSide | undefined,
+    anchorSize: AnchorSize | undefined,
     fallbackValue = '',
     foundComma = false,
     customPropName: string | undefined;
@@ -172,10 +224,10 @@ function parseAnchorFn(
     args.push(child);
   });
 
-  let [name, side]: (csstree.CssNode | undefined)[] = args;
-  if (!side) {
-    // If we only have one argument, assume it is the (required) anchor-side
-    side = name;
+  let [name, sideOrSize]: (csstree.CssNode | undefined)[] = args;
+  if (!sideOrSize) {
+    // If we only have one argument assume it is the (required) anchor-side/size
+    sideOrSize = name;
     name = undefined;
   }
   if (name) {
@@ -187,12 +239,20 @@ function parseAnchorFn(
       customPropName = (name.children.first as csstree.Identifier).name;
     }
   }
-  if (side) {
-    if (isIdentifier(side) && isAnchorSide(side.name)) {
-      anchorSide = side.name;
-    } else if (isPercentage(side)) {
-      const number = Number(side.value);
-      anchorSide = Number.isNaN(number) ? undefined : number;
+  if (sideOrSize) {
+    if (isAnchorFunction(node)) {
+      if (isIdentifier(sideOrSize) && isAnchorSide(sideOrSize.name)) {
+        anchorSide = sideOrSize.name;
+      } else if (isPercentage(sideOrSize)) {
+        const number = Number(sideOrSize.value);
+        anchorSide = Number.isNaN(number) ? undefined : number;
+      }
+    } else if (
+      isAnchorSizeFunction(node) &&
+      isIdentifier(sideOrSize) &&
+      isAnchorSize(sideOrSize.name)
+    ) {
+      anchorSize = sideOrSize.name;
     }
   }
 
@@ -212,6 +272,7 @@ function parseAnchorFn(
   return {
     anchorName,
     anchorSide,
+    anchorSize,
     fallbackValue: fallbackValue || '0px',
     customPropName,
     uuid,
@@ -238,9 +299,9 @@ let customPropAssignments: Record<string, AnchorFunction[]> = {};
 // replaced in the CSS
 let customPropOriginals: Record<string, string> = {};
 // Top-level key (`uuid`) is the original uuid to find in the updated CSS
-// - `key` (`propUuid`) is the new inset-property-specific uuid to append to the
+// - `key` (`propUuid`) is the new property-specific uuid to append to the
 //   original custom property name
-// - `value` is the new inset-property-specific custom property value to use
+// - `value` is the new property-specific custom property value to use
 let customPropReplacements: Record<string, Record<string, string>> = {};
 
 // Objects are declared at top-level to keep code cleaner,
@@ -258,7 +319,11 @@ function getAnchorFunctionData(
   declaration: csstree.Declaration | null,
   rule?: csstree.Raw,
 ) {
-  if (isAnchorFunction(node) && rule?.value && declaration) {
+  if (
+    (isAnchorFunction(node) || isAnchorSizeFunction(node)) &&
+    rule?.value &&
+    declaration
+  ) {
     if (declaration.property.startsWith('--')) {
       const original = csstree.generate(declaration.value);
       const data = parseAnchorFn(node, true);
@@ -270,7 +335,10 @@ function getAnchorFunctionData(
       ];
       return { changed: true };
     }
-    if (isInset(declaration.property)) {
+    if (
+      isInsetProp(declaration.property) ||
+      isSizingProp(declaration.property)
+    ) {
       const data = parseAnchorFn(node, true);
       return { prop: declaration.property, data, changed: true };
     }
@@ -302,7 +370,10 @@ function getPositionFallbackRules(node: csstree.CssNode) {
         declarations.forEach((child) => {
           const firstChild = child.value.children.first as csstree.CssNode;
           // Parse value if it's an `anchor()` fn; otherwise store it raw
-          if (firstChild && isAnchorFunction(firstChild)) {
+          if (
+            firstChild &&
+            (isAnchorFunction(firstChild) || isAnchorSizeFunction(firstChild))
+          ) {
             tryBlock[child.property] = parseAnchorFn(firstChild);
           } else {
             tryBlock[child.property] = csstree.generate(child.value);
@@ -525,7 +596,7 @@ export async function parseCSS(styleData: StyleData[]) {
     toCheckAgain.forEach((s) => customPropsToCheck.add(s));
   }
 
-  // Then find where CSS custom properties are used in inset properties...
+  // Then find where CSS custom properties are used in inset/sizing properties:
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -541,8 +612,8 @@ export async function parseCSS(styleData: StyleData[]) {
           declaration &&
           prop &&
           node.children.first &&
-          // Now we only want assignments to inset properties
-          isInset(prop)
+          // Now we only want assignments to inset/sizing properties
+          (isInsetProp(prop) || isSizingProp(prop))
         ) {
           const child = node.children.first as csstree.Identifier;
           // Find anchor data assigned to this custom property
@@ -558,7 +629,8 @@ export async function parseCSS(styleData: StyleData[]) {
 
           /*
 
-            An anchor fn was assigned to an inset property.
+            An anchor (or anchor-size) fn was assigned to an inset (or sizing)
+            property.
 
             It's possible that there are multiple uses of the same CSS
             custom property name, with different anchor function calls
@@ -566,8 +638,8 @@ export async function parseCSS(styleData: StyleData[]) {
             cascaded to the given location, we iterate over all anchor
             functions that were assigned to the given CSS custom property
             name. For each one, we add a new custom prop with the value
-            for that target and inset property, and let CSS determine which
-            one cascades through to where it's used.
+            for that target and inset/sizing property, and let CSS determine
+            which one cascades down to where it's used.
 
             For example, this:
 
@@ -606,7 +678,7 @@ export async function parseCSS(styleData: StyleData[]) {
           // another custom property (and not a direct reference to an anchor
           // fn), we want to replace the reference to its "parent" property with
           // a direct reference to the resolved value of the parent property for
-          // this given inset property (e.g. top or left). We do this
+          // this given inset/sizing property (e.g. top or width). We do this
           // recursively back up the chain of references...
           if (referencedFns.length) {
             const ancestorProps = new Set([child.name]);
@@ -620,9 +692,9 @@ export async function parseCSS(styleData: StyleData[]) {
                       // the updated CSS
                       customPropReplacements[uuid] = {
                         ...customPropReplacements[uuid],
-                        // - `key` (`propUuid`) is the inset-property-specific
+                        // - `key` (`propUuid`) is the property-specific
                         //   uuid to append to the new custom property name
-                        // - `value` is the new inset-property-specific custom
+                        // - `value` is the new property-specific custom
                         //   property value to use
                         [propUuid]: `${name}-${propUuid}`,
                       };
@@ -638,7 +710,7 @@ export async function parseCSS(styleData: StyleData[]) {
             }
           }
 
-          // When `anchor()` is used multiple times in different inset
+          // When `anchor()` is used multiple times in different inset/sizing
           // properties, the value will be different each time. So we append
           // the property to the uuid, and update the CSS property to point
           // to the new uuid...
@@ -658,9 +730,9 @@ export async function parseCSS(styleData: StyleData[]) {
             // the updated CSS:
             customPropReplacements[uuid] = {
               ...customPropReplacements[uuid],
-              // - `key` (`propUuid`) is the inset-property-specific
+              // - `key` (`propUuid`) is the property-specific
               //   uuid to append to the new custom property name
-              // - `value` is the new inset-property-specific custom
+              // - `value` is the new property-specific custom
               //   property value to use
               [propUuid]: uuidWithProp,
             };
@@ -699,7 +771,7 @@ export async function parseCSS(styleData: StyleData[]) {
             const positions = customPropReplacements[child.name];
             if (positions) {
               for (const [propUuid, value] of Object.entries(positions)) {
-                // Add new inset-property-specific declarations
+                // Add new property-specific declarations
                 this.block.children.appendData({
                   type: 'Declaration',
                   important: false,
