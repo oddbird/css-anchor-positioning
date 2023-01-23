@@ -20,10 +20,11 @@ describe('parseCSS', () => {
         <div id="my-target-positioning" class="target">Target</div>
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
-  `;
+    `;
     const anchorEl = document.getElementById('my-anchor-positioning');
     const targetEl = document.getElementById('my-target-positioning');
     const css = getSampleCSS('anchor-positioning');
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
 
     const expected = {
@@ -140,6 +141,7 @@ describe('parseCSS', () => {
         top: anchor(--my-anchor bottom);
       }
     `;
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#f1': {
@@ -177,6 +179,7 @@ describe('parseCSS', () => {
         top: anchor(--my-anchor bottom);
       }
     `;
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
       '#f1': {
@@ -451,9 +454,10 @@ describe('parseCSS', () => {
         <div id="my-target-size" class="target">Target</div>
         <div id="my-anchor-size" class="anchor">Anchor</div>
       </div>
-  `;
+    `;
     const anchorEl = document.getElementById('my-anchor-size');
     const css = getSampleCSS('anchor-size');
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
 
     const expected = {
@@ -478,8 +482,12 @@ describe('parseCSS', () => {
   });
 
   it('parses `@position-fallback` strategy', async () => {
-    document.body.innerHTML =
-      '<div style="position: relative"><div id="my-target-fallback"></div><div id="my-anchor-fallback"></div></div>';
+    document.body.innerHTML = `
+      <div style="position: relative">
+        <div id="my-target-fallback" style="position: absolute"></div>
+        <div id="my-anchor-fallback"></div>
+      </div>
+    `;
     const anchorEl = document.getElementById('my-anchor-fallback');
     const css = getSampleCSS('position-fallback');
     const { rules } = await parseCSS([{ css }] as StyleData[]);
@@ -598,7 +606,12 @@ describe('parseCSS', () => {
   });
 
   it('parses `@position-fallback` with unknown anchor name', async () => {
-    document.body.innerHTML = '<div id="my-target-fallback"></div>';
+    document.body.innerHTML = `
+      <div style="position: relative">
+        <div id="my-target-fallback" style="position: absolute"></div>
+        <div id="my-anchor-fallback"></div>
+      </div>
+    `;
     const css = `
       #my-target-fallback {
         position: absolute;

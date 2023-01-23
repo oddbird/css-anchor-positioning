@@ -1,8 +1,9 @@
 #my-anchor-size {
   anchor-name: --my-anchor;
-  width: 5em;
+  width: 10em;
 }
 
 #my-target-size {
+  position: absolute;
   width: anchor-size(--my-anchor width);
 }

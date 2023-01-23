@@ -110,6 +110,8 @@ describe('getPixelValue [anchor() fn]', () => {
       { ...obj, anchorSide: 'left', targetProperty: 'left', targetEl: null },
       '0px',
     ],
+    [{ ...obj, anchorSide: 'left', targetProperty: 'top' }, '0px'],
+    [{ ...obj, anchorSide: 'left', targetProperty: 'width' }, '0px'],
     [{ ...obj, anchorSide: 'right', targetProperty: 'left' }, '30px'],
     [{ ...obj, anchorSide: 'top', targetProperty: 'top' }, '50px'],
     [{ ...obj, anchorSide: 'bottom', targetProperty: 'top' }, '90px'],
@@ -160,6 +162,7 @@ describe('getPixelValue [anchor-size() fn]', () => {
   const obj = {
     anchorRect,
     fallback: '0px',
+    targetEl: {},
   };
 
   beforeAll(() => {
@@ -174,7 +177,13 @@ describe('getPixelValue [anchor-size() fn]', () => {
 
   it.each([
     [{ ...obj, anchorSize: 'width', targetProperty: 'width' }, '20px'],
+    [{ ...obj, anchorSize: 'width', targetProperty: 'color' }, '0px'],
+    [{ ...obj, anchorSize: 'foo', targetProperty: 'width' }, '0px'],
     [{ ...obj, anchorSize: 'block', targetProperty: 'height' }, '40px'],
+    [
+      { ...obj, anchorSize: 'width', targetProperty: 'width', targetEl: null },
+      '0px',
+    ],
   ] as [GetPixelValueOpts, string][])(
     'returns pixel value for anchor fn',
     async (opts, expected) => {

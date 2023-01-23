@@ -1,5 +1,15 @@
 import { type Page, Browser, expect, test } from '@playwright/test';
 
+import {
+  isValidAnchorElement,
+  validatedForPositioning,
+} from '../../src/validate.js';
+
+interface LocalWindow extends Window {
+  isValidAnchorElement: typeof isValidAnchorElement;
+  validatedForPositioning: typeof validatedForPositioning;
+}
+
 async function buildPage(browser: Browser) {
   const page = await browser.newPage();
   await page.goto('/');
@@ -20,8 +30,10 @@ async function buildPage(browser: Browser) {
   let loading = true;
   while (loading) {
     loading = await page.evaluate(() => {
-      document.getSelection('script');
-      return window.isValidAnchorElement === undefined;
+      document.getSelection();
+      return (
+        (window as unknown as LocalWindow).isValidAnchorElement === undefined
+      );
     });
   }
 
@@ -45,7 +57,10 @@ async function callValidFunction(page: Page) {
         const anchorElement = document.querySelector(
           anchorSelector,
         ) as HTMLElement;
-        return await isValidAnchorElement(anchorElement, targetElement);
+        if (anchorElement && targetElement) {
+          return await isValidAnchorElement(anchorElement, targetElement);
+        }
+        return false;
       },
       [anchorSelector, targetSelector],
     );
@@ -451,7 +466,7 @@ test('target anchor element is first element el in tree order.', async ({
         <div class="cb">
           <div class="anchor1 size5x7 not-positioned-cb" id="my-anchor-positioning5">
             <div class="anchor1 size9x11" id="my-anchor-positioning"></div>
-            <div class="target9" style="left: anchor(--a1 right)" id="my-target-positioning" data-offset-x=9></div>
+            <div class="target target9" style="left: anchor(--a1 right)" id="my-target-positioning" data-offset-x=9></div>
           </div>
           <div class="target" style="left: anchor(--a1 right)" data-offset-x=5></div>
         </div>
@@ -481,7 +496,9 @@ test('target anchor element is first element el in tree order.', async ({
       ]).then((value) => value);
 
       validatedData.results = { anchor };
-      validatedData.anchorWidth = getComputedStyle(anchor).width;
+      if (anchor) {
+        validatedData.anchorWidth = getComputedStyle(anchor).width;
+      }
 
       return validatedData;
     },

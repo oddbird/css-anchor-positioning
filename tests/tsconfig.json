@@ -2,7 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "isolatedModules": false,
-    "types": ["vitest/globals"]
+    "types": ["vitest/globals"],
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "include": ["./**/*.ts"]
 }

@@ -28,15 +28,15 @@ function isContainingBlockDescendant(
   }
 }
 
-export function isWindow(el: Element | Window | undefined): el is Window {
+function isWindow(el: Element | Window | undefined): el is Window {
   return Boolean(el && el === (el as Window).window);
 }
 
-export function isFixedPositioned(el: HTMLElement) {
+function isFixedPositioned(el: HTMLElement) {
   return hasStyle(el, 'position', 'fixed');
 }
 
-export function isAbsolutelyPositioned(el?: HTMLElement | null) {
+function isAbsolutelyPositioned(el?: HTMLElement | null) {
   return Boolean(
     el && (isFixedPositioned(el) || hasStyle(el, 'position', 'absolute')),
   );
@@ -107,7 +107,13 @@ export async function validatedForPositioning(
   targetEl: HTMLElement | null,
   anchorSelectors: string[],
 ) {
-  if (!targetEl || anchorSelectors.length === 0) {
+  if (
+    !(
+      targetEl instanceof HTMLElement &&
+      anchorSelectors.length &&
+      isAbsolutelyPositioned(targetEl)
+    )
+  ) {
     return null;
   }
 

@@ -5,8 +5,13 @@ import {
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
+  AnchorFunction,
   getCSSPropertyValue,
+  InsetProperty,
+  isInsetProp,
+  isSizingProp,
   parseCSS,
+  SizingProperty,
 } from './parse.js';
 import { transformCSS } from './transform.js';
 
@@ -93,7 +98,7 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
 
 export interface GetPixelValueOpts {
   targetEl?: HTMLElement;
-  targetProperty: string;
+  targetProperty: InsetProperty | SizingProperty;
   anchorRect?: Rect;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
@@ -108,7 +113,15 @@ export const getPixelValue = async ({
   anchorSize,
   fallback,
 }: GetPixelValueOpts) => {
+  if (!((anchorSize || anchorSide !== undefined) && targetEl && anchorRect)) {
+    return fallback;
+  }
   if (anchorSize) {
+    // anchor-size() can only be assigned to sizing properties:
+    // https://drafts.csswg.org/css-anchor-1/#queries
+    if (!isSizingProp(targetProperty)) {
+      return fallback;
+    }
     // Calculate value for `anchor-size()` fn...
     let size: AnchorSize | undefined;
     switch (anchorSize) {
@@ -119,20 +132,18 @@ export const getPixelValue = async ({
       default: {
         let vertical = false;
         // Logical keywords require checking the writing-mode
-        // of the target element (or its containing block)
-        if (targetEl) {
-          // `block` and `inline` should use the writing-mode of the element's
-          // containing block, not the element itself:
-          // https://trello.com/c/KnqCnHx3
-          const writingMode = getCSSPropertyValue(targetEl, 'writing-mode');
-          vertical =
-            writingMode.startsWith('vertical-') ||
-            writingMode.startsWith('sideways-');
-        }
+        // of the target element (or its containing block):
+        // `block` and `inline` should use the writing-mode of the element's
+        // containing block, not the element itself:
+        // https://trello.com/c/KnqCnHx3
+        const writingMode = getCSSPropertyValue(targetEl, 'writing-mode');
+        vertical =
+          writingMode.startsWith('vertical-') ||
+          writingMode.startsWith('sideways-');
         size = resolveLogicalSizeKeyword(anchorSize, vertical);
       }
     }
-    if (anchorRect && size) {
+    if (size) {
       return `${anchorRect[size]}px`;
     }
     return fallback;
@@ -143,6 +154,20 @@ export const getPixelValue = async ({
     let percentage: number | undefined;
     let offsetParent: Element | Window | HTMLElement | undefined;
     const axis = getAxis(targetProperty);
+
+    // anchor() can only be assigned to inset properties,
+    // and if a physical keyword ('left', 'right', 'top', 'bottom') is used,
+    // the axis of the keyword must match the axis of the inset property:
+    // https://drafts.csswg.org/css-anchor-1/#queries
+    if (
+      !(
+        isInsetProp(targetProperty) &&
+        axis &&
+        (!isInsetProp(anchorSide) || axis === getAxis(anchorSide))
+      )
+    ) {
+      return fallback;
+    }
 
     switch (anchorSide) {
       case 'left':
@@ -163,7 +188,7 @@ export const getPixelValue = async ({
       default:
         // Logical keywords require checking the writing direction
         // of the target element (or its containing block)
-        if (anchorSide !== undefined && targetEl) {
+        if (targetEl) {
           // `start` and `end` should use the writing-mode of the element's
           // containing block, not the element itself:
           // https://trello.com/c/KnqCnHx3
@@ -176,7 +201,7 @@ export const getPixelValue = async ({
       typeof percentage === 'number' && !Number.isNaN(percentage);
 
     const dir = getAxisProperty(axis);
-    if (hasPercentage && axis && dir && targetEl && anchorRect) {
+    if (hasPercentage && dir) {
       if (targetProperty === 'bottom' || targetProperty === 'right') {
         offsetParent = await platform.getOffsetParent?.(targetEl);
         if (!(await platform.isElement?.(offsetParent))) {
@@ -228,7 +253,7 @@ async function position(rules: AnchorPositions) {
 
     for (const [property, anchorValues] of Object.entries(
       position.declarations,
-    )) {
+    ) as [InsetProperty | SizingProperty, AnchorFunction[]][]) {
       for (const anchorValue of anchorValues) {
         const anchor = anchorValue.anchorEl;
         const target = anchorValue.targetEl;
