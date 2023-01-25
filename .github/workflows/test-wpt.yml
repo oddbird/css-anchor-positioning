@@ -67,7 +67,7 @@ jobs:
       - name: Build polyfill
         run: |
           yarn install --immutable
-          yarn build
+          yarn build:wpt
 
       - name: Setup WPT
         run: |
@@ -80,7 +80,7 @@ jobs:
           python3 -m http.server 9606 &
           cd ../wpt
           ./wpt manifest
-          ./wpt serve --inject-script=${{ github.workspace }}/dist/css-anchor-positioning.umd.cjs &
+          ./wpt serve --inject-script=${{ github.workspace }}/dist/css-anchor-positioning-wpt.umd.cjs &
           cd ..
           cp -r wpt-results/test-results .
           yarn test:wpt

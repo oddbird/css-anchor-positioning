@@ -10,7 +10,16 @@ export default defineConfig({
   build: process.env.NETLIFY
     ? {}
     : {
-        lib: process.env.BUILD_FN
+        lib: process.env.BUILD_WPT
+          ? // build that adds a delay variable for WPT test-runner
+            {
+              entry: resolve(__dirname, 'src/index-wpt.ts'),
+              name: 'CssAnchorPositioning',
+              formats: ['umd'],
+              // the proper extensions will be added
+              fileName: 'css-anchor-positioning-wpt',
+            }
+          : process.env.BUILD_FN
           ? // build that exposes the polyfill as a fn
             {
               entry: resolve(__dirname, 'src/index-fn.ts'),
@@ -45,7 +54,7 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text-summary', 'html'],
       include: ['src/**/*.{js,ts}'],
-      exclude: ['src/index.ts', 'src/index-fn.ts'],
+      exclude: ['src/index.ts', 'src/index-fn.ts', 'src/index-wpt.ts'],
       skipFull: true,
       all: true,
     },
