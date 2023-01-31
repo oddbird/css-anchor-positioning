@@ -1,11 +1,11 @@
-import { type Rect, autoUpdate, platform } from '@floating-ui/dom';
+import { autoUpdate, platform, type Rect } from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import {
+  AnchorFunction,
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
-  AnchorFunction,
   getCSSPropertyValue,
   InsetProperty,
   isInsetProp,
