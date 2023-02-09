@@ -1,8 +1,15 @@
-import { autoUpdate, platform, type Rect } from '@floating-ui/dom';
+import {
+  autoUpdate,
+  detectOverflow,
+  MiddlewareArguments,
+  platform,
+  type Rect,
+} from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import {
   AnchorFunction,
+  AnchorFunctionDeclaration,
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
@@ -12,8 +19,11 @@ import {
   isSizingProp,
   parseCSS,
   SizingProperty,
+  TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
+
+const platformWithCache = { ...platform, _c: new Map() };
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -243,49 +253,102 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-async function position(rules: AnchorPositions) {
+async function applyAnchorPositions(declarations: AnchorFunctionDeclaration) {
   const root = document.documentElement;
 
-  for (const position of Object.values(rules)) {
-    if (!position.declarations || !Object.keys(position.declarations).length) {
-      continue;
-    }
-
-    for (const [property, anchorValues] of Object.entries(
-      position.declarations,
-    ) as [InsetProperty | SizingProperty, AnchorFunction[]][]) {
-      for (const anchorValue of anchorValues) {
-        const anchor = anchorValue.anchorEl;
-        const target = anchorValue.targetEl;
-        if (anchor && target) {
-          autoUpdate(anchor, target, async () => {
-            const rects = await platform.getElementRects({
-              reference: anchor,
-              floating: target,
-              strategy: 'absolute',
-            });
-            const resolved = await getPixelValue({
-              targetEl: target,
-              targetProperty: property,
-              anchorRect: rects.reference,
-              anchorSide: anchorValue.anchorSide,
-              anchorSize: anchorValue.anchorSize,
-              fallback: anchorValue.fallbackValue,
-            });
-            root.style.setProperty(anchorValue.uuid, resolved);
+  for (const [property, anchorValues] of Object.entries(declarations) as [
+    InsetProperty | SizingProperty,
+    AnchorFunction[],
+  ][]) {
+    for (const anchorValue of anchorValues) {
+      const anchor = anchorValue.anchorEl;
+      const target = anchorValue.targetEl;
+      if (anchor && target) {
+        autoUpdate(anchor, target, async () => {
+          const rects = await platform.getElementRects({
+            reference: anchor,
+            floating: target,
+            strategy: 'absolute',
           });
-        } else {
-          // Use fallback value
           const resolved = await getPixelValue({
+            targetEl: target,
             targetProperty: property,
+            anchorRect: rects.reference,
             anchorSide: anchorValue.anchorSide,
             anchorSize: anchorValue.anchorSize,
             fallback: anchorValue.fallbackValue,
           });
           root.style.setProperty(anchorValue.uuid, resolved);
-        }
+        });
+      } else {
+        // Use fallback value
+        const resolved = await getPixelValue({
+          targetProperty: property,
+          anchorSide: anchorValue.anchorSide,
+          anchorSize: anchorValue.anchorSize,
+          fallback: anchorValue.fallbackValue,
+        });
+        root.style.setProperty(anchorValue.uuid, resolved);
       }
     }
+  }
+}
+
+async function applyPositionFallbacks(
+  targetSel: string,
+  fallbacks: TryBlock[],
+) {
+  if (!fallbacks.length) {
+    return;
+  }
+
+  const root = document.documentElement;
+  const targets: NodeListOf<HTMLElement> = document.querySelectorAll(targetSel);
+
+  for (const target of targets) {
+    let checking = false;
+    autoUpdate(root, target, async () => {
+      if (checking) {
+        return;
+      }
+      checking = true;
+      for (const [index, { uuid }] of fallbacks.entries()) {
+        target.setAttribute('data-fallback-try', uuid);
+        if (index === fallbacks.length - 1) {
+          checking = false;
+          break;
+        }
+        const rects = await platform.getElementRects({
+          reference: root,
+          floating: target,
+          strategy: 'absolute',
+        });
+        const overflow = await detectOverflow({
+          x: target.offsetLeft,
+          y: target.offsetTop,
+          platform: platformWithCache,
+          rects,
+          elements: { floating: target, reference: root },
+          strategy: 'absolute',
+        } as unknown as MiddlewareArguments);
+        if (Object.values(overflow).every((side) => side <= 0)) {
+          checking = false;
+          break;
+        }
+      }
+    });
+  }
+}
+
+async function position(rules: AnchorPositions) {
+  for (const pos of Object.values(rules)) {
+    // Handle `anchor()` and `anchor-size()` functions...
+    await applyAnchorPositions(pos.declarations ?? {});
+  }
+
+  for (const [targetSel, position] of Object.entries(rules)) {
+    // Handle `@position-fallback` blocks...
+    await applyPositionFallbacks(targetSel, position.fallbacks ?? []);
   }
 }
 
@@ -297,11 +360,11 @@ export async function polyfill() {
   const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
+    // update source code
+    await transformCSS(styleData, inlineStyles);
+
     // calculate position values
     await position(rules);
-
-    // update source code
-    transformCSS(styleData, inlineStyles);
   }
 
   return rules;

@@ -47,8 +47,10 @@ body {
     minmax(var(--page-margin), 1fr) [full-end];
   margin: 0;
   overflow-x: hidden;
+}
 
-  @media (min-width: 30em) {
+@media (min-width: 30em) {
+  body {
     --page-margin: calc(var(--size-6) + 4vw);
   }
 }

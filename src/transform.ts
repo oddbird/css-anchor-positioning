@@ -1,18 +1,28 @@
 import { type StyleData } from './fetch.js';
 
-export function transformCSS(
+export async function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
 ) {
-  styleData.forEach(({ el, css, changed }) => {
+  for (const { el, css, changed } of styleData) {
     if (changed) {
       if (el.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el.tagName.toLowerCase() === 'link') {
-        // Handle linked stylesheets
+        // Create new link
         const blob = new Blob([css], { type: 'text/css' });
-        (el as HTMLLinkElement).href = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = url;
+        const promise = new Promise((res) => {
+          link.onload = res;
+        });
+        el.replaceWith(link);
+        // Wait for new stylesheet to be loaded
+        await promise;
+        URL.revokeObjectURL(url);
       } else if (el.hasAttribute('data-anchor-polyfill')) {
         // Handle inline styles
         const attr = el.getAttribute('data-anchor-polyfill');
@@ -36,5 +46,5 @@ export function transformCSS(
     if (el.hasAttribute('data-anchor-polyfill')) {
       el.removeAttribute('data-anchor-polyfill');
     }
-  });
+  }
 }

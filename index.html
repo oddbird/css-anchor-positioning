@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
     <link rel="stylesheet" href="https://unpkg.com/open-props" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
+    />
     <link rel="stylesheet" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
@@ -49,6 +53,8 @@
         );
       }
     </script>
+    <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
+    <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
   </head>
   <body>
     <header>
@@ -147,8 +153,8 @@
     </section>
     <section id="anchor-positioning" class="demo-item">
       <h2>
-        <a href="#anchor-positioning" aria-hidden="true">🔗</a> Anchor
-        Positioning via anchor() [stylesheet]
+        <a href="#anchor-positioning" aria-hidden="true">🔗</a>
+        Positioning with <code>anchor()</code> [stylesheet]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-target-positioning" class="target">Target</div>
@@ -158,8 +164,8 @@
         With polyfill applied: Target and Anchor's right edges line up. Target's
         top edge lines up with the bottom edge of the Anchor.
       </p>
-      <pre>
-#my-anchor-positioning {
+      <pre><code class="language-css"
+>#my-anchor-positioning {
   anchor-name: --my-anchor-positioning;
 }
 
@@ -167,13 +173,12 @@
   position: absolute;
   top: anchor(--my-anchor-positioning bottom);
   right: anchor(--my-anchor-positioning right, 50px);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="anchor-style-tag" class="demo-item">
       <h2>
         <a href="#anchor-style-tag" aria-hidden="true">🔗</a>
-        Anchor Positioning via anchor() [&lt;style&gt; tag]
+        Positioning with <code>anchor()</code> [&lt;style&gt; tag]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-target-style-tag" class="target">Target</div>
@@ -183,8 +188,8 @@
         With polyfill applied: Target is positioned at the top left corner of
         the Anchor.
       </p>
-      <pre>
-/* a <code>style</code> tag */
+      <pre><code class="language-css"
+>/* a &lt;style&gt; tag */
 
 #my-anchor-style-tag {
   anchor-name: --my-anchor-style-tag;
@@ -194,13 +199,12 @@
   position: absolute;
   bottom: anchor(--my-anchor-style-tag start);
   right: anchor(--my-anchor-style-tag left);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="anchor-inline" class="demo-item">
       <h2>
         <a href="#anchor-inline" aria-hidden="true">🔗</a>
-        Anchor Positioning via anchor() [inline styles]
+        Positioning with <code>anchor()</code> [inline styles]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div
@@ -226,8 +230,8 @@
         With polyfill applied: Target and Anchor's right edges line up. Target's
         top edge lines up with the bottom edge of the Anchor.
       </p>
-      <pre>
-/* inline <code>style</code> attributes */
+      <pre><code class="language-css"
+>/* inline &lt;style&gt; attributes */
 
 /* anchor */
 
@@ -239,13 +243,13 @@
     position: absolute;
     top: anchor(--my-anchor-in-line bottom);
     right: anchor(--my-anchor-in-line right);
-  "</pre
-      >
+  "</code></pre>
     </section>
     <section id="implicit-name" class="demo-item">
       <h2>
         <a href="#implicit-name" aria-hidden="true">🔗</a>
-        Anchor() [with implicit anchor via "anchor" attribute]
+        Positioning with <code>anchor()</code> [implicit
+        <code>anchor</code> attribute]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-implicit-anchor" class="anchor">Anchor</div>
@@ -257,21 +261,22 @@
         With polyfill applied: Target is positioned at the top left corner of
         the Anchor.
       </p>
-      <pre>
-&lt;div id="my-implicit-anchor"&gt;Anchor&lt;/div&gt;
-&lt;div id="my-implicit-target" anchor="my-implicit-anchor"&gt;Target&lt;/div&gt;
+      <pre><code class="language-html"
+>&lt;div id="my-implicit-anchor"&gt;Anchor&lt;/div&gt;
+&lt;div id="my-implicit-target" anchor="my-implicit-anchor"&gt;Target&lt;/div&gt;</code>
 
-#my-implicit-target {
+<code class="language-css"
+>#my-implicit-target {
   position: absolute;
   right: anchor(left);
   bottom: anchor(top);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="custom-prop-name" class="demo-item">
       <h2>
         <a href="#custom-prop-name" aria-hidden="true">🔗</a>
-        Anchor() [with anchor name set as CSS custom property]
+        Positioning with <code>anchor()</code> [anchor name set as CSS custom
+        property]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-name-prop" class="anchor">Anchor</div>
@@ -281,8 +286,8 @@
         With polyfill applied: Target is positioned at the top left corner of
         the Anchor.
       </p>
-      <pre>
-#my-anchor-name-prop {
+      <pre><code class="language-css"
+>#my-anchor-name-prop {
   anchor-name: --my-anchor-name-prop;
 }
 
@@ -292,82 +297,100 @@
   position: absolute;
   right: anchor(var(--anchor-var) left);
   bottom: anchor(var(--anchor-var) top);
-}</pre
-      >
+}</code></pre>
     </section>
-    <!-- <section id="position-fallback" class="demo-item">
+    <section id="position-fallback" class="demo-item">
       <h2>
         <a href="#position-fallback" aria-hidden="true">🔗</a>
-        Anchor Positioning via position-fallback
+        Positioning with <code>@position-fallback</code>
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-target-fallback" class="target">Target</div>
-        <div id="my-anchor-fallback" class="anchor">Anchor</div>
+        <div class="scroll-container">
+          <div class="scroll-contents">
+            <div class="placefiller-above-anchor"></div>
+            <div class="placefiller-before-anchor"></div>
+            <span id="my-anchor-fallback" class="anchor"
+              >@position-fallback Anchor</span
+            >
+            <div id="my-target-fallback" class="target">Target</div>
+          </div>
+        </div>
       </div>
-      <p class="note">
-        With polyfill applied: Target's bottom sits at 25% of the height of the
-        Anchor. The left edge of the Target is aligned with the right edge of
-        the Anchor. If there is no space for the Target element at the initial
-        position, the
-        <code>@position-fallback</code> block lists additional positioning
-        alternatives to try.
-      </p>
-      <pre>
-#my-anchor-fallback {
+      <div class="note">
+        <p>
+          With polyfill applied, the following positions are attempted in order:
+        </p>
+        <ol>
+          <li>
+            Align the bottom, left edge of the target with the top, left edge of
+            the anchor.
+          </li>
+          <li>
+            Align the top, left edge of the target with the bottom, left edge of
+            the anchor.
+          </li>
+          <li>
+            Align the bottom, right edge of the target with the top, right edge
+            of the anchor.
+          </li>
+          <li>
+            Align the top, right edge of the target with the bottom, right edge
+            of the anchor, and increase the height and width of the target.
+          </li>
+        </ol>
+      </div>
+      <pre><code class="language-css"
+>#my-anchor-fallback {
   anchor-name: --my-anchor-fallback;
 }
 
 #my-target-fallback {
-  bottom: anchor(--my-anchor-fallback 25%);
-  left: anchor(--my-anchor-fallback right);
   position: absolute;
   position-fallback: --fallback1;
 }
 
 @position-fallback --fallback1 {
+  /* First try to align the bottom, left edge of the target
+     with the top, left edge of the anchor. */
   @try {
-    /* 1: Position to the right of the anchor. */
-    left: anchor(--my-anchor-fallback right, 10px);
-    top: anchor(--my-anchor-fallback top);
-}
-
-  @try {
-    /* 2: Position to the left of the anchor. */
-    right: anchor(--my-anchor-fallback left);
-    top: anchor(--my-anchor-fallback top);
-}
-
-  @try {
-    /* 3: Position to the bottom of the anchor. */
-    left: anchor(--my-anchor-fallback left);
-    top: anchor(--my-anchor-fallback bottom);
-}
-
-  @try {
-    /* 4: Position to the top of the anchor. */
     bottom: anchor(--my-anchor-fallback top);
     left: anchor(--my-anchor-fallback left);
-}
-
-  @try {
-    /* 5: Position to the left with the narrower width. */
-    height: 40px;
-    left: anchor(--my-anchor-fallback right);
-    top: anchor(--my-anchor-fallback top);
-    width: 35px;
   }
-}</pre>
-    </section> -->
+
+  /* Next try to align the top, left edge of the target
+     with the bottom, left edge of the anchor. */
+  @try {
+    top: anchor(--my-anchor-fallback bottom);
+    left: anchor(--my-anchor-fallback left);
+  }
+
+  /* Next try to align the bottom, right edge of the target
+     with the top, right edge of the anchor. */
+  @try {
+    bottom: anchor(--my-anchor-fallback top);
+    right: anchor(--my-anchor-fallback right);
+  }
+
+  /* Finally, try to align the top, right edge of the target
+     with the bottom, right edge of the anchor. */
+  @try {
+    top: anchor(--my-anchor-fallback bottom);
+    right: anchor(--my-anchor-fallback right);
+    width: 6em;
+    height: 6em;
+  }
+}</code></pre>
+    </section>
     <section id="anchor-scroll" class="demo-item">
       <h2>
         <a href="#anchor-scroll" aria-hidden="true">🔗</a>
-        Anchor Positioning [with scroll]
+        Positioning with <code>anchor()</code> [scrolling elements]
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="scroll-container">
-          <div id="scroll-contents">
-            <div id="placefiller-above-anchor"></div>
-            <div id="placefiller-before-anchor"></div>
+        <div class="scroll-container">
+          <div class="scroll-contents">
+            <div class="placefiller-above-anchor"></div>
+            <div class="placefiller-before-anchor"></div>
             <span id="scroll-anchor" class="anchor">Anchor</span>
             <div id="inner-anchored" class="target">Inner-anchored Target</div>
           </div>
@@ -381,8 +404,8 @@
         top right corner of the Anchor. The Outer-anchored Target is positioned
         at the bottom left corner of the Anchor.
       </p>
-      <pre>
-#scroll-anchor {
+      <pre><code class="language-css"
+>#scroll-anchor {
   anchor-name: --scroll-anchor;
 }
 
@@ -396,42 +419,13 @@
   position: absolute;
   top: anchor(--scroll-anchor bottom);
   right: anchor(--scroll-anchor start);
-}</pre
-      >
-    </section>
-    <section id="custom-prop" class="demo-item">
-      <h2>
-        <a href="#custom-prop" aria-hidden="true">🔗</a>
-        Anchor() [assigned to CSS custom property]
-      </h2>
-      <div style="position: relative" class="demo-elements">
-        <div id="my-anchor" class="anchor">Anchor</div>
-        <div id="my-target" class="target">Target</div>
-      </div>
-      <p class="note">
-        With polyfill applied: Target's top edge is positioned at 50% of the
-        height of the Anchor. The right edge of the Target lines up with 100% of
-        the width of the Anchor (i.e. the Anchor's right edge).
-      </p>
-      <pre>
-#my-anchor {
-  anchor-name: --my-anchor;
-}
-
-#my-target {
-  --center: anchor(--my-anchor 50%);
-  --full: anchor(--my-anchor 100%);
-
-  position: absolute;
-  top: var(--center);
-  right: var(--full);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="math-function" class="demo-item">
       <h2>
         <a href="#math-function" aria-hidden="true">🔗</a>
-        Anchor() [used in math function]
+        Positioning with <code>anchor()</code> [used in
+        <code>calc()</code> function]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-math" class="anchor">Anchor</div>
@@ -442,8 +436,8 @@
         right edge). The top edge of the Target is 50px above the bottom edge of
         the Anchor.
       </p>
-      <pre>
-#my-anchor-math {
+      <pre><code class="language-css"
+>#my-anchor-math {
   anchor-name: --my-anchor-math;
 }
 
@@ -454,13 +448,42 @@
   position: absolute;
   top: calc(var(--full-math) - 50px);
   left: var(--full-minus-math);
-}</pre
-      >
+}</code></pre>
+    </section>
+    <section id="custom-prop" class="demo-item">
+      <h2>
+        <a href="#custom-prop" aria-hidden="true">🔗</a>
+        Positioning with <code>anchor()</code> [passed through CSS custom
+        property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor" class="anchor">Anchor</div>
+        <div id="my-target" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target's top edge is positioned at 50% of the
+        height of the Anchor. The right edge of the Target lines up with 100% of
+        the width of the Anchor (i.e. the Anchor's right edge).
+      </p>
+      <pre><code class="language-css"
+>#my-anchor {
+  anchor-name: --my-anchor;
+}
+
+#my-target {
+  --center: anchor(--my-anchor 50%);
+  --full: anchor(--my-anchor 100%);
+
+  position: absolute;
+  top: var(--center);
+  right: var(--full);
+}</code></pre>
     </section>
     <section id="custom-prop-passthrough" class="demo-item">
       <h2>
         <a href="#custom-prop-passthrough" aria-hidden="true">🔗</a>
-        Anchor() [passed through multiple CSS custom properties]
+        Positioning with <code>anchor()</code> [passed through multiple CSS
+        custom properties]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-props" class="anchor">Anchor</div>
@@ -471,8 +494,8 @@
         horizontal center. Target's bottom edge is 10% above the bottom edge of
         Anchor.
       </p>
-      <pre>
-#my-anchor-props {
+      <pre><code class="language-css"
+>#my-anchor-props {
   anchor-name: --my-anchor-props;
 }
 
@@ -484,13 +507,13 @@
   position: absolute;
   left: var(--half);
   bottom: var(--tenth);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="duplicate-custom-props" class="demo-item">
       <h2>
         <a href="#duplicate-custom-props" aria-hidden="true">🔗</a>
-        Anchor() [with duplicate CSS custom properties]
+        Positioning with <code>anchor()</code> [with duplicate CSS custom
+        properties]
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="anchor-duplicate-custom-props" class="anchor">Anchor</div>
@@ -500,8 +523,8 @@
         With polyfill applied: Target's top left corner is positioned in the
         center (vertically and horizontally) of the Anchor.
       </p>
-      <pre>
-#anchor-duplicate-custom-props {
+      <pre><code class="language-css"
+>#anchor-duplicate-custom-props {
   anchor-name: --anchor-duplicate-custom-props;
 }
 
@@ -515,13 +538,12 @@
 
 #other {
   --center: anchor(--anchor-duplicate-custom-props 100%);
-}</pre
-      >
+}</code></pre>
     </section>
     <section id="anchor-size" class="demo-item">
       <h2>
         <a href="#anchor-size" aria-hidden="true">🔗</a>
-        Anchor Size
+        Sizing with <code>anchor-size()</code>
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-size" class="anchor">Anchor</div>
@@ -530,16 +552,15 @@
       <p class="note">
         With polyfill applied: Target has the same width as the Anchor.
       </p>
-      <pre>
-#my-anchor-size {
+      <pre><code class="language-css"
+>#my-anchor-size {
   anchor-name: --my-anchor;
   width: 5em;
 }
 
 #my-target-size {
   width: anchor-size(--my-anchor width);
-}</pre
-      >
+}</code></pre>
     </section>
     <footer>
       <p>
