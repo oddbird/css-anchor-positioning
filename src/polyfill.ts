@@ -324,7 +324,7 @@ async function applyPositionFallbacks(
       }
       checking = true;
       for (const [index, { uuid }] of fallbacks.entries()) {
-        target.setAttribute('data-fallback-try', uuid);
+        target.setAttribute('data-anchor-polyfill-fallback-try', uuid);
         if (index === fallbacks.length - 1) {
           checking = false;
           break;
