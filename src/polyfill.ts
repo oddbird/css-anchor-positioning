@@ -1,7 +1,7 @@
 import {
   autoUpdate,
   detectOverflow,
-  MiddlewareArguments,
+  MiddlewareState,
   platform,
   type Rect,
 } from '@floating-ui/dom';
@@ -24,6 +24,16 @@ import {
 import { transformCSS } from './transform.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
+
+const getOffsetParent = async (el: HTMLElement) => {
+  let offsetParent = await platform.getOffsetParent?.(el);
+  if (!(await platform.isElement?.(offsetParent))) {
+    offsetParent =
+      (await platform.getDocumentElement?.(el)) ||
+      window.document.documentElement;
+  }
+  return offsetParent as HTMLElement;
+};
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -162,7 +172,7 @@ export const getPixelValue = async ({
   if (anchorSide !== undefined) {
     // Calculate value for `anchor()` fn...
     let percentage: number | undefined;
-    let offsetParent: Element | Window | HTMLElement | undefined;
+    let offsetParent;
     const axis = getAxis(targetProperty);
 
     // anchor() can only be assigned to inset properties,
@@ -213,34 +223,35 @@ export const getPixelValue = async ({
     const dir = getAxisProperty(axis);
     if (hasPercentage && dir) {
       if (targetProperty === 'bottom' || targetProperty === 'right') {
-        offsetParent = await platform.getOffsetParent?.(targetEl);
-        if (!(await platform.isElement?.(offsetParent))) {
-          offsetParent =
-            (await platform.getDocumentElement?.(targetEl)) ||
-            window.document.documentElement;
-        }
+        offsetParent = await getOffsetParent(targetEl);
       }
       let value =
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
         case 'bottom': {
-          let offsetHeight = (offsetParent as HTMLElement).clientHeight;
+          if (!offsetParent) {
+            break;
+          }
+          let offsetHeight = offsetParent.clientHeight;
           // This is a hack for inline elements with `clientHeight: 0`,
           // but it doesn't take scrollbar size into account
-          if (offsetHeight === 0 && isInline(offsetParent as HTMLElement)) {
-            const border = getBorders(offsetParent as HTMLElement, axis);
-            offsetHeight = (offsetParent as HTMLElement).offsetHeight - border;
+          if (offsetHeight === 0 && isInline(offsetParent)) {
+            const border = getBorders(offsetParent, axis);
+            offsetHeight = offsetParent.offsetHeight - border;
           }
           value = offsetHeight - value;
           break;
         }
         case 'right': {
-          let offsetWidth = (offsetParent as HTMLElement).clientWidth;
+          if (!offsetParent) {
+            break;
+          }
+          let offsetWidth = offsetParent.clientWidth;
           // This is a hack for inline elements with `clientWidth: 0`,
           // but it doesn't take scrollbar size into account
-          if (offsetWidth === 0 && isInline(offsetParent as HTMLElement)) {
-            const border = getBorders(offsetParent as HTMLElement, axis);
-            offsetWidth = (offsetParent as HTMLElement).offsetWidth - border;
+          if (offsetWidth === 0 && isInline(offsetParent)) {
+            const border = getBorders(offsetParent, axis);
+            offsetWidth = offsetParent.offsetWidth - border;
           }
           value = offsetWidth - value;
           break;
@@ -302,12 +313,12 @@ async function applyPositionFallbacks(
     return;
   }
 
-  const root = document.documentElement;
   const targets: NodeListOf<HTMLElement> = document.querySelectorAll(targetSel);
 
   for (const target of targets) {
     let checking = false;
-    autoUpdate(root, target, async () => {
+    const offsetParent = await getOffsetParent(target);
+    autoUpdate(offsetParent, target, async () => {
       if (checking) {
         return;
       }
@@ -319,18 +330,33 @@ async function applyPositionFallbacks(
           break;
         }
         const rects = await platform.getElementRects({
-          reference: root,
+          reference: offsetParent,
           floating: target,
           strategy: 'absolute',
         });
-        const overflow = await detectOverflow({
-          x: target.offsetLeft,
-          y: target.offsetTop,
-          platform: platformWithCache,
-          rects,
-          elements: { floating: target, reference: root },
-          strategy: 'absolute',
-        } as unknown as MiddlewareArguments);
+        const overflow = await detectOverflow(
+          {
+            x: target.offsetLeft,
+            y: target.offsetTop,
+            platform: platformWithCache,
+            rects,
+            elements: { floating: target, reference: offsetParent },
+            strategy: 'absolute',
+          } as unknown as MiddlewareState,
+          {
+            boundary: offsetParent,
+            rootBoundary: 'document',
+            padding: {
+              left:
+                parseInt(getCSSPropertyValue(target, 'margin-left'), 10) || 0,
+              right:
+                parseInt(getCSSPropertyValue(target, 'margin-right'), 10) || 0,
+              top: parseInt(getCSSPropertyValue(target, 'margin-top'), 10) || 0,
+              bottom:
+                parseInt(getCSSPropertyValue(target, 'margin-bottom'), 10) || 0,
+            },
+          },
+        );
         if (Object.values(overflow).every((side) => side <= 0)) {
           checking = false;
           break;
