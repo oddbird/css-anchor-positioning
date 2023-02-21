@@ -3,12 +3,7 @@
   overflow: scroll;
   width: 400px;
   border: solid;
-}
-
-.scroll-contents {
-  height: 1000px;
   position: relative;
-  width: 1000px;
 }
 
 .placefiller-above-anchor {
@@ -18,6 +13,11 @@
 .placefiller-before-anchor {
   display: inline-block;
   width: 150px;
+}
+
+.placefiller-after-anchor {
+  height: 1000px;
+  width: 1000px;
 }
 
 #scroll-anchor {

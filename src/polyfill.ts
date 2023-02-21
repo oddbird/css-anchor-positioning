@@ -340,7 +340,7 @@ async function applyPositionFallbacks(
             y: target.offsetTop,
             platform: platformWithCache,
             rects,
-            elements: { floating: target, reference: offsetParent },
+            elements: { floating: target },
             strategy: 'absolute',
           } as unknown as MiddlewareState,
           {
