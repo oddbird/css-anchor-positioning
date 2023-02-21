@@ -23,11 +23,11 @@ export async function transformCSS(
         // Wait for new stylesheet to be loaded
         await promise;
         URL.revokeObjectURL(url);
-      } else if (el.hasAttribute('data-anchor-polyfill')) {
+      } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
-        const attr = el.getAttribute('data-anchor-polyfill');
+        const attr = el.getAttribute('data-has-inline-styles');
         if (attr) {
-          const pre = `[data-anchor-polyfill="${attr}"]{`;
+          const pre = `[data-has-inline-styles="${attr}"]{`;
           const post = `}`;
           let styles = css.slice(pre.length, 0 - post.length);
           // Check for custom anchor-element mapping, so it is not overwritten
@@ -43,8 +43,8 @@ export async function transformCSS(
       }
     }
     // Remove no-longer-needed data-attribute
-    if (el.hasAttribute('data-anchor-polyfill')) {
-      el.removeAttribute('data-anchor-polyfill');
+    if (el.hasAttribute('data-has-inline-styles')) {
+      el.removeAttribute('data-has-inline-styles');
     }
   }
 }

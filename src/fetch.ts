@@ -37,7 +37,7 @@ async function fetchLinkedStylesheets(
 }
 
 // Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, adds a new 'data-anchor-polyfill' attribute with a
+// For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
 function fetchInlineStyles() {
@@ -47,7 +47,7 @@ function fetchInlineStyles() {
 
   elementsWithInlineAnchorStyles.forEach((el) => {
     const selector = nanoid(12);
-    const dataAttribute = 'data-anchor-polyfill';
+    const dataAttribute = 'data-has-inline-styles';
     el.setAttribute(dataAttribute, selector);
     const styles = el.getAttribute('style');
     const css = `[${dataAttribute}="${selector}"] { ${styles} }`;

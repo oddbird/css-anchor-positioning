@@ -116,6 +116,18 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
   );
 };
 
+const getMargin = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
+  parseInt(getCSSPropertyValue(el, `margin-${dir}`), 10) || 0;
+
+const getMargins = (el: HTMLElement) => {
+  return {
+    top: getMargin(el, 'top'),
+    right: getMargin(el, 'right'),
+    bottom: getMargin(el, 'bottom'),
+    left: getMargin(el, 'left'),
+  };
+};
+
 export interface GetPixelValueOpts {
   targetEl?: HTMLElement;
   targetProperty: InsetProperty | SizingProperty;
@@ -324,7 +336,7 @@ async function applyPositionFallbacks(
       }
       checking = true;
       for (const [index, { uuid }] of fallbacks.entries()) {
-        target.setAttribute('data-anchor-polyfill-fallback-try', uuid);
+        target.setAttribute('data-anchor-polyfill', uuid);
         if (index === fallbacks.length - 1) {
           checking = false;
           break;
@@ -346,17 +358,10 @@ async function applyPositionFallbacks(
           {
             boundary: offsetParent,
             rootBoundary: 'document',
-            padding: {
-              left:
-                parseInt(getCSSPropertyValue(target, 'margin-left'), 10) || 0,
-              right:
-                parseInt(getCSSPropertyValue(target, 'margin-right'), 10) || 0,
-              top: parseInt(getCSSPropertyValue(target, 'margin-top'), 10) || 0,
-              bottom:
-                parseInt(getCSSPropertyValue(target, 'margin-bottom'), 10) || 0,
-            },
+            padding: getMargins(target),
           },
         );
+        // If none of the sides overflow, use this `@try` block and stop loop...
         if (Object.values(overflow).every((side) => side <= 0)) {
           checking = false;
           break;

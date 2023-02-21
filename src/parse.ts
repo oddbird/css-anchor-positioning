@@ -516,7 +516,7 @@ export async function parseCSS(styleData: StyleData[]) {
           }
           // Add each `@try` block, scoped to a unique data-attr
           for (const block of fallbacks[name].blocks) {
-            const dataAttr = `[data-anchor-polyfill-fallback-try="${block.uuid}"]`;
+            const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
             this.stylesheet?.children.prependData({
               type: 'Rule',
               prelude: {
@@ -917,7 +917,7 @@ export async function parseCSS(styleData: StyleData[]) {
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     let targets: NodeListOf<HTMLElement>;
     if (
-      targetSel.startsWith('[data-anchor-polyfill-fallback-try=') &&
+      targetSel.startsWith('[data-anchor-polyfill=') &&
       fallbackTargets[targetSel]
     ) {
       targets = document.querySelectorAll(fallbackTargets[targetSel]);
