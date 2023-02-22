@@ -172,9 +172,10 @@ interface FallbackTargets {
 
 interface Fallbacks {
   // `key` is the `position-fallback` value (name)
-  // `value` is an array of `@try` block declarations (in order)
   [key: string]: {
+    // `targets` is an array of selectors where this `position-fallback` is used
     targets: string[];
+    // `blocks` is an array of `@try` block declarations (in order)
     blocks: TryBlock[];
   };
 }
@@ -920,6 +921,8 @@ export async function parseCSS(styleData: StyleData[]) {
       targetSel.startsWith('[data-anchor-polyfill=') &&
       fallbackTargets[targetSel]
     ) {
+      // If we're dealing with a `@position-fallback` `@try` block,
+      // then the targets are places where that `position-fallback` is used.
       targets = document.querySelectorAll(fallbackTargets[targetSel]);
     } else {
       targets = document.querySelectorAll(targetSel);

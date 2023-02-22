@@ -3,9 +3,10 @@ import { transformCSS } from '../../src/transform.js';
 describe('transformCSS', () => {
   beforeAll(() => {
     global.URL.createObjectURL = vi.fn().mockReturnValue('/updated.css');
+    global.URL.revokeObjectURL = vi.fn();
   });
 
-  it('parses and removes new anchor positioning CSS after transformation to JS', () => {
+  it('parses and removes new anchor positioning CSS after transformation to JS', async () => {
     document.head.innerHTML = `
       <link type="text/css" href="/sample.css"/>
       <style>
@@ -16,7 +17,7 @@ describe('transformCSS', () => {
       <div id="div" data-has-inline-styles="key" style="--foo: var(--bar); color: red;" />
       <div id="div2" data-has-inline-styles="key2" style="color: red;" />
     `;
-    const link = document.querySelector('link') as HTMLLinkElement;
+    let link = document.querySelector('link') as HTMLLinkElement;
     const style = document.querySelector('style') as HTMLStyleElement;
     const div = document.getElementById('div') as HTMLDivElement;
     const div2 = document.getElementById('div2') as HTMLDivElement;
@@ -36,7 +37,10 @@ describe('transformCSS', () => {
     ];
     const inlineStyles = new Map();
     inlineStyles.set(div, { '--foo': '--bar' });
-    transformCSS(styleData, inlineStyles);
+    const promise = transformCSS(styleData, inlineStyles);
+    link = document.querySelector('link') as HTMLLinkElement;
+    link.dispatchEvent(new Event('load'));
+    await promise;
 
     expect(link.href).toContain('/updated.css');
     expect(style.innerHTML).toBe('html { padding: 0; }');
