@@ -1,7 +1,6 @@
 .scroll-container {
   height: 400px;
   overflow: scroll;
-  width: 400px;
   border: solid;
   position: relative;
 }

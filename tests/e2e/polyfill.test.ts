@@ -103,12 +103,12 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
 
   await applyPolyfill(page);
 
-  // await expect(target).not.toHaveCSS('left', '0px');
-  // await expect(target).not.toHaveCSS('width', '100px');
+  await expect(target).not.toHaveCSS('left', '0px');
+  await expect(target).not.toHaveCSS('width', '100px');
 
   await target.evaluate(
     (node: HTMLElement) =>
-      ((node.offsetParent as HTMLElement).style.width = '10px'),
+      ((node.offsetParent as HTMLElement).style.height = '20px'),
   );
 
   await expect(target).toHaveCSS('width', '100px');
