@@ -1,8 +1,15 @@
-import { autoUpdate, platform, type Rect } from '@floating-ui/dom';
+import {
+  autoUpdate,
+  detectOverflow,
+  MiddlewareState,
+  platform,
+  type Rect,
+} from '@floating-ui/dom';
 
 import { fetchCSS } from './fetch.js';
 import {
   AnchorFunction,
+  AnchorFunctionDeclaration,
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
@@ -12,8 +19,21 @@ import {
   isSizingProp,
   parseCSS,
   SizingProperty,
+  TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
+
+const platformWithCache = { ...platform, _c: new Map() };
+
+const getOffsetParent = async (el: HTMLElement) => {
+  let offsetParent = await platform.getOffsetParent?.(el);
+  if (!(await platform.isElement?.(offsetParent))) {
+    offsetParent =
+      (await platform.getDocumentElement?.(el)) ||
+      window.document.documentElement;
+  }
+  return offsetParent as HTMLElement;
+};
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -96,6 +116,18 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
   );
 };
 
+const getMargin = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
+  parseInt(getCSSPropertyValue(el, `margin-${dir}`), 10) || 0;
+
+const getMargins = (el: HTMLElement) => {
+  return {
+    top: getMargin(el, 'top'),
+    right: getMargin(el, 'right'),
+    bottom: getMargin(el, 'bottom'),
+    left: getMargin(el, 'left'),
+  };
+};
+
 export interface GetPixelValueOpts {
   targetEl?: HTMLElement;
   targetProperty: InsetProperty | SizingProperty;
@@ -152,7 +184,7 @@ export const getPixelValue = async ({
   if (anchorSide !== undefined) {
     // Calculate value for `anchor()` fn...
     let percentage: number | undefined;
-    let offsetParent: Element | Window | HTMLElement | undefined;
+    let offsetParent;
     const axis = getAxis(targetProperty);
 
     // anchor() can only be assigned to inset properties,
@@ -203,34 +235,35 @@ export const getPixelValue = async ({
     const dir = getAxisProperty(axis);
     if (hasPercentage && dir) {
       if (targetProperty === 'bottom' || targetProperty === 'right') {
-        offsetParent = await platform.getOffsetParent?.(targetEl);
-        if (!(await platform.isElement?.(offsetParent))) {
-          offsetParent =
-            (await platform.getDocumentElement?.(targetEl)) ||
-            window.document.documentElement;
-        }
+        offsetParent = await getOffsetParent(targetEl);
       }
       let value =
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
         case 'bottom': {
-          let offsetHeight = (offsetParent as HTMLElement).clientHeight;
+          if (!offsetParent) {
+            break;
+          }
+          let offsetHeight = offsetParent.clientHeight;
           // This is a hack for inline elements with `clientHeight: 0`,
           // but it doesn't take scrollbar size into account
-          if (offsetHeight === 0 && isInline(offsetParent as HTMLElement)) {
-            const border = getBorders(offsetParent as HTMLElement, axis);
-            offsetHeight = (offsetParent as HTMLElement).offsetHeight - border;
+          if (offsetHeight === 0 && isInline(offsetParent)) {
+            const border = getBorders(offsetParent, axis);
+            offsetHeight = offsetParent.offsetHeight - border;
           }
           value = offsetHeight - value;
           break;
         }
         case 'right': {
-          let offsetWidth = (offsetParent as HTMLElement).clientWidth;
+          if (!offsetParent) {
+            break;
+          }
+          let offsetWidth = offsetParent.clientWidth;
           // This is a hack for inline elements with `clientWidth: 0`,
           // but it doesn't take scrollbar size into account
-          if (offsetWidth === 0 && isInline(offsetParent as HTMLElement)) {
-            const border = getBorders(offsetParent as HTMLElement, axis);
-            offsetWidth = (offsetParent as HTMLElement).offsetWidth - border;
+          if (offsetWidth === 0 && isInline(offsetParent)) {
+            const border = getBorders(offsetParent, axis);
+            offsetWidth = offsetParent.offsetWidth - border;
           }
           value = offsetWidth - value;
           break;
@@ -243,49 +276,115 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-async function position(rules: AnchorPositions) {
+async function applyAnchorPositions(declarations: AnchorFunctionDeclaration) {
   const root = document.documentElement;
 
-  for (const position of Object.values(rules)) {
-    if (!position.declarations || !Object.keys(position.declarations).length) {
-      continue;
-    }
-
-    for (const [property, anchorValues] of Object.entries(
-      position.declarations,
-    ) as [InsetProperty | SizingProperty, AnchorFunction[]][]) {
-      for (const anchorValue of anchorValues) {
-        const anchor = anchorValue.anchorEl;
-        const target = anchorValue.targetEl;
-        if (anchor && target) {
-          autoUpdate(anchor, target, async () => {
-            const rects = await platform.getElementRects({
-              reference: anchor,
-              floating: target,
-              strategy: 'absolute',
-            });
-            const resolved = await getPixelValue({
-              targetEl: target,
-              targetProperty: property,
-              anchorRect: rects.reference,
-              anchorSide: anchorValue.anchorSide,
-              anchorSize: anchorValue.anchorSize,
-              fallback: anchorValue.fallbackValue,
-            });
-            root.style.setProperty(anchorValue.uuid, resolved);
+  for (const [property, anchorValues] of Object.entries(declarations) as [
+    InsetProperty | SizingProperty,
+    AnchorFunction[],
+  ][]) {
+    for (const anchorValue of anchorValues) {
+      const anchor = anchorValue.anchorEl;
+      const target = anchorValue.targetEl;
+      if (anchor && target) {
+        autoUpdate(anchor, target, async () => {
+          const rects = await platform.getElementRects({
+            reference: anchor,
+            floating: target,
+            strategy: 'absolute',
           });
-        } else {
-          // Use fallback value
           const resolved = await getPixelValue({
+            targetEl: target,
             targetProperty: property,
+            anchorRect: rects.reference,
             anchorSide: anchorValue.anchorSide,
             anchorSize: anchorValue.anchorSize,
             fallback: anchorValue.fallbackValue,
           });
           root.style.setProperty(anchorValue.uuid, resolved);
-        }
+        });
+      } else {
+        // Use fallback value
+        const resolved = await getPixelValue({
+          targetProperty: property,
+          anchorSide: anchorValue.anchorSide,
+          anchorSize: anchorValue.anchorSize,
+          fallback: anchorValue.fallbackValue,
+        });
+        root.style.setProperty(anchorValue.uuid, resolved);
       }
     }
+  }
+}
+
+async function applyPositionFallbacks(
+  targetSel: string,
+  fallbacks: TryBlock[],
+) {
+  if (!fallbacks.length) {
+    return;
+  }
+
+  const targets: NodeListOf<HTMLElement> = document.querySelectorAll(targetSel);
+
+  for (const target of targets) {
+    let checking = false;
+    const offsetParent = await getOffsetParent(target);
+    autoUpdate(offsetParent, target, async () => {
+      // If this auto-update was triggered while the polyfill is already looping
+      // through the possible `@try` blocks, do not check again.
+      if (checking) {
+        return;
+      }
+      checking = true;
+      // Apply the styles from each `@try` block (in order), stopping when we
+      // reach one that does not cause the target's margin-box to overflow
+      // its offsetParent (containing block).
+      for (const [index, { uuid }] of fallbacks.entries()) {
+        target.setAttribute('data-anchor-polyfill', uuid);
+        if (index === fallbacks.length - 1) {
+          checking = false;
+          break;
+        }
+        const rects = await platform.getElementRects({
+          reference: offsetParent,
+          floating: target,
+          strategy: 'absolute',
+        });
+        const overflow = await detectOverflow(
+          {
+            x: target.offsetLeft,
+            y: target.offsetTop,
+            platform: platformWithCache,
+            rects,
+            elements: { floating: target },
+            strategy: 'absolute',
+          } as unknown as MiddlewareState,
+          {
+            boundary: offsetParent,
+            rootBoundary: 'document',
+            padding: getMargins(target),
+          },
+        );
+        // If none of the sides overflow, use this `@try` block and stop loop...
+        if (Object.values(overflow).every((side) => side <= 0)) {
+          checking = false;
+          break;
+        }
+      }
+    });
+  }
+}
+
+async function position(rules: AnchorPositions) {
+  for (const pos of Object.values(rules)) {
+    // Handle `anchor()` and `anchor-size()` functions...
+    await applyAnchorPositions(pos.declarations ?? {});
+  }
+
+  for (const [targetSel, position] of Object.entries(rules)) {
+    // Handle `@position-fallback` blocks...
+    await applyPositionFallbacks(targetSel, position.fallbacks ?? []);
   }
 }
 
@@ -297,11 +396,11 @@ export async function polyfill() {
   const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
+    // update source code
+    await transformCSS(styleData, inlineStyles);
+
     // calculate position values
     await position(rules);
-
-    // update source code
-    transformCSS(styleData, inlineStyles);
   }
 
   return rules;

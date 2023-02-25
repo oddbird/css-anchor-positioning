@@ -1,22 +1,22 @@
-#scroll-container {
+.scroll-container {
   height: 400px;
   overflow: scroll;
-  width: 400px;
-}
-
-#scroll-contents {
-  height: 1000px;
+  border: solid;
   position: relative;
-  width: 1000px;
 }
 
-#placefiller-above-anchor {
-  height: 200px;
+.placefiller-above-anchor {
+  height: 150px;
 }
 
-#placefiller-before-anchor {
+.placefiller-before-anchor {
   display: inline-block;
-  width: 300px;
+  width: 150px;
+}
+
+.placefiller-after-anchor {
+  height: 1000px;
+  width: 1000px;
 }
 
 #scroll-anchor {

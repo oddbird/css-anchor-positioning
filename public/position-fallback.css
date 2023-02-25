@@ -3,42 +3,38 @@
 }
 
 #my-target-fallback {
-  bottom: anchor(--my-anchor-fallback 25%);
-  left: anchor(--my-anchor-fallback right);
   position: absolute;
   position-fallback: --fallback1;
 }
 
 @position-fallback --fallback1 {
+  /* First try to align the bottom, left edge of the target
+     with the top, left edge of the anchor. */
   @try {
-    /* 1: Position to the right of the anchor. */
-    left: anchor(--my-anchor-fallback right, 10px);
-    top: anchor(--my-anchor-fallback top);
-  }
-
-  @try {
-    /* 2: Position to the left of the anchor. */
-    right: anchor(--my-anchor-fallback left);
-    top: anchor(--my-anchor-fallback top);
-  }
-
-  @try {
-    /* 3: Position to the bottom of the anchor. */
-    left: anchor(--my-anchor-fallback left);
-    top: anchor(--my-anchor-fallback bottom);
-  }
-
-  @try {
-    /* 4: Position to the top of the anchor. */
     bottom: anchor(--my-anchor-fallback top);
     left: anchor(--my-anchor-fallback left);
   }
 
+  /* Next try to align the top, left edge of the target
+     with the bottom, left edge of the anchor. */
   @try {
-    /* 5: Position to the left with the narrower width. */
-    height: 40px;
-    left: anchor(--my-anchor-fallback right);
-    top: anchor(--my-anchor-fallback top);
-    width: 35px;
+    top: anchor(--my-anchor-fallback bottom);
+    left: anchor(--my-anchor-fallback left);
+  }
+
+  /* Next try to align the bottom, right edge of the target
+     with the top, right edge of the anchor. */
+  @try {
+    bottom: anchor(--my-anchor-fallback top);
+    right: anchor(--my-anchor-fallback right);
+  }
+
+  /* Finally, try to align the top, right edge of the target
+     with the bottom, right edge of the anchor. */
+  @try {
+    top: anchor(--my-anchor-fallback bottom);
+    right: anchor(--my-anchor-fallback right);
+    width: 100px;
+    height: 100px;
   }
 }

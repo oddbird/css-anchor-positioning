@@ -85,6 +85,7 @@ const TEST_FOLDERS: Array<string> = ['css/css-anchor-position'];
 
 // Tests that check DOM implementation details instead of user-facing behavior
 const TEST_BLOCKLIST = [
+  'anchor-default-basics.html',
   'anchor-name-basics.html',
   'anchor-parse-invalid.html',
   'anchor-parse-valid.html',

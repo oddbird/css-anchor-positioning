@@ -18,9 +18,32 @@ interface AnchorNames {
   [key: string]: string[];
 }
 
-export type InsetProperty = 'top' | 'left' | 'right' | 'bottom';
+export type InsetProperty =
+  | 'top'
+  | 'left'
+  | 'right'
+  | 'bottom'
+  | 'inset-block-start'
+  | 'inset-block-end'
+  | 'inset-inline-start'
+  | 'inset-inline-end'
+  | 'inset-block'
+  | 'inset-inline'
+  | 'inset';
 
-const INSET_PROPS: InsetProperty[] = ['left', 'right', 'top', 'bottom'];
+const INSET_PROPS: InsetProperty[] = [
+  'left',
+  'right',
+  'top',
+  'bottom',
+  'inset-block-start',
+  'inset-block-end',
+  'inset-inline-start',
+  'inset-inline-end',
+  'inset-block',
+  'inset-inline',
+  'inset',
+];
 
 export type SizingProperty =
   | 'width'
@@ -37,6 +60,23 @@ const SIZING_PROPS: SizingProperty[] = [
   'min-height',
   'max-width',
   'max-height',
+];
+
+export type BoxAlignmentProperty =
+  | 'justify-content'
+  | 'align-content'
+  | 'justify-self'
+  | 'align-self'
+  | 'justify-items'
+  | 'align-items';
+
+const BOX_ALIGNMENT_PROPS: BoxAlignmentProperty[] = [
+  'justify-content',
+  'align-content',
+  'justify-self',
+  'align-self',
+  'justify-items',
+  'align-items',
 ];
 
 type AnchorSideKeyword =
@@ -94,7 +134,7 @@ export interface AnchorFunction {
 
 // `key` is the property being declared
 // `value` is the anchor-positioning data for that property
-type AnchorFunctionDeclaration = Partial<
+export type AnchorFunctionDeclaration = Partial<
   Record<InsetProperty | SizingProperty, AnchorFunction[]>
 >;
 
@@ -115,22 +155,29 @@ export interface AnchorPositions {
   [key: string]: AnchorPosition;
 }
 
-// `key` is the property being declared
-// `value` is the property value, or parsed anchor-fn data
-type TryBlock = Partial<
-  Record<string | InsetProperty | SizingProperty, string | AnchorFunction>
->;
+export interface TryBlock {
+  uuid: string;
+  // `key` is the property being declared
+  // `value` is the property value
+  declarations: Partial<
+    Record<InsetProperty | SizingProperty | BoxAlignmentProperty, string>
+  >;
+}
 
-interface FallbackNames {
-  // `key` is the target element selector
-  // `value` is the `position-fallback` value (name)
+interface FallbackTargets {
+  // `key` is the `@try` block uuid
+  // `value` is the target element selector
   [key: string]: string;
 }
 
 interface Fallbacks {
   // `key` is the `position-fallback` value (name)
-  // `value` is an array of `@try` block declarations (in order)
-  [key: string]: TryBlock[];
+  [key: string]: {
+    // `targets` is an array of selectors where this `position-fallback` is used
+    targets: string[];
+    // `blocks` is an array of `@try` block declarations (in order)
+    blocks: TryBlock[];
+  };
 }
 
 function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
@@ -201,6 +248,12 @@ export function isSizingProp(property: string): property is SizingProperty {
 
 function isAnchorSize(property: string): property is AnchorSize {
   return ANCHOR_SIZES.includes(property as AnchorSize);
+}
+
+export function isBoxAlignmentProp(
+  property: string,
+): property is BoxAlignmentProperty {
+  return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
 }
 
 function parseAnchorFn(
@@ -320,13 +373,8 @@ function resetStores() {
 function getAnchorFunctionData(
   node: csstree.CssNode,
   declaration: csstree.Declaration | null,
-  rule?: csstree.Raw,
 ) {
-  if (
-    (isAnchorFunction(node) || isAnchorSizeFunction(node)) &&
-    rule?.value &&
-    declaration
-  ) {
+  if ((isAnchorFunction(node) || isAnchorSizeFunction(node)) && declaration) {
     if (declaration.property.startsWith('--')) {
       const original = csstree.generate(declaration.value);
       const data = parseAnchorFn(node, true);
@@ -350,7 +398,7 @@ function getAnchorFunctionData(
 }
 
 function getPositionFallbackDeclaration(
-  node: csstree.CssNode,
+  node: csstree.Declaration,
   rule?: csstree.Raw,
 ) {
   if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
@@ -360,32 +408,31 @@ function getPositionFallbackDeclaration(
   return {};
 }
 
-function getPositionFallbackRules(node: csstree.CssNode) {
+function getPositionFallbackRules(node: csstree.Atrule) {
   if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
     const name = node.prelude.value;
     const tryBlocks: TryBlock[] = [];
     const tryAtRules = node.block.children.filter(isTryAtRule);
     tryAtRules.forEach((atRule) => {
       if (atRule.block?.children) {
-        const tryBlock: TryBlock = {};
         // Only declarations are allowed inside a `@try` block
-        const declarations = atRule.block.children.filter(isDeclaration);
-        declarations.forEach((child) => {
-          const firstChild = child.value.children.first as csstree.CssNode;
-          // Parse value if it's an `anchor()` fn; otherwise store it raw
-          if (
-            firstChild &&
-            (isAnchorFunction(firstChild) || isAnchorSizeFunction(firstChild))
-          ) {
-            tryBlock[child.property] = parseAnchorFn(firstChild);
-          } else {
-            tryBlock[child.property] = csstree.generate(child.value);
-          }
-        });
+        const declarations = atRule.block.children.filter(
+          (d): d is DeclarationWithValue =>
+            isDeclaration(d) &&
+            (isInsetProp(d.property) ||
+              isSizingProp(d.property) ||
+              isBoxAlignmentProp(d.property)),
+        );
+        const tryBlock: TryBlock = {
+          uuid: `${name}-try-${nanoid(12)}`,
+          declarations: Object.fromEntries(
+            declarations.map((d) => [d.property, csstree.generate(d.value)]),
+          ),
+        };
         tryBlocks.push(tryBlock);
       }
     });
-    return { name, fallbacks: tryBlocks };
+    return { name, blocks: tryBlocks };
   }
   return {};
 }
@@ -424,9 +471,88 @@ function getAST(cssText: string) {
 
 export async function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
-  const fallbackNames: FallbackNames = {};
+  const fallbackTargets: FallbackTargets = {};
   const fallbacks: Fallbacks = {};
+  // Final data merged together under target-element selector key
+  const validPositions: AnchorPositions = {};
   resetStores();
+
+  // First, find all uses of `@position-fallback`
+  for (const styleObj of styleData) {
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Atrule',
+      enter(node) {
+        // Parse `@position-fallback` rules
+        const { name, blocks } = getPositionFallbackRules(node);
+        if (name && blocks?.length) {
+          // This will override earlier `@position-fallback` lists
+          // with the same name:
+          // (e.g. multiple `@position-fallback --my-fallback {...}` uses
+          // with the same `--my-fallback` name)
+          fallbacks[name] = {
+            targets: [],
+            blocks: blocks,
+          };
+        }
+      },
+    });
+  }
+
+  // Then, find all `position-fallback` declarations,
+  // and add in `@try` block contents (scoped to unique data-attrs)
+  for (const styleObj of styleData) {
+    let changed = false;
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Declaration',
+      enter(node) {
+        const rule = this.rule?.prelude as csstree.Raw | undefined;
+        // Parse `position-fallback` declaration
+        const { name, selector } = getPositionFallbackDeclaration(node, rule);
+        if (name && selector && fallbacks[name]) {
+          validPositions[selector] = { fallbacks: fallbacks[name].blocks };
+          if (!fallbacks[name].targets.includes(selector)) {
+            fallbacks[name].targets.push(selector);
+          }
+          // Add each `@try` block, scoped to a unique data-attr
+          for (const block of fallbacks[name].blocks) {
+            const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+            this.stylesheet?.children.prependData({
+              type: 'Rule',
+              prelude: {
+                type: 'Raw',
+                value: dataAttr,
+              },
+              block: {
+                type: 'Block',
+                children: new csstree.List<csstree.CssNode>().fromArray(
+                  Object.entries(block.declarations).map(([prop, val]) => ({
+                    type: 'Declaration',
+                    important: true,
+                    property: prop,
+                    value: {
+                      type: 'Raw',
+                      value: val,
+                    },
+                  })),
+                ),
+              },
+            });
+            // Store mapping of data-attr to target selector
+            fallbackTargets[dataAttr] = selector;
+          }
+          changed = true;
+        }
+      },
+    });
+    if (changed) {
+      // Update CSS
+      styleObj.css = csstree.generate(ast);
+      styleObj.changed = true;
+    }
+  }
+
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -451,7 +577,7 @@ export async function parseCSS(styleData: StyleData[]) {
         prop,
         data,
         changed: updated,
-      } = getAnchorFunctionData(node, this.declaration, rule);
+      } = getAnchorFunctionData(node, this.declaration);
       if (prop && data && rule?.value) {
         // This will override earlier declarations
         // with the same exact rule selector
@@ -465,28 +591,6 @@ export async function parseCSS(styleData: StyleData[]) {
       }
       if (updated) {
         changed = true;
-      }
-
-      // Parse `position-fallback` declaration
-      const { name: fbName, selector: fbSelector } =
-        getPositionFallbackDeclaration(node, rule);
-      if (fbName && fbSelector) {
-        // This will override earlier `position-fallback` declarations
-        // with the same rule selector:
-        // (e.g. multiple `position-fallback:` declarations
-        // for the same `.foo {...}` selector)
-        fallbackNames[fbSelector] = fbName;
-      }
-
-      // Parse `@position-fallback` rule
-      const { name: fbRuleName, fallbacks: fbTryBlocks } =
-        getPositionFallbackRules(node);
-      if (fbRuleName && fbTryBlocks.length) {
-        // This will override earlier `@position-fallback` lists
-        // with the same name:
-        // (e.g. multiple `@position-fallback --my-fallback {...}` uses
-        // with the same `--my-fallback` name)
-        fallbacks[fbRuleName] = fbTryBlocks;
       }
     });
     if (changed) {
@@ -808,38 +912,21 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  // Merge data together under target-element selector key
-  const validPositions: AnchorPositions = {};
-
-  // Store any `position-fallback` declarations
-  for (const [targetSel, fallbackName] of Object.entries(fallbackNames)) {
-    const positionFallbacks = fallbacks[fallbackName];
-    if (positionFallbacks) {
-      const targetEl: HTMLElement | null = document.querySelector(targetSel);
-      // Populate `anchorEl` for each fallback `anchor()` fn
-      for (const tryBlock of positionFallbacks) {
-        for (const [prop, value] of Object.entries(tryBlock)) {
-          if (typeof value === 'object') {
-            const anchorEl = await getAnchorEl(
-              targetEl,
-              value as AnchorFunction,
-            );
-            (tryBlock[prop] as AnchorFunction).anchorEl = anchorEl;
-          }
-        }
-      }
-      validPositions[targetSel] = {
-        fallbacks: positionFallbacks,
-      };
-    }
-  }
-
   // Store inline style custom property mappings for each target element
   const inlineStyles = new Map<HTMLElement, Record<string, string>>();
   // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
-    const targets: NodeListOf<HTMLElement> =
-      document.querySelectorAll(targetSel);
+    let targets: NodeListOf<HTMLElement>;
+    if (
+      targetSel.startsWith('[data-anchor-polyfill=') &&
+      fallbackTargets[targetSel]
+    ) {
+      // If we're dealing with a `@position-fallback` `@try` block,
+      // then the targets are places where that `position-fallback` is used.
+      targets = document.querySelectorAll(fallbackTargets[targetSel]);
+    } else {
+      targets = document.querySelectorAll(targetSel);
+    }
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
       InsetProperty | SizingProperty,
       AnchorFunction[],

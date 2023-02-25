@@ -87,11 +87,11 @@ describe('fetch inline styles', () => {
     expect(styleData).toHaveLength(4);
     expect(styleData[2].url).toBeUndefined();
     expect(styleData[3].url).toBeUndefined();
-    expect(styleData[2].css.trim()).toContain('[data-anchor-polyfill=');
+    expect(styleData[2].css.trim()).toContain('[data-has-inline-styles=');
     expect(styleData[2].css.trim()).toContain(
       'top: anchor(--my-anchor-in-line end)',
     );
-    expect(styleData[3].css.trim()).toContain('[data-anchor-polyfill=');
+    expect(styleData[3].css.trim()).toContain('[data-has-inline-styles=');
     expect(styleData[3].css.trim()).toContain(
       'anchor-name: --my-anchor-in-line',
     );

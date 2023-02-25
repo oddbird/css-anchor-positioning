@@ -1,7 +1,7 @@
 export default {
-  timeout: process.env.CI ? undefined : 10000, // Max execution time of any single test
+  timeout: process.env.CI ? undefined : 10 * 1000, // Max execution time of any single test
   expect: {
-    timeout: 1000, // Max execution time of single expect() calls
+    timeout: 10 * 1000, // Max execution time of single expect() calls
   },
   reporter: 'dot',
   fullyParallel: true,

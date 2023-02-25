@@ -1,5 +1,5 @@
 import { type StyleData } from '../../src/fetch.js';
-import { parseCSS } from '../../src/parse.js';
+import { AnchorPositions, parseCSS } from '../../src/parse.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
@@ -481,174 +481,56 @@ describe('parseCSS', () => {
     expect(rules).toEqual(expected);
   });
 
-  it('parses `@position-fallback` strategy', async () => {
+  it('parses `@position-fallback`', async () => {
     document.body.innerHTML = `
       <div style="position: relative">
         <div id="my-target-fallback" style="position: absolute"></div>
         <div id="my-anchor-fallback"></div>
       </div>
     `;
-    const anchorEl = document.getElementById('my-anchor-fallback');
     const css = getSampleCSS('position-fallback');
     const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected = {
-      '#my-target-fallback': {
-        declarations: {
-          left: [
-            {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              targetEl: document.getElementById('my-target-fallback'),
-              anchorSide: 'right',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          ],
-          bottom: [
-            {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              targetEl: document.getElementById('my-target-fallback'),
-              anchorSide: 25,
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          ],
-        },
-        fallbacks: [
-          {
-            left: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'right',
-              fallbackValue: '10px',
-              uuid: expect.any(String),
-            },
-            top: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          },
-          {
-            right: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'left',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-            top: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          },
-          {
-            left: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'left',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-            top: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'bottom',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          },
-          {
-            left: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'left',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-            bottom: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          },
-          {
-            left: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'right',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-            top: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl,
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-            width: '35px',
-            height: '40px',
-          },
-        ],
-      },
-    };
-
-    expect(rules).toEqual(expected);
-  });
-
-  it('parses `@position-fallback` with unknown anchor name', async () => {
-    document.body.innerHTML = `
-      <div style="position: relative">
-        <div id="my-target-fallback" style="position: absolute"></div>
-        <div id="my-anchor-fallback"></div>
-      </div>
-    `;
-    const css = `
-      #my-target-fallback {
-        position: absolute;
-        position-fallback: --fallback1;
-      }
-
-      @position-fallback --fallback1 {
-        @try {
-          left: anchor(--my-anchor-fallback right, 10px);
-          top: anchor(--my-anchor-fallback top);
-        }
-      }
-    `;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-
-    const expected = {
+    const expected: AnchorPositions = {
       '#my-target-fallback': {
         fallbacks: [
           {
-            left: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl: null,
-              anchorSide: 'right',
-              fallbackValue: '10px',
-              uuid: expect.any(String),
+            uuid: expect.any(String),
+            declarations: {
+              bottom: 'anchor(--my-anchor-fallback top)',
+              left: 'anchor(--my-anchor-fallback left)',
             },
-            top: {
-              anchorName: '--my-anchor-fallback',
-              anchorEl: null,
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
+          },
+          {
+            uuid: expect.any(String),
+            declarations: {
+              top: 'anchor(--my-anchor-fallback bottom)',
+              left: 'anchor(--my-anchor-fallback left)',
+            },
+          },
+          {
+            uuid: expect.any(String),
+            declarations: {
+              bottom: 'anchor(--my-anchor-fallback top)',
+              right: 'anchor(--my-anchor-fallback right)',
+            },
+          },
+          {
+            uuid: expect.any(String),
+            declarations: {
+              top: 'anchor(--my-anchor-fallback bottom)',
+              right: 'anchor(--my-anchor-fallback right)',
+              width: '100px',
+              height: '100px',
             },
           },
         ],
       },
     };
+    for (const { uuid } of rules['#my-target-fallback']?.fallbacks ?? []) {
+      expected[`[data-anchor-polyfill="${uuid}"]`] = {
+        declarations: expect.any(Object),
+      };
+    }
 
     expect(rules).toEqual(expected);
   });

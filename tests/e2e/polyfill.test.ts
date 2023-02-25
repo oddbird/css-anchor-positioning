@@ -16,21 +16,24 @@ async function applyPolyfill(page: Page) {
   return await btn.click();
 }
 
-async function getAnchorWidth(page: Page) {
+async function getElementWidth(page: Page, sel: string) {
   return page
-    .locator(anchorSelector)
+    .locator(sel)
+    .first()
     .evaluate((node: HTMLElement) => node.getBoundingClientRect().width);
 }
 
-async function getParentWidth(page: Page) {
+async function getParentWidth(page: Page, sel: string) {
   return page
-    .locator(targetSelector)
+    .locator(sel)
+    .first()
     .evaluate((node: HTMLElement) => node.offsetParent?.clientWidth ?? 0);
 }
 
-async function getParentHeight(page: Page) {
+async function getParentHeight(page: Page, sel: string) {
   return page
-    .locator(targetSelector)
+    .locator(sel)
+    .first()
     .evaluate((node: HTMLElement) => node.offsetParent?.clientHeight ?? 0);
 }
 
@@ -41,11 +44,11 @@ function getNumberMatcher(val: number) {
   return new RegExp(`^${val}px$`);
 }
 
-test('applies polyfill', async ({ page }) => {
+test('applies polyfill for `anchor()`', async ({ page }) => {
   const target = page.locator(targetSelector);
-  const width = await getAnchorWidth(page);
-  const parentWidth = await getParentWidth(page);
-  const parentHeight = await getParentHeight(page);
+  const width = await getElementWidth(page, anchorSelector);
+  const parentWidth = await getParentWidth(page, targetSelector);
+  const parentHeight = await getParentHeight(page, targetSelector);
   const expected = getNumberMatcher(parentWidth - width);
 
   await expect(target).toHaveCSS('top', '0px');
@@ -59,9 +62,9 @@ test('applies polyfill', async ({ page }) => {
 
 test('applies polyfill from inline styles', async ({ page }) => {
   const targetInLine = page.locator('#my-target-inline');
-  const width = await getAnchorWidth(page);
-  const parentWidth = await getParentWidth(page);
-  const parentHeight = await getParentHeight(page);
+  const width = await getElementWidth(page, anchorSelector);
+  const parentWidth = await getParentWidth(page, targetSelector);
+  const parentHeight = await getParentHeight(page, targetSelector);
   const expected = getNumberMatcher(parentWidth - width);
 
   await expect(targetInLine).toHaveCSS('top', '0px');
@@ -75,9 +78,9 @@ test('applies polyfill from inline styles', async ({ page }) => {
 
 test('updates when sizes change', async ({ page }) => {
   const target = page.locator(targetSelector);
-  const width = await getAnchorWidth(page);
-  const parentWidth = await getParentWidth(page);
-  const parentHeight = await getParentHeight(page);
+  const width = await getElementWidth(page, anchorSelector);
+  const parentWidth = await getParentWidth(page, targetSelector);
+  const parentHeight = await getParentHeight(page, targetSelector);
   await applyPolyfill(page);
   let expected = getNumberMatcher(parentWidth - width);
 
@@ -90,4 +93,23 @@ test('updates when sizes change', async ({ page }) => {
   expected = getNumberMatcher(parentWidth - 50);
 
   await expect(target).toHaveCSS('right', expected);
+});
+
+test('applies polyfill for `@position-fallback`', async ({ page }) => {
+  const targetSel = '#my-target-fallback';
+  const target = page.locator(targetSel);
+
+  await expect(target).toHaveCSS('left', '0px');
+
+  await applyPolyfill(page);
+
+  await expect(target).not.toHaveCSS('left', '0px');
+  await expect(target).not.toHaveCSS('width', '100px');
+
+  await target.evaluate(
+    (node: HTMLElement) =>
+      ((node.offsetParent as HTMLElement).style.height = '20px'),
+  );
+
+  await expect(target).toHaveCSS('width', '100px');
 });
