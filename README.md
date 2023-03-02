@@ -4,6 +4,8 @@
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/61a20096-7925-4775-99a9-b40a010197c0/deploy-status)](https://app.netlify.com/sites/anchor-polyfill/deploys)
 
+[WPT results](https://anchor-position-wpt.netlify.app/)
+
 ## Browser Support
 
 - Firefox 54+
@@ -18,7 +20,7 @@ To use the polyfill, add this script tag to your document `<head>`:
 ```js
 <script type="module">
   if (!("anchorName" in document.documentElement.style)) {
-    import("https://unpkg.com/@oddbird/css-anchor-positioning@0.0.1");
+    import("https://unpkg.com/@oddbird/css-anchor-positioning");
   }
 </script>
 ```
