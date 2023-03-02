@@ -27,6 +27,36 @@ To use the polyfill, add this script tag to your document `<head>`:
 
 You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
 
+## Configuration
+
+The polyfill accepts one argument (type: `boolean`, default: `false`), which
+determines whether anchor calculations should [update on every animation
+frame](https://floating-ui.com/docs/autoUpdate#animationframe) (e.g. when the
+anchor element moves). Calculations always update on scroll/resize regardless.
+
+```js
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    const { default: polyfill } = await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js");
+
+    polyfill(true);
+  }
+</script>
+```
+
+When using the default version of the polyfill that executes automatically, this
+option can be set by setting the value of
+`window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`.
+
+```js
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    window.UPDATE_ANCHOR_ON_ANIMATION_FRAME = true;
+    import("https://unpkg.com/@oddbird/css-anchor-positioning");
+  }
+</script>
+```
+
 ## Limitations
 
 This polyfill doesn't (yet) support the following:
