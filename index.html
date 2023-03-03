@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
     <link rel="stylesheet" href="/anchor-implicit.css" />
+    <link rel="stylesheet" href="/anchor-update.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -52,6 +53,18 @@
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
       }
+
+      const updateBtn = document.getElementById('toggle-anchor-width');
+      const updateAnchor = document.getElementById('my-anchor-update');
+      updateBtn.addEventListener('click', () => {
+        if (updateAnchor.getAttribute('data-small')) {
+          updateAnchor.setAttribute('data-large', true);
+          updateAnchor.removeAttribute('data-small');
+        } else {
+          updateAnchor.setAttribute('data-small', true);
+          updateAnchor.removeAttribute('data-large');
+        }
+      });
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
@@ -558,6 +571,34 @@
 
 #my-target-size {
   width: anchor-size(--my-anchor width);
+}</code></pre>
+    </section>
+    <section id="anchor-update" class="demo-item">
+      <h2>
+        <a href="#anchor-update" aria-hidden="true">🔗</a>
+        Dynamically update anchors
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-update" class="anchor">Anchor</div>
+        <div id="my-target-update" class="target">Target</div>
+      </div>
+      <button id="toggle-anchor-width">Toggle anchor width</button>
+      <p class="note">
+        With polyfill applied: Target and Anchor's right edges line up. Target's
+        top edge lines up with the bottom edge of the Anchor.
+        <br />
+        <br />
+        When Anchor width is changed dynamically, Target position updates accordingly.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-update {
+  anchor-name: --my-anchor-update;
+}
+
+#my-target-update {
+  position: absolute;
+  right: anchor(--my-anchor-update right);
+  top: anchor(--my-anchor-update bottom);
 }</code></pre>
     </section>
     <footer>
