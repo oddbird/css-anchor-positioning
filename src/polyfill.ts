@@ -340,7 +340,7 @@ async function applyPositionFallbacks(
     let checking = false;
     const offsetParent = await getOffsetParent(target);
     autoUpdate(
-      offsetParent,
+      target,
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already looping
@@ -359,7 +359,7 @@ async function applyPositionFallbacks(
             break;
           }
           const rects = await platform.getElementRects({
-            reference: offsetParent,
+            reference: target,
             floating: target,
             strategy: 'absolute',
           });
