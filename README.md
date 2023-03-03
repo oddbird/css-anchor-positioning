@@ -67,8 +67,6 @@ This polyfill doesn't (yet) support the following:
 - anchor functions with `implicit` anchor-element
 - automatic anchor positioning: anchor functions with `auto` or `auto-same`
   anchor-side
-- dynamic anchor movement other than container resize/scroll
-  ([#73](https://github.com/oddbird/css-anchor-positioning/issues/73))
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
@@ -76,12 +74,12 @@ This polyfill doesn't (yet) support the following:
 - vertical/rtl writing-modes (partial support)
 - absolutely-positioned targets with `grid-column`/`grid-row`/`grid-area` in a
   CSS Grid layout
-- `@position-fallback` where targets overflow the grid area but do not overflow
-  the containing block
+- `@position-fallback` where targets in a CSS Grid layout overflow the grid area
+  but do not overflow the containing block
 - `@position-fallback` where targets overflow their inset-modified containing
   block, overlapping the anchor element
 - anchors in multi-column layouts
-- anchor functions used as the fallback value for another anchor function
+- anchor functions used as the fallback value in another anchor function
 - anchor functions assigned to `bottom` or `right` properties on inline targets
   whose offset-parent is inline with `clientHeight`/`clientWidth` of `0`
   (partial support -- does not account for possible scrollbar width)
