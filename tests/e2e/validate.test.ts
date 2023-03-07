@@ -510,3 +510,341 @@ test('target anchor element is first element el in tree order.', async ({
   expect(validationResults.results.anchor).toBeTruthy;
   expect(validationResults.anchorWidth).toBe('9px');
 });
+
+test('top layer - valid - absolutely positioned top-layer anchor with top-layer target - WPT anchor-position-top-layer-003', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-003.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+          position: absolute;
+          top: 300px;
+          left: 200px;
+          width: 100px;
+          height: 100px;
+          background: orange;
+          anchor-name: --a;
+        }
+
+        #my-target-positioning {
+          top: anchor(--a top);
+          left: anchor(--a right);
+          width: 100px;
+          height: 100px;
+          background: lime;
+          anchor-scroll: --a;
+          outline: none;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <dialog id="my-anchor-positioning"></dialog>
+      <dialog id="my-target-positioning"></dialog>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(true);
+});
+
+test('top layer - valid - fixed position top-layer anchor with top-layer target - WPT anchor-position-top-layer-004', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-004.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+          position: fixed;
+          top: 200px;
+          left: 200px;
+          width: 100px;
+          height: 100px;
+          background: orange;
+          anchor-name: --a;
+        }
+
+        #my-target-positioning {
+          top: anchor(--a top);
+          left: anchor(--a right);
+          width: 100px;
+          height: 100px;
+          background: lime;
+          anchor-scroll: --a;
+          outline: none;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <dialog id="my-anchor-positioning"></dialog>
+      <dialog id="my-target-positioning"></dialog>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(true);
+});
+
+test('top layer - valid - absolultely positioned non-top-layer anchor with top-layer target - WPT anchor-position-top-layer-001', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-001.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+          position: absolute;
+          top: 300px;
+          left: 200px;
+          width: 100px;
+          height: 100px;
+          background: orange;
+          anchor-name: --a;
+        }
+
+        #my-target-positioning {
+          top: anchor(--a top);
+          left: anchor(--a right);
+          width: 100px;
+          height: 100px;
+          background: lime;
+          anchor-scroll: --a;
+          outline: none;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <div id="my-anchor-positioning"></div>
+      <dialog id="my-target-positioning"></dialog>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(true);
+});
+
+test('top layer - valid - fixed positioned non-top-layer anchor with top-layer target - WPT anchor-position-top-layer-002', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-002.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+          position: fixed;
+          top: 200px;
+          left: 200px;
+          width: 100px;
+          height: 100px;
+          background: orange;
+          anchor-name: --a;
+        }
+
+        #my-target-positioning {
+          top: anchor(--a top);
+          left: anchor(--a right);
+          width: 100px;
+          height: 100px;
+          background: lime;
+          anchor-scroll: --a;
+          outline: none;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <div id="my-anchor-positioning"></div>
+      <dialog id="my-target-positioning"></dialog>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(true);
+});
+
+test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-005.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+          position: absolute;
+          top: 300px;
+          left: 200px;
+          width: 100px;
+          height: 100px;
+          background: orange;
+          anchor-name: --a;
+        }
+
+        #my-target-positioning {
+          position: fixed;
+          top: anchor(--a bottom, 200px);
+          left: anchor(--a left, 300px);
+          width: 100px;
+          height: 100px;
+          background: lime;
+          anchor-scroll: --a;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+          outline: none;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <dialog id="my-anchor-positioning"></dialog>
+      <div id="my-target-positioning"></div>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(false);
+});
+
+test('top layer - invalid - succeeding top-layer anchor with top-layer target - WPT anchor-position-top-layer-006', async ({
+  browser,
+}) => {
+  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-006.html
+  const page = await buildPage(browser);
+  await page.setContent(
+    `
+      <style>
+        #my-anchor-positioning {
+            position: absolute;
+            top: 300px;
+            left: 200px;
+            width: 100px;
+            height: 100px;
+            background: orange;
+            anchor-name: --a;
+        }
+
+        #my-target-positioning {
+            position: fixed;
+            top: anchor(--a bottom, 200px);
+            left: anchor(--a left, 300px);
+            width: 100px;
+            height: 100px;
+            background: lime;
+            anchor-scroll: --a;
+        }
+
+        body {
+          margin: 0;
+          height: 300vh;
+        }
+
+        dialog {
+          margin: 0;
+          border: 0;
+          padding: 0;
+          inset: auto;
+          outline: none;
+        }
+
+        dialog::backdrop {
+          background: transparent;
+        }
+      </style>
+
+      <dialog id="my-anchor-positioning"></dialog>
+      <dialog id="my-target-positioning"></dialog>
+  `,
+    { waitUntil: 'load' },
+  );
+  const valid = await callValidFunction(page);
+
+  await page.close();
+  expect(valid).toBe(false);
+});

@@ -42,21 +42,42 @@ function isAbsolutelyPositioned(el?: HTMLElement | null) {
   );
 }
 
+function isTopLayer(el?: HTMLElement | null) {
+  return Boolean(el && getComputedStyle(el, ':backdrop').position === 'fixed');
+}
+
+function isTargetPreceedingAnchor(target: HTMLElement, anchor: HTMLElement) {
+  // const topLayerSet = [] // TODO add/remove based on calls to `showPopover` or `showDialog` and `close()`
+  if (isFixedPositioned(target) && hasStyle(anchor, 'position', 'absolute')) {
+    return true;
+  }
+  return false;
+}
+
 // Validates that anchor element is a valid anchor for given target element
 export async function isValidAnchorElement(
   anchor: HTMLElement,
   target: HTMLElement,
 ) {
+  if (isTopLayer(anchor) && isTopLayer(target)) {
+    if (isTargetPreceedingAnchor(target, anchor)) {
+      return false;
+    }
+    return true;
+  }
+
   const anchorContainingBlock = await platform.getOffsetParent?.(anchor);
   const targetContainingBlock = await platform.getOffsetParent?.(target);
 
   // If el has the same containing block as the querying element,
   // el must not be absolutely positioned.
-  if (
-    isAbsolutelyPositioned(anchor) &&
-    anchorContainingBlock === targetContainingBlock
-  ) {
-    return false;
+  if (isAbsolutelyPositioned(anchor)) {
+    if (isTopLayer(target)) {
+      return true;
+    }
+    if (anchorContainingBlock === targetContainingBlock) {
+      return false;
+    }
   }
 
   // If el has a different containing block from the querying element,
@@ -109,9 +130,8 @@ export async function validatedForPositioning(
 ) {
   if (
     !(
-      targetEl instanceof HTMLElement &&
-      anchorSelectors.length &&
-      isAbsolutelyPositioned(targetEl)
+      (targetEl instanceof HTMLElement && anchorSelectors.length) //&&
+      //isAbsolutelyPositioned(targetEl) // TODO
     )
   ) {
     return null;
