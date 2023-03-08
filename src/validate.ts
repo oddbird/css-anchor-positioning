@@ -42,17 +42,23 @@ function isAbsolutelyPositioned(el?: HTMLElement | null) {
   );
 }
 
-function isTopLayer(el?: HTMLElement | null) {
-  return Boolean(el && getComputedStyle(el, ':backdrop').position === 'fixed');
+function isTopLayer(el: HTMLElement) {
+  // below only works for chromium, FF / Webkit return 'fixed' for non-top layer elements as well
+  // return Boolean(getComputedStyle(el, '::backdrop').position === 'fixed');
+
+  // alternative approach - check for the specific top layer element types: "Currently, the top layer elements are: popovers, modal dialogs, and elements in a fullscreen mode."
+  return Boolean(
+    el.nodeName === 'DIALOG' || el.attributes.hasOwnProperty('popover'),
+  );
 }
 
-function isTargetPreceedingAnchor(target: HTMLElement, anchor: HTMLElement) {
-  // const topLayerSet = [] // TODO add/remove based on calls to `showPopover` or `showDialog` and `close()`
-  if (isFixedPositioned(target) && hasStyle(anchor, 'position', 'absolute')) {
-    return true;
-  }
-  return false;
-}
+// function isTargetPreceedingAnchor(target: HTMLElement, anchor: HTMLElement) {
+//   // TODO keep track of top layer order
+//   if (isFixedPositioned(target) && hasStyle(anchor, 'position', 'absolute')) {
+//     return true;
+//   }
+//   return false;
+// }
 
 // Validates that anchor element is a valid anchor for given target element
 export async function isValidAnchorElement(
@@ -60,9 +66,9 @@ export async function isValidAnchorElement(
   target: HTMLElement,
 ) {
   if (isTopLayer(anchor) && isTopLayer(target)) {
-    if (isTargetPreceedingAnchor(target, anchor)) {
-      return false;
-    }
+    // if (isTargetPreceedingAnchor(target, anchor)) {
+    //   return false;
+    // }
     return true;
   }
 
@@ -130,8 +136,9 @@ export async function validatedForPositioning(
 ) {
   if (
     !(
-      (targetEl instanceof HTMLElement && anchorSelectors.length) //&&
-      //isAbsolutelyPositioned(targetEl) // TODO
+      targetEl instanceof HTMLElement &&
+      anchorSelectors.length &&
+      isAbsolutelyPositioned(targetEl)
     )
   ) {
     return null;

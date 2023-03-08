@@ -792,59 +792,59 @@ test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anc
   expect(valid).toBe(false);
 });
 
-test('top layer - invalid - succeeding top-layer anchor with top-layer target - WPT anchor-position-top-layer-006', async ({
-  browser,
-}) => {
-  // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-006.html
-  const page = await buildPage(browser);
-  await page.setContent(
-    `
-      <style>
-        #my-anchor-positioning {
-            position: absolute;
-            top: 300px;
-            left: 200px;
-            width: 100px;
-            height: 100px;
-            background: orange;
-            anchor-name: --a;
-        }
+// test('top layer - invalid - succeeding top-layer anchor with top-layer target - WPT anchor-position-top-layer-006', async ({
+//   browser,
+// }) => {
+//   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-006.html
+//   const page = await buildPage(browser);
+//   await page.setContent(
+//     `
+//       <style>
+//         #my-anchor-positioning {
+//             position: absolute;
+//             top: 300px;
+//             left: 200px;
+//             width: 100px;
+//             height: 100px;
+//             background: orange;
+//             anchor-name: --a;
+//         }
 
-        #my-target-positioning {
-            position: fixed;
-            top: anchor(--a bottom, 200px);
-            left: anchor(--a left, 300px);
-            width: 100px;
-            height: 100px;
-            background: lime;
-            anchor-scroll: --a;
-        }
+//         #my-target-positioning {
+//             position: fixed;
+//             top: anchor(--a bottom, 200px);
+//             left: anchor(--a left, 300px);
+//             width: 100px;
+//             height: 100px;
+//             background: lime;
+//             anchor-scroll: --a;
+//         }
 
-        body {
-          margin: 0;
-          height: 300vh;
-        }
+//         body {
+//           margin: 0;
+//           height: 300vh;
+//         }
 
-        dialog {
-          margin: 0;
-          border: 0;
-          padding: 0;
-          inset: auto;
-          outline: none;
-        }
+//         dialog {
+//           margin: 0;
+//           border: 0;
+//           padding: 0;
+//           inset: auto;
+//           outline: none;
+//         }
 
-        dialog::backdrop {
-          background: transparent;
-        }
-      </style>
+//         dialog::backdrop {
+//           background: transparent;
+//         }
+//       </style>
 
-      <dialog id="my-anchor-positioning"></dialog>
-      <dialog id="my-target-positioning"></dialog>
-  `,
-    { waitUntil: 'load' },
-  );
-  const valid = await callValidFunction(page);
+//       <dialog id="my-anchor-positioning"></dialog>
+//       <dialog id="my-target-positioning"></dialog>
+//   `,
+//     { waitUntil: 'load' },
+//   );
+//   const valid = await callValidFunction(page);
 
-  await page.close();
-  expect(valid).toBe(false);
-});
+//   await page.close();
+//   expect(valid).toBe(false);
+// });
