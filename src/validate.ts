@@ -48,7 +48,8 @@ function isTopLayer(el: HTMLElement) {
 
   // alternative approach - check for the specific top layer element types: "Currently, the top layer elements are: popovers, modal dialogs, and elements in a fullscreen mode."
   return Boolean(
-    el.nodeName === 'DIALOG' || el.attributes.hasOwnProperty('popover'),
+    el.nodeName === 'DIALOG' ||
+      Object.prototype.hasOwnProperty.call(el.attributes, 'popover'),
   );
 }
 
