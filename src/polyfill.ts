@@ -276,7 +276,10 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-async function applyAnchorPositions(declarations: AnchorFunctionDeclaration) {
+async function applyAnchorPositions(
+  declarations: AnchorFunctionDeclaration,
+  useAnimationFrame = false,
+) {
   const root = document.documentElement;
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
@@ -287,22 +290,27 @@ async function applyAnchorPositions(declarations: AnchorFunctionDeclaration) {
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        autoUpdate(anchor, target, async () => {
-          const rects = await platform.getElementRects({
-            reference: anchor,
-            floating: target,
-            strategy: 'absolute',
-          });
-          const resolved = await getPixelValue({
-            targetEl: target,
-            targetProperty: property,
-            anchorRect: rects.reference,
-            anchorSide: anchorValue.anchorSide,
-            anchorSize: anchorValue.anchorSize,
-            fallback: anchorValue.fallbackValue,
-          });
-          root.style.setProperty(anchorValue.uuid, resolved);
-        });
+        autoUpdate(
+          anchor,
+          target,
+          async () => {
+            const rects = await platform.getElementRects({
+              reference: anchor,
+              floating: target,
+              strategy: 'absolute',
+            });
+            const resolved = await getPixelValue({
+              targetEl: target,
+              targetProperty: property,
+              anchorRect: rects.reference,
+              anchorSide: anchorValue.anchorSide,
+              anchorSize: anchorValue.anchorSize,
+              fallback: anchorValue.fallbackValue,
+            });
+            root.style.setProperty(anchorValue.uuid, resolved);
+          },
+          { animationFrame: useAnimationFrame },
+        );
       } else {
         // Use fallback value
         const resolved = await getPixelValue({
@@ -320,6 +328,7 @@ async function applyAnchorPositions(declarations: AnchorFunctionDeclaration) {
 async function applyPositionFallbacks(
   targetSel: string,
   fallbacks: TryBlock[],
+  useAnimationFrame = false,
 ) {
   if (!fallbacks.length) {
     return;
@@ -330,65 +339,78 @@ async function applyPositionFallbacks(
   for (const target of targets) {
     let checking = false;
     const offsetParent = await getOffsetParent(target);
-    autoUpdate(offsetParent, target, async () => {
-      // If this auto-update was triggered while the polyfill is already looping
-      // through the possible `@try` blocks, do not check again.
-      if (checking) {
-        return;
-      }
-      checking = true;
-      // Apply the styles from each `@try` block (in order), stopping when we
-      // reach one that does not cause the target's margin-box to overflow
-      // its offsetParent (containing block).
-      for (const [index, { uuid }] of fallbacks.entries()) {
-        target.setAttribute('data-anchor-polyfill', uuid);
-        if (index === fallbacks.length - 1) {
-          checking = false;
-          break;
+    autoUpdate(
+      target,
+      target,
+      async () => {
+        // If this auto-update was triggered while the polyfill is already looping
+        // through the possible `@try` blocks, do not check again.
+        if (checking) {
+          return;
         }
-        const rects = await platform.getElementRects({
-          reference: offsetParent,
-          floating: target,
-          strategy: 'absolute',
-        });
-        const overflow = await detectOverflow(
-          {
-            x: target.offsetLeft,
-            y: target.offsetTop,
-            platform: platformWithCache,
-            rects,
-            elements: { floating: target },
+        checking = true;
+        // Apply the styles from each `@try` block (in order), stopping when we
+        // reach one that does not cause the target's margin-box to overflow
+        // its offsetParent (containing block).
+        for (const [index, { uuid }] of fallbacks.entries()) {
+          target.setAttribute('data-anchor-polyfill', uuid);
+          if (index === fallbacks.length - 1) {
+            checking = false;
+            break;
+          }
+          const rects = await platform.getElementRects({
+            reference: target,
+            floating: target,
             strategy: 'absolute',
-          } as unknown as MiddlewareState,
-          {
-            boundary: offsetParent,
-            rootBoundary: 'document',
-            padding: getMargins(target),
-          },
-        );
-        // If none of the sides overflow, use this `@try` block and stop loop...
-        if (Object.values(overflow).every((side) => side <= 0)) {
-          checking = false;
-          break;
+          });
+          const overflow = await detectOverflow(
+            {
+              x: target.offsetLeft,
+              y: target.offsetTop,
+              platform: platformWithCache,
+              rects,
+              elements: { floating: target },
+              strategy: 'absolute',
+            } as unknown as MiddlewareState,
+            {
+              boundary: offsetParent,
+              rootBoundary: 'document',
+              padding: getMargins(target),
+            },
+          );
+          // If none of the sides overflow, use this `@try` block and stop loop...
+          if (Object.values(overflow).every((side) => side <= 0)) {
+            checking = false;
+            break;
+          }
         }
-      }
-    });
+      },
+      { animationFrame: useAnimationFrame },
+    );
   }
 }
 
-async function position(rules: AnchorPositions) {
+async function position(rules: AnchorPositions, useAnimationFrame = false) {
   for (const pos of Object.values(rules)) {
     // Handle `anchor()` and `anchor-size()` functions...
-    await applyAnchorPositions(pos.declarations ?? {});
+    await applyAnchorPositions(pos.declarations ?? {}, useAnimationFrame);
   }
 
   for (const [targetSel, position] of Object.entries(rules)) {
     // Handle `@position-fallback` blocks...
-    await applyPositionFallbacks(targetSel, position.fallbacks ?? []);
+    await applyPositionFallbacks(
+      targetSel,
+      position.fallbacks ?? [],
+      useAnimationFrame,
+    );
   }
 }
 
-export async function polyfill() {
+export async function polyfill(animationFrame?: boolean) {
+  const useAnimationFrame =
+    animationFrame === undefined
+      ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
+      : animationFrame;
   // fetch CSS from stylesheet and inline style
   const styleData = await fetchCSS();
 
@@ -400,7 +422,7 @@ export async function polyfill() {
     await transformCSS(styleData, inlineStyles);
 
     // calculate position values
-    await position(rules);
+    await position(rules, useAnimationFrame);
   }
 
   return rules;
