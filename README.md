@@ -27,6 +27,37 @@ To use the polyfill, add this script tag to your document `<head>`:
 
 You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
 
+## Configuration
+
+The polyfill accepts one argument (type: `boolean`, default: `false`), which
+determines whether anchor calculations should [update on every animation
+frame](https://floating-ui.com/docs/autoUpdate#animationframe) (e.g. when the
+anchor element moves), in addition to always updating on scroll/resize. While
+this option is optimized for performance, it should be used sparingly.
+
+```js
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    const { default: polyfill } = await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js");
+
+    polyfill(true);
+  }
+</script>
+```
+
+When using the default version of the polyfill that executes automatically, this
+option can be set by setting the value of
+`window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`.
+
+```js
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    window.UPDATE_ANCHOR_ON_ANIMATION_FRAME = true;
+    import("https://unpkg.com/@oddbird/css-anchor-positioning");
+  }
+</script>
+```
+
 ## Limitations
 
 This polyfill doesn't (yet) support the following:
@@ -37,8 +68,6 @@ This polyfill doesn't (yet) support the following:
 - anchor functions with `implicit` anchor-element
 - automatic anchor positioning: anchor functions with `auto` or `auto-same`
   anchor-side
-- dynamic anchor movement other than container resize/scroll
-  ([#73](https://github.com/oddbird/css-anchor-positioning/issues/73))
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
@@ -46,12 +75,12 @@ This polyfill doesn't (yet) support the following:
 - vertical/rtl writing-modes (partial support)
 - absolutely-positioned targets with `grid-column`/`grid-row`/`grid-area` in a
   CSS Grid layout
-- `@position-fallback` where targets overflow the grid area but do not overflow
-  the containing block
+- `@position-fallback` where targets in a CSS Grid layout overflow the grid area
+  but do not overflow the containing block
 - `@position-fallback` where targets overflow their inset-modified containing
   block, overlapping the anchor element
 - anchors in multi-column layouts
-- anchor functions used as the fallback value for another anchor function
+- anchor functions used as the fallback value in another anchor function
 - anchor functions assigned to `bottom` or `right` properties on inline targets
   whose offset-parent is inline with `clientHeight`/`clientWidth` of `0`
   (partial support -- does not account for possible scrollbar width)

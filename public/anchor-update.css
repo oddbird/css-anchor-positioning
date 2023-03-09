@@ -1,0 +1,17 @@
+#my-anchor-update {
+  anchor-name: --my-anchor-update;
+}
+
+#my-anchor-update[data-small] {
+  width: 100px;
+}
+
+#my-anchor-update[data-large] {
+  width: 400px;
+}
+
+#my-target-update {
+  position: absolute;
+  right: anchor(--my-anchor-update right);
+  top: anchor(--my-anchor-update bottom);
+}
