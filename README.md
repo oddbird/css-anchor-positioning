@@ -62,7 +62,7 @@ option can be set by setting the value of
 
 This polyfill doesn't (yet) support the following:
 
-- top layer anchor elements
+- Tracking the order of elements in the [top-layer](https://fullscreen.spec.whatwg.org/#new-stacking-layer) to invalidate top-layer target elements from anchoring to succeding top-layer anchors. See [this WPT](https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-006.html) for an example.
 - `anchor-default` property
 - `anchor-scroll` property
 - anchor functions with `implicit` anchor-element
