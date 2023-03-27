@@ -43,14 +43,9 @@ function isAbsolutelyPositioned(el?: HTMLElement | null) {
 }
 
 function isTopLayer(el: HTMLElement) {
-  // below only works for chromium, FF / Webkit return 'fixed' for non-top layer elements as well
-  // return Boolean(getComputedStyle(el, '::backdrop').position === 'fixed');
-
-  // alternative approach - check for the specific top layer element types: "Currently, the top layer elements are: popovers, modal dialogs, and elements in a fullscreen mode."
-  return Boolean(
-    el.nodeName === 'DIALOG' ||
-      Object.prototype.hasOwnProperty.call(el.attributes, 'popover'),
-  );
+  // check for the specific top layer element types: "Currently, the top layer elements are: popovers, modal dialogs, and elements in a fullscreen mode."
+  const topLayerElements = document.querySelectorAll('dialog, [popover]');
+  return Boolean(Array.from(topLayerElements).includes(el));
 }
 
 // function isTargetPreceedingAnchor(target: HTMLElement, anchor: HTMLElement) {
