@@ -10,9 +10,20 @@
       rel="stylesheet"
       href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.css"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.min.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
     <link rel="stylesheet" href="/demo.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
+    <link rel="stylesheet" href="/anchor-popover.css" />
     <link rel="stylesheet" href="/position-fallback.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
@@ -283,6 +294,40 @@
   position: absolute;
   right: anchor(implicit left);
   bottom: anchor(top);
+}</code></pre>
+    </section>
+    <section id="anchor-positioning-popover" class="demo-item">
+      <h2>
+        <a href="#anchor-positioning-popover" aria-hidden="true">🔗</a>
+        Anchoring a <code>popover</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-target-popover" class="target" popover="auto">
+          Popover (Target)
+        </div>
+        <button
+          id="my-anchor-popover"
+          class="anchor"
+          popovertarget="my-target-popover"
+        >
+          Anchor (click to open)
+        </button>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the bottom right corner
+        of the Anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-popover {
+  position: absolute;
+  left: 200px;
+  anchor-name: --my-anchor-popover;
+}
+
+#my-target-popover {
+  position: absolute;
+  left: anchor(--my-anchor-popover right);
+  top: anchor(--my-anchor-popover bottom);
 }</code></pre>
     </section>
     <section id="custom-prop-name" class="demo-item">

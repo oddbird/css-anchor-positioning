@@ -42,21 +42,43 @@ function isAbsolutelyPositioned(el?: HTMLElement | null) {
   );
 }
 
+function isTopLayer(el: HTMLElement) {
+  // check for the specific top layer element types...
+  // Currently, the top layer elements are:
+  // popovers, modal dialogs, and elements in a fullscreen mode.
+  // See https://developer.chrome.com/blog/top-layer-devtools/#what-are-the-top-layer-and-top-layer-elements
+  // TODO:
+  //   - only check for "open" popovers
+  //   - add support for fullscreen elements
+  const topLayerElements = document.querySelectorAll('dialog, [popover]');
+  return Boolean(Array.from(topLayerElements).includes(el));
+}
+
 // Validates that anchor element is a valid anchor for given target element
 export async function isValidAnchorElement(
   anchor: HTMLElement,
   target: HTMLElement,
 ) {
+  if (isTopLayer(anchor) && isTopLayer(target)) {
+    // TODO: keep track of top layer order
+    // if (isTargetPrecedingAnchor(target, anchor)) {
+    //   return false;
+    // }
+    return true;
+  }
+
   const anchorContainingBlock = await platform.getOffsetParent?.(anchor);
   const targetContainingBlock = await platform.getOffsetParent?.(target);
 
   // If el has the same containing block as the querying element,
   // el must not be absolutely positioned.
-  if (
-    isAbsolutelyPositioned(anchor) &&
-    anchorContainingBlock === targetContainingBlock
-  ) {
-    return false;
+  if (isAbsolutelyPositioned(anchor)) {
+    if (isTopLayer(target)) {
+      return true;
+    }
+    if (anchorContainingBlock === targetContainingBlock) {
+      return false;
+    }
   }
 
   // If el has a different containing block from the querying element,

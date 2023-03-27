@@ -1,0 +1,12 @@
+#my-anchor-popover {
+  position: absolute;
+  left: 200px;
+  anchor-name: --my-anchor-popover;
+}
+
+#my-target-popover {
+  position: absolute;
+  margin: 0;
+  left: anchor(--my-anchor-popover right);
+  top: anchor(--my-anchor-popover bottom);
+}
