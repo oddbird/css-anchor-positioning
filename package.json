@@ -78,21 +78,21 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.2.8",
+    "@floating-ui/dom": "^1.2.9",
     "@types/css-tree": "^2.3.1",
     "css-tree": "^2.3.1",
     "nanoid": "^4.0.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.34.0",
+    "@playwright/test": "^1.34.3",
     "@types/async": "^3.2.20",
     "@types/node": "*",
-    "@types/selenium-webdriver": "^4.1.14",
-    "@typescript-eslint/eslint-plugin": "^5.59.6",
-    "@typescript-eslint/parser": "^5.59.6",
+    "@types/selenium-webdriver": "^4.1.15",
+    "@typescript-eslint/eslint-plugin": "^5.59.7",
+    "@typescript-eslint/parser": "^5.59.7",
     "@vitest/coverage-istanbul": "^0.31.1",
     "async": "^3.2.4",
-    "browserslist": "^4.21.5",
+    "browserslist": "^4.21.7",
     "browserstack-local": "^1.5.2",
     "cross-env": "^7.0.3",
     "eslint": "^8.41.0",
@@ -103,7 +103,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "fetch-mock": "^9.11.0",
-    "jsdom": "^22.0.0",
+    "jsdom": "^22.1.0",
     "liquidjs": "^10.7.1",
     "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
@@ -113,7 +113,7 @@
     "stylelint-config-standard": "^33.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
-    "vite": "^4.3.8",
+    "vite": "^4.3.9",
     "vitest": "^0.31.1"
   },
   "resolutions": {
