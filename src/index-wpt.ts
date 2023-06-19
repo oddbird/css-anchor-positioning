@@ -7,8 +7,8 @@ window.CHECK_LAYOUT_DELAY = true;
 // apply polyfill
 if (document.readyState !== 'complete') {
   window.addEventListener('load', () => {
-    polyfill(true);
+    polyfill();
   });
 } else {
-  polyfill(true);
+  polyfill();
 }

@@ -51,7 +51,7 @@
 
       if (!('anchorName' in document.documentElement.style)) {
         btn.addEventListener('click', () =>
-          polyfill(true).then((rules) => {
+          polyfill().then((rules) => {
             btn.innerText = 'Polyfill Applied';
             btn.setAttribute('disabled', '');
             console.log(rules);
