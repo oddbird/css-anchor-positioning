@@ -32,8 +32,9 @@ You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
 The polyfill accepts one argument (type: `boolean`, default: `false`), which
 determines whether anchor calculations should [update on every animation
 frame](https://floating-ui.com/docs/autoUpdate#animationframe) (e.g. when the
-anchor element moves), in addition to always updating on scroll/resize. While
-this option is optimized for performance, it should be used sparingly.
+anchor element is animated using `transform`s), in addition to always updating
+on scroll/resize. While this option is optimized for performance, it should be
+used sparingly.
 
 ```js
 <script type="module">
