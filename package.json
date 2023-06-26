@@ -78,7 +78,7 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.4.1",
+    "@floating-ui/dom": "^1.4.2",
     "@types/css-tree": "^2.3.1",
     "css-tree": "^2.3.1",
     "nanoid": "^4.0.2"
@@ -88,8 +88,8 @@
     "@types/async": "^3.2.20",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.15",
-    "@typescript-eslint/eslint-plugin": "^5.59.11",
-    "@typescript-eslint/parser": "^5.59.11",
+    "@typescript-eslint/eslint-plugin": "^5.60.0",
+    "@typescript-eslint/parser": "^5.60.0",
     "@vitest/coverage-istanbul": "^0.32.2",
     "async": "^3.2.4",
     "browserslist": "^4.21.9",
@@ -99,7 +99,7 @@
     "eslint-config-prettier": "^8.8.0",
     "eslint-import-resolver-typescript": "^3.5.5",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-jest": "^27.2.2",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "fetch-mock": "^9.11.0",
@@ -109,7 +109,7 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^2.8.8",
     "selenium-webdriver": "^4.10.0",
-    "stylelint": "^15.8.0",
+    "stylelint": "^15.9.0",
     "stylelint-config-standard": "^33.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.3",
