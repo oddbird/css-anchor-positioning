@@ -76,12 +76,12 @@ interface ResultDataDetail {
 
 type TestResult = [string, ResultDataDetail];
 
-type TestSuite = {
+interface TestSuite {
   js: string[];
-  iframe: Array<[string, string]>;
-};
+  iframe: [string, string][];
+}
 
-const TEST_FOLDERS: Array<string> = ['css/css-anchor-position'];
+const TEST_FOLDERS: string[] = ['css/css-anchor-position'];
 
 // Tests that check DOM implementation details instead of user-facing behavior
 const TEST_BLOCKLIST = [
@@ -98,7 +98,7 @@ const TEST_BLOCKLIST = [
 ];
 const TEST_FILTERS = [new RegExp(TEST_BLOCKLIST.join('|'))];
 
-const SUBTEST_FILTERS: Array<RegExp> = [
+const SUBTEST_FILTERS: RegExp[] = [
   //   /calc\(.*\)/,
   //   /max\(.*\)/,
   //   /style\(.*\)/,
@@ -291,8 +291,8 @@ async function getTests(manifestPath: string): Promise<TestSuite> {
   const manifestBuffer = await readFile(manifestPath);
   const manifest = JSON.parse(manifestBuffer.toString());
 
-  const js: Array<string> = [];
-  const iframe: Array<[string, string]> = [];
+  const js: string[] = [];
+  const iframe: [string, string][] = [];
 
   for (const folder_path of TEST_FOLDERS) {
     // console.info(`folder_path => ${folder_path}`);
@@ -366,7 +366,7 @@ async function runTestSuite(
   name: string,
   capabilities: Record<string, unknown>,
   testSuite: TestSuite,
-): Promise<Array<TestResult>> {
+): Promise<TestResult[]> {
   const driver = createWebDriver(capabilities);
 
   try {
@@ -421,7 +421,7 @@ async function main() {
     `Iframe Tests:\n${testSuite.iframe.map(([, path]) => path).join('\n')}\n`,
   );
 
-  const tests: Array<() => Promise<void>> = [];
+  const tests: (() => Promise<void>)[] = [];
   const results: BrowserDefinition[] = BROWSERS.map((browser) => ({
     ...browser,
     versions: browser.versions.map((version) => {
