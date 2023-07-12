@@ -12,11 +12,9 @@ interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }
 
-interface AnchorNames {
-  // `key` is the `anchor-name` value
-  // `value` is an array of all element selectors with that anchor name
-  [key: string]: string[];
-}
+// `key` is the `anchor-name` value
+// `value` is an array of all element selectors with that anchor name
+type AnchorNames = Record<string, string[]>;
 
 export type InsetProperty =
   | 'top'
@@ -138,22 +136,18 @@ export type AnchorFunctionDeclaration = Partial<
   Record<InsetProperty | SizingProperty, AnchorFunction[]>
 >;
 
-interface AnchorFunctionDeclarations {
-  // `key` is the target element selector
-  // `value` is an object with all anchor-function declarations on that element
-  [key: string]: AnchorFunctionDeclaration;
-}
+// `key` is the target element selector
+// `value` is an object with all anchor-function declarations on that element
+type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
 interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
   fallbacks?: TryBlock[];
 }
 
-export interface AnchorPositions {
-  // `key` is the target element selector
-  // `value` is an object with all anchor-positioning data for that element
-  [key: string]: AnchorPosition;
-}
+// `key` is the target element selector
+// `value` is an object with all anchor-positioning data for that element
+export type AnchorPositions = Record<string, AnchorPosition>;
 
 export interface TryBlock {
   uuid: string;
@@ -164,21 +158,20 @@ export interface TryBlock {
   >;
 }
 
-interface FallbackTargets {
-  // `key` is the `@try` block uuid
-  // `value` is the target element selector
-  [key: string]: string;
-}
+// `key` is the `@try` block uuid
+// `value` is the target element selector
+type FallbackTargets = Record<string, string>;
 
-interface Fallbacks {
+type Fallbacks = Record<
   // `key` is the `position-fallback` value (name)
-  [key: string]: {
+  string,
+  {
     // `targets` is an array of selectors where this `position-fallback` is used
     targets: string[];
     // `blocks` is an array of `@try` block declarations (in order)
     blocks: TryBlock[];
-  };
-}
+  }
+>;
 
 function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
