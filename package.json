@@ -84,13 +84,13 @@
     "nanoid": "^4.0.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.37.0",
+    "@playwright/test": "^1.37.1",
     "@types/async": "^3.2.20",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.15",
-    "@typescript-eslint/eslint-plugin": "^6.3.0",
-    "@typescript-eslint/parser": "^6.3.0",
-    "@vitest/coverage-istanbul": "^0.34.1",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@typescript-eslint/parser": "^6.4.0",
+    "@vitest/coverage-istanbul": "^0.34.2",
     "async": "^3.2.4",
     "browserslist": "^4.21.10",
     "browserstack-local": "^1.5.4",
@@ -98,7 +98,7 @@
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.0",
-    "eslint-plugin-import": "^2.28.0",
+    "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-jest": "^27.2.3",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "fetch-mock": "^9.11.0",
@@ -106,14 +106,14 @@
     "liquidjs": "^10.8.4",
     "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
-    "prettier": "^3.0.1",
+    "prettier": "^3.0.2",
     "selenium-webdriver": "^4.11.1",
-    "stylelint": "^15.10.2",
+    "stylelint": "^15.10.3",
     "stylelint-config-standard": "^34.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6",
     "vite": "^4.4.9",
-    "vitest": "^0.34.1"
+    "vitest": "^0.34.2"
   },
   "resolutions": {
     "tslib": ">=2"
