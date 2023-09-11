@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.action == 'reopened'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check if WPT results branch exists
         id: results-branch-exists
         run: echo "EXISTS=$(git ls-remote --heads origin $RESULTS_BRANCH | wc -l)" >> $GITHUB_OUTPUT
@@ -44,7 +44,7 @@ jobs:
           git push origin $RESULTS_BRANCH
           git switch ${{ github.ref_name }}
       - name: Clone WPT results branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.RESULTS_BRANCH }}
           path: wpt-results
@@ -56,7 +56,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Clone WPT repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ env.WPT_REPO }}
           ref: ${{ env.WPT_REF }}
