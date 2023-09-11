@@ -17,7 +17,7 @@ jobs:
     env:
       BRANCH_NAME: auto-dependency-upgrades
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           # Use a separate key so the resulting PR also runs GH Actions
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
