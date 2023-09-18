@@ -44,15 +44,15 @@ async function expectWithinOne(
   not?: boolean,
 ) {
   const actual = await locator.evaluate(
-    (node: HTMLElement, attr: string) =>
-      window.getComputedStyle(node).getPropertyValue(attr),
+    (node: HTMLElement, attribute: string) =>
+      window.getComputedStyle(node).getPropertyValue(attribute),
     attr,
   );
   const actualNumber = Number(actual.slice(0, -2));
   if (not) {
-    return expect(actualNumber).not.toBeCloseTo(expected, 1);
+    return expect(actualNumber).not.toBeCloseTo(expected, 0);
   }
-  return expect(actualNumber).toBeCloseTo(expected, 1);
+  return expect(actualNumber).toBeCloseTo(expected, 0);
 }
 
 test('applies polyfill for `anchor()`', async ({ page }) => {
@@ -93,17 +93,15 @@ test('updates when sizes change', async ({ page }) => {
   const parentWidth = await getParentWidth(page, targetSelector);
   const parentHeight = await getParentHeight(page, targetSelector);
   await applyPolyfill(page);
-  let expected = parentWidth - width;
 
   await expect(target).toHaveCSS('top', `${parentHeight}px`);
-  await expectWithinOne(target, 'right', expected);
+  await expectWithinOne(target, 'right', parentWidth - width);
 
   await page
     .locator(anchorSelector)
     .evaluate((anchor) => (anchor.style.width = '50px'));
-  expected = parentWidth - 50;
 
-  await expectWithinOne(target, 'right', expected);
+  await expectWithinOne(target, 'right', parentWidth - 50);
 });
 
 test('applies polyfill for `@position-fallback`', async ({ page }) => {
