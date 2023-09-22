@@ -1,0 +1,14 @@
+#my-anchor-added-new {
+  anchor-name: --my-anchor-added;
+  margin-bottom: 1rem;
+}
+
+#my-anchor-added-original {
+  anchor-name: --my-anchor-added;
+}
+
+#my-target-added {
+  position: absolute;
+  left: anchor(--my-anchor-added right);
+  top: anchor(--my-anchor-added top);
+}

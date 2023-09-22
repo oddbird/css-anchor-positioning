@@ -1,6 +1,7 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+import { POLYFILL_ID_ATTR, TARGET_STYLE_ATTR } from './constants.js';
 import { StyleData } from './fetch.js';
 import { validatedForPositioning } from './validate.js';
 
@@ -514,7 +515,7 @@ export async function parseCSS(styleData: StyleData[]) {
           }
           // Add each `@try` block, scoped to a unique data-attr
           for (const block of fallbacks[name].blocks) {
-            const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+            const dataAttr = `[${POLYFILL_ID_ATTR}="${block.uuid}"]`;
             this.stylesheet?.children.prependData({
               type: 'Rule',
               prelude: {
@@ -915,7 +916,7 @@ export async function parseCSS(styleData: StyleData[]) {
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
     let targets: NodeListOf<HTMLElement>;
     if (
-      targetSel.startsWith('[data-anchor-polyfill=') &&
+      targetSel.startsWith(`[${POLYFILL_ID_ATTR}=`) &&
       fallbackTargets[targetSel]
     ) {
       // If we're dealing with a `@position-fallback` `@try` block,
@@ -939,13 +940,16 @@ export async function parseCSS(styleData: StyleData[]) {
             ...(inlineStyles.get(targetEl) ?? {}),
             [anchorObj.uuid]: uuid,
           });
+          const original = targetEl.getAttribute('style') ?? '';
           // Point original uuid to new uuid
           targetEl.setAttribute(
             'style',
-            `${anchorObj.uuid}: var(${uuid}); ${
-              targetEl.getAttribute('style') ?? ''
-            }`,
+            `${anchorObj.uuid}: var(${uuid}); ${original}`,
           );
+          if (!targetEl.hasAttribute(TARGET_STYLE_ATTR)) {
+            // Store original styles (for potential later restoration)
+            targetEl.setAttribute(TARGET_STYLE_ATTR, original);
+          }
           // Populate new data for each anchor/target combo
           validPositions[targetSel] = {
             ...validPositions[targetSel],

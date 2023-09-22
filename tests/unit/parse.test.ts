@@ -1,3 +1,4 @@
+import { POLYFILL_ID_ATTR } from '../../src/constants.js';
 import { type StyleData } from '../../src/fetch.js';
 import { AnchorPositions, parseCSS } from '../../src/parse.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
@@ -527,7 +528,7 @@ describe('parseCSS', () => {
       },
     };
     for (const { uuid } of rules['#my-target-fallback']?.fallbacks ?? []) {
-      expected[`[data-anchor-polyfill="${uuid}"]`] = {
+      expected[`[${POLYFILL_ID_ATTR}="${uuid}"]`] = {
         declarations: expect.any(Object),
       };
     }
