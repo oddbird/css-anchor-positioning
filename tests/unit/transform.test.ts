@@ -23,17 +23,30 @@ describe('transformCSS', () => {
     const div = document.getElementById('div') as HTMLDivElement;
     const div2 = document.getElementById('div2') as HTMLDivElement;
     const styleData = [
-      { el: link, css: 'html { margin: 0; }', changed: true },
-      { el: style, css: 'html { padding: 0; }', changed: true },
+      {
+        el: link,
+        css: 'html { margin: 0; }',
+        changed: true,
+        original: 'html { margin: 1; }',
+        url: new URL(link.href, document.baseURI),
+      },
+      {
+        el: style,
+        css: 'html { padding: 0; }',
+        changed: true,
+        original: 'p { color: red; }',
+      },
       {
         el: div,
         css: `[${INLINE_STYLES_ID_ATTR}="key"]{color:blue;}`,
         changed: true,
+        original: '--foo: var(--bar); color: red;',
       },
       {
         el: div2,
-        css: `[${INLINE_STYLES_ID_ATTR}="key2"]{color:blue;}`,
+        css: `[${INLINE_STYLES_ID_ATTR}="key2"]{color:red;}`,
         changed: false,
+        original: 'color: red;',
       },
     ];
     const inlineStyles = new Map();

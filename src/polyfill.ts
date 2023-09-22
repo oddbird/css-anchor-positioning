@@ -475,7 +475,9 @@ export async function restore() {
       if (el.tagName.toLowerCase() === 'style') {
         el.innerHTML = original;
       } else if (el.tagName.toLowerCase() === 'link') {
-        await replaceLink(el as HTMLLinkElement, original, url);
+        if (url) {
+          await replaceLink(el as HTMLLinkElement, original, url);
+        }
       } else {
         el.setAttribute('style', original);
       }

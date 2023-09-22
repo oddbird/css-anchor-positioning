@@ -631,16 +631,18 @@
       </div>
       <button id="toggle-anchor-width">Toggle anchor width</button>
       <script>
-        document.getElementById('toggle-anchor-width').addEventListener('click', () => {
-          const updateAnchor = document.getElementById('my-anchor-update');
-          if (updateAnchor.getAttribute('data-small')) {
-            updateAnchor.setAttribute('data-large', true);
-            updateAnchor.removeAttribute('data-small');
-          } else {
-            updateAnchor.setAttribute('data-small', true);
-            updateAnchor.removeAttribute('data-large');
-          }
-        });
+        document
+          .getElementById('toggle-anchor-width')
+          .addEventListener('click', () => {
+            const updateAnchor = document.getElementById('my-anchor-update');
+            if (updateAnchor.getAttribute('data-small')) {
+              updateAnchor.setAttribute('data-large', true);
+              updateAnchor.removeAttribute('data-small');
+            } else {
+              updateAnchor.setAttribute('data-small', true);
+              updateAnchor.removeAttribute('data-large');
+            }
+          });
       </script>
       <p class="note">
         With polyfill applied: Target and Anchor's right edges line up. Target's
@@ -666,7 +668,11 @@
         <a href="#anchor-added" aria-hidden="true">🔗</a>
         Dynamically added anchors
       </h2>
-      <div style="position: relative" class="demo-elements" id="my-anchor-added-container">
+      <div
+        style="position: relative"
+        class="demo-elements"
+        id="my-anchor-added-container"
+      >
         <div id="my-anchor-added-original" class="anchor">Original Anchor</div>
         <div id="my-target-added" class="target">Target</div>
       </div>
@@ -684,7 +690,9 @@
             addedAnchor.id = 'my-anchor-added-new';
             addedAnchor.classList.add('anchor');
             addedAnchor.innerText = 'Added Anchor';
-            document.getElementById('my-anchor-added-container').prepend(addedAnchor);
+            document
+              .getElementById('my-anchor-added-container')
+              .prepend(addedAnchor);
             addBtn.innerText = 'Remove anchor';
             window.polyfill();
           }
