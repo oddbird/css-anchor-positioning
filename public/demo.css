@@ -155,7 +155,7 @@ footer p {
 
 /* prettier-ignore */
 [href*='://']::after {
-  content: ' ↗';
+  content: '\a0↗';
 }
 
 nav a:any-link,
