@@ -84,20 +84,20 @@
     "nanoid": "^5.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.38.0",
-    "@types/async": "^3.2.20",
+    "@playwright/test": "^1.38.1",
+    "@types/async": "^3.2.21",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.16",
-    "@typescript-eslint/eslint-plugin": "^6.7.0",
-    "@typescript-eslint/parser": "^6.7.0",
-    "@vitest/coverage-istanbul": "^0.34.4",
+    "@typescript-eslint/eslint-plugin": "^6.7.2",
+    "@typescript-eslint/parser": "^6.7.2",
+    "@vitest/coverage-istanbul": "^0.34.5",
     "async": "^3.2.4",
-    "browserslist": "^4.21.10",
+    "browserslist": "^4.21.11",
     "browserstack-local": "^1.5.4",
     "cross-env": "^7.0.3",
-    "eslint": "^8.49.0",
+    "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",
-    "eslint-import-resolver-typescript": "^3.6.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-jest": "^27.4.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
@@ -113,7 +113,7 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
-    "vitest": "^0.34.4"
+    "vitest": "^0.34.5"
   },
   "resolutions": {
     "tslib": ">=2"
