@@ -20,20 +20,20 @@ export default defineConfig({
               fileName: 'css-anchor-positioning-wpt',
             }
           : process.env.BUILD_FN
-          ? // build that exposes the polyfill as a fn
-            {
-              entry: resolve(__dirname, 'src/index-fn.ts'),
-              name: 'CssAnchorPositioning',
-              // the proper extensions will be added
-              fileName: 'css-anchor-positioning-fn',
-            }
-          : // build that runs the polyfill on import
-            {
-              entry: resolve(__dirname, 'src/index.ts'),
-              name: 'CssAnchorPositioning',
-              // the proper extensions will be added
-              fileName: 'css-anchor-positioning',
-            },
+            ? // build that exposes the polyfill as a fn
+              {
+                entry: resolve(__dirname, 'src/index-fn.ts'),
+                name: 'CssAnchorPositioning',
+                // the proper extensions will be added
+                fileName: 'css-anchor-positioning-fn',
+              }
+            : // build that runs the polyfill on import
+              {
+                entry: resolve(__dirname, 'src/index.ts'),
+                name: 'CssAnchorPositioning',
+                // the proper extensions will be added
+                fileName: 'css-anchor-positioning',
+              },
         emptyOutDir: !process.env.BUILD_FN,
         target: 'es6',
         sourcemap: true,
