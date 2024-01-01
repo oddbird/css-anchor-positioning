@@ -88,9 +88,9 @@
     "@types/async": "^3.2.24",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.21",
-    "@typescript-eslint/eslint-plugin": "^6.15.0",
-    "@typescript-eslint/parser": "^6.15.0",
-    "@vitest/coverage-istanbul": "^1.1.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "@vitest/coverage-istanbul": "^1.1.1",
     "async": "^3.2.5",
     "browserslist": "^4.22.2",
     "browserstack-local": "^1.5.5",
@@ -108,12 +108,12 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^3.1.1",
     "selenium-webdriver": "^4.16.0",
-    "stylelint": "^16.0.2",
-    "stylelint-config-standard": "^35.0.0",
+    "stylelint": "^16.1.0",
+    "stylelint-config-standard": "^36.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.10",
-    "vitest": "^1.1.0"
+    "vitest": "^1.1.1"
   },
   "resolutions": {
     "tslib": ">=2"
