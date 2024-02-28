@@ -25,6 +25,19 @@ To use the polyfill, add this script tag to your document `<head>`:
 </script>
 ```
 
+If you want to manually apply the polyfill, you can instead import the
+`polyfill` function directly from the
+`@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js` file.
+
+For build tools such as Vite, Webpack, and Parcel, that will look like this:
+
+```js
+import polyfill from '@oddbird/css-anchor-positioning/fn';
+```
+
+The `polyfill` function returns a promise that resolves when the polyfill has
+been applied.
+
 You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
 
 ## Configuration
