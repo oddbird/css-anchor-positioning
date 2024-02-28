@@ -16,15 +16,15 @@ Please follow the [OddBird Code of Conduct](https://www.oddbird.net/conduct/).
 ## Development
 
 - Clone the repository.
-- Install dependencies: `yarn install`.
-- Start dev server: `yarn serve`. Visit `localhost:3000`.
+- Install dependencies: `npm install`.
+- Start dev server: `npm run serve`. Visit `localhost:3000`.
 
 ## Code style
 
 JS code is formatted with prettier, and CSS is formatted with stylelint.
 
-- Lint: `yarn lint:ci`
-- Format & lint: `yarn lint`
+- Lint: `npm run lint:ci`
+- Format & lint: `npm run lint`
 
 We recommend setting up your IDE to automatically format code for you.
 
@@ -32,11 +32,11 @@ We recommend setting up your IDE to automatically format code for you.
 
 Unit tests and end-to-end tests are available in the `tests/` folder.
 
-- Run all tests: `yarn test`
-- Run unit tests: `yarn test:unit`
+- Run all tests: `npm run test`
+- Run unit tests: `npm run test:unit`
 - Run end-to-end tests:
   - Configure Playwright (this step is only required once or when the version of
     `@playwright/test` changes in package.json):
     `npx playwright install --with-deps`
-  - Run tests (Chromium only): `yarn test:e2e`
-  - Run tests (Chromium, Firefox & Webkit): `yarn test:e2e:ci`
+  - Run tests (Chromium only): `npm run test:e2e`
+  - Run tests (Chromium, Firefox & Webkit): `npm run test:e2e:ci`

@@ -1,4 +1,5 @@
 version: 2
+
 updates:
   - package-ecosystem: github-actions
     directory: '/'
@@ -6,3 +7,23 @@ updates:
       interval: weekly
       time: '04:00'
       timezone: America/New_York
+
+  - package-ecosystem: npm
+    directory: '/'
+    versioning-strategy: increase
+    schedule:
+      interval: weekly
+      time: '04:00'
+      timezone: America/New_York
+    groups:
+      prod:
+        dependency-type:
+          - 'production'
+      dev:
+        dependency-type:
+          - 'development'
+    ignore:
+      - dependency-name: '@types/node'
+      - dependency-name: 'node-fetch'
+        versions:
+          - 3.x

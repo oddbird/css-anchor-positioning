@@ -61,8 +61,8 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "eslint:check": "eslint .",
-    "eslint:fix": "yarn eslint:check --fix",
-    "format:css": "yarn lint:css --fix",
+    "eslint:fix": "npm run eslint:check -- --fix",
+    "format:css": "npm run lint:css -- --fix",
     "format:js": "run-s prettier:fix eslint:fix tsc tsc:tests",
     "lint": "run-p format:css format:js",
     "lint:css": "stylelint \"**/*.css\"",
@@ -70,9 +70,9 @@
     "lint:ci": "run-p lint:css lint:js",
     "prepack": "run-s build types",
     "test:unit": "vitest",
-    "test:watch": "yarn test:unit --watch",
+    "test:watch": "npm run test:unit -- --watch",
     "test:e2e": "playwright test tests/e2e/",
-    "test:e2e:ci": "yarn test:e2e --browser=all",
+    "test:e2e:ci": "npm run test:e2e -- --browser=all",
     "test": "run-p test:unit test:e2e",
     "test:ci": "run-p test:unit test:e2e:ci",
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
@@ -118,16 +118,9 @@
   "resolutions": {
     "tslib": ">=2"
   },
-  "yarn-upgrade-all": {
-    "ignore": [
-      "@types/node",
-      "node-fetch"
-    ]
-  },
   "sideEffects": [
     "./src/index.ts",
     "./dist/css-anchor-positioning.js",
     "./dist/css-anchor-positioning.umd.cjs"
-  ],
-  "packageManager": "yarn@3.2.3"
+  ]
 }
