@@ -449,7 +449,9 @@ async function getAnchorEl(
     if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
-      return await validatedForPositioning(targetEl, [`#${anchorAttr}`]);
+      return await validatedForPositioning(targetEl, [
+        `#${CSS.escape(anchorAttr)}`,
+      ]);
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
