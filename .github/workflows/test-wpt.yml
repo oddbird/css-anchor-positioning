@@ -1,9 +1,10 @@
 name: Run WPT
 
 on:
-  push:
-  pull_request:
-    types: [opened, reopened]
+  workflow_dispatch: # Allow running on-demand
+  # push:
+  # pull_request:
+  #   types: [opened, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
