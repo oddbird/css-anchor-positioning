@@ -81,7 +81,7 @@
     "@floating-ui/dom": "^1.6.3",
     "@types/css-tree": "^2.3.7",
     "css-tree": "^2.3.1",
-    "nanoid": "^5.0.6"
+    "nanoid": "^5.0.7"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
