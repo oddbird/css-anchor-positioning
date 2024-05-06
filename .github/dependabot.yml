@@ -12,7 +12,7 @@ updates:
     directory: '/'
     versioning-strategy: increase
     schedule:
-      interval: weekly
+      interval: monthly
       time: '04:00'
       timezone: America/New_York
     groups:
