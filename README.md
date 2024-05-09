@@ -76,11 +76,16 @@ option can be set by setting the value of
 
 This polyfill doesn't (yet) support the following:
 
-- `anchor-default` property
-- `anchor-scroll` property
+- `position-try`, `position-try-options`, and `position-try-order` properties
+- `anchor-scope` property
+- `position-anchor` property (currently available as `anchor-default`)
+- `inset-area` property
+- `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
+  `align-items` properties
 - anchor functions with `implicit` anchor-element
-- automatic anchor positioning: anchor functions with `auto` or `auto-same`
+- automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
+- `anchor-name` property defining multiple anchor names
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
 - tracking the order of elements in the
