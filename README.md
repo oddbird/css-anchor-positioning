@@ -109,6 +109,9 @@ This polyfill doesn't (yet) support the following:
   whose offset-parent is inline with `clientHeight`/`clientWidth` of `0`
   (partial support -- does not account for possible scrollbar width)
 
+In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
+  polyfilled.
+
 ## Sponsor OddBird's OSS Work
 
 At OddBird, we love contributing to the languages & tools developers rely on.
