@@ -78,7 +78,7 @@ This polyfill doesn't (yet) support the following:
 
 - `position-try`, `position-try-options`, and `position-try-order` properties
 - `anchor-scope` property
-- `position-anchor` property (currently available as `anchor-default`)
+- `position-anchor` property
 - `inset-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
