@@ -110,7 +110,7 @@ This polyfill doesn't (yet) support the following:
   (partial support -- does not account for possible scrollbar width)
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
-  polyfilled.
+polyfilled.
 
 ## Sponsor OddBird's OSS Work
 
