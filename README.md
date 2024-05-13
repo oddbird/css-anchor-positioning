@@ -74,9 +74,15 @@ option can be set by setting the value of
 
 ## Limitations
 
-This polyfill doesn't (yet) support the following:
+This polyfill was implemented against an early version of the spec, and updates
+were paused to allow the syntax to solidify. Now that browsers are working on
+implementation, we would like to bring it up to date.
 
-- `position-try`, `position-try-options`, and `position-try-order` properties
+While this polyfill supports many basic use cases, it doesn't (yet) support the
+following:
+
+- The `@position-try` rule
+- The `position-try-options`, `position-try-order`, or `position-try` properties
 - `anchor-scope` property
 - `position-anchor` property
 - `inset-area` property
