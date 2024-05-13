@@ -86,6 +86,7 @@ This polyfill doesn't (yet) support the following:
 - automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
 - `anchor-name` property defining multiple anchor names
+- `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
 - tracking the order of elements in the
