@@ -1,5 +1,6 @@
 import fetchMock from 'fetch-mock';
 
+import { INLINE_STYLES_ID_ATTR } from '../../src/constants.js';
 import { fetchCSS } from '../../src/fetch.js';
 import { getSampleCSS } from '../helpers.js';
 
@@ -87,11 +88,11 @@ describe('fetch inline styles', () => {
     expect(styleData).toHaveLength(4);
     expect(styleData[2].url).toBeUndefined();
     expect(styleData[3].url).toBeUndefined();
-    expect(styleData[2].css.trim()).toContain('[data-has-inline-styles=');
+    expect(styleData[2].css.trim()).toContain(`[${INLINE_STYLES_ID_ATTR}=`);
     expect(styleData[2].css.trim()).toContain(
       'top: anchor(--my-anchor-in-line end)',
     );
-    expect(styleData[3].css.trim()).toContain('[data-has-inline-styles=');
+    expect(styleData[3].css.trim()).toContain(`[${INLINE_STYLES_ID_ATTR}=`);
     expect(styleData[3].css.trim()).toContain(
       'anchor-name: --my-anchor-in-line',
     );
