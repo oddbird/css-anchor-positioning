@@ -74,13 +74,25 @@ option can be set by setting the value of
 
 ## Limitations
 
-This polyfill doesn't (yet) support the following:
+This polyfill was implemented against an early version of the spec, and updates
+were paused to allow the syntax to solidify. Now that browsers are working on
+implementation, we would like to bring it up to date.
 
-- `anchor-default` property
-- `anchor-scroll` property
+While this polyfill supports many basic use cases, it doesn't (yet) support the
+following:
+
+- The `@position-try` rule
+- The `position-try-options`, `position-try-order`, or `position-try` properties
+- `anchor-scope` property
+- `position-anchor` property
+- `inset-area` property
+- `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
+  `align-items` properties
 - anchor functions with `implicit` anchor-element
-- automatic anchor positioning: anchor functions with `auto` or `auto-same`
+- automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
+- `anchor-name` property defining multiple anchor names
+- `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
 - tracking the order of elements in the
@@ -104,6 +116,9 @@ This polyfill doesn't (yet) support the following:
   whose offset-parent is inline with `clientHeight`/`clientWidth` of `0`
   (partial support -- does not account for possible scrollbar width)
 
+In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
+polyfilled.
+
 ## Sponsor OddBird's OSS Work
 
 At OddBird, we love contributing to the languages & tools developers rely on.
@@ -115,4 +130,4 @@ and centered on your needs as a developer!
 We display sponsor logos and avatars
 on our [website](https://www.oddbird.net/polyfill/#open-source-sponsors).
 
-[Sponsor OddBird's OSS Work](https://opencollective.com/oddbird-open-source)
+[Sponsor OddBird's OSS Work](https://github.com/sponsors/oddbird)
