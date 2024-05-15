@@ -338,10 +338,12 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
     node.value.children.first &&
     rule?.value
   ) {
-    const name = (node.value.children.first as csstree.Identifier).name;
-    return { name, selector: rule.value };
+    return node.value.children.map((item) => {
+      const { name } = item as csstree.Identifier;
+      return { name, selector: rule.value };
+    });
   }
-  return {};
+  return [];
 }
 
 let anchorNames: AnchorNames = {};
@@ -559,17 +561,18 @@ export async function parseCSS(styleData: StyleData[]) {
       const rule = this.rule?.prelude as csstree.Raw | undefined;
 
       // Parse `anchor-name` declaration
-      const { name: anchorName, selector: anchorSelector } = getAnchorNameData(
-        node,
-        rule,
+      const anchorNameData = getAnchorNameData(node, rule);
+      anchorNameData.forEach(
+        ({ name: anchorName, selector: anchorSelector }) => {
+          if (anchorName && anchorSelector) {
+            if (anchorNames[anchorName]) {
+              anchorNames[anchorName].push(anchorSelector);
+            } else {
+              anchorNames[anchorName] = [anchorSelector];
+            }
+          }
+        },
       );
-      if (anchorName && anchorSelector) {
-        if (anchorNames[anchorName]) {
-          anchorNames[anchorName].push(anchorSelector);
-        } else {
-          anchorNames[anchorName] = [anchorSelector];
-        }
-      }
 
       // Parse `anchor()` function
       const {
