@@ -335,7 +335,7 @@ function parseAnchorFn(
 function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   if (
     isAnchorNameDeclaration(node) &&
-    node.value.children.first &&
+    !node.value.children.isEmpty &&
     rule?.value
   ) {
     return node.value.children.map((item) => {
