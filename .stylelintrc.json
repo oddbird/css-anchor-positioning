@@ -14,7 +14,11 @@
     "property-no-unknown": [
       true,
       {
-        "ignoreProperties": ["anchor-name", "position-fallback"]
+        "ignoreProperties": [
+          "anchor-name",
+          "position-anchor",
+          "position-fallback"
+        ]
       }
     ]
   }
