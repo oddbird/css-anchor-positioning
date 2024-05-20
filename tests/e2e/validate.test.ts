@@ -1,12 +1,12 @@
 import { Browser, expect, type Page, test } from '@playwright/test';
 
 import {
-  isValidAnchorElement,
+  isAcceptableAnchorElement,
   validatedForPositioning,
 } from '../../src/validate.js';
 
 interface LocalWindow extends Window {
-  isValidAnchorElement: typeof isValidAnchorElement;
+  isAcceptableAnchorElement: typeof isAcceptableAnchorElement;
   validatedForPositioning: typeof validatedForPositioning;
 }
 
@@ -18,11 +18,11 @@ async function buildPage(browser: Browser) {
 
     content: `
       import {
-        isValidAnchorElement,
+        isAcceptableAnchorElement,
         validatedForPositioning,
       } from '../../src/validate.ts';
 
-      window.isValidAnchorElement = isValidAnchorElement
+      window.isAcceptableAnchorElement = isAcceptableAnchorElement
       window.validatedForPositioning = validatedForPositioning
     `,
   });
@@ -32,7 +32,8 @@ async function buildPage(browser: Browser) {
     loading = await page.evaluate(() => {
       document.getSelection();
       return (
-        (window as unknown as LocalWindow).isValidAnchorElement === undefined
+        (window as unknown as LocalWindow).isAcceptableAnchorElement ===
+        undefined
       );
     });
   }
@@ -58,7 +59,7 @@ async function callValidFunction(page: Page) {
           anchorSelector,
         ) as HTMLElement;
         if (anchorElement && targetElement) {
-          return await isValidAnchorElement(anchorElement, targetElement);
+          return await isAcceptableAnchorElement(anchorElement, targetElement);
         }
         return false;
       },

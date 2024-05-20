@@ -54,45 +54,57 @@ function isTopLayer(el: HTMLElement) {
   return Boolean(Array.from(topLayerElements).includes(el));
 }
 
-// Validates that anchor element is a valid anchor for given target element
-export async function isValidAnchorElement(
-  anchor: HTMLElement,
-  target: HTMLElement,
+function precedes(self: HTMLElement, other: HTMLElement) {
+  return (
+    self.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING ||
+    isTopLayer(other)
+  );
+}
+
+/**
+ * Validates that el is a acceptable anchor element for an absolutely positioned element query el
+ * https://drafts.csswg.org/css-anchor-position-1/#acceptable-anchor-element
+ */
+export async function isAcceptableAnchorElement(
+  el: HTMLElement,
+  queryEl: HTMLElement,
 ) {
-  if (isTopLayer(anchor) && isTopLayer(target)) {
-    // TODO: keep track of top layer order
-    // if (isTargetPrecedingAnchor(target, anchor)) {
-    //   return false;
-    // }
-    return true;
+  const elContainingBlock = await platform.getOffsetParent(el);
+  const queryElContainingBlock = await platform.getOffsetParent(queryEl);
+
+  // Either el is a descendant of query el’s containing block
+  // or query el’s containing block is the initial containing block.
+  if (
+    !(
+      isContainingBlockDescendant(queryElContainingBlock, el) ||
+      isWindow(queryElContainingBlock)
+    )
+  ) {
+    return false;
   }
 
-  const anchorContainingBlock = await platform.getOffsetParent?.(anchor);
-  const targetContainingBlock = await platform.getOffsetParent?.(target);
-
-  // If el has the same containing block as the querying element,
-  // el must not be absolutely positioned.
-  if (isAbsolutelyPositioned(anchor)) {
-    if (isTopLayer(target)) {
-      return true;
-    }
-    if (anchorContainingBlock === targetContainingBlock) {
-      return false;
-    }
+  // If el has the same containing block as query el,
+  // then either el is not absolutely positioned,
+  // or el precedes query el in the tree order.
+  if (
+    elContainingBlock === queryElContainingBlock &&
+    !(!isAbsolutelyPositioned(el) || precedes(el, queryEl))
+  ) {
+    return false;
   }
 
-  // If el has a different containing block from the querying element,
-  // the last containing block in el's containing block chain
-  // before reaching the querying element's containing block
-  // must not be absolutely positioned:
-  if (anchorContainingBlock !== targetContainingBlock) {
+  // If el has a different containing block from query el,
+  // then the last containing block in el’s containing block chain
+  // before reaching query el’s containing block
+  // is either not absolutely positioned or precedes query el in the tree order.
+  if (elContainingBlock !== queryElContainingBlock) {
     let currentCB: Element | Window | undefined;
     const anchorCBchain: (typeof currentCB)[] = [];
 
-    currentCB = anchorContainingBlock;
+    currentCB = elContainingBlock;
     while (
       currentCB &&
-      currentCB !== targetContainingBlock &&
+      currentCB !== queryElContainingBlock &&
       currentCB !== window
     ) {
       anchorCBchain.push(currentCB);
@@ -101,25 +113,29 @@ export async function isValidAnchorElement(
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
 
     if (
-      lastInChain &&
       lastInChain instanceof HTMLElement &&
-      isAbsolutelyPositioned(lastInChain)
+      !(!isAbsolutelyPositioned(lastInChain) || precedes(lastInChain, queryEl))
     ) {
       return false;
     }
   }
 
-  // Either anchor el is a descendant of query el’s containing block,
-  // or query el’s containing block is the initial containing block
-  // https://drafts4.csswg.org/css-anchor-1/#determining
-  if (
-    isContainingBlockDescendant(targetContainingBlock, anchor) ||
-    isWindow(targetContainingBlock)
-  ) {
-    return true;
+  // TODO el is either an element or a part-like pseudo-element.
+
+  // el is not in the skipped contents of another element.
+  {
+    let currentParent = el.parentElement;
+
+    while (currentParent) {
+      if (getComputedStyle(currentParent).contentVisibility === 'hidden') {
+        return false;
+      }
+
+      currentParent = currentParent.parentElement;
+    }
   }
 
-  return false;
+  return true;
 }
 
 // Given a target element and CSS selector(s) for potential anchor element(s),
@@ -143,11 +159,13 @@ export async function validatedForPositioning(
     anchorSelectors.join(', '),
   );
 
+  let acceptableAnchorElement: HTMLElement | undefined;
+
   for (const anchor of anchorElements) {
-    if (await isValidAnchorElement(anchor, targetEl)) {
-      return anchor;
+    if (await isAcceptableAnchorElement(anchor, targetEl)) {
+      acceptableAnchorElement = anchor;
     }
   }
 
-  return null;
+  return acceptableAnchorElement;
 }
