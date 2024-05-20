@@ -426,7 +426,7 @@ describe('parseCSS', () => {
             },
             {
               anchorName: '--anchor',
-              anchorEl: document.getElementById('a1'),
+              anchorEl: document.getElementById('a2'),
               targetEl: document.getElementById('t3'),
               anchorSide: 'bottom',
               fallbackValue: '0px',
