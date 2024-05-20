@@ -159,13 +159,13 @@ export async function validatedForPositioning(
     anchorSelectors.join(', '),
   );
 
-  let acceptableAnchorElement: HTMLElement | null = null;
+  for (let index = anchorElements.length - 1; index >= 0; index--) {
+    const anchor = anchorElements[index];
 
-  for (const anchor of anchorElements) {
     if (await isAcceptableAnchorElement(anchor, targetEl)) {
-      acceptableAnchorElement = anchor;
+      return anchor;
     }
   }
 
-  return acceptableAnchorElement;
+  return null;
 }
