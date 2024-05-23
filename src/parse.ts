@@ -470,14 +470,14 @@ async function getAnchorEl(
   const customPropName = anchorObj.customPropName;
   if (targetEl && !anchorName) {
     const anchorAttr = targetEl.getAttribute('anchor');
-    if (customPropName) {
+    if (targetEl.dataset[POSITION_ANCHOR_DATASET_KEY]) {
+      anchorName = targetEl.dataset[POSITION_ANCHOR_DATASET_KEY];
+    } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
       return await validatedForPositioning(targetEl, [
         `#${CSS.escape(anchorAttr)}`,
       ]);
-    } else if (targetEl.dataset[POSITION_ANCHOR_DATASET_KEY]) {
-      anchorName = targetEl.dataset[POSITION_ANCHOR_DATASET_KEY];
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
