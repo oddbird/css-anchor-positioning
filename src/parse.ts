@@ -100,6 +100,7 @@ const ANCHOR_SIDES: AnchorSideKeyword[] = [
   'center',
 ];
 
+const POSITION_ANCHOR_DATASET_KEY = 'polyfillPositionAnchorName';
 export type AnchorSide = AnchorSideKeyword | number;
 
 export type AnchorSize =
@@ -221,6 +222,10 @@ function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
   return Boolean(node.type === 'Identifier' && node.name);
 }
 
+function getDeclarationValue(node: DeclarationWithValue) {
+  return (node.value.children.first as csstree.Identifier).name;
+}
+
 function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
@@ -247,6 +252,12 @@ export function isBoxAlignmentProp(
   property: string,
 ): property is BoxAlignmentProperty {
   return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
+}
+
+function isPositionAnchorDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-anchor';
 }
 
 function parseAnchorFn(
@@ -338,7 +349,7 @@ function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
     node.value.children.first &&
     rule?.value
   ) {
-    const name = (node.value.children.first as csstree.Identifier).name;
+    const name = getDeclarationValue(node);
     return { name, selector: rule.value };
   }
   return {};
@@ -394,12 +405,25 @@ function getAnchorFunctionData(
   return {};
 }
 
+function getPositionAnchorData(node: csstree.CssNode, rule?: csstree.Raw) {
+  if (isPositionAnchorDeclaration(node) && rule?.value) {
+    const targets = document.querySelectorAll(rule.value);
+    const name = getDeclarationValue(node);
+
+    for (const targetEl of targets) {
+      (targetEl as HTMLElement).dataset[POSITION_ANCHOR_DATASET_KEY] = name;
+    }
+    return { name, selector: rule.value };
+  }
+  return {};
+}
+
 function getPositionFallbackDeclaration(
   node: csstree.Declaration,
   rule?: csstree.Raw,
 ) {
   if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
-    const name = (node.value.children.first as csstree.Identifier).name;
+    const name = getDeclarationValue(node);
     return { name, selector: rule.value };
   }
   return {};
@@ -452,6 +476,8 @@ async function getAnchorEl(
       return await validatedForPositioning(targetEl, [
         `#${CSS.escape(anchorAttr)}`,
       ]);
+    } else if (targetEl.dataset[POSITION_ANCHOR_DATASET_KEY]) {
+      anchorName = targetEl.dataset[POSITION_ANCHOR_DATASET_KEY];
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
@@ -568,6 +594,17 @@ export async function parseCSS(styleData: StyleData[]) {
           anchorNames[anchorName].push(anchorSelector);
         } else {
           anchorNames[anchorName] = [anchorSelector];
+        }
+      }
+
+      // Parse `position-anchor` data
+      const { name: positionAnchorName, selector: positionAnchorSelector } =
+        getPositionAnchorData(node, rule);
+      if (positionAnchorName && positionAnchorSelector) {
+        if (anchorNames[positionAnchorName]) {
+          anchorNames[positionAnchorName].push(positionAnchorSelector);
+        } else {
+          anchorNames[positionAnchorName] = [positionAnchorSelector];
         }
       }
 
