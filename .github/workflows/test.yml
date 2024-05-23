@@ -3,7 +3,7 @@ name: Lint & Test
 on:
   push:
   pull_request:
-    types: [reopened]
+    types: [opened, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
