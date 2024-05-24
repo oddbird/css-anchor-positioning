@@ -100,7 +100,6 @@ const ANCHOR_SIDES: AnchorSideKeyword[] = [
   'center',
 ];
 
-const POSITION_ANCHOR_DATASET_KEY = 'polyfillPositionAnchorName';
 export type AnchorSide = AnchorSideKeyword | number;
 
 export type AnchorSize =
@@ -174,6 +173,8 @@ type Fallbacks = Record<
   }
 >;
 
+const POSITION_ANCHOR_DATASET_KEY = 'polyfillPositionAnchorName';
+
 function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
@@ -222,10 +223,6 @@ function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
   return Boolean(node.type === 'Identifier' && node.name);
 }
 
-function getDeclarationValue(node: DeclarationWithValue) {
-  return (node.value.children.first as csstree.Identifier).name;
-}
-
 function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
@@ -258,6 +255,10 @@ function isPositionAnchorDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-anchor';
+}
+
+function getDeclarationValue(node: DeclarationWithValue) {
+  return (node.value.children.first as csstree.Identifier).name;
 }
 
 function parseAnchorFn(
