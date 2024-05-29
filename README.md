@@ -91,7 +91,6 @@ following:
 - anchor functions with `implicit` anchor-element
 - automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
-- `anchor-name` property defining multiple anchor names
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
