@@ -79,7 +79,7 @@ were paused to allow the syntax to solidify. Now that browsers are working on
 implementation, we would like to bring it up to date.
 
 While this polyfill supports many basic use cases, it doesn't (yet) support the
-following:
+following features:
 
 - The `@position-try` rule
 - The `position-try-options`, `position-try-order`, or `position-try` properties
@@ -94,26 +94,9 @@ following:
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
-- tracking the order of elements in the
-  [top-layer](https://fullscreen.spec.whatwg.org/#new-stacking-layer) to
-  invalidate top-layer target elements from anchoring to succeeding top-layer
-  anchors. See [this
-  WPT](https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-006.html)
-  for an example.
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - vertical/rtl writing-modes (partial support)
-- absolutely-positioned targets with `grid-column`/`grid-row`/`grid-area` in a
-  CSS Grid layout
-- `@position-fallback` where targets in a CSS Grid layout overflow the grid area
-  but do not overflow the containing block
-- `@position-fallback` where targets overflow their inset-modified containing
-  block, overlapping the anchor element
-- anchors in multi-column layouts
-- anchor functions used as the fallback value in another anchor function
-- anchor functions assigned to `bottom` or `right` properties on inline targets
-  whose offset-parent is inline with `clientHeight`/`clientWidth` of `0`
-  (partial support -- does not account for possible scrollbar width)
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
