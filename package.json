@@ -84,7 +84,7 @@
     "nanoid": "^5.0.7"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.1",
+    "@playwright/test": "1.43.1",
     "@types/async": "^3.2.24",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.23",
