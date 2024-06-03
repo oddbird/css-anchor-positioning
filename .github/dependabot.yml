@@ -21,6 +21,7 @@ updates:
       dev:
         dependency-type: development
     ignore:
+      - dependency-name: '@playwright/test'
       - dependency-name: '@types/node'
       - dependency-name: 'node-fetch'
         versions:
