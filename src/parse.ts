@@ -4,7 +4,7 @@ import { nanoid } from 'nanoid/non-secure';
 import { StyleData } from './fetch.js';
 import { validatedForPositioning } from './validate.js';
 
-interface DeclarationWithValue extends csstree.Declaration {
+export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
 
@@ -173,8 +173,6 @@ type Fallbacks = Record<
   }
 >;
 
-const POSITION_ANCHOR_DATASET_KEY = 'polyfillPositionAnchorName';
-
 function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
@@ -257,7 +255,7 @@ function isPositionAnchorDeclaration(
   return node.type === 'Declaration' && node.property === 'position-anchor';
 }
 
-function getDeclarationValue(node: DeclarationWithValue) {
+export function getDeclarationValue(node: DeclarationWithValue) {
   return (node.value.children.first as csstree.Identifier).name;
 }
 
@@ -408,12 +406,7 @@ function getAnchorFunctionData(
 
 function getPositionAnchorData(node: csstree.CssNode, rule?: csstree.Raw) {
   if (isPositionAnchorDeclaration(node) && rule?.value) {
-    const targets = document.querySelectorAll(rule.value);
     const name = getDeclarationValue(node);
-
-    for (const targetEl of targets) {
-      (targetEl as HTMLElement).dataset[POSITION_ANCHOR_DATASET_KEY] = name;
-    }
     return { name, selector: rule.value };
   }
   return {};
@@ -471,8 +464,13 @@ async function getAnchorEl(
   const customPropName = anchorObj.customPropName;
   if (targetEl && !anchorName) {
     const anchorAttr = targetEl.getAttribute('anchor');
-    if (targetEl.dataset[POSITION_ANCHOR_DATASET_KEY]) {
-      anchorName = targetEl.dataset[POSITION_ANCHOR_DATASET_KEY];
+    const positionAnchorProperty = getCSSPropertyValue(
+      targetEl,
+      '--position-anchor',
+    );
+
+    if (positionAnchorProperty) {
+      anchorName = positionAnchorProperty;
     } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
@@ -485,7 +483,7 @@ async function getAnchorEl(
   return await validatedForPositioning(targetEl, anchorSelectors);
 }
 
-function getAST(cssText: string) {
+export function getAST(cssText: string) {
   const ast = csstree.parse(cssText, {
     parseAtrulePrelude: false,
     parseRulePrelude: false,

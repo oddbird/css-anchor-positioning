@@ -3,8 +3,11 @@ import { type StyleData } from './fetch.js';
 export async function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
+  cleanup = false,
 ) {
+  const updatedStyleData: StyleData[] = [];
   for (const { el, css, changed } of styleData) {
+    const updatedObject: StyleData = { el, css, changed: false };
     if (changed) {
       if (el.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
@@ -23,6 +26,7 @@ export async function transformCSS(
         // Wait for new stylesheet to be loaded
         await promise;
         URL.revokeObjectURL(url);
+        updatedObject.el = link;
       } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
@@ -43,8 +47,10 @@ export async function transformCSS(
       }
     }
     // Remove no-longer-needed data-attribute
-    if (el.hasAttribute('data-has-inline-styles')) {
+    if (cleanup && el.hasAttribute('data-has-inline-styles')) {
       el.removeAttribute('data-has-inline-styles');
     }
+    updatedStyleData.push(updatedObject);
   }
+  return updatedStyleData;
 }

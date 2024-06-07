@@ -333,18 +333,16 @@
 &lt;div id="my-position-target-b" class="target"&gt;Target B&lt;/div&gt;</code>
 
 <code class="language-css"
->.target {
+>
+#my-position-target-b {
+  position-anchor: --my-position-anchor-b;
+}
+
+.target {
   position: absolute;
   bottom: anchor(top);
   left: anchor(right);
-}
-
-#my-position-target-a {
   position-anchor: --my-position-anchor-a;
-}
-
-#my-position-target-b {
-  position-anchor: --my-position-anchor-b;
 }
 
 #my-position-anchor-a {

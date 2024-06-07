@@ -6,6 +6,7 @@ import {
   type Rect,
 } from '@floating-ui/dom';
 
+import { cascadeCSS } from './cascade.js';
 import { fetchCSS } from './fetch.js';
 import {
   AnchorFunction,
@@ -412,14 +413,19 @@ export async function polyfill(animationFrame?: boolean) {
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
       : animationFrame;
   // fetch CSS from stylesheet and inline style
-  const styleData = await fetchCSS();
+  let styleData = await fetchCSS();
 
+  // pre parse CSS styles that we need to cascade
+  const { changedStyles } = await cascadeCSS(styleData);
+  if (Object.values(changedStyles).length) {
+    styleData = await transformCSS(styleData);
+  }
   // parse CSS
   const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // update source code
-    await transformCSS(styleData, inlineStyles);
+    await transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
     await position(rules, useAnimationFrame);
