@@ -1,4 +1,4 @@
-import { type StyleData } from './fetch.js';
+import { type StyleData } from './utils.js';
 
 export async function transformCSS(
   styleData: StyleData[],

@@ -1,11 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
-export interface StyleData {
-  el: HTMLElement;
-  css: string;
-  url?: URL;
-  changed?: boolean;
-}
+import { StyleData } from './utils.js';
 
 export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
   return Boolean(

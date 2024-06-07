@@ -1,5 +1,5 @@
-import { type StyleData } from '../../src/fetch.js';
 import { AnchorPositions, parseCSS } from '../../src/parse.js';
+import { type StyleData } from '../../src/utils.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {

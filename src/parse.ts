@@ -1,12 +1,13 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
-import { StyleData } from './fetch.js';
+import {
+  DeclarationWithValue,
+  getAST,
+  getDeclarationValue,
+  StyleData,
+} from './utils.js';
 import { validatedForPositioning } from './validate.js';
-
-export interface DeclarationWithValue extends csstree.Declaration {
-  value: csstree.Value;
-}
 
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
@@ -255,10 +256,6 @@ function isPositionAnchorDeclaration(
   return node.type === 'Declaration' && node.property === 'position-anchor';
 }
 
-export function getDeclarationValue(node: DeclarationWithValue) {
-  return (node.value.children.first as csstree.Identifier).name;
-}
-
 function parseAnchorFn(
   node: csstree.FunctionNode,
   replaceCss?: boolean,
@@ -481,16 +478,6 @@ async function getAnchorEl(
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
   return await validatedForPositioning(targetEl, anchorSelectors);
-}
-
-export function getAST(cssText: string) {
-  const ast = csstree.parse(cssText, {
-    parseAtrulePrelude: false,
-    parseRulePrelude: false,
-    parseCustomProperty: true,
-  });
-
-  return ast;
 }
 
 export async function parseCSS(styleData: StyleData[]) {

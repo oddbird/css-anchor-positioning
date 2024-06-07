@@ -1,7 +1,11 @@
 import * as csstree from 'css-tree';
 
-import { StyleData } from './fetch.js';
-import { DeclarationWithValue, getAST, getDeclarationValue } from './parse.js';
+import {
+  type DeclarationWithValue,
+  getAST,
+  getDeclarationValue,
+  type StyleData,
+} from './utils.js';
 
 function isPositionAnchorDeclaration(
   node: csstree.CssNode,
