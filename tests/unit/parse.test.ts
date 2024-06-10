@@ -180,6 +180,7 @@ describe('parseCSS', () => {
       .my-targets {
         position: absolute;
         position-anchor: --my-anchor;
+        --position-anchor: --my-anchor;
       }
       #my-anchor {
         anchor-name: --my-anchor;
@@ -230,12 +231,14 @@ describe('parseCSS', () => {
     const css = `
       #my-target-1 {
         top: anchor(bottom);
+        --position-anchor: --my-anchor;
         position-anchor: --my-anchor;
         position: absolute;
       }
       #my-target-2 {
         bottom: anchor(top);
         position-anchor: --my-anchor;
+        --position-anchor: --my-anchor;
         position: absolute;
       }
       #my-anchor {
