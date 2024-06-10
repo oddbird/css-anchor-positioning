@@ -2,6 +2,7 @@ import * as csstree from 'css-tree';
 
 import {
   type DeclarationWithValue,
+  generateCSS,
   getAST,
   getDeclarationValue,
   type StyleData,
@@ -48,7 +49,7 @@ export async function cascadeCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
       changedStyles.push(styleObj);
     }

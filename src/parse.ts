@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/non-secure';
 
 import {
   DeclarationWithValue,
+  generateCSS,
   getAST,
   getDeclarationValue,
   StyleData,
@@ -270,7 +271,7 @@ function parseAnchorFn(
   const args: csstree.CssNode[] = [];
   node.children.toArray().forEach((child) => {
     if (foundComma) {
-      fallbackValue = `${fallbackValue}${csstree.generate(child)}`;
+      fallbackValue = `${fallbackValue}${generateCSS(child)}`;
       return;
     }
     if (child.type === 'Operator' && child.value === ',') {
@@ -380,7 +381,7 @@ function getAnchorFunctionData(
 ) {
   if ((isAnchorFunction(node) || isAnchorSizeFunction(node)) && declaration) {
     if (declaration.property.startsWith('--')) {
-      const original = csstree.generate(declaration.value);
+      const original = generateCSS(declaration.value);
       const data = parseAnchorFn(node, true);
       // Store the original anchor function so that we can restore it later
       customPropOriginals[data.uuid] = original;
@@ -438,7 +439,7 @@ function getPositionFallbackRules(node: csstree.Atrule) {
         const tryBlock: TryBlock = {
           uuid: `${name}-try-${nanoid(12)}`,
           declarations: Object.fromEntries(
-            declarations.map((d) => [d.property, csstree.generate(d.value)]),
+            declarations.map((d) => [d.property, generateCSS(d.value)]),
           ),
         };
         tryBlocks.push(tryBlock);
@@ -559,7 +560,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -617,7 +618,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -693,7 +694,7 @@ export async function parseCSS(styleData: StyleData[]) {
             // now being re-assigned to another custom property...
             const uuid = `${child.name}-anchor-${nanoid(12)}`;
             // Store the original declaration so that we can restore it later
-            const original = csstree.generate(declaration.value);
+            const original = generateCSS(declaration.value);
             customPropOriginals[uuid] = original;
             // Store a mapping of the new property to the original property
             // name, as well as the unique uuid(s) temporarily used to replace
@@ -717,7 +718,7 @@ export async function parseCSS(styleData: StyleData[]) {
       });
       if (changed) {
         // Update CSS
-        styleObj.css = csstree.generate(ast);
+        styleObj.css = generateCSS(ast);
         styleObj.changed = true;
       }
     }
@@ -874,7 +875,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -928,7 +929,7 @@ export async function parseCSS(styleData: StyleData[]) {
       });
       if (changed) {
         // Update CSS
-        styleObj.css = csstree.generate(ast);
+        styleObj.css = generateCSS(ast);
         styleObj.changed = true;
       }
     }
