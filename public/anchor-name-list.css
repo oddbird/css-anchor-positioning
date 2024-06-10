@@ -1,0 +1,15 @@
+#my-anchor-name-list {
+  anchor-name: --my-anchor-name-a, --my-anchor-name-b;
+}
+
+#my-target-name-list-a {
+  position: absolute;
+  right: anchor(--my-anchor-name-a left);
+  bottom: anchor(--my-anchor-name-a top);
+}
+
+#my-target-name-list-b {
+  position: absolute;
+  left: anchor(--my-anchor-name-b right);
+  top: anchor(--my-anchor-name-b bottom);
+}
