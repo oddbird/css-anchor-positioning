@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
+    <link rel="stylesheet" href="/anchor-name-list.css" />
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
     <link rel="stylesheet" href="/anchor-implicit.css" />
@@ -665,6 +666,38 @@
   right: anchor(--my-anchor-update right);
   top: anchor(--my-anchor-update bottom);
 }</code></pre>
+    </section>
+    <section id="anchor-name-list" class="demo-item">
+      <h2>
+        <a href="#anchor-name-list" aria-hidden="true">🔗</a>
+        Use a list of anchor names
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-name-list" class="anchor">Anchor</div>
+        <div id="my-target-name-list-a" class="target">Target A</div>
+        <div id="my-target-name-list-b" class="target">Target B</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target A is positioned at Anchor's top left
+        corner. Target B is positioned at Anchor's bottom right corner.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-name-list {
+  anchor-name: --my-anchor-name-a, --my-anchor-name-b;
+}
+
+#my-target-name-list-a {
+  position: absolute;
+  right: anchor(--my-anchor-name-a left);
+  bottom: anchor(--my-anchor-name-a top);
+}
+
+#my-target-name-list-b {
+  position: absolute;
+  left: anchor(--my-anchor-name-b right);
+  top: anchor(--my-anchor-name-b bottom);
+}
+</code></pre>
     </section>
     <section id="anchor-absolute" class="demo-item">
       <h2>
