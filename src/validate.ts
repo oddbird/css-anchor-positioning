@@ -14,7 +14,7 @@ function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
 // because `.contains()` will return true: "a node is contained inside itself."
 // https://developer.mozilla.org/en-US/docs/Web/API/Node/contains
 function isContainingBlockDescendant(
-  containingBlock: Element | Window | undefined,
+  containingBlock: Element | Window,
   anchor: Element,
 ): boolean {
   if (!containingBlock || containingBlock === anchor) {
@@ -42,23 +42,37 @@ function isAbsolutelyPositioned(el?: HTMLElement | null) {
   );
 }
 
-function isTopLayer(el: HTMLElement) {
-  // check for the specific top layer element types...
-  // Currently, the top layer elements are:
-  // popovers, modal dialogs, and elements in a fullscreen mode.
-  // See https://developer.chrome.com/blog/top-layer-devtools/#what-are-the-top-layer-and-top-layer-elements
-  // TODO:
-  //   - only check for "open" popovers
-  //   - add support for fullscreen elements
-  const topLayerElements = document.querySelectorAll('dialog, [popover]');
-  return Boolean(Array.from(topLayerElements).includes(el));
+function precedes(self: HTMLElement, other: HTMLElement) {
+  return self.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING;
 }
 
-function precedes(self: HTMLElement, other: HTMLElement) {
-  return (
-    self.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING ||
-    isTopLayer(other)
-  );
+/** https://drafts.csswg.org/css-display-4/#formatting-context */
+async function getFormattingContext(element: HTMLElement) {
+  return await platform.getOffsetParent(element);
+}
+
+/** https://drafts.csswg.org/css-display-4/#containing-block */
+async function getContainingBlock(element: HTMLElement) {
+  if (
+    !['absolute', 'fixed'].includes(getCSSPropertyValue(element, 'position'))
+  ) {
+    return await getFormattingContext(element);
+  }
+
+  let currentParent = element.parentElement;
+
+  while (currentParent) {
+    if (
+      !hasStyle(currentParent, 'position', 'static') &&
+      hasStyle(currentParent, 'display', 'block')
+    ) {
+      return currentParent;
+    }
+
+    currentParent = currentParent.parentElement;
+  }
+
+  return window;
 }
 
 /**
@@ -69,8 +83,8 @@ export async function isAcceptableAnchorElement(
   el: HTMLElement,
   queryEl: HTMLElement,
 ) {
-  const elContainingBlock = await platform.getOffsetParent(el);
-  const queryElContainingBlock = await platform.getOffsetParent(queryEl);
+  const elContainingBlock = await getContainingBlock(el);
+  const queryElContainingBlock = await getContainingBlock(queryEl);
 
   // Either el is a descendant of query el’s containing block
   // or query el’s containing block is the initial containing block.
@@ -98,7 +112,7 @@ export async function isAcceptableAnchorElement(
   // before reaching query el’s containing block
   // is either not absolutely positioned or precedes query el in the tree order.
   if (elContainingBlock !== queryElContainingBlock) {
-    let currentCB: Element | Window | undefined;
+    let currentCB: Element | Window;
     const anchorCBchain: (typeof currentCB)[] = [];
 
     currentCB = elContainingBlock;
@@ -108,7 +122,7 @@ export async function isAcceptableAnchorElement(
       currentCB !== window
     ) {
       anchorCBchain.push(currentCB);
-      currentCB = await platform.getOffsetParent?.(currentCB as HTMLElement);
+      currentCB = await getContainingBlock(currentCB as HTMLElement);
     }
     const lastInChain = anchorCBchain[anchorCBchain.length - 1];
 
@@ -135,12 +149,17 @@ export async function isAcceptableAnchorElement(
     }
   }
 
+  // TODO el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+
   return true;
 }
 
-// Given a target element and CSS selector(s) for potential anchor element(s),
-// returns the first element that passes validation,
-// or `null` if no valid anchor element is found
+/**
+ * Given a target element and CSS selector(s) for potential anchor element(s),
+ * returns the first element that passes validation,
+ * or `null` if no valid anchor element is found
+ * https://drafts.csswg.org/css-anchor-position-1/#target
+ */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
   anchorSelectors: string[],
