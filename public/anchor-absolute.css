@@ -1,7 +1,3 @@
-#anchor-absolute > .demo-elements {
-  height: 200px;
-}
-
 #my-anchor-absolute-one,
 #my-anchor-absolute-two {
   position: absolute;

@@ -127,7 +127,7 @@ export async function isAcceptableAnchorElement(
     let currentParent = el.parentElement;
 
     while (currentParent) {
-      if (getComputedStyle(currentParent).contentVisibility === 'hidden') {
+      if (hasStyle(currentParent, 'content-visibility', 'hidden')) {
         return false;
       }
 
