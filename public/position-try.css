@@ -1,0 +1,41 @@
+#my-anchor-fallback {
+  anchor-name: --my-anchor-fallback;
+}
+
+#my-target-fallback {
+  position: absolute;
+  position-anchor: --my-anchor-fallback;
+  position-try-options: --top-left, --bottom-left, --top-right, --top-left;
+  position-try-order: most-height;
+}
+
+@position-try --top-left {
+  /* First try to align the bottom, left edge of the target
+     with the top, left edge of the anchor. */
+  bottom: anchor(--my-anchor-fallback top);
+  left: anchor(--my-anchor-fallback left);
+}
+
+@position-try --bottom-left {
+  /* Next try to align the top, left edge of the target
+     with the bottom, left edge of the anchor. */
+  top: anchor(--my-anchor-fallback bottom);
+  left: anchor(--my-anchor-fallback left);
+}
+
+@position-try --top-right {
+  /* Next try to align the bottom, right edge of the target
+     with the top, right edge of the anchor. */
+  bottom: anchor(--my-anchor-fallback top);
+  right: anchor(--my-anchor-fallback right);
+}
+
+@position-try --top-left {
+  /* Finally, try to align the top, right edge of the target
+     with the bottom, right edge of the anchor. */
+
+  top: anchor(--my-anchor-fallback bottom);
+  right: anchor(--my-anchor-fallback right);
+  width: 100px;
+  height: 100px;
+}

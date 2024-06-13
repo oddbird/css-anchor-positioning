@@ -119,6 +119,30 @@ const ANCHOR_SIZES: AnchorSize[] = [
   'self-inline',
 ];
 
+type PositionTryOrder =
+  | 'normal'
+  | 'most-width'
+  | 'most-height'
+  | 'most-block-size'
+  | 'most-inline-size';
+
+const POSITION_TRY_ORDERS: PositionTryOrder[] = [
+  'normal',
+  'most-width',
+  'most-height',
+  'most-block-size',
+  'most-inline-size',
+];
+
+type PositionTryOptionsTryTactics = 'flip-block' | 'flip-inline' | 'flip-start';
+
+type PositionTryOption =
+  | 'none'
+  | PositionTryOptionsTryTactics
+  // | csstree.Identifier
+  // todo: what's the dashed ident type
+  | InsetProperty;
+
 export interface AnchorFunction {
   targetEl?: HTMLElement | null;
   anchorEl?: HTMLElement | null;
@@ -143,6 +167,7 @@ type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
   fallbacks?: TryBlock[];
+  order?: PositionTryOrder;
 }
 
 // `key` is the target element selector
@@ -158,7 +183,7 @@ export interface TryBlock {
   >;
 }
 
-// `key` is the `@try` block uuid
+// `key` is the `@position-try` block uuid
 // `value` is the target element selector
 type FallbackTargets = Record<string, string>;
 
@@ -203,18 +228,28 @@ function isVarFunction(
   return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
-function isFallbackDeclaration(
+function isPositionTryOptionsDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-fallback';
+  return (
+    node.type === 'Declaration' && node.property === 'position-try-options'
+  );
 }
 
-function isFallbackAtRule(node: csstree.CssNode): node is AtRuleRaw {
-  return node.type === 'Atrule' && node.name === 'position-fallback';
+function isPositionTryOrderDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try-order';
 }
 
-function isTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
-  return node.type === 'Atrule' && node.name === 'try';
+function isPositionTryDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try';
+}
+
+function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
+  return node.type === 'Atrule' && node.name === 'position-try';
 }
 
 function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
@@ -396,41 +431,118 @@ function getAnchorFunctionData(
   return {};
 }
 
-function getPositionFallbackDeclaration(
+function getPositionTryOptionsDeclaration(
   node: csstree.Declaration,
   rule?: csstree.Raw,
 ) {
-  if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
-    const name = (node.value.children.first as csstree.Identifier).name;
-    return { name, selector: rule.value };
+  if (
+    isPositionTryOptionsDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    return node.value.children
+      .map((item) => {
+        const { name } = item as csstree.Identifier;
+        return name as PositionTryOption;
+      })
+      .toArray();
+  }
+  return [];
+}
+
+function getPositionTryDeclaration(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+) {
+  if (
+    isPositionTryDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    let order: PositionTryOrder | undefined;
+    const options: PositionTryOption[] = [];
+    let index = 0;
+    node.value.children.forEach((item) => {
+      if (isIdentifier(item)) {
+        const name = (item as csstree.Identifier).name;
+        if (
+          index === 0 &&
+          POSITION_TRY_ORDERS.includes(name as PositionTryOrder)
+        ) {
+          order = name as PositionTryOrder;
+        } else {
+          options.push(name as PositionTryOption);
+        }
+
+        index++;
+      }
+    });
+
+    return { order, options };
   }
   return {};
 }
 
-function getPositionFallbackRules(node: csstree.Atrule) {
-  if (isFallbackAtRule(node) && node.prelude?.value && node.block?.children) {
+function getPositionTryOrderDeclaration(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+) {
+  if (
+    isPositionTryOrderDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    return {
+      order: (node.value.children.first as csstree.Identifier)
+        .name as PositionTryOrder,
+    };
+  }
+  return {};
+}
+
+function getPositionFallbackValues(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+) {
+  const { order, options } = getPositionTryDeclaration(node, rule);
+  if (order || options) {
+    return { order, options };
+  }
+  const { order: orderDeclaration } = getPositionTryOrderDeclaration(
+    node,
+    rule,
+  );
+  const optionsNames = getPositionTryOptionsDeclaration(node, rule);
+  if (orderDeclaration || optionsNames) {
+    return { order: orderDeclaration, options: optionsNames };
+  }
+  return {};
+}
+
+function getPositionTryRules(node: csstree.Atrule) {
+  if (
+    isPositionTryAtRule(node) &&
+    node.prelude?.value &&
+    node.block?.children
+  ) {
     const name = node.prelude.value;
     const tryBlocks: TryBlock[] = [];
-    const tryAtRules = node.block.children.filter(isTryAtRule);
-    tryAtRules.forEach((atRule) => {
-      if (atRule.block?.children) {
-        // Only declarations are allowed inside a `@try` block
-        const declarations = atRule.block.children.filter(
-          (d): d is DeclarationWithValue =>
-            isDeclaration(d) &&
-            (isInsetProp(d.property) ||
-              isSizingProp(d.property) ||
-              isBoxAlignmentProp(d.property)),
-        );
-        const tryBlock: TryBlock = {
-          uuid: `${name}-try-${nanoid(12)}`,
-          declarations: Object.fromEntries(
-            declarations.map((d) => [d.property, csstree.generate(d.value)]),
-          ),
-        };
-        tryBlocks.push(tryBlock);
-      }
-    });
+    const declarations = node.block.children.filter(
+      (d): d is DeclarationWithValue =>
+        isDeclaration(d) &&
+        (isInsetProp(d.property) ||
+          isSizingProp(d.property) ||
+          isBoxAlignmentProp(d.property)),
+    );
+    const tryBlock: TryBlock = {
+      uuid: `${name}-try-${nanoid(12)}`,
+      declarations: Object.fromEntries(
+        declarations.map((d) => [d.property, csstree.generate(d.value)]),
+      ),
+    };
+
+    tryBlocks.push(tryBlock);
+
     return { name, blocks: tryBlocks };
   }
   return {};
@@ -478,18 +590,18 @@ export async function parseCSS(styleData: StyleData[]) {
   const validPositions: AnchorPositions = {};
   resetStores();
 
-  // First, find all uses of `@position-fallback`
+  // First, find all uses of `@position-try`
   for (const styleObj of styleData) {
     const ast = getAST(styleObj.css);
     csstree.walk(ast, {
       visit: 'Atrule',
       enter(node) {
-        // Parse `@position-fallback` rules
-        const { name, blocks } = getPositionFallbackRules(node);
+        // Parse `@position-try` rules
+        const { name, blocks } = getPositionTryRules(node);
         if (name && blocks?.length) {
           // This will override earlier `@position-fallback` lists
           // with the same name:
-          // (e.g. multiple `@position-fallback --my-fallback {...}` uses
+          // (e.g. multiple `@position-try --my-fallback {...}` uses
           // with the same `--my-fallback` name)
           fallbacks[name] = {
             targets: [],
@@ -500,8 +612,8 @@ export async function parseCSS(styleData: StyleData[]) {
     });
   }
 
-  // Then, find all `position-fallback` declarations,
-  // and add in `@try` block contents (scoped to unique data-attrs)
+  // Then, find all `position-try-options` declarations,
+  // and add in block contents (scoped to unique data-attrs)
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -509,41 +621,73 @@ export async function parseCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const rule = this.rule?.prelude as csstree.Raw | undefined;
-        // Parse `position-fallback` declaration
-        const { name, selector } = getPositionFallbackDeclaration(node, rule);
-        if (name && selector && fallbacks[name]) {
-          validPositions[selector] = { fallbacks: fallbacks[name].blocks };
-          if (!fallbacks[name].targets.includes(selector)) {
-            fallbacks[name].targets.push(selector);
+        // Parse `position-try-options` declaration
+        const { order, options } = getPositionFallbackValues(node, rule);
+        const selector = rule?.value;
+        const anchorPosition: AnchorPosition = {};
+        if (order && selector) {
+          anchorPosition.order = order;
+        }
+        options?.forEach((name) => {
+          if (name && selector && fallbacks[name]) {
+            if (anchorPosition.fallbacks) {
+              anchorPosition.fallbacks = [
+                ...anchorPosition.fallbacks,
+                ...fallbacks[name].blocks,
+              ];
+            } else {
+              anchorPosition.fallbacks = fallbacks[name].blocks;
+            }
+
+            if (!fallbacks[name].targets.includes(selector)) {
+              fallbacks[name].targets.push(selector);
+            }
+            // Add each `@position-try` block, scoped to a unique data-attr
+            for (const block of fallbacks[name].blocks) {
+              const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+              this.stylesheet?.children.prependData({
+                type: 'Rule',
+                prelude: {
+                  type: 'Raw',
+                  value: dataAttr,
+                },
+                block: {
+                  type: 'Block',
+                  children: new csstree.List<csstree.CssNode>().fromArray(
+                    Object.entries(block.declarations).map(([prop, val]) => ({
+                      type: 'Declaration',
+                      important: true,
+                      property: prop,
+                      value: {
+                        type: 'Raw',
+                        value: val,
+                      },
+                    })),
+                  ),
+                },
+              });
+              // Store mapping of data-attr to target selector
+              fallbackTargets[dataAttr] = selector;
+            }
+            changed = true;
           }
-          // Add each `@try` block, scoped to a unique data-attr
-          for (const block of fallbacks[name].blocks) {
-            const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
-            this.stylesheet?.children.prependData({
-              type: 'Rule',
-              prelude: {
-                type: 'Raw',
-                value: dataAttr,
-              },
-              block: {
-                type: 'Block',
-                children: new csstree.List<csstree.CssNode>().fromArray(
-                  Object.entries(block.declarations).map(([prop, val]) => ({
-                    type: 'Declaration',
-                    important: true,
-                    property: prop,
-                    value: {
-                      type: 'Raw',
-                      value: val,
-                    },
-                  })),
-                ),
-              },
-            });
-            // Store mapping of data-attr to target selector
-            fallbackTargets[dataAttr] = selector;
+        });
+        if (selector && Object.keys(anchorPosition).length > 0) {
+          if (validPositions[selector]) {
+            if (anchorPosition.order) {
+              validPositions[selector].order = anchorPosition.order;
+            }
+            if (anchorPosition.fallbacks) {
+              if (!validPositions[selector].fallbacks)
+                validPositions[selector].fallbacks = [];
+              validPositions[selector].fallbacks?.push(
+                ...anchorPosition.fallbacks,
+              );
+            }
+            //  = {order: anchorPosition.order, fallbacks: [...[validPositions[selector].fallbacks], ...[anchorPosition.fallbacks]]};
+          } else {
+            validPositions[selector] = anchorPosition;
           }
-          changed = true;
         }
       },
     });

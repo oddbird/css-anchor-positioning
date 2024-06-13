@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
-    <link rel="stylesheet" href="/position-fallback.css" />
+    <link rel="stylesheet" href="/position-try.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
@@ -371,28 +371,23 @@
   bottom: anchor(var(--anchor-var) top);
 }</code></pre>
     </section>
-    <section id="position-fallback" class="demo-item">
+    <section id="position-try" class="demo-item">
       <h2>
-        <a href="#position-fallback" aria-hidden="true">🔗</a>
-        Positioning with <code>@position-fallback</code>
+        <a href="#position-try" aria-hidden="true">🔗</a>
+        Positioning with <code>@position-try</code>
       </h2>
       <div style="position: relative" class="demo-elements">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
           <span id="my-anchor-fallback" class="anchor"
-            >@position-fallback Anchor</span
+            >@position-try Anchor</span
           >
           <div id="my-target-fallback" class="target">Target</div>
           <div class="placefiller-after-anchor"></div>
         </div>
       </div>
       <div class="note">
-        <p>
-          <strong>Note: </strong>The <code>@position-fallback</code> syntax has
-          been replaced in the spec, and will be deprecated in the next version
-          of this Polyfill.
-        </p>
         <p>
           With polyfill applied, the following positions are attempted in order:
         </p>
