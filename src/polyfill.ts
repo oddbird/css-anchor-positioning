@@ -344,14 +344,14 @@ async function applyPositionFallbacks(
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already looping
-        // through the possible `@try` blocks, do not check again.
+        // through the possible `@position-try` blocks, do not check again.
         if (checking) {
           return;
         }
         checking = true;
-        // Apply the styles from each `@try` block (in order), stopping when we
-        // reach one that does not cause the target's margin-box to overflow
-        // its offsetParent (containing block).
+        // Apply the styles from each `@position-try` block (in order), stopping
+        // when we reach one that does not cause the target's margin-box to
+        // overflow its offsetParent (containing block).
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
           if (index === fallbacks.length - 1) {

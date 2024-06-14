@@ -548,7 +548,7 @@ describe('parseCSS', () => {
         <div id="my-anchor-fallback"></div>
       </div>
     `;
-    const css = getSampleCSS('position-fallback');
+    const css = getSampleCSS('position-try');
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected: AnchorPositions = {
       '#my-target-fallback': {
