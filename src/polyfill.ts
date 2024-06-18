@@ -325,7 +325,7 @@ async function applyAnchorPositions(
   }
 }
 
-async function checkOverflow(target: HTMLElement, offsetParent:HTMLElement){
+async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
   const rects = await platform.getElementRects({
     reference: target,
     floating: target,
@@ -378,15 +378,15 @@ async function applyPositionFallbacks(
         const defaultOverflow = await checkOverflow(target, offsetParent);
         // If none of the sides overflow, don't try fallbacks
         if (Object.values(defaultOverflow).every((side) => side <= 0)) {
-         checking = false;
-         return;
-       }
+          checking = false;
+          return;
+        }
         // Apply the styles from each `@position-try` block (in order), stopping
         // when we reach one that does not cause the target's margin-box to
         // overflow its offsetParent (containing block).
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
-          
+
           const overflow = await checkOverflow(target, offsetParent);
 
           // If none of the sides overflow, use this `@try` block and stop loop...

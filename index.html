@@ -417,14 +417,12 @@
 
 #my-target-fallback {
   position: absolute;
-  position-try-options: --top-left, --bottom-left, --top-right, --bottom-right;
-}
 
-@position-try --top-left {
   /* First try to align the bottom, left edge of the target
-     with the top, left edge of the anchor. */
+  with the top, left edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   left: anchor(--my-anchor-fallback left);
+  position-try-options: --bottom-left, --top-right, --bottom-right;
 }
 
 @position-try --bottom-left {

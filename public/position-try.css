@@ -4,14 +4,12 @@
 
 #my-target-fallback {
   position: absolute;
-  position-try-options: --top-left, --bottom-left, --top-right, --bottom-right;
-}
 
-@position-try --top-left {
   /* First try to align the bottom, left edge of the target
      with the top, left edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   left: anchor(--my-anchor-fallback left);
+  position-try-options: --bottom-left, --top-right, --bottom-right;
 }
 
 @position-try --bottom-left {
@@ -19,6 +17,7 @@
      with the bottom, left edge of the anchor. */
   top: anchor(--my-anchor-fallback bottom);
   left: anchor(--my-anchor-fallback left);
+  bottom: revert;
 }
 
 @position-try --top-right {
@@ -26,6 +25,7 @@
      with the top, right edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   right: anchor(--my-anchor-fallback right);
+  left: revert;
 }
 
 @position-try --bottom-right {
@@ -36,4 +36,6 @@
   right: anchor(--my-anchor-fallback right);
   width: 100px;
   height: 100px;
+  bottom: revert;
+  left: revert;
 }

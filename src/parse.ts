@@ -241,6 +241,13 @@ function isPositionTryOrderDeclaration(
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-try-order';
 }
+function isPositionTryFallbackDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return (
+    node.type === 'Declaration' && node.property === 'position-try-fallback'
+  );
+}
 
 function isPositionTryDeclaration(
   node: csstree.CssNode,
@@ -436,7 +443,8 @@ function getPositionTryOptionsDeclaration(
   rule?: csstree.Raw,
 ) {
   if (
-    isPositionTryOptionsDeclaration(node) &&
+    (isPositionTryOptionsDeclaration(node) ||
+      isPositionTryFallbackDeclaration(node)) &&
     node.value.children.first &&
     rule?.value
   ) {
