@@ -15,12 +15,10 @@ export function getAST(cssText: string) {
 
 export function generateCSS(ast: csstree.CssNode) {
   const css = csstree.generate(ast, {
-    // Default `safe` adds extra (potentially breaking0 spaces for compatibility
+    // Default `safe` adds extra (potentially breaking) spaces for compatibility
     // with old browsers.
     mode: 'spec',
-    // Pending types updated in
-    // https://github.com/DefinitelyTyped/DefinitelyTyped/pull/69772
-  } as csstree.GenerateOptions);
+  });
   return css;
 }
 
