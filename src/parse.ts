@@ -251,7 +251,7 @@ export function isBoxAlignmentProp(
   return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
 }
 
-function isPositionAnchorDeclaration(
+export function isPositionAnchorDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-anchor';

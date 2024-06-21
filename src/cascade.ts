@@ -1,18 +1,12 @@
 import * as csstree from 'css-tree';
 
+import { isPositionAnchorDeclaration } from './parse.js';
 import {
-  type DeclarationWithValue,
   generateCSS,
   getAST,
   getDeclarationValue,
   type StyleData,
 } from './utils.js';
-
-function isPositionAnchorDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-anchor';
-}
 
 // Move `position-anchor` declaration to cascadable `--position-anchor`
 // property.
