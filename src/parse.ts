@@ -911,9 +911,10 @@ export async function parseCSS(styleData: StyleData[]) {
                   property: `${this.declaration.property}-${propUuid}`,
                   value: {
                     type: 'Raw',
-                    value: csstree
-                      .generate(this.declaration.value)
-                      .replace(`var(${child.name})`, `var(${value})`),
+                    value: generateCSS(this.declaration.value).replace(
+                      `var(${child.name})`,
+                      `var(${value})`,
+                    ),
                   },
                 });
                 changed = true;
