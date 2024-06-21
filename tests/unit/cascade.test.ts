@@ -1,5 +1,5 @@
 import { cascadeCSS } from '../../src/cascade.js';
-import { StyleData } from '../../src/utils.js';
+import { type StyleData } from '../../src/utils.js';
 import { getSampleCSS } from './../helpers.js';
 
 describe('cascadeCSS', () => {

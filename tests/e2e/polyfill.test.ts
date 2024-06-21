@@ -1,4 +1,4 @@
-import { expect, Locator, type Page, test } from '@playwright/test';
+import { expect, type Locator, type Page, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
   // Listen for all console logs

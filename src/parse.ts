@@ -2,11 +2,11 @@ import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
 import {
-  DeclarationWithValue,
+  type DeclarationWithValue,
   generateCSS,
   getAST,
   getDeclarationValue,
-  StyleData,
+  type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
 

@@ -1,4 +1,4 @@
-import { AnchorPositions, parseCSS } from '../../src/parse.js';
+import { type AnchorPositions, parseCSS } from '../../src/parse.js';
 import { type StyleData } from '../../src/utils.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 

@@ -5,21 +5,19 @@ export interface DeclarationWithValue extends csstree.Declaration {
 }
 
 export function getAST(cssText: string) {
-  const ast = csstree.parse(cssText, {
+  return csstree.parse(cssText, {
     parseAtrulePrelude: false,
     parseRulePrelude: false,
     parseCustomProperty: true,
   });
-  return ast;
 }
 
 export function generateCSS(ast: csstree.CssNode) {
-  const css = csstree.generate(ast, {
+  return csstree.generate(ast, {
     // Default `safe` adds extra (potentially breaking) spaces for compatibility
     // with old browsers.
     mode: 'spec',
   });
-  return css;
 }
 
 export function getDeclarationValue(node: DeclarationWithValue) {

@@ -1,9 +1,9 @@
-import { AnchorSide, AnchorSize } from '../../src/parse.js';
+import { type AnchorSide, type AnchorSize } from '../../src/parse.js';
 import {
   getAxis,
   getAxisProperty,
   getPixelValue,
-  GetPixelValueOpts,
+  type GetPixelValueOpts,
   resolveLogicalSideKeyword,
   resolveLogicalSizeKeyword,
 } from '../../src/polyfill.js';

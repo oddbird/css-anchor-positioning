@@ -1,7 +1,7 @@
 import {
   autoUpdate,
   detectOverflow,
-  MiddlewareState,
+  type MiddlewareState,
   platform,
   type Rect,
 } from '@floating-ui/dom';
@@ -9,18 +9,18 @@ import {
 import { cascadeCSS } from './cascade.js';
 import { fetchCSS } from './fetch.js';
 import {
-  AnchorFunction,
-  AnchorFunctionDeclaration,
+  type AnchorFunction,
+  type AnchorFunctionDeclaration,
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
   getCSSPropertyValue,
-  InsetProperty,
+  type InsetProperty,
   isInsetProp,
   isSizingProp,
   parseCSS,
-  SizingProperty,
-  TryBlock,
+  type SizingProperty,
+  type TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
 

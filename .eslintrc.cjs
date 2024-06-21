@@ -29,5 +29,9 @@ module.exports = {
     'simple-import-sort/imports': 1,
     'no-console': 1,
     'no-warning-comments': [1, { terms: ['todo', 'fixme', '@@@'] }],
+    '@typescript-eslint/consistent-type-imports': [
+      1,
+      { fixStyle: 'inline-type-imports' },
+    ],
   },
 };

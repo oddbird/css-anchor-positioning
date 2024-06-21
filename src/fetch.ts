@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
-import { StyleData } from './utils.js';
+import { type StyleData } from './utils.js';
 
 export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
   return Boolean(
