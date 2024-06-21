@@ -119,7 +119,7 @@ const ANCHOR_SIZES: AnchorSize[] = [
   'self-inline',
 ];
 
-type PositionTryOrder =
+export type PositionTryOrder =
   | 'normal'
   | 'most-width'
   | 'most-height'

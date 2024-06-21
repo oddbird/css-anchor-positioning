@@ -1,0 +1,31 @@
+#my-anchor-order {
+  anchor-name: --my-anchor-order;
+}
+
+#my-target-order {
+  position: absolute;
+  position-anchor: --my-anchor-order;
+  position-try: most-height, --top, --bottom;
+  left: anchor(--my-anchor-order right);
+  height: 100px;
+  width: 300px;
+}
+
+@position-try --top {
+  /* First try to align the bottom, left edge of the target
+     with the top, left edge of the anchor. */
+  bottom: anchor(--my-anchor-order top);
+  left: anchor(--my-anchor-order left);
+  right: revert;
+  height: 125px;
+  width: revert;
+}
+
+@position-try --bottom {
+  /* Next try to align the top, left edge of the target
+     with the bottom, left edge of the anchor. */
+  top: anchor(--my-anchor-order bottom);
+  left: anchor(--my-anchor-order left);
+  right: revert;
+  height: 200px;
+}

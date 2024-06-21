@@ -18,6 +18,7 @@ import {
   isInsetProp,
   isSizingProp,
   parseCSS,
+  PositionTryOrder,
   SizingProperty,
   TryBlock,
 } from './parse.js';
@@ -352,6 +353,7 @@ async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
 async function applyPositionFallbacks(
   targetSel: string,
   fallbacks: TryBlock[],
+  order: PositionTryOrder = 'normal',
   useAnimationFrame = false,
 ) {
   if (!fallbacks.length) {
@@ -381,25 +383,61 @@ async function applyPositionFallbacks(
           checking = false;
           return;
         }
-        // Apply the styles from each `@position-try` block (in order), stopping
-        // when we reach one that does not cause the target's margin-box to
-        // overflow its offsetParent (containing block).
-        for (const [index, { uuid }] of fallbacks.entries()) {
-          target.setAttribute('data-anchor-polyfill', uuid);
+        if (order === 'normal') {
+          // Apply the styles from each `@position-try` block (in order), stopping
+          // when we reach one that does not cause the target's margin-box to
+          // overflow its offsetParent (containing block).
+          for (const [index, { uuid }] of fallbacks.entries()) {
+            target.setAttribute('data-anchor-polyfill', uuid);
 
-          const overflow = await checkOverflow(target, offsetParent);
+            const overflow = await checkOverflow(target, offsetParent);
 
-          // If none of the sides overflow, use this `@try` block and stop loop...
-          if (Object.values(overflow).every((side) => side <= 0)) {
-            checking = false;
-            break;
+            // If none of the sides overflow, use this `@try` block and stop loop...
+            if (Object.values(overflow).every((side) => side <= 0)) {
+              checking = false;
+              break;
+            }
+            // If it's the last fallback, and none have matched, revert to base.
+            if (index === fallbacks.length - 1) {
+              checking = false;
+              target.removeAttribute('data-anchor-polyfill');
+              break;
+            }
           }
-          // If it's the last fallback, and none have matched, revert to base.
-          if (index === fallbacks.length - 1) {
-            checking = false;
-            target.removeAttribute('data-anchor-polyfill');
-            break;
-          }
+        } else {
+          // Get visible area for all fallbacks. This is not the correct
+          // measurement- we want the inset-modified containing block, not the
+          // target's size.
+          const visibleArea = await Promise.all(
+            fallbacks.map(async ({ uuid }) => {
+              target.setAttribute('data-anchor-polyfill', uuid);
+
+              const overflow = await checkOverflow(target, offsetParent);
+              const { clientHeight, clientWidth } = target;
+              const visible = {
+                height:
+                  clientHeight -
+                  Math.max(0, overflow.top) -
+                  Math.max(0, overflow.bottom),
+                width:
+                  clientWidth -
+                  Math.max(0, overflow.left) -
+                  Math.max(0, overflow.right),
+              };
+
+              return { uuid, visible };
+            }),
+          );
+          // sort
+          const sorter = ['most-height', 'most-block-size'].includes(order)
+            ? 'height'
+            : 'width';
+          visibleArea.sort((a, b) => {
+            return b.visible[sorter] - a.visible[sorter];
+          });
+          // return winner
+          target.setAttribute('data-anchor-polyfill', visibleArea[0].uuid);
+          checking = false;
         }
       },
       { animationFrame: useAnimationFrame },
@@ -418,6 +456,7 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
     await applyPositionFallbacks(
       targetSel,
       position.fallbacks ?? [],
+      position.order,
       useAnimationFrame,
     );
   }
