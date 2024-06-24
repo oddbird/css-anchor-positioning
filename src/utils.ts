@@ -1,5 +1,6 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
+
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }

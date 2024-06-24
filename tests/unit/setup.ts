@@ -11,6 +11,3 @@ beforeAll(() => {
 afterEach(() => {
   fetchMock.reset();
 });
-vi.mock('nanoid/non-secure', () => {
-  return { nanoid: () => '1234' };
-});
