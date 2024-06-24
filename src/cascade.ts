@@ -5,6 +5,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
+  POSITION_ANCHOR_PROPERTY,
   type StyleData,
 } from './utils.js';
 
@@ -12,41 +13,40 @@ import {
 // property.
 function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
   if (isPositionAnchorDeclaration(node) && block) {
-    const newProp = {
+    block.children.appendData({
       type: 'Declaration',
       important: false,
-      property: '--position-anchor',
+      property: POSITION_ANCHOR_PROPERTY,
       value: {
         type: 'Raw',
         value: getDeclarationValue(node),
       },
-    } as const;
-
-    block.children.append(block.children.createItem(newProp));
+    });
     return { updated: true };
   }
   return {};
 }
 
 export async function cascadeCSS(styleData: StyleData[]) {
-  const changedStyles = [];
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, function (node) {
-      const block = this.rule?.block;
-
-      const { updated } = shiftPositionAnchorData(node, block);
-      if (updated) {
-        changed = true;
-      }
+    csstree.walk(ast, {
+      visit: 'Declaration',
+      enter(node) {
+        const block = this.rule?.block;
+        const { updated } = shiftPositionAnchorData(node, block);
+        if (updated) {
+          changed = true;
+        }
+      },
     });
+
     if (changed) {
       // Update CSS
       styleObj.css = generateCSS(ast);
       styleObj.changed = true;
-      changedStyles.push(styleObj);
     }
   }
-  return { changedStyles };
+  return styleData.some((styleObj) => styleObj.changed === true);
 }

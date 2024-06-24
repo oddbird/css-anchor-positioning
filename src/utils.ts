@@ -1,5 +1,5 @@
 import * as csstree from 'css-tree';
-
+import { nanoid } from 'nanoid/non-secure';
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
@@ -30,3 +30,5 @@ export interface StyleData {
   url?: URL;
   changed?: boolean;
 }
+
+export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;

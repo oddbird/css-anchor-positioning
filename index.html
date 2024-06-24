@@ -334,7 +334,11 @@
 &lt;div id="my-position-target-b" class="target"&gt;Target B&lt;/div&gt;</code>
 
 <code class="language-css"
->#my-position-target-b {
+>#my-position-target-a {  
+  position-anchor: --my-position-anchor-a;  
+}
+
+#my-position-target-b {
   position-anchor: --my-position-anchor-b;
 }
 
@@ -342,7 +346,6 @@
   position: absolute;
   bottom: anchor(top);
   left: anchor(right);
-  position-anchor: --my-position-anchor-a;
 }
 
 #my-position-anchor-a {

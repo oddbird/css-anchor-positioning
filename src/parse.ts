@@ -6,6 +6,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
+  POSITION_ANCHOR_PROPERTY,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -404,14 +405,6 @@ function getAnchorFunctionData(
   return {};
 }
 
-function getPositionAnchorData(node: csstree.CssNode, rule?: csstree.Raw) {
-  if (isPositionAnchorDeclaration(node) && rule?.value) {
-    const name = getDeclarationValue(node);
-    return { name, selector: rule.value };
-  }
-  return {};
-}
-
 function getPositionFallbackDeclaration(
   node: csstree.Declaration,
   rule?: csstree.Raw,
@@ -466,7 +459,7 @@ async function getAnchorEl(
     const anchorAttr = targetEl.getAttribute('anchor');
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
-      '--position-anchor',
+      POSITION_ANCHOR_PROPERTY,
     );
 
     if (positionAnchorProperty) {
@@ -586,17 +579,6 @@ export async function parseCSS(styleData: StyleData[]) {
           }
         },
       );
-
-      // Parse `position-anchor` data
-      const { name: positionAnchorName, selector: positionAnchorSelector } =
-        getPositionAnchorData(node, rule);
-      if (positionAnchorName && positionAnchorSelector) {
-        if (anchorNames[positionAnchorName]) {
-          anchorNames[positionAnchorName].push(positionAnchorSelector);
-        } else {
-          anchorNames[positionAnchorName] = [positionAnchorSelector];
-        }
-      }
 
       // Parse `anchor()` function
       const {

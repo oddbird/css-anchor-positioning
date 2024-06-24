@@ -1,5 +1,5 @@
 import { type AnchorPositions, parseCSS } from '../../src/parse.js';
-import { type StyleData } from '../../src/utils.js';
+import { POSITION_ANCHOR_PROPERTY, type StyleData } from '../../src/utils.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
@@ -180,7 +180,7 @@ describe('parseCSS', () => {
       .my-targets {
         position: absolute;
         position-anchor: --my-anchor;
-        --position-anchor: --my-anchor;
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
       }
       #my-anchor {
         anchor-name: --my-anchor;
@@ -231,14 +231,14 @@ describe('parseCSS', () => {
     const css = `
       #my-target-1 {
         top: anchor(bottom);
-        --position-anchor: --my-anchor;
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
         position-anchor: --my-anchor;
         position: absolute;
       }
       #my-target-2 {
         bottom: anchor(top);
         position-anchor: --my-anchor;
-        --position-anchor: --my-anchor;
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
         position: absolute;
       }
       #my-anchor {
