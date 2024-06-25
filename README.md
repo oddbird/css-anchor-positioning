@@ -84,7 +84,6 @@ following features:
 - The `@position-try` rule
 - The `position-try-options`, `position-try-order`, or `position-try` properties
 - `anchor-scope` property
-- `position-anchor` property
 - `inset-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
