@@ -11,7 +11,12 @@
     "property-no-unknown": [
       true,
       {
-        "ignoreProperties": ["anchor-name", "position-try"]
+        "ignoreProperties": [
+          "anchor-name",
+          "position-anchor",
+          "position-fallback",
+          "position-try"
+        ]
       }
     ]
   }

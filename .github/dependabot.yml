@@ -24,5 +24,8 @@ updates:
       - dependency-name: '@playwright/test'
       - dependency-name: '@types/node'
       - dependency-name: 'node-fetch'
-        versions:
-          - 3.x
+        update-types:
+          - 'version-update:semver-major'
+      - dependency-name: 'eslint'
+        update-types:
+          - 'version-update:semver-major'

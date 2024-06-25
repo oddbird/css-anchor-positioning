@@ -1,0 +1,19 @@
+#position-anchor #my-position-target-b {
+  position-anchor: --my-position-anchor-b;
+}
+
+#position-anchor .target {
+  position: absolute;
+  bottom: anchor(top);
+  left: anchor(right);
+  position-anchor: --my-position-anchor-a;
+}
+
+#my-position-anchor-a {
+  anchor-name: --my-position-anchor-a;
+  margin-bottom: 3em;
+}
+
+#my-position-anchor-b {
+  anchor-name: --my-position-anchor-b;
+}
