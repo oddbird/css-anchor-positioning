@@ -1,4 +1,4 @@
-import { Browser, expect, type Page, test } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 
 import {
   isValidAnchorElement,

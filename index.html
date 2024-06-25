@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
+    <link rel="stylesheet" href="/position-anchor.css" />
     <link rel="stylesheet" href="/position-fallback.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
@@ -308,6 +309,51 @@
   position: absolute;
   right: anchor(implicit left);
   bottom: anchor(top);
+}</code></pre>
+    </section>
+    <section id="position-anchor" class="demo-item">
+      <h2>
+        <a href="#position-anchor" aria-hidden="true">🔗</a>
+        Positioning with <code>anchor()</code> [
+        <code>position-anchor</code> property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-position-anchor-a" class="anchor">Anchor A</div>
+        <div id="my-position-target-a" class="target">Target A</div>
+        <div id="my-position-anchor-b" class="anchor">Anchor B</div>
+        <div id="my-position-target-b" class="target">Target B</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Targets are positioned at the top right corner of
+        their respective Anchors.
+      </p>
+      <pre><code class="language-html"
+>&lt;div id="my-position-anchor-a" class="anchor"&gt;Anchor A&lt;/div&gt;
+&lt;div id="my-position-target-a" class="target"&gt;Target A&lt;/div&gt;
+&lt;div id="my-position-anchor-b" class="anchor"&gt;Anchor B&lt;/div&gt;
+&lt;div id="my-position-target-b" class="target"&gt;Target B&lt;/div&gt;</code>
+
+<code class="language-css"
+>#my-position-target-a {  
+  position-anchor: --my-position-anchor-a;  
+}
+
+#my-position-target-b {
+  position-anchor: --my-position-anchor-b;
+}
+
+.target {
+  position: absolute;
+  bottom: anchor(top);
+  left: anchor(right);
+}
+
+#my-position-anchor-a {
+  anchor-name: --my-position-anchor-a;
+}
+
+#my-position-anchor-b {
+  anchor-name: --my-position-anchor-b;
 }</code></pre>
     </section>
     <section id="anchor-positioning-popover" class="demo-item">
