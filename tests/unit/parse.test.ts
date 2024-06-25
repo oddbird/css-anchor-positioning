@@ -692,6 +692,7 @@ describe('parseCSS', () => {
               targetEl,
             },
           ],
+          width: expect.any(Array)
         },
         fallbacks: [
           {
