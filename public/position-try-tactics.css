@@ -1,0 +1,11 @@
+#my-anchor-try-tactics {
+  anchor-name: --my-anchor-try-tactics;
+}
+
+#my-target-try-tactics {
+  position: absolute;
+  position-anchor: --my-anchor-try-tactics;
+  bottom: anchor(top);
+  left: anchor(left);
+  position-try-options: flip-block, flip-inline, flip-start;
+}

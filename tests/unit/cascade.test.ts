@@ -14,4 +14,15 @@ describe('cascadeCSS', () => {
     expect(css).toContain(`${POSITION_ANCHOR_PROPERTY}:--my-position-anchor-b`);
     expect(css).toContain(`${POSITION_ANCHOR_PROPERTY}:--my-position-anchor-a`);
   });
+  it('adds insets with anchors as custom properties', async () => {
+    const srcCSS = getSampleCSS('position-try-tactics');
+    const styleData: StyleData[] = [
+      { css: srcCSS, el: document.createElement('div') },
+    ];
+    const cascadeCausedChanges = await cascadeCSS(styleData);
+    expect(cascadeCausedChanges).toBe(true);
+    const { css } = styleData[0];
+    expect(css).toContain('--bottom: anchor(top);');
+    expect(css).toContain('--left: anchor(top);');
+  });
 });

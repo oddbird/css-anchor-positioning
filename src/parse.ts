@@ -5,7 +5,9 @@ import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
+  isAnchorFunction,
   POSITION_ANCHOR_PROPERTY,
+  splitCommaList,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -141,8 +143,7 @@ type PositionTryOptionsTryTactics = 'flip-block' | 'flip-inline' | 'flip-start';
 type PositionTryOption =
   | 'none'
   | PositionTryOptionsTryTactics
-  // | csstree.Identifier
-  // todo: what's the dashed ident type
+  | csstree.Identifier
   | InsetProperty;
 
 export interface AnchorFunction {
@@ -208,12 +209,6 @@ function isAnchorNameDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-name';
-}
-
-function isAnchorFunction(
-  node: csstree.CssNode | null,
-): node is csstree.FunctionNode {
-  return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
 function isAnchorSizeFunction(
@@ -456,12 +451,7 @@ function getPositionTryOptionsDeclaration(
     node.value.children.first &&
     rule?.value
   ) {
-    return node.value.children
-      .map((item) => {
-        const { name } = item as csstree.Identifier;
-        return name as PositionTryOption;
-      })
-      .toArray();
+    return splitCommaList(node.value.children);
   }
   return [];
 }

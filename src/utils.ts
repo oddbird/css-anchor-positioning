@@ -5,6 +5,12 @@ export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
 
+export function isAnchorFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(node && node.type === 'Function' && node.name === 'anchor');
+}
+
 export function getAST(cssText: string) {
   return csstree.parse(cssText, {
     parseAtrulePrelude: false,
@@ -33,3 +39,20 @@ export interface StyleData {
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;
+
+export function splitCommaList(list: csstree.List<csstree.CssNode>) {
+  return list.toArray().reduce(
+    (acc: csstree.Identifier[][], child) => {
+      if (child.type === 'Operator' && child.value === ',') {
+        acc.push([]);
+        return acc;
+      }
+      if (child.type === 'Identifier') {
+        acc[acc.length - 1].push(child);
+      }
+
+      return acc;
+    },
+    [[]],
+  );
+}

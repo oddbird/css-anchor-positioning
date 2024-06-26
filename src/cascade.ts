@@ -5,6 +5,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
+  isAnchorFunction,
   POSITION_ANCHOR_PROPERTY,
   type StyleData,
 } from './utils.js';
@@ -27,6 +28,24 @@ function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
   return {};
 }
 
+// Move inset declarations to cascadable properties
+// property.
+function shiftInsetData(node: csstree.CssNode, block?: csstree.Block) {
+  if (isAnchorFunction(node) && block) {
+    block.children.appendData({
+      type: 'Declaration',
+      important: false,
+      property: POSITION_ANCHOR_PROPERTY,
+      value: {
+        type: 'Raw',
+        value: node,
+      },
+    });
+    return { updated: true };
+  }
+  return {};
+}
+
 export async function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
@@ -37,6 +56,10 @@ export async function cascadeCSS(styleData: StyleData[]) {
         const block = this.rule?.block;
         const { updated } = shiftPositionAnchorData(node, block);
         if (updated) {
+          changed = true;
+        }
+        const { updated: insetUpdated} = shiftInsetData(node, block);
+        if (insetUpdated) {
           changed = true;
         }
       },
