@@ -1,0 +1,22 @@
+#my-anchor-absolute-one,
+#my-anchor-absolute-two {
+  position: absolute;
+  anchor-name: --my-anchor-absolute;
+}
+
+#my-anchor-absolute-one {
+  top: 10px;
+  left: 20px;
+}
+
+#my-anchor-absolute-two {
+  top: 100px;
+  left: 200px;
+}
+
+#my-target-absolute-one,
+#my-target-absolute-two {
+  position: absolute;
+  top: anchor(--my-anchor-absolute bottom);
+  left: anchor(--my-anchor-absolute right);
+}

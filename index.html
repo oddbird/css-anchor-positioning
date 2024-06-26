@@ -35,6 +35,7 @@
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
     <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
+    <link rel="stylesheet" href="/anchor-absolute.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -743,6 +744,36 @@
   top: anchor(--my-anchor-name-b bottom);
 }
 </code></pre>
+    </section>
+    <section id="anchor-absolute" class="demo-item">
+      <h2>
+        <a href="#anchor-absolute" aria-hidden="true">🔗</a>
+        Absolutely positioned anchor
+      </h2>
+      <div style="position: relative; height: 150px;" class="demo-elements">
+        <div id="my-anchor-absolute-one" class="anchor">Anchor one</div>
+        <div id="my-target-absolute-one" class="target">Target one</div>
+        <div id="my-anchor-absolute-two" class="anchor">Anchor two</div>
+        <div id="my-target-absolute-two" class="target">Target two</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target one is positioned at the bottom right
+        corner of Anchor one. Target two is positioned at the bottom right
+        corner of Anchor two.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-absolute-one,
+#my-anchor-absolute-two {
+  position: absolute;
+  anchor-name: --my-anchor-absolute;
+}
+
+#my-target-absolute-one,
+#my-target-absolute-two {
+  position: absolute;
+  top: anchor(--my-anchor-absolute bottom);
+  left: anchor(--my-anchor-absolute right);
+}</code></pre>
     </section>
     <section id="sponsor">
       <h2>Sponsor OddBird's OSS Work</h2>
