@@ -736,7 +736,7 @@ test('top layer - valid - fixed positioned non-top-layer anchor with top-layer t
   expect(valid).toBe(true);
 });
 
-test('top layer - valid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
+test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-005.html
@@ -756,12 +756,12 @@ test('top layer - valid - top-layer anchor with non-top-layer target - WPT ancho
 
         #my-target-positioning {
           position: fixed;
-          top: anchor(--a bottom, 200px);
-          left: anchor(--a left, 300px);
+          top: anchor(bottom, 200px);
+          left: anchor(left, 300px);
           width: 100px;
           height: 100px;
           background: lime;
-          anchor-scroll: --a;
+          position-anchor: --a;
         }
 
         body {
@@ -784,13 +784,17 @@ test('top layer - valid - top-layer anchor with non-top-layer target - WPT ancho
 
       <dialog id="my-anchor-positioning"></dialog>
       <div id="my-target-positioning"></div>
+
+      <script>
+        document.getElementById("my-anchor-positioning").showModal();
+      </script>
   `,
     { waitUntil: 'load' },
   );
   const valid = await callValidFunction(page);
 
   await page.close();
-  expect(valid).toBe(true);
+  expect(valid).toBe(false);
 });
 
 // test('top layer - invalid - succeeding top-layer anchor with top-layer target - WPT anchor-position-top-layer-006', async ({
