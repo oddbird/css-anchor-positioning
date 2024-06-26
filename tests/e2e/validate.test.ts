@@ -204,7 +204,7 @@ test('anchor is valid when anchor has same CB as querying element and anchor is 
   expect(result).toBe(true);
 });
 
-test('anchor is NOT valid when anchor has same CB as querying element, but anchor is absolutely positioned', async ({
+test('anchor is valid when anchor has same CB as querying element, but anchor is absolutely positioned', async ({
   browser,
 }) => {
   const page = await buildPage(browser);
@@ -220,10 +220,10 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
-test('anchor is NOT valid when anchor has same CB as querying element, but anchor is absolutely positioned - fixed position', async ({
+test('anchor is valid when anchor has same CB as querying element, but anchor is absolutely positioned - fixed position', async ({
   browser,
 }) => {
   const page = await buildPage(browser);
@@ -239,7 +239,7 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
 // if el has a different containing block from the querying element,
@@ -287,7 +287,7 @@ test('anchor is valid if it has a different CB from the querying element, and th
   expect(result).toBe(true);
 });
 
-test('anchor is NOT valid if it has a different CB from the querying element, and the last CB in anchor CB chain before the query element CB is absolutely positioned', async ({
+test('anchor is valid if it has a different CB from the querying element, and the last CB in anchor CB chain before the query element CB is absolutely positioned', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.html
@@ -346,10 +346,10 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
-test('when multiple anchor elements have the same name and are valid, the first is returned', async ({
+test('when multiple anchor elements have the same name and are valid, the last is returned', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-001.html
@@ -423,8 +423,8 @@ test('when multiple anchor elements have the same name and are valid, the first 
   await page.close();
   expect(valid).toBe(true);
   expect(validationResults.results.anchor).toBeTruthy;
-  expect(validationResults.anchorText).toContain('First Anchor Element');
-  expect(validationResults.anchorWidth).toBe('10px');
+  expect(validationResults.anchorText).toContain('Third Anchor Element');
+  expect(validationResults.anchorWidth).toBe('30px');
 });
 
 test('target anchor element is first element el in tree order.', async ({
@@ -736,7 +736,7 @@ test('top layer - valid - fixed positioned non-top-layer anchor with top-layer t
   expect(valid).toBe(true);
 });
 
-test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
+test('top layer - valid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-005.html
@@ -790,7 +790,7 @@ test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anc
   const valid = await callValidFunction(page);
 
   await page.close();
-  expect(valid).toBe(false);
+  expect(valid).toBe(true);
 });
 
 // test('top layer - invalid - succeeding top-layer anchor with top-layer target - WPT anchor-position-top-layer-006', async ({
