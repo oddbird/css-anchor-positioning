@@ -229,7 +229,7 @@ function isPositionTryOptionsDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return (
-    node.type === 'Declaration' && node.property === 'position-try-options'
+    node.type === 'Declaration' && node.property === 'position-try-fallbacks'
   );
 }
 
@@ -615,7 +615,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
   }
 
-  // Then, find all `position-try-options` declarations,
+  // Then, find all `position-try-fallbacks` declarations,
   // and add in block contents (scoped to unique data-attrs)
   for (const styleObj of styleData) {
     let changed = false;
@@ -624,7 +624,7 @@ export async function parseCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const rule = this.rule?.prelude as csstree.Raw | undefined;
-        // Parse `position-try-options` declaration
+        // Parse `position-try-fallbacks` declaration
         const { order, options } = getPositionFallbackValues(node, rule);
         const selector = rule?.value;
         const anchorPosition: AnchorPosition = {};

@@ -14,7 +14,7 @@
         "ignoreProperties": [
           "anchor-name",
           "position-anchor",
-          "position-fallback",
+          "position-try-fallbacks",
           "position-try"
         ]
       }
