@@ -4,7 +4,7 @@
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/61a20096-7925-4775-99a9-b40a010197c0/deploy-status)](https://app.netlify.com/sites/anchor-polyfill/deploys)
 
-[WPT results](https://anchor-position-wpt.netlify.app/)
+<!-- [WPT results](https://anchor-position-wpt.netlify.app/) -->
 
 ## Browser Support
 
