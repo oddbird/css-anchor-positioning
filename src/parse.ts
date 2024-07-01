@@ -1,7 +1,6 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
-import { applyTryTacticToBlock } from './fallback.js';
 import {
   type DeclarationWithValue,
   generateCSS,
@@ -600,30 +599,6 @@ function getPositionTryRules(node: csstree.Atrule) {
   return {};
 }
 
-// Takes a selector, and for each element, creates a new block with the tactic
-function applyTryTactic(
-  selector: string,
-  tactic: PositionTryOptionsTryTactics,
-) {
-  const elements = document.querySelectorAll(selector);
-  return [...elements].map((el) => {
-    const rules: { [K in InsetProperty]?: string } = {};
-    INSET_PROPS.forEach((prop) => {
-      // todo: better typing than as HTMLElement
-      const val = getCSSPropertyValue(el as HTMLElement, `${prop}`);
-      if (val) {
-        rules[prop] = val;
-      }
-      const propVal = getCSSPropertyValue(el as HTMLElement, `--${prop}`);
-      if (propVal) {
-        rules[prop] = propVal;
-      }
-    });
-    const adjustedRules = applyTryTacticToBlock(rules, tactic);
-    return adjustedRules;
-  });
-}
-
 export function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
@@ -706,25 +681,6 @@ export async function parseCSS(styleData: StyleData[]) {
           let name;
           if (tryObject.type === 'at-rule') {
             name = tryObject.atRule;
-          }
-          if (tryObject.type === 'try-tactic') {
-            // add new item to fallbacks store
-            name = `${selector}-${tryObject.tactic}`;
-            fallbacks[name] = {
-              targets: [selector],
-              blocks: [
-                {
-                  uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
-                  declarations: Object.fromEntries(
-                    [{ property: 'top', value: '123px' }].map((d) => [
-                      d.property,
-                      d.value,
-                    ]),
-                  ),
-                },
-              ],
-            };
-            console.log(applyTryTactic(selector, tryObject.tactic));
           }
           if (name && selector && fallbacks[name]) {
             if (anchorPosition.fallbacks) {
