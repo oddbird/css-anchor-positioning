@@ -1,10 +1,12 @@
 import * as csstree from 'css-tree';
+import { nanoid } from 'nanoid';
 
 import { isPositionAnchorDeclaration } from './parse.js';
 import {
   generateCSS,
   getAST,
   getDeclarationValue,
+  INSTANCE_UUID,
   isAnchorFunction,
   POSITION_ANCHOR_PROPERTY,
   type StyleData,
@@ -29,17 +31,32 @@ function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
 }
 
 // Move inset declarations to cascadable properties
-// property.
-function shiftInsetData(node: csstree.CssNode, block?: csstree.Block) {
-  if (isAnchorFunction(node) && block) {
+function shiftAnchorFunctionDeclarations(
+  node: csstree.Declaration,
+  block?: csstree.Block,
+) {
+  const value = (node.value as csstree.Value)?.children?.first;
+  if (value && isAnchorFunction(value) && block) {
+    let existingBlockId = block.children.filter(
+      (item) =>
+        item.type === 'Declaration' &&
+        item.property === `--block-id-${INSTANCE_UUID}`,
+    )?.first?.value.value;
+
+    if (!existingBlockId) {
+      existingBlockId = nanoid();
+      block.children.appendData({
+        type: 'Declaration',
+        important: false,
+        property: `--block-id-${INSTANCE_UUID}`,
+        value: { type: 'Raw', value: existingBlockId },
+      });
+    }
     block.children.appendData({
       type: 'Declaration',
       important: false,
-      property: POSITION_ANCHOR_PROPERTY,
-      value: {
-        type: 'Raw',
-        value: node,
-      },
+      property: `--${node.property}-${INSTANCE_UUID}`,
+      value: { type: 'Raw', value: existingBlockId },
     });
     return { updated: true };
   }
@@ -58,7 +75,10 @@ export async function cascadeCSS(styleData: StyleData[]) {
         if (updated) {
           changed = true;
         }
-        const { updated: insetUpdated} = shiftInsetData(node, block);
+        const { updated: insetUpdated } = shiftAnchorFunctionDeclarations(
+          node,
+          block,
+        );
         if (insetUpdated) {
           changed = true;
         }

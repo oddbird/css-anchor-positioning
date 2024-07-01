@@ -1,6 +1,8 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+export const INSTANCE_UUID = nanoid();
+
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
@@ -38,7 +40,7 @@ export interface StyleData {
   changed?: boolean;
 }
 
-export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;
+export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
 
 export function splitCommaList(list: csstree.List<csstree.CssNode>) {
   return list.toArray().reduce(
@@ -54,5 +56,12 @@ export function splitCommaList(list: csstree.List<csstree.CssNode>) {
       return acc;
     },
     [[]],
+  );
+}
+
+// todo: check if this ends up being used
+export function splitCommaListValues(list: csstree.List<csstree.CssNode>) {
+  return splitCommaList(list).map((value) =>
+    value.map((identifier) => identifier.name).join(' '),
   );
 }

@@ -22,7 +22,7 @@ describe('cascadeCSS', () => {
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(true);
     const { css } = styleData[0];
-    expect(css).toContain('--bottom: anchor(top);');
-    expect(css).toContain('--left: anchor(top);');
+    expect(css).toContain('--bottom:anchor(top);');
+    expect(css).toContain('--left:anchor(left);');
   });
 });

@@ -1,6 +1,7 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+import { applyTryTacticToBlock } from './fallback.js';
 import {
   type DeclarationWithValue,
   generateCSS,
@@ -33,7 +34,7 @@ export type InsetProperty =
   | 'inset-inline'
   | 'inset';
 
-const INSET_PROPS: InsetProperty[] = [
+export const INSET_PROPS: InsetProperty[] = [
   'left',
   'right',
   'top',
@@ -138,13 +139,36 @@ const POSITION_TRY_ORDERS: PositionTryOrder[] = [
   'most-inline-size',
 ];
 
-type PositionTryOptionsTryTactics = 'flip-block' | 'flip-inline' | 'flip-start';
+export type PositionTryOptionsTryTactics =
+  | 'flip-block'
+  | 'flip-inline'
+  | 'flip-start';
 
-type PositionTryOption =
-  | 'none'
-  | PositionTryOptionsTryTactics
-  | csstree.Identifier
-  | InsetProperty;
+const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
+
+interface PositionTryDefTactic {
+  type: 'try-tactic';
+  tactic: PositionTryOptionsTryTactics;
+}
+interface PositionTryDefInsetArea {
+  type: 'inset-area';
+  insetArea: InsetProperty;
+}
+interface PositionTryDefAtRule {
+  type: 'at-rule';
+  atRule: csstree.Identifier['name'];
+}
+interface PositionTryDefAtRuleWithTactic {
+  type: 'at-rule-with-try-tactic';
+  tactic: PositionTryOptionsTryTactics;
+  atRule: csstree.Identifier['name'];
+}
+
+type PositionTryObject =
+  | PositionTryDefTactic
+  | PositionTryDefInsetArea
+  | PositionTryDefAtRule
+  | PositionTryDefAtRuleWithTactic;
 
 export interface AnchorFunction {
   targetEl?: HTMLElement | null;
@@ -225,7 +249,7 @@ function isVarFunction(
   return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
-function isPositionTryOptionsDeclaration(
+function isPositionTryFallbacksDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return (
@@ -238,13 +262,6 @@ function isPositionTryOrderDeclaration(
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-try-order';
 }
-function isPositionTryFallbackDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return (
-    node.type === 'Declaration' && node.property === 'position-try-fallback'
-  );
-}
 
 function isPositionTryDeclaration(
   node: csstree.CssNode,
@@ -254,6 +271,16 @@ function isPositionTryDeclaration(
 
 function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'position-try';
+}
+
+function isPositionTryTactic(
+  name: string,
+): name is PositionTryOptionsTryTactics {
+  return POSITION_TRY_TACTICS.includes(name);
+}
+
+function isPositionTryOrder(name: string): name is PositionTryOrder {
+  return POSITION_TRY_ORDERS.includes(name as PositionTryOrder);
 }
 
 function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
@@ -441,17 +468,46 @@ function getAnchorFunctionData(
   return {};
 }
 
+function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
+  const positionOptions = splitCommaList(list);
+  const tryObjects: PositionTryObject[] = [];
+  positionOptions.forEach((option) => {
+    if (option.length === 2 && isPositionTryTactic(option[0].name)) {
+      tryObjects.push({
+        tactic: option[0].name,
+        atRule: option[1].name,
+        type: 'at-rule-with-try-tactic',
+      });
+    } else if (option[0].name.startsWith('--')) {
+      tryObjects.push({
+        atRule: option[0].name,
+        type: 'at-rule',
+      });
+    } else if (isPositionTryTactic(option[0].name)) {
+      tryObjects.push({
+        tactic: option[0].name,
+        type: 'try-tactic',
+      });
+    } else if (isInsetProp(option[0].name)) {
+      tryObjects.push({
+        insetArea: option[0].name,
+        type: 'inset-area',
+      });
+    }
+  });
+  return tryObjects;
+}
+
 function getPositionTryOptionsDeclaration(
   node: csstree.Declaration,
   rule?: csstree.Raw,
 ) {
   if (
-    (isPositionTryOptionsDeclaration(node) ||
-      isPositionTryFallbackDeclaration(node)) &&
+    isPositionTryFallbacksDeclaration(node) &&
     node.value.children.first &&
     rule?.value
   ) {
-    return splitCommaList(node.value.children);
+    return parsePositionTryFallbacks(node.value.children);
   }
   return [];
 }
@@ -459,30 +515,20 @@ function getPositionTryOptionsDeclaration(
 function getPositionTryDeclaration(
   node: csstree.Declaration,
   rule?: csstree.Raw,
-) {
+): { order?: PositionTryOrder; options?: PositionTryObject[] } {
   if (
     isPositionTryDeclaration(node) &&
     node.value.children.first &&
     rule?.value
   ) {
     let order: PositionTryOrder | undefined;
-    const options: PositionTryOption[] = [];
-    let index = 0;
-    node.value.children.forEach((item) => {
-      if (isIdentifier(item)) {
-        const name = (item as csstree.Identifier).name;
-        if (
-          index === 0 &&
-          POSITION_TRY_ORDERS.includes(name as PositionTryOrder)
-        ) {
-          order = name as PositionTryOrder;
-        } else {
-          options.push(name as PositionTryOption);
-        }
-
-        index++;
-      }
-    });
+    // get potential order
+    const firstName = (node.value.children.first as csstree.Identifier).name;
+    if (firstName && isPositionTryOrder(firstName)) {
+      order = firstName;
+      node.value.children.shift();
+    }
+    const options = parsePositionTryFallbacks(node.value.children);
 
     return { order, options };
   }
@@ -509,7 +555,7 @@ function getPositionTryOrderDeclaration(
 function getPositionFallbackValues(
   node: csstree.Declaration,
   rule?: csstree.Raw,
-) {
+): { order?: PositionTryOrder; options?: PositionTryObject[] } {
   const { order, options } = getPositionTryDeclaration(node, rule);
   if (order || options) {
     return { order, options };
@@ -552,6 +598,30 @@ function getPositionTryRules(node: csstree.Atrule) {
     return { name, blocks: tryBlocks };
   }
   return {};
+}
+
+// Takes a selector, and for each element, creates a new block with the tactic
+function applyTryTactic(
+  selector: string,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const elements = document.querySelectorAll(selector);
+  return [...elements].map((el) => {
+    const rules: { [K in InsetProperty]?: string } = {};
+    INSET_PROPS.forEach((prop) => {
+      // todo: better typing than as HTMLElement
+      const val = getCSSPropertyValue(el as HTMLElement, `${prop}`);
+      if (val) {
+        rules[prop] = val;
+      }
+      const propVal = getCSSPropertyValue(el as HTMLElement, `--${prop}`);
+      if (propVal) {
+        rules[prop] = propVal;
+      }
+    });
+    const adjustedRules = applyTryTacticToBlock(rules, tactic);
+    return adjustedRules;
+  });
 }
 
 export function getCSSPropertyValue(el: HTMLElement, prop: string) {
@@ -602,7 +672,7 @@ export async function parseCSS(styleData: StyleData[]) {
         // Parse `@position-try` rules
         const { name, blocks } = getPositionTryRules(node);
         if (name && blocks?.length) {
-          // This will override earlier `@position-fallback` lists
+          // This will override earlier `@position-try` lists
           // with the same name:
           // (e.g. multiple `@position-try --my-fallback {...}` uses
           // with the same `--my-fallback` name)
@@ -627,11 +697,35 @@ export async function parseCSS(styleData: StyleData[]) {
         // Parse `position-try-fallbacks` declaration
         const { order, options } = getPositionFallbackValues(node, rule);
         const selector = rule?.value;
+        if (!selector) return;
         const anchorPosition: AnchorPosition = {};
         if (order && selector) {
           anchorPosition.order = order;
         }
-        options?.forEach((name) => {
+        options?.forEach((tryObject) => {
+          let name;
+          if (tryObject.type === 'at-rule') {
+            name = tryObject.atRule;
+          }
+          if (tryObject.type === 'try-tactic') {
+            // add new item to fallbacks store
+            name = `${selector}-${tryObject.tactic}`;
+            fallbacks[name] = {
+              targets: [selector],
+              blocks: [
+                {
+                  uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
+                  declarations: Object.fromEntries(
+                    [{ property: 'top', value: '123px' }].map((d) => [
+                      d.property,
+                      d.value,
+                    ]),
+                  ),
+                },
+              ],
+            };
+            console.log(applyTryTactic(selector, tryObject.tactic));
+          }
           if (name && selector && fallbacks[name]) {
             if (anchorPosition.fallbacks) {
               anchorPosition.fallbacks = [
