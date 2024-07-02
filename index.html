@@ -36,6 +36,7 @@
     <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
+    <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -773,6 +774,30 @@
   position: absolute;
   top: anchor(--my-anchor-absolute bottom);
   left: anchor(--my-anchor-absolute right);
+}</code></pre>
+    </section>
+    <section id="anchor-pseudo-element" class="demo-item">
+      <h2>
+        <a href="#anchor-pseudo-element" aria-hidden="true">🔗</a>
+        Pseudo-element anchor
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-pseudo-element" class="anchor">Anchor</div>
+        <div id="my-target-pseudo-element" class="target">Target</div>
+      </div>
+      <p class="note">
+        Target is positioned at the bottom right corner of the Anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-pseudo-element::before {
+  content: '';
+  anchor-name: --my-anchor-pseudo-element;
+}
+
+#my-target-pseudo-element {
+  position: absolute;
+  top: anchor(--my-anchor-pseudo-element bottom);
+  left: anchor(--my-anchor-pseudo-element right);
 }</code></pre>
     </section>
     <section id="sponsor">

@@ -1,6 +1,89 @@
-import { platform } from '@floating-ui/dom';
+import { platform, type VirtualElement } from '@floating-ui/dom';
 
-import { getCSSPropertyValue } from './parse.js';
+import { type AnchorSelector, getCSSPropertyValue } from './parse.js';
+
+export interface PseudoElement extends VirtualElement {
+  fakePseudoElement: HTMLElement;
+  removeFake(): void;
+}
+
+function getAnchorsBySelectors(selectors: AnchorSelector[]) {
+  const result = [];
+
+  for (const { selector, pseudoElement } of selectors) {
+    if (pseudoElement && !['before', 'after'].includes(pseudoElement)) {
+      continue;
+    }
+
+    const elements = Array.from(
+      document.querySelectorAll<HTMLElement>(selector),
+    );
+
+    if (!pseudoElement) {
+      result.push(...elements);
+      continue;
+    }
+
+    for (const element of elements) {
+      const originalStyles = Array.from(document.adoptedStyleSheets);
+      const styleSheet = new CSSStyleSheet();
+      const styles = getComputedStyle(element, `::${pseudoElement}`);
+      const fakePseudoElement = document.createElement('div');
+
+      for (const property of Array.from(styles)) {
+        fakePseudoElement.style.setProperty(
+          property,
+          styles.getPropertyValue(property),
+        );
+      }
+
+      fakePseudoElement.textContent = styles.content.slice(1, -1);
+
+      styleSheet.insertRule(
+        `${selector}::${pseudoElement} { display: none !important; }`,
+      );
+      document.adoptedStyleSheets = [...originalStyles, styleSheet];
+
+      switch (pseudoElement) {
+        case 'before': {
+          element.insertAdjacentElement('afterbegin', fakePseudoElement);
+          break;
+        }
+
+        case 'after': {
+          element.insertAdjacentElement('beforeend', fakePseudoElement);
+          break;
+        }
+      }
+
+      const startingScrollY = window.scrollY;
+      const startingScrollX = window.scrollX;
+      const boundingClientRect = fakePseudoElement.getBoundingClientRect();
+
+      result.push({
+        fakePseudoElement,
+
+        removeFake() {
+          fakePseudoElement.remove();
+          document.adoptedStyleSheets = originalStyles;
+        },
+
+        getBoundingClientRect() {
+          // NOTE this only takes into account viewport scroll
+          // but not any of it's parents, doing that on each scroll event would be expensive
+          return DOMRect.fromRect({
+            x: boundingClientRect.x - (window.scrollX - startingScrollX),
+            y: boundingClientRect.y - (window.scrollY - startingScrollY),
+            width: boundingClientRect.width,
+            height: boundingClientRect.height,
+          });
+        },
+      } satisfies PseudoElement);
+    }
+  }
+
+  return result;
+}
 
 // Given an element and CSS style property,
 // checks if the CSS property equals a certain value
@@ -162,7 +245,7 @@ export async function isAcceptableAnchorElement(
  */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
-  anchorSelectors: string[],
+  anchorSelectors: AnchorSelector[],
 ) {
   if (
     !(
@@ -174,14 +257,20 @@ export async function validatedForPositioning(
     return null;
   }
 
-  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
-    anchorSelectors.join(', '),
-  );
+  const anchorElements = getAnchorsBySelectors(anchorSelectors);
 
   for (let index = anchorElements.length - 1; index >= 0; index--) {
     const anchor = anchorElements[index];
+    const isPseudoElement = 'fakePseudoElement' in anchor;
 
-    if (await isAcceptableAnchorElement(anchor, targetEl)) {
+    if (
+      await isAcceptableAnchorElement(
+        isPseudoElement ? anchor.fakePseudoElement : anchor,
+        targetEl,
+      )
+    ) {
+      if (isPseudoElement) anchor.removeFake();
+
       return anchor;
     }
   }

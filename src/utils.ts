@@ -8,7 +8,6 @@ export interface DeclarationWithValue extends csstree.Declaration {
 export function getAST(cssText: string) {
   return csstree.parse(cssText, {
     parseAtrulePrelude: false,
-    parseRulePrelude: false,
     parseCustomProperty: true,
   });
 }
