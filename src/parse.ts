@@ -48,13 +48,46 @@ export const INSET_PROPS: InsetProperty[] = [
   'inset',
 ];
 
+export type MarginProperty =
+  | 'margin-block-start'
+  | 'margin-block-end'
+  | 'margin-block'
+  | 'margin-inline-start'
+  | 'margin-inline-end'
+  | 'margin-inline'
+  | 'margin-bottom'
+  | 'margin-left'
+  | 'margin-right'
+  | 'margin-top'
+  | 'margin';
+
+export const MARGIN_PROPERTIES: MarginProperty[] = [
+  'margin-block-start',
+  'margin-block-end',
+  'margin-block',
+  'margin-inline-start',
+  'margin-inline-end',
+  'margin-inline',
+  'margin-bottom',
+  'margin-left',
+  'margin-right',
+  'margin-top',
+  'margin',
+];
+
 export type SizingProperty =
   | 'width'
   | 'height'
   | 'min-width'
   | 'min-height'
   | 'max-width'
-  | 'max-height';
+  | 'max-height'
+  | 'block-size'
+  | 'inline-size'
+  | 'min-block-size'
+  | 'min-inline-size'
+  | 'max-block-size'
+  | 'max-inline-size';
 
 const SIZING_PROPS: SizingProperty[] = [
   'width',
@@ -63,23 +96,23 @@ const SIZING_PROPS: SizingProperty[] = [
   'min-height',
   'max-width',
   'max-height',
+  'block-size',
+  'inline-size',
+  'min-block-size',
+  'min-inline-size',
+  'max-block-size',
+  'max-inline-size',
 ];
 
-export type BoxAlignmentProperty =
-  | 'justify-content'
-  | 'align-content'
+export type SelfAlignmentProperty =
   | 'justify-self'
   | 'align-self'
-  | 'justify-items'
-  | 'align-items';
+  | 'place-self';
 
-const BOX_ALIGNMENT_PROPS: BoxAlignmentProperty[] = [
-  'justify-content',
-  'align-content',
+const SELF_ALIGNMENT_PROPS: SelfAlignmentProperty[] = [
   'justify-self',
   'align-self',
-  'justify-items',
-  'align-items',
+  'place-self',
 ];
 
 type AnchorSideKeyword =
@@ -206,7 +239,7 @@ export interface TryBlock {
   // `key` is the property being declared
   // `value` is the property value
   declarations: Partial<
-    Record<InsetProperty | SizingProperty | BoxAlignmentProperty, string>
+    Record<InsetProperty | MarginProperty | SizingProperty | SelfAlignmentProperty | 'position-anchor' | 'inset-area', string>
   >;
 }
 
@@ -305,14 +338,18 @@ export function isSizingProp(property: string): property is SizingProperty {
   return SIZING_PROPS.includes(property as SizingProperty);
 }
 
+export function isMarginProp(property: string): property is MarginProperty {
+  return MARGIN_PROPERTIES.includes(property as MarginProperty);
+}
+
 function isAnchorSize(property: string): property is AnchorSize {
   return ANCHOR_SIZES.includes(property as AnchorSize);
 }
 
-export function isBoxAlignmentProp(
+export function isSelfAlignmentProp(
   property: string,
-): property is BoxAlignmentProperty {
-  return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
+): property is SelfAlignmentProperty {
+  return SELF_ALIGNMENT_PROPS.includes(property as SelfAlignmentProperty);
 }
 
 export function isPositionAnchorDeclaration(
@@ -571,6 +608,19 @@ function getPositionFallbackValues(
   return {};
 }
 
+// https://drafts.csswg.org/css-anchor-position-1/#accepted-position-try-properties
+export function isAcceptedPositionTryProperty(
+  declaration: csstree.Declaration,
+) {
+  return (
+    isInsetProp(declaration.property) ||
+    isMarginProp(declaration.property) ||
+    isSizingProp(declaration.property) ||
+    isSelfAlignmentProp(declaration.property) ||
+    ['position-anchor', 'inset-area'].includes(declaration.property)
+  );
+}
+
 function getPositionTryRules(node: csstree.Atrule) {
   if (
     isPositionTryAtRule(node) &&
@@ -581,10 +631,7 @@ function getPositionTryRules(node: csstree.Atrule) {
     const tryBlocks: TryBlock[] = [];
     const declarations = node.block.children.filter(
       (d): d is DeclarationWithValue =>
-        isDeclaration(d) &&
-        (isInsetProp(d.property) ||
-          isSizingProp(d.property) ||
-          isBoxAlignmentProp(d.property)),
+        isDeclaration(d) && isAcceptedPositionTryProperty(d),
     );
     const tryBlock: TryBlock = {
       uuid: `${name}-try-${nanoid(12)}`,
