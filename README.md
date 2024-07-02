@@ -82,7 +82,7 @@ While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
 
 - The `@position-try` rule
-- The `position-try-options`, `position-try-order`, or `position-try` properties
+- The `position-try-fallbacks`, `position-try-order`, or `position-try` properties
 - `anchor-scope` property
 - `inset-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and

@@ -665,21 +665,40 @@ describe('parseCSS', () => {
         <div id="my-anchor-fallback"></div>
       </div>
     `;
-    const css = getSampleCSS('position-fallback');
+    const css = getSampleCSS('position-try');
     const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const anchorEl = document.getElementById('my-anchor-fallback');
+    const targetEl = document.getElementById('my-target-fallback');
     const expected: AnchorPositions = {
       '#my-target-fallback': {
+        declarations: {
+          bottom: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorSide: 'top',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl,
+              targetEl,
+            },
+          ],
+          left: [
+            {
+              anchorName: '--my-anchor-fallback',
+              anchorSide: 'left',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl,
+              targetEl,
+            },
+          ],
+          width: expect.any(Array),
+        },
         fallbacks: [
           {
             uuid: expect.any(String),
             declarations: {
-              bottom: 'anchor(--my-anchor-fallback top)',
-              left: 'anchor(--my-anchor-fallback left)',
-            },
-          },
-          {
-            uuid: expect.any(String),
-            declarations: {
+              bottom: 'revert',
               top: 'anchor(--my-anchor-fallback bottom)',
               left: 'anchor(--my-anchor-fallback left)',
             },
@@ -689,6 +708,7 @@ describe('parseCSS', () => {
             declarations: {
               bottom: 'anchor(--my-anchor-fallback top)',
               right: 'anchor(--my-anchor-fallback right)',
+              left: 'revert',
             },
           },
           {
@@ -696,6 +716,8 @@ describe('parseCSS', () => {
             declarations: {
               top: 'anchor(--my-anchor-fallback bottom)',
               right: 'anchor(--my-anchor-fallback right)',
+              left: 'revert',
+              bottom: 'revert',
               width: '100px',
               height: '100px',
             },

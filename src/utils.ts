@@ -1,8 +1,16 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+export const INSTANCE_UUID = nanoid();
+
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
+}
+
+export function isAnchorFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
 export function getAST(cssText: string) {
@@ -32,4 +40,28 @@ export interface StyleData {
   changed?: boolean;
 }
 
-export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;
+export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
+
+export function splitCommaList(list: csstree.List<csstree.CssNode>) {
+  return list.toArray().reduce(
+    (acc: csstree.Identifier[][], child) => {
+      if (child.type === 'Operator' && child.value === ',') {
+        acc.push([]);
+        return acc;
+      }
+      if (child.type === 'Identifier') {
+        acc[acc.length - 1].push(child);
+      }
+
+      return acc;
+    },
+    [[]],
+  );
+}
+
+// todo: check if this ends up being used
+export function splitCommaListValues(list: csstree.List<csstree.CssNode>) {
+  return splitCommaList(list).map((value) =>
+    value.map((identifier) => identifier.name).join(' '),
+  );
+}
