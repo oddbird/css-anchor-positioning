@@ -1,9 +1,7 @@
 #my-anchor-pseudo-element::before {
   content: '::before';
-
   margin-right: 1ch;
   background-color: white;
-
   anchor-name: --my-anchor-pseudo-element;
 }
 

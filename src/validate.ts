@@ -1,25 +1,28 @@
 import { platform, type VirtualElement } from '@floating-ui/dom';
 
-import { type AnchorSelector, getCSSPropertyValue } from './parse.js';
+import { getCSSPropertyValue,type Selector } from './parse.js';
 
 export interface PseudoElement extends VirtualElement {
   fakePseudoElement: HTMLElement;
-  removeFake(): void;
+  removeFakePseudoElement(): void;
 }
 
-function getAnchorsBySelectors(selectors: AnchorSelector[]) {
-  const result = [];
+function getAnchorsBySelectors(selectors: Selector[]) {
+  const result: (HTMLElement | PseudoElement)[] = [];
 
-  for (const { selector, pseudoElement } of selectors) {
-    if (pseudoElement && !['before', 'after'].includes(pseudoElement)) {
+  for (const { selector, elementPart, pseudoElementPart } of selectors) {
+    if (
+      pseudoElementPart &&
+      !['::before', '::after'].includes(pseudoElementPart)
+    ) {
       continue;
     }
 
     const elements = Array.from(
-      document.querySelectorAll<HTMLElement>(selector),
+      document.querySelectorAll<HTMLElement>(elementPart),
     );
 
-    if (!pseudoElement) {
+    if (!pseudoElementPart) {
       result.push(...elements);
       continue;
     }
@@ -27,7 +30,7 @@ function getAnchorsBySelectors(selectors: AnchorSelector[]) {
     for (const element of elements) {
       const originalStyles = Array.from(document.adoptedStyleSheets);
       const styleSheet = new CSSStyleSheet();
-      const styles = getComputedStyle(element, `::${pseudoElement}`);
+      const styles = getComputedStyle(element, pseudoElementPart);
       const fakePseudoElement = document.createElement('div');
 
       for (const property of Array.from(styles)) {
@@ -39,18 +42,16 @@ function getAnchorsBySelectors(selectors: AnchorSelector[]) {
 
       fakePseudoElement.textContent = styles.content.slice(1, -1);
 
-      styleSheet.insertRule(
-        `${selector}::${pseudoElement} { display: none !important; }`,
-      );
+      styleSheet.insertRule(`${selector} { display: none !important; }`);
       document.adoptedStyleSheets = [...originalStyles, styleSheet];
 
-      switch (pseudoElement) {
-        case 'before': {
+      switch (pseudoElementPart) {
+        case '::before': {
           element.insertAdjacentElement('afterbegin', fakePseudoElement);
           break;
         }
 
-        case 'after': {
+        case '::after': {
           element.insertAdjacentElement('beforeend', fakePseudoElement);
           break;
         }
@@ -63,14 +64,14 @@ function getAnchorsBySelectors(selectors: AnchorSelector[]) {
       result.push({
         fakePseudoElement,
 
-        removeFake() {
+        removeFakePseudoElement() {
           fakePseudoElement.remove();
           document.adoptedStyleSheets = originalStyles;
         },
 
         getBoundingClientRect() {
-          // NOTE this only takes into account viewport scroll
-          // but not any of it's parents, doing that on each scroll event would be expensive
+          // NOTE this only takes into account viewport scroll and not any of it's parents,
+          // traversing parents on each scroll event would be expensive
           return DOMRect.fromRect({
             x: boundingClientRect.x - (window.scrollX - startingScrollX),
             y: boundingClientRect.y - (window.scrollY - startingScrollY),
@@ -78,7 +79,7 @@ function getAnchorsBySelectors(selectors: AnchorSelector[]) {
             height: boundingClientRect.height,
           });
         },
-      } satisfies PseudoElement);
+      });
     }
   }
 
@@ -217,8 +218,6 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is either an element or a part-like pseudo-element.
-
   // el is not in the skipped contents of another element.
   {
     let currentParent = el.parentElement;
@@ -245,7 +244,7 @@ export async function isAcceptableAnchorElement(
  */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
-  anchorSelectors: AnchorSelector[],
+  anchorSelectors: Selector[],
 ) {
   if (
     !(
@@ -269,7 +268,7 @@ export async function validatedForPositioning(
         targetEl,
       )
     ) {
-      if (isPseudoElement) anchor.removeFake();
+      if (isPseudoElement) anchor.removeFakePseudoElement();
 
       return anchor;
     }

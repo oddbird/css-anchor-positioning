@@ -15,14 +15,15 @@ interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }
 
-export interface AnchorSelector {
+export interface Selector {
   selector: string;
-  pseudoElement?: string;
+  elementPart: string;
+  pseudoElementPart?: string;
 }
 
 // `key` is the `anchor-name` value
 // `value` is an array of all element selectors with that anchor name
-type AnchorNames = Record<string, AnchorSelector[]>;
+type AnchorNames = Record<string, Selector[]>;
 
 export type InsetProperty =
   | 'top'
@@ -352,25 +353,28 @@ function getAnchorNames(node: DeclarationWithValue) {
   );
 }
 
-function getAnchorSelectors(selectors: csstree.SelectorList) {
-  return (selectors.children as csstree.List<csstree.Selector>).map(
-    (selector) => {
-      let pseudoElement: string | undefined;
+function getSelectors(rule: csstree.SelectorList | undefined) {
+  if (!rule) return [];
+
+  return (rule.children as csstree.List<csstree.Selector>)
+    .map((selector) => {
+      let pseudoElementPart: string | undefined;
 
       if (selector.children.last?.type === 'PseudoElementSelector') {
         selector = csstree.clone(selector) as csstree.Selector;
-        pseudoElement = (
-          selector.children.last as csstree.PseudoElementSelector
-        ).name;
+        pseudoElementPart = generateCSS(selector.children.last!);
         selector.children.pop();
       }
 
+      const elementPart = generateCSS(selector);
+
       return {
-        selector: generateCSS(selector),
-        pseudoElement,
-      };
-    },
-  );
+        selector: elementPart + (pseudoElementPart ?? ''),
+        elementPart,
+        pseudoElementPart,
+      } satisfies Selector;
+    })
+    .toArray();
 }
 
 let anchorNames: AnchorNames = {};
@@ -425,11 +429,15 @@ function getAnchorFunctionData(
 
 function getPositionFallbackDeclaration(
   node: csstree.Declaration,
-  rule?: csstree.Raw,
+  selectorList?: csstree.SelectorList,
 ) {
-  if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
+  if (
+    isFallbackDeclaration(node) &&
+    node.value.children.first &&
+    selectorList
+  ) {
     const name = getDeclarationValue(node);
-    return { name, selector: rule.value };
+    return { name, selector: selectorList };
   }
   return {};
 }
@@ -485,8 +493,10 @@ async function getAnchorEl(
     } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
+      const elementPart = `#${CSS.escape(anchorAttr)}`;
+
       return await validatedForPositioning(targetEl, [
-        { selector: `#${CSS.escape(anchorAttr)}` },
+        { selector: elementPart, elementPart },
       ]);
     }
   }
@@ -532,14 +542,22 @@ export async function parseCSS(styleData: StyleData[]) {
     csstree.walk(ast, {
       visit: 'Declaration',
       enter(node) {
-        const rule = this.rule?.prelude as csstree.Raw | undefined;
+        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const selectors = getSelectors(rule);
+
         // Parse `position-fallback` declaration
-        const { name, selector } = getPositionFallbackDeclaration(node, rule);
-        if (name && selector && fallbacks[name]) {
-          validPositions[selector] = { fallbacks: fallbacks[name].blocks };
-          if (!fallbacks[name].targets.includes(selector)) {
-            fallbacks[name].targets.push(selector);
+        const { name } = getPositionFallbackDeclaration(node);
+        if (name && selectors.length && fallbacks[name]) {
+          const selectorList = selectors
+            .map(({ selector }) => selector)
+            .join(', ');
+
+          for (const { selector } of selectors) {
+            if (!fallbacks[name].targets.includes(selector)) {
+              fallbacks[name].targets.push(selector);
+            }
           }
+
           // Add each `@try` block, scoped to a unique data-attr
           for (const block of fallbacks[name].blocks) {
             const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
@@ -565,7 +583,7 @@ export async function parseCSS(styleData: StyleData[]) {
               },
             });
             // Store mapping of data-attr to target selector
-            fallbackTargets[dataAttr] = selector;
+            fallbackTargets[dataAttr] = selectorList;
           }
           changed = true;
         }
@@ -582,19 +600,14 @@ export async function parseCSS(styleData: StyleData[]) {
     let changed = false;
     const ast = getAST(styleObj.css);
     csstree.walk(ast, function (node) {
-      const selectorList = this.rule?.prelude as
-        | csstree.SelectorList
-        | undefined;
-
-      const anchorSelectors = selectorList
-        ? getAnchorSelectors(selectorList)
-        : undefined;
+      const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+      const selectors = getSelectors(rule);
 
       // Parse `anchor-name` declaration
-      if (isAnchorNameDeclaration(node) && anchorSelectors) {
+      if (isAnchorNameDeclaration(node) && selectors.length) {
         for (const name of getAnchorNames(node)) {
           anchorNames[name] ??= [];
-          anchorNames[name].push(...anchorSelectors);
+          anchorNames[name].push(...selectors);
         }
       }
 
@@ -604,20 +617,16 @@ export async function parseCSS(styleData: StyleData[]) {
         data,
         changed: updated,
       } = getAnchorFunctionData(node, this.declaration);
-      if (prop && data && anchorSelectors) {
+      if (prop && data && selectors.length) {
         // This will override earlier declarations
         // with the same exact rule selector
         // *and* the same exact declaration property:
         // (e.g. multiple `top: anchor(...)` declarations
         // for the same `.foo {...}` selector)
-        for (const { selector, pseudoElement } of anchorSelectors) {
-          const fullSelector = pseudoElement
-            ? `${selector}::${pseudoElement}`
-            : selector;
-
+        for (const { selector } of selectors) {
           anchorFunctions[selector] = {
-            ...anchorFunctions[fullSelector],
-            [prop]: [...(anchorFunctions[fullSelector]?.[prop] ?? []), data],
+            ...anchorFunctions[selector],
+            [prop]: [...(anchorFunctions[selector]?.[prop] ?? []), data],
           };
         }
       }
@@ -672,11 +681,11 @@ export async function parseCSS(styleData: StyleData[]) {
       csstree.walk(ast, {
         visit: 'Function',
         enter(node) {
-          const rule = this.rule?.prelude as csstree.Raw | undefined;
+          const rule = this.rule?.prelude as csstree.SelectorList | undefined;
           const declaration = this.declaration;
           const prop = declaration?.property;
           if (
-            rule?.value &&
+            rule?.children &&
             isVarFunction(node) &&
             declaration &&
             prop &&
@@ -742,15 +751,12 @@ export async function parseCSS(styleData: StyleData[]) {
     csstree.walk(ast, {
       visit: 'Function',
       enter(node) {
-        const selectorList = this.rule?.prelude as
-          | csstree.SelectorList
-          | undefined;
-
+        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
         const declaration = this.declaration;
         const prop = declaration?.property;
 
         if (
-          selectorList?.children &&
+          rule?.children &&
           isVarFunction(node) &&
           declaration &&
           prop &&
@@ -855,7 +861,7 @@ export async function parseCSS(styleData: StyleData[]) {
           // properties, the value will be different each time. So we append
           // the property to the uuid, and update the CSS property to point
           // to the new uuid...
-          const anchorSelectors = getAnchorSelectors(selectorList);
+          const selectors = getSelectors(rule);
 
           for (const anchorFnData of [...anchorFns, ...referencedFns]) {
             const data = { ...anchorFnData };
@@ -863,17 +869,10 @@ export async function parseCSS(styleData: StyleData[]) {
             const uuid = data.uuid;
             data.uuid = uuidWithProp;
 
-            for (const { selector, pseudoElement } of anchorSelectors) {
-              const fullSelector = pseudoElement
-                ? `${selector}::${pseudoElement}`
-                : selector;
-
-              anchorFunctions[fullSelector] = {
-                ...anchorFunctions[fullSelector],
-                [prop]: [
-                  ...(anchorFunctions[fullSelector]?.[prop] ?? []),
-                  data,
-                ],
+            for (const { selector } of selectors) {
+              anchorFunctions[selector] = {
+                ...anchorFunctions[selector],
+                [prop]: [...(anchorFunctions[selector]?.[prop] ?? []), data],
               };
             }
             // Store new name with declaration prop appended,
