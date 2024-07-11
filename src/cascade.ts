@@ -1,7 +1,7 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid';
 
-import { isPositionAnchorDeclaration } from './parse.js';
+import { isInsetProp, isPositionAnchorDeclaration } from './parse.js';
 import {
   generateCSS,
   getAST,
@@ -30,18 +30,28 @@ function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
   return {};
 }
 
-// Move inset declarations to cascadable properties
+// Add unique id to each block with an anchor function
+// Add custom property identifying which properties have anchor functions applied
+// We may be able to remove this,
+// if moving all inset properties to custom properties captures required info.
 function shiftAnchorFunctionDeclarations(
   node: csstree.Declaration,
   block?: csstree.Block,
 ) {
   const value = (node.value as csstree.Value)?.children?.first;
   if (value && isAnchorFunction(value) && block) {
-    let existingBlockId = block.children.filter(
+    let existingBlockId;
+    const existingBlockIdDeclaration = block.children.filter(
       (item) =>
         item.type === 'Declaration' &&
         item.property === `--block-id-${INSTANCE_UUID}`,
-    )?.first?.value.value;
+    );
+    if (existingBlockIdDeclaration) {
+      existingBlockId = (
+        (existingBlockIdDeclaration.first as csstree.Declaration)
+          ?.value as csstree.Raw
+      )?.value;
+    } else return false;
 
     if (!existingBlockId) {
       existingBlockId = nanoid();
@@ -58,9 +68,26 @@ function shiftAnchorFunctionDeclarations(
       property: `--${node.property}-${INSTANCE_UUID}`,
       value: { type: 'Raw', value: existingBlockId },
     });
-    return { updated: true };
+    return true;
   }
-  return {};
+  return false;
+}
+
+// Move all inset properties to custom properties
+function shiftInsetProperties(
+  node: csstree.Declaration,
+  block?: csstree.Block,
+) {
+  if (block && isInsetProp(node.property)) {
+    block.children.appendData({
+      type: 'Declaration',
+      important: false,
+      property: `--${node.property}-${INSTANCE_UUID}`,
+      value: node.value,
+    });
+    return true;
+  }
+  return false;
 }
 
 export async function cascadeCSS(styleData: StyleData[]) {
@@ -71,17 +98,16 @@ export async function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
-        const { updated } = shiftPositionAnchorData(node, block);
-        if (updated) {
-          changed = true;
-        }
-        const { updated: insetUpdated } = shiftAnchorFunctionDeclarations(
+        const { updated: positionUpdated } = shiftPositionAnchorData(
           node,
           block,
         );
-        if (insetUpdated) {
-          changed = true;
-        }
+
+        const anchorUpdated = shiftAnchorFunctionDeclarations(node, block);
+
+        const insetUpdated = shiftInsetProperties(node, block);
+
+        changed = changed || positionUpdated || anchorUpdated || insetUpdated;
       },
     });
 

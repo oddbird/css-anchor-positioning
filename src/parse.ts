@@ -1,7 +1,7 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
-import { applyTryTacticToBlock } from './fallback.js';
+import { applyTryTactic } from './fallback.js';
 import {
   type DeclarationWithValue,
   generateCSS,
@@ -113,6 +113,23 @@ const SELF_ALIGNMENT_PROPS: SelfAlignmentProperty[] = [
   'justify-self',
   'align-self',
   'place-self',
+];
+
+export type AcceptedPositionTryProperty =
+  | InsetProperty
+  | MarginProperty
+  | SizingProperty
+  | SelfAlignmentProperty
+  | 'position-anchor'
+  | 'inset-area';
+
+export const ACCEPTED_POSITION_TRY_PROPERTIES: AcceptedPositionTryProperty[] = [
+  ...INSET_PROPS,
+  ...MARGIN_PROPERTIES,
+  ...SIZING_PROPS,
+  ...SELF_ALIGNMENT_PROPS,
+  'position-anchor',
+  'inset-area',
 ];
 
 type AnchorSideKeyword =
@@ -238,9 +255,7 @@ export interface TryBlock {
   uuid: string;
   // `key` is the property being declared
   // `value` is the property value
-  declarations: Partial<
-    Record<InsetProperty | MarginProperty | SizingProperty | SelfAlignmentProperty | 'position-anchor' | 'inset-area', string>
-  >;
+  declarations: Partial<Record<AcceptedPositionTryProperty, string>>;
 }
 
 // `key` is the `@position-try` block uuid
@@ -647,30 +662,6 @@ function getPositionTryRules(node: csstree.Atrule) {
   return {};
 }
 
-// Takes a selector, and for each element, creates a new block with the tactic
-function applyTryTactic(
-  selector: string,
-  tactic: PositionTryOptionsTryTactics,
-) {
-  const elements = document.querySelectorAll(selector);
-  return [...elements].map((el) => {
-    const rules: { [K in InsetProperty]?: string } = {};
-    INSET_PROPS.forEach((prop) => {
-      // todo: better typing than as HTMLElement
-      const val = getCSSPropertyValue(el as HTMLElement, `${prop}`);
-      if (val) {
-        rules[prop] = val;
-      }
-      const propVal = getCSSPropertyValue(el as HTMLElement, `--${prop}`);
-      if (propVal) {
-        rules[prop] = propVal;
-      }
-    });
-    const adjustedRules = applyTryTacticToBlock(rules, tactic);
-    return adjustedRules;
-  });
-}
-
 export function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
@@ -757,21 +748,19 @@ export async function parseCSS(styleData: StyleData[]) {
           if (tryObject.type === 'try-tactic') {
             // add new item to fallbacks store
             name = `${selector}-${tryObject.tactic}`;
+            const tacticAppliedRules = applyTryTactic(
+              selector,
+              tryObject.tactic,
+            );
             fallbacks[name] = {
               targets: [selector],
               blocks: [
                 {
                   uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
-                  declarations: Object.fromEntries(
-                    [{ property: 'top', value: '123px' }].map((d) => [
-                      d.property,
-                      d.value,
-                    ]),
-                  ),
+                  declarations: tacticAppliedRules[0],
                 },
               ],
             };
-            console.log(applyTryTactic(selector, tryObject.tactic));
           }
           if (name && selector && fallbacks[name]) {
             if (anchorPosition.fallbacks) {
