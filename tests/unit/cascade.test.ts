@@ -1,5 +1,9 @@
 import { cascadeCSS } from '../../src/cascade.js';
-import { POSITION_ANCHOR_PROPERTY, type StyleData } from '../../src/utils.js';
+import {
+  INSTANCE_UUID,
+  POSITION_ANCHOR_PROPERTY,
+  type StyleData,
+} from '../../src/utils.js';
 import { getSampleCSS } from './../helpers.js';
 
 describe('cascadeCSS', () => {
@@ -22,7 +26,7 @@ describe('cascadeCSS', () => {
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(true);
     const { css } = styleData[0];
-    expect(css).toContain('--bottom:anchor(top);');
-    expect(css).toContain('--left:anchor(left);');
+    expect(css).toContain(`--bottom-${INSTANCE_UUID}:anchor(top);`);
+    expect(css).toContain(`--left-${INSTANCE_UUID}:anchor(left);`);
   });
 });

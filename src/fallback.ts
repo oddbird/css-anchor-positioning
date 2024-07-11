@@ -1,13 +1,15 @@
+import type * as csstree from 'css-tree';
+
 import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
-  getCSSPropertyValue,
   type PositionTryOptionsTryTactics,
   type TryBlock,
 } from './parse.js';
 import {
   generateCSS,
   getAST,
+  getCSSPropertyValue,
   INSTANCE_UUID,
   isAnchorFunction,
 } from './utils.js';
@@ -16,12 +18,14 @@ export function applyTryTactic(
   selector: string,
   tactic: PositionTryOptionsTryTactics,
 ) {
-  const elements: NodeListOf<HTMLElement> = document.querySelectorAll(selector);
-  return [...elements].map((el) => {
+  // todo: This currently only uses the styles from the first match. Each
+  // element may have different styles and need a separate fallback definition.
+  const el: HTMLElement | null = document.querySelector(selector);
+  if (el) {
     const rules = getExistingInsetRules(el);
     const adjustedRules = applyTryTacticToBlock(rules, tactic);
     return adjustedRules;
-  });
+  }
 }
 
 type InsetRules = Partial<Record<AcceptedPositionTryProperty, string>>;
@@ -40,7 +44,10 @@ export function getExistingInsetRules(el: HTMLElement) {
   return rules;
 }
 
-const tryTacticsMapping = {
+const tryTacticsMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<AcceptedPositionTryProperty, AcceptedPositionTryProperty>>
+> = {
   'flip-block': {
     top: 'bottom',
     bottom: 'top',
@@ -53,28 +60,51 @@ const tryTacticsMapping = {
     'inset-inline-start': 'inset-inline-end',
     'inset-inline-end': 'inset-inline-start',
   },
+  'flip-start': {},
 };
+
+function mapProperty(
+  property: AcceptedPositionTryProperty,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const mapping = tryTacticsMapping[tactic];
+
+  return mapping[property] || property;
+}
 
 export function applyTryTacticToBlock(
   rules: InsetRules,
   tactic: PositionTryOptionsTryTactics,
 ) {
-  const mapping = tryTacticsMapping[tactic] || {};
   const declarations: TryBlock['declarations'] = {};
-
-  Object.keys(rules).forEach((key) => {
-    const property = mapping[key] || key;
+  const keys = Object.keys(rules) as AcceptedPositionTryProperty[];
+  keys.forEach((key) => {
+    const property = mapProperty(key, tactic);
+    // If we changed the property, set the original to `revert`,
+    // but don't overwrite values already set
     if (property !== key) {
-      declarations[key] = 'revert';
+      declarations[key] ??= 'revert';
     }
     let rule = rules[key];
-    const ast = getAST(`#id{${key}: ${rule};}`);
-    const astPart =
-      ast.children.first.block.children.first.value.children.first;
+    const ast = getAST(`#id{${key}: ${rule};}`) as csstree.Block;
+    const astPart = (
+      (
+        (ast.children.first as csstree.Rule)?.block.children
+          .first as csstree.Declaration
+      )?.value as csstree.Value
+    ).children.first as csstree.CssNode;
     if (isAnchorFunction(astPart)) {
       astPart.children.map((item) => {
-        if (item.type === 'Identifier') {
-          item.name = mapping[item.name] || item.name;
+        if (
+          item.type === 'Identifier' &&
+          ACCEPTED_POSITION_TRY_PROPERTIES.includes(
+            item.name as AcceptedPositionTryProperty,
+          )
+        ) {
+          item.name = mapProperty(
+            item.name as AcceptedPositionTryProperty,
+            tactic,
+          );
         }
       });
       rule = generateCSS(astPart);

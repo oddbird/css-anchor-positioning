@@ -6,6 +6,7 @@ import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
+  getCSSPropertyValue,
   isAnchorFunction,
   POSITION_ANCHOR_PROPERTY,
   splitCommaList,
@@ -662,10 +663,6 @@ function getPositionTryRules(node: csstree.Atrule) {
   return {};
 }
 
-export function getCSSPropertyValue(el: HTMLElement, prop: string) {
-  return getComputedStyle(el).getPropertyValue(prop).trim();
-}
-
 async function getAnchorEl(
   targetEl: HTMLElement | null,
   anchorObj: AnchorFunction,
@@ -752,15 +749,17 @@ export async function parseCSS(styleData: StyleData[]) {
               selector,
               tryObject.tactic,
             );
-            fallbacks[name] = {
-              targets: [selector],
-              blocks: [
-                {
-                  uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
-                  declarations: tacticAppliedRules[0],
-                },
-              ],
-            };
+            if (tacticAppliedRules) {
+              fallbacks[name] = {
+                targets: [selector],
+                blocks: [
+                  {
+                    uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
+                    declarations: tacticAppliedRules,
+                  },
+                ],
+              };
+            }
           }
           if (name && selector && fallbacks[name]) {
             if (anchorPosition.fallbacks) {

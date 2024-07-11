@@ -14,7 +14,6 @@ import {
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
-  getCSSPropertyValue,
   type InsetProperty,
   isInsetProp,
   isSizingProp,
@@ -23,6 +22,7 @@ import {
   type TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
+import { getCSSPropertyValue } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 

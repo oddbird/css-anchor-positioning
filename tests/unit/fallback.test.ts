@@ -1,29 +1,20 @@
-import type * as csstree from 'css-tree';
-
 import { applyTryTacticToBlock } from '../../src/fallback.js';
-import { generateCSS, getAST } from '../../src/utils.js';
 describe('fallback', () => {
   describe('applyTryTactic', () => {
     describe('flip-block', () => {
       it('flips raw values', () => {
-        const ast = getAST('{bottom:12px}') as csstree.StyleSheet;
-        const block = (ast.children.first as csstree.Rule).block;
-        const result = generateCSS(applyTryTacticToBlock(block, 'flip-block'));
-        expect(result).toBe('{top:12px}');
-      });
-      it('no change to none-inset', () => {
-        const ast = getAST('{color:red}') as csstree.StyleSheet;
-        const block = (ast.children.first as csstree.Rule).block;
-        const result = generateCSS(applyTryTacticToBlock(block, 'flip-block'));
-        expect(result).toBe('{color:red}');
+        const result = applyTryTacticToBlock({ bottom: '12px' }, 'flip-block');
+        expect(result).toMatchObject({ top: '12px', bottom: 'revert' });
       });
       it('flips anchors', () => {
-        const ast = getAST(
-          '{bottom:anchor(top);top:anchor(--a top)}',
-        ) as csstree.StyleSheet;
-        const block = (ast.children.first as csstree.Rule).block;
-        const result = generateCSS(applyTryTacticToBlock(block, 'flip-block'));
-        expect(result).toBe('{top:anchor(bottom);bottom:anchor(--a bottom)}');
+        const result = applyTryTacticToBlock(
+          { bottom: 'anchor(top)', top: 'anchor(--a top)' },
+          'flip-block',
+        );
+        expect(result).toMatchObject({
+          top: 'anchor(bottom)',
+          bottom: 'anchor(--a bottom)',
+        });
       });
     });
   });

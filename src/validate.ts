@@ -1,6 +1,6 @@
 import { platform } from '@floating-ui/dom';
 
-import { getCSSPropertyValue } from './parse.js';
+import { getCSSPropertyValue } from './utils.js';
 
 // Given an element and CSS style property,
 // checks if the CSS property equals a certain value
