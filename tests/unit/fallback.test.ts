@@ -54,21 +54,21 @@ describe('fallback', () => {
           'inset-area left top',
           `${propWrap('inset-area')}: left top;`,
           {
-            'inset-area': 'left bottom'
+            'inset-area': 'left bottom',
           },
         ],
         [
           'inset-area right bottom',
           `${propWrap('inset-area')}: right bottom;`,
           {
-            'inset-area': 'right top'
+            'inset-area': 'right top',
           },
         ],
         [
           'margin shorthand',
           `${propWrap('margin')}: 5px 15px 25px 35px;`,
           {
-            'margin': '25px 15px 5px 35px'
+            margin: '25px 15px 5px 35px',
           },
         ],
         [
@@ -129,8 +129,8 @@ describe('fallback', () => {
           'flips left and right logical self anchors',
           `${propWrap('right')}: anchor(self-start);${propWrap('left')}:anchor(self-end)`,
           {
-            left: 'anchor(end)',
-            right: 'anchor(start)',
+            left: 'anchor(self-end)',
+            right: 'anchor(self-start)',
           },
         ],
         [
@@ -145,21 +145,21 @@ describe('fallback', () => {
           'inset-area left top',
           `${propWrap('inset-area')}: left top;`,
           {
-            'inset-area': 'right top'
+            'inset-area': 'right top',
           },
         ],
         [
           'inset-area right bottom',
           `${propWrap('inset-area')}: right bottom;`,
           {
-            'inset-area': 'left bottom'
+            'inset-area': 'left bottom',
           },
         ],
         [
           'margin shorthand',
           `${propWrap('margin')}: 5px 15px 25px 35px;`,
           {
-            'margin': '5px 35px 25px 15px'
+            margin: '5px 35px 25px 15px',
           },
         ],
         [
@@ -254,28 +254,28 @@ describe('fallback', () => {
           'inset-area left top',
           `${propWrap('inset-area')}: left top;`,
           {
-            'inset-area': 'left top'
+            'inset-area': 'left top',
           },
         ],
         [
           'inset-area left bottom',
           `${propWrap('inset-area')}: left bottom;`,
           {
-            'inset-area': 'right top'
+            'inset-area': 'right top',
           },
         ],
         [
           'inset-area right bottom',
           `${propWrap('inset-area')}: right bottom;`,
           {
-            'inset-area': 'right bottom'
+            'inset-area': 'right bottom',
           },
         ],
         [
           'inset-area right top',
           `${propWrap('inset-area')}: right top;`,
           {
-            'inset-area': 'left bottom'
+            'inset-area': 'left bottom',
           },
         ],
         // [

@@ -264,6 +264,41 @@ function mapInsetArea(
     .join('-');
 }
 
+function mapMargin(
+  key: string,
+  valueAst: csstree.Value,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  if (key === 'margin') {
+    const [first, second, third, fourth] = valueAst.children.toArray();
+    if (tactic === 'flip-block') {
+      if (fourth) {
+        valueAst.children.fromArray([third, second, first, fourth]);
+      } else if (third) {
+        valueAst.children.fromArray([third, second, first]);
+      } // No change needed for 1 or 2 values
+    } else if (tactic === 'flip-inline') {
+      if (fourth) {
+        valueAst.children.fromArray([first, fourth, third, second]);
+      } // No change needed for 1, 2 or 3 values
+    }
+  } else if (key === 'margin-block') {
+    const [first, second] = valueAst.children.toArray();
+    if (tactic === 'flip-block') {
+      if (second) {
+        valueAst.children.fromArray([second, first]);
+      }
+    }
+  } else if (key === 'margin-inline') {
+    const [first, second] = valueAst.children.toArray();
+    if (tactic === 'flip-inline') {
+      if (second) {
+        valueAst.children.fromArray([second, first]);
+      }
+    }
+  }
+}
+
 const getValueAST = (property: string, val: string) => {
   const ast = getAST(`#id{${property}: ${val};}`) as csstree.Block;
   const astDeclaration = (ast.children.first as csstree.Rule)?.block.children
@@ -305,6 +340,9 @@ export function applyTryTacticToBlock(
         }
         return id;
       });
+    }
+    if (key.startsWith('margin')) {
+      mapMargin(key, valueAst, tactic);
     }
 
     declarations[newKey] = generateCSS(valueAst);
