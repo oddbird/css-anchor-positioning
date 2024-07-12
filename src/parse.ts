@@ -133,7 +133,7 @@ export const ACCEPTED_POSITION_TRY_PROPERTIES: AcceptedPositionTryProperty[] = [
   'inset-area',
 ];
 
-type AnchorSideKeyword =
+export type AnchorSideKeyword =
   | 'top'
   | 'left'
   | 'right'
@@ -144,7 +144,7 @@ type AnchorSideKeyword =
   | 'self-end'
   | 'center';
 
-const ANCHOR_SIDES: AnchorSideKeyword[] = [
+export const ANCHOR_SIDES: AnchorSideKeyword[] = [
   'top',
   'left',
   'right',

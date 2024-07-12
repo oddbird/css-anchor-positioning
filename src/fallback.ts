@@ -3,6 +3,8 @@ import type * as csstree from 'css-tree';
 import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
+  ANCHOR_SIDES,
+  type AnchorSideKeyword,
   type PositionTryOptionsTryTactics,
   type TryBlock,
 } from './parse.js';
@@ -13,6 +15,132 @@ import {
   INSTANCE_UUID,
   isAnchorFunction,
 } from './utils.js';
+
+type InsetAreaProperty =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'span-left'
+  | 'span-right'
+  | 'x-start'
+  | 'x-end'
+  | 'span-x-start'
+  | 'span-x-end'
+  | 'x-self-start'
+  | 'x-self-end'
+  | 'span-x-self-start'
+  | 'span-x-self-end'
+  | 'span-all'
+  | 'top'
+  | 'bottom'
+  | 'span-top'
+  | 'span-bottom'
+  | 'y-start'
+  | 'y-end'
+  | 'span-y-start'
+  | 'span-y-end'
+  | 'y-self-start'
+  | 'y-self-end'
+  | 'span-y-self-start'
+  | 'span-y-self-end'
+  | 'block-start'
+  | 'block-end'
+  | 'span-block-start'
+  | 'span-block-end'
+  | 'inline-start'
+  | 'inline-end'
+  | 'span-inline-start'
+  | 'span-inline-end'
+  | 'self-block-start'
+  | 'self-block-end'
+  | 'span-self-block-start'
+  | 'span-self-block-end'
+  | 'self-inline-start'
+  | 'self-inline-end'
+  | 'span-self-inline-start'
+  | 'span-self-inline-end'
+  | 'start'
+  | 'end'
+  | 'span-start'
+  | 'span-end'
+  | 'self-start'
+  | 'self-end'
+  | 'span-self-start'
+  | 'span-self-end';
+
+const INSET_AREA_PROPS: InsetAreaProperty[] = [
+  'left',
+  'center',
+  'right',
+  'span-left',
+  'span-right',
+  'x-start',
+  'x-end',
+  'span-x-start',
+  'span-x-end',
+  'x-self-start',
+  'x-self-end',
+  'span-x-self-start',
+  'span-x-self-end',
+  'span-all',
+  'top',
+  'bottom',
+  'span-top',
+  'span-bottom',
+  'y-start',
+  'y-end',
+  'span-y-start',
+  'span-y-end',
+  'y-self-start',
+  'y-self-end',
+  'span-y-self-start',
+  'span-y-self-end',
+  'block-start',
+  'block-end',
+  'span-block-start',
+  'span-block-end',
+  'inline-start',
+  'inline-end',
+  'span-inline-start',
+  'span-inline-end',
+  'self-block-start',
+  'self-block-end',
+  'span-self-block-start',
+  'span-self-block-end',
+  'self-inline-start',
+  'self-inline-end',
+  'span-self-inline-start',
+  'span-self-inline-end',
+  'start',
+  'end',
+  'span-start',
+  'span-end',
+  'self-start',
+  'self-end',
+  'span-self-start',
+  'span-self-end',
+];
+type InsetAreaPropertyChunks =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'span'
+  | 'x'
+  | 'start'
+  | 'end'
+  | 'self'
+  | 'all'
+  | 'top'
+  | 'bottom'
+  | 'y'
+  | 'block'
+  | 'inline';
+
+export function isInsetAreaProp(
+  property: string | InsetAreaProperty,
+): property is InsetAreaProperty {
+  return INSET_AREA_PROPS.includes(property as InsetAreaProperty);
+}
 
 export function applyTryTactic(
   selector: string,
@@ -53,12 +181,58 @@ const tryTacticsMapping: Record<
     bottom: 'top',
     'inset-block-start': 'inset-block-end',
     'inset-block-end': 'inset-block-start',
+    'margin-top': 'margin-bottom',
+    'margin-bottom': 'margin-top',
   },
   'flip-inline': {
     left: 'right',
     right: 'left',
     'inset-inline-start': 'inset-inline-end',
     'inset-inline-end': 'inset-inline-start',
+    'margin-left': 'margin-right',
+    'margin-right': 'margin-left',
+  },
+  'flip-start': {},
+};
+
+const anchorSideMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<AnchorSideKeyword, AnchorSideKeyword>>
+> = {
+  'flip-block': {
+    top: 'bottom',
+    bottom: 'top',
+    start: 'end',
+    end: 'start',
+    'self-end': 'self-start',
+    'self-start': 'self-end',
+  },
+  'flip-inline': {
+    left: 'right',
+    right: 'left',
+    start: 'end',
+    end: 'start',
+    'self-end': 'self-start',
+    'self-start': 'self-end',
+  },
+  'flip-start': {},
+};
+
+const insetAreaPropertyMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<InsetAreaPropertyChunks, InsetAreaPropertyChunks>>
+> = {
+  'flip-block': {
+    top: 'bottom',
+    bottom: 'top',
+    start: 'end',
+    end: 'start',
+  },
+  'flip-inline': {
+    left: 'right',
+    right: 'left',
+    start: 'end',
+    end: 'start',
   },
   'flip-start': {},
 };
@@ -68,49 +242,72 @@ function mapProperty(
   tactic: PositionTryOptionsTryTactics,
 ) {
   const mapping = tryTacticsMapping[tactic];
-
   return mapping[property] || property;
 }
+
+function mapAnchorSide(
+  side: AnchorSideKeyword,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const mapping = anchorSideMapping[tactic];
+  return mapping[side] || side;
+}
+
+function mapInsetArea(
+  prop: InsetAreaProperty,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const mapping = insetAreaPropertyMapping[tactic];
+  return prop
+    .split('-')
+    .map((value) => mapping[value as InsetAreaPropertyChunks] || value)
+    .join('-');
+}
+
+const getValueAST = (property: string, val: string) => {
+  const ast = getAST(`#id{${property}: ${val};}`) as csstree.Block;
+  const astDeclaration = (ast.children.first as csstree.Rule)?.block.children
+    .first as csstree.Declaration;
+  return astDeclaration.value as csstree.Value;
+};
 
 export function applyTryTacticToBlock(
   rules: InsetRules,
   tactic: PositionTryOptionsTryTactics,
 ) {
   const declarations: TryBlock['declarations'] = {};
-  const keys = Object.keys(rules) as AcceptedPositionTryProperty[];
-  keys.forEach((key) => {
-    const property = mapProperty(key, tactic);
-    // If we changed the property, set the original to `revert`,
-    // but don't overwrite values already set
-    if (property !== key) {
+  Object.entries(rules).forEach(([_key, value]) => {
+    const key = _key as AcceptedPositionTryProperty;
+    const valueAst = getValueAST(key, value);
+
+    const newKey = mapProperty(key as AcceptedPositionTryProperty, tactic);
+
+    // If we're changing the property, revert the original if it hasn't been set.
+    if (newKey !== key) {
       declarations[key] ??= 'revert';
     }
-    let rule = rules[key];
-    const ast = getAST(`#id{${key}: ${rule};}`) as csstree.Block;
-    const astPart = (
-      (
-        (ast.children.first as csstree.Rule)?.block.children
-          .first as csstree.Declaration
-      )?.value as csstree.Value
-    ).children.first as csstree.CssNode;
-    if (isAnchorFunction(astPart)) {
-      astPart.children.map((item) => {
+
+    if (isAnchorFunction(valueAst.children.first)) {
+      valueAst.children.first.children.map((item) => {
         if (
           item.type === 'Identifier' &&
-          ACCEPTED_POSITION_TRY_PROPERTIES.includes(
-            item.name as AcceptedPositionTryProperty,
-          )
+          ANCHOR_SIDES.includes(item.name as AnchorSideKeyword)
         ) {
-          item.name = mapProperty(
-            item.name as AcceptedPositionTryProperty,
-            tactic,
-          );
+          item.name = mapAnchorSide(item.name as AnchorSideKeyword, tactic);
         }
       });
-      rule = generateCSS(astPart);
     }
-    declarations[property] = rule;
-  });
 
+    if (key === 'inset-area') {
+      valueAst.children.map((id) => {
+        if (id.type === 'Identifier' && isInsetAreaProp(id.name)) {
+          id.name = mapInsetArea(id.name, tactic);
+        }
+        return id;
+      });
+    }
+
+    declarations[newKey] = generateCSS(valueAst);
+  });
   return declarations;
 }

@@ -30,16 +30,16 @@ describe('fallback', () => {
           'flips top and bottom logical anchors',
           `${propWrap('bottom')}: anchor(start);${propWrap('top')}:anchor(end)`,
           {
-            top: 'anchor(bottom)',
-            bottom: 'anchor(top)',
+            top: 'anchor(end)',
+            bottom: 'anchor(start)',
           },
         ],
         [
           'flips top and bottom logical self anchors',
           `${propWrap('bottom')}: anchor(self-start);${propWrap('top')}:anchor(self-end)`,
           {
-            top: 'anchor(bottom)',
-            bottom: 'anchor(top)',
+            top: 'anchor(self-end)',
+            bottom: 'anchor(self-start)',
           },
         ],
         [
