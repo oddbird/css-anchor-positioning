@@ -547,42 +547,17 @@
         </ol>
       </div>
       <pre><code class="language-css"
->#my-anchor-fallback {
-  anchor-name: --my-anchor-fallback;
+>#my-anchor-try-tactics {
+  anchor-name: --my-anchor-try-tactics;
 }
-
-#my-target-fallback {
+#my-target-try-tactics {
   position: absolute;
-
-  /* First try to align the bottom, left edge of the target
-  with the top, left edge of the anchor. */
-  bottom: anchor(--my-anchor-fallback top);
-  left: anchor(--my-anchor-fallback left);
-  position-try-fallbacks: --bottom-left, --top-right, --bottom-right;
+  position-anchor: --my-anchor-try-tactics;
+  bottom: anchor(top);
+  left: anchor(right);
+  position-try-fallbacks: flip-block, flip-inline, flip-start;
 }
-
-@position-try --bottom-left {
-  /* Next try to align the top, left edge of the target
-     with the bottom, left edge of the anchor. */
-  top: anchor(--my-anchor-fallback bottom);
-  left: anchor(--my-anchor-fallback left);
-}
-
-@position-try --top-right {
-  /* Next try to align the bottom, right edge of the target
-     with the top, right edge of the anchor. */
-  bottom: anchor(--my-anchor-fallback top);
-  right: anchor(--my-anchor-fallback right);
-}
-
-@position-try --bottom-right {
-  /* Finally, try to align the top, right edge of the target
-     with the bottom, right edge of the anchor. */
-  top: anchor(--my-anchor-fallback bottom);
-  right: anchor(--my-anchor-fallback right);
-  width: 100px;
-  height: 100px;
-}</code></pre>
+</code></pre>
     </section>
     <section id="anchor-scroll" class="demo-item">
       <h2>
