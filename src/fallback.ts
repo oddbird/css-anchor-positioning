@@ -120,6 +120,7 @@ const INSET_AREA_PROPS: InsetAreaProperty[] = [
   'span-self-start',
   'span-self-end',
 ];
+
 type InsetAreaPropertyChunks =
   | 'left'
   | 'center'
@@ -192,7 +193,18 @@ const tryTacticsMapping: Record<
     'margin-left': 'margin-right',
     'margin-right': 'margin-left',
   },
-  'flip-start': {},
+  'flip-start': {
+    left: 'top',
+    right: 'bottom',
+    top: 'left',
+    bottom: 'right',
+    'inset-block-start': 'inset-block-end',
+    'inset-block-end': 'inset-block-start',
+    'inset-inline-start': 'inset-inline-end',
+    'inset-inline-end': 'inset-inline-start',
+    'inset-block': 'inset-inline',
+    'inset-inline': 'inset-block',
+  },
 };
 
 const anchorSideMapping: Record<
@@ -215,7 +227,12 @@ const anchorSideMapping: Record<
     'self-end': 'self-start',
     'self-start': 'self-end',
   },
-  'flip-start': {},
+  'flip-start': {
+    top: 'left',
+    left: 'top',
+    right: 'bottom',
+    bottom: 'right',
+  },
 };
 
 const insetAreaPropertyMapping: Record<
@@ -234,7 +251,9 @@ const insetAreaPropertyMapping: Record<
     start: 'end',
     end: 'start',
   },
-  'flip-start': {},
+  'flip-start': {
+    // TODO: Requires fuller logic
+  },
 };
 
 function mapProperty(
@@ -257,11 +276,15 @@ function mapInsetArea(
   prop: InsetAreaProperty,
   tactic: PositionTryOptionsTryTactics,
 ) {
-  const mapping = insetAreaPropertyMapping[tactic];
-  return prop
-    .split('-')
-    .map((value) => mapping[value as InsetAreaPropertyChunks] || value)
-    .join('-');
+  if (tactic === 'flip-start') {
+    return prop;
+  } else {
+    const mapping = insetAreaPropertyMapping[tactic];
+    return prop
+      .split('-')
+      .map((value) => mapping[value as InsetAreaPropertyChunks] || value)
+      .join('-');
+  }
 }
 
 function mapMargin(
@@ -269,6 +292,7 @@ function mapMargin(
   valueAst: csstree.Value,
   tactic: PositionTryOptionsTryTactics,
 ) {
+  // TODO: Handle flip-start
   if (key === 'margin') {
     const [first, second, third, fourth] = valueAst.children.toArray();
     if (tactic === 'flip-block') {

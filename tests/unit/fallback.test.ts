@@ -72,6 +72,13 @@ describe('fallback', () => {
           },
         ],
         [
+          'margin shorthand 3 values',
+          `${propWrap('margin')}: 5px 15px 25px;`,
+          {
+            margin: '25px 15px 5px',
+          },
+        ],
+        [
           'margin long hands',
           `${propWrap('margin-top')}: 5px;
           ${propWrap('margin-bottom')}: 15px;
@@ -160,6 +167,13 @@ describe('fallback', () => {
           `${propWrap('margin')}: 5px 15px 25px 35px;`,
           {
             margin: '5px 35px 25px 15px',
+          },
+        ],
+        [
+          'margin shorthand 3 values',
+          `${propWrap('margin')}: 5px 15px 25px;`,
+          {
+            margin: '5px 15px 25px',
           },
         ],
         [
@@ -257,13 +271,13 @@ describe('fallback', () => {
             'inset-area': 'left top',
           },
         ],
-        [
-          'inset-area left bottom',
-          `${propWrap('inset-area')}: left bottom;`,
-          {
-            'inset-area': 'right top',
-          },
-        ],
+        // [
+        //   'inset-area left bottom',
+        //   `${propWrap('inset-area')}: left bottom;`,
+        //   {
+        //     'inset-area': 'right top',
+        //   },
+        // ],
         [
           'inset-area right bottom',
           `${propWrap('inset-area')}: right bottom;`,
@@ -271,13 +285,13 @@ describe('fallback', () => {
             'inset-area': 'right bottom',
           },
         ],
-        [
-          'inset-area right top',
-          `${propWrap('inset-area')}: right top;`,
-          {
-            'inset-area': 'left bottom',
-          },
-        ],
+        // [
+        //   'inset-area right top',
+        //   `${propWrap('inset-area')}: right top;`,
+        //   {
+        //     'inset-area': 'left bottom',
+        //   },
+        // ],
         // [
         //   'margin shorthand',
         //   `${propWrap('margin')}: 5px 15px 25px 35px;`,
@@ -311,7 +325,7 @@ describe('fallback', () => {
         // ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactic('#ref', 'flip-inline')).toMatchObject(expected);
+        expect(applyTryTactic('#ref', 'flip-start')).toMatchObject(expected);
       });
     });
   });

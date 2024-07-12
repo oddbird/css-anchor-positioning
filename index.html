@@ -522,20 +522,23 @@
         </p>
         <ol>
           <li>
-            Align the bottom, left edge of the target with the top, left edge of
-            the anchor.
-          </li>
-          <li>
-            Align the top, left edge of the target with the bottom, left edge of
-            the anchor.
-          </li>
-          <li>
-            Align the bottom, right edge of the target with the top, right edge
+            Align the bottom, left edge of the target with the top, right edge
             of the anchor.
           </li>
           <li>
-            Align the top, right edge of the target with the bottom, right edge
-            of the anchor, and increase the height and width of the target.
+            Apply `flip-block`, flipping across the inline axis, and align the
+            top, left edge of the target with the bottom, right edge of the
+            anchor.
+          </li>
+          <li>
+            Apply `flip-inline`, flipping across the block axis, and align the
+            bottom, right edge of the target with the top, left edge of the
+            anchor.
+          </li>
+          <li>
+            Apply `flip-start`, flipping across a diagonal line from upper left
+            to lower right, and align the top, right edge of the target with the
+            bottom, left edge of the anchor.
           </li>
           <li>
             When every position overflows, revert to the initial base styles in
