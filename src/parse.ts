@@ -429,7 +429,7 @@ function getAnchorFunctionData(
 
 function getPositionFallbackDeclaration(
   node: csstree.Declaration,
-  selectorList?: csstree.SelectorList,
+  selectorList: csstree.SelectorList | undefined,
 ) {
   if (
     isFallbackDeclaration(node) &&
@@ -546,13 +546,10 @@ export async function parseCSS(styleData: StyleData[]) {
         const selectors = getSelectors(rule);
 
         // Parse `position-fallback` declaration
-        const { name } = getPositionFallbackDeclaration(node);
+        const { name } = getPositionFallbackDeclaration(node, rule);
         if (name && selectors.length && fallbacks[name]) {
-          const selectorList = selectors
-            .map(({ selector }) => selector)
-            .join(', ');
-
           for (const { selector } of selectors) {
+            validPositions[selector] = { fallbacks: fallbacks[name].blocks };
             if (!fallbacks[name].targets.includes(selector)) {
               fallbacks[name].targets.push(selector);
             }
@@ -583,7 +580,9 @@ export async function parseCSS(styleData: StyleData[]) {
               },
             });
             // Store mapping of data-attr to target selector
-            fallbackTargets[dataAttr] = selectorList;
+            for (const { selector } of selectors) {
+              fallbackTargets[dataAttr] = selector;
+            }
           }
           changed = true;
         }

@@ -1,7 +1,9 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 
+import type { Selector } from '../../src/parse.js';
 import {
   isAcceptableAnchorElement,
+  type PseudoElement,
   validatedForPositioning,
 } from '../../src/validate.js';
 
@@ -45,7 +47,10 @@ test.afterAll(async ({ browser }) => {
   await browser.close();
 });
 
-const anchorSelector = '#my-anchor-positioning';
+const anchorSelector = {
+  selector: '#my-anchor-positioning',
+  elementPart: '#my-anchor-positioning',
+} satisfies Selector;
 const targetSelector = '#my-target-positioning';
 
 async function callValidFunction(page: Page) {
@@ -56,14 +61,14 @@ async function callValidFunction(page: Page) {
           targetSelector,
         ) as HTMLElement;
         const anchorElement = document.querySelector(
-          anchorSelector,
+          anchorSelector.selector,
         ) as HTMLElement;
         if (anchorElement && targetElement) {
           return await isAcceptableAnchorElement(anchorElement, targetElement);
         }
         return false;
       },
-      [anchorSelector, targetSelector],
+      [anchorSelector, targetSelector] as const,
     );
   } catch (e) {
     await page.close();
@@ -396,7 +401,7 @@ test('when multiple anchor elements have the same name and are valid, the last i
     async ([anchorSelector, targetSelector]) => {
       interface Data {
         results: {
-          anchor: HTMLElement | null;
+          anchor: HTMLElement | PseudoElement | null;
         };
         anchorWidth: string | undefined;
         anchorText: string | undefined;
@@ -412,12 +417,18 @@ test('when multiple anchor elements have the same name and are valid, the last i
       ]).then((value) => value);
 
       validatedData.results = { anchor };
-      validatedData.anchorWidth = anchor?.style.width;
-      validatedData.anchorText = anchor?.innerHTML;
+
+      if (anchor && 'fakePseudoElement' in anchor) {
+        validatedData.anchorWidth = anchor.computedStyle.width;
+        validatedData.anchorText = anchor.computedStyle.content.slice(1, -1);
+      } else {
+        validatedData.anchorWidth = anchor?.style.width;
+        validatedData.anchorText = anchor?.innerHTML;
+      }
 
       return validatedData;
     },
-    [anchorSelector, targetSelector],
+    [anchorSelector, targetSelector] as const,
   );
 
   await page.close();
@@ -481,7 +492,7 @@ test('target anchor element is first element el in tree order.', async ({
     async ([anchorSelector, targetSelector]) => {
       interface Data {
         results: {
-          anchor: HTMLElement | null;
+          anchor: HTMLElement | PseudoElement | null;
         };
         anchorWidth: string | undefined;
         anchorText: string | undefined;
@@ -498,12 +509,18 @@ test('target anchor element is first element el in tree order.', async ({
 
       validatedData.results = { anchor };
       if (anchor) {
-        validatedData.anchorWidth = getComputedStyle(anchor).width;
+        validatedData.anchorWidth =
+          'fakePseudoElement' in anchor
+            ? anchor.computedStyle.width
+            : getComputedStyle(anchor).width;
       }
 
       return validatedData;
     },
-    ['.anchor1', '.target9'],
+    [
+      { selector: '.anchor1', elementPart: '.anchor1' } satisfies Selector,
+      '.target9',
+    ] as const,
   );
 
   await page.close();

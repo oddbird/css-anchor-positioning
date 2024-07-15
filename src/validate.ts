@@ -1,9 +1,11 @@
 import { platform, type VirtualElement } from '@floating-ui/dom';
+import { nanoid } from 'nanoid/non-secure';
 
-import { getCSSPropertyValue,type Selector } from './parse.js';
+import { getCSSPropertyValue, type Selector } from './parse.js';
 
 export interface PseudoElement extends VirtualElement {
   fakePseudoElement: HTMLElement;
+  computedStyle: CSSStyleDeclaration;
   removeFakePseudoElement(): void;
 }
 
@@ -11,12 +13,10 @@ function getAnchorsBySelectors(selectors: Selector[]) {
   const result: (HTMLElement | PseudoElement)[] = [];
 
   for (const { selector, elementPart, pseudoElementPart } of selectors) {
-    if (
-      pseudoElementPart &&
-      !['::before', '::after'].includes(pseudoElementPart)
-    ) {
-      continue;
-    }
+    const is_before = pseudoElementPart === '::before';
+    const is_after = pseudoElementPart === '::after';
+
+    if (pseudoElementPart && !(is_before || is_after)) continue;
 
     const elements = Array.from(
       document.querySelectorAll<HTMLElement>(elementPart),
@@ -28,33 +28,31 @@ function getAnchorsBySelectors(selectors: Selector[]) {
     }
 
     for (const element of elements) {
-      const originalStyles = Array.from(document.adoptedStyleSheets);
-      const styleSheet = new CSSStyleSheet();
-      const styles = getComputedStyle(element, pseudoElementPart);
+      const computedStyle = getComputedStyle(element, pseudoElementPart);
       const fakePseudoElement = document.createElement('div');
+      const styleSheet = new CSSStyleSheet();
+      const originalStyles = Array.from(document.adoptedStyleSheets);
 
-      for (const property of Array.from(styles)) {
-        fakePseudoElement.style.setProperty(
-          property,
-          styles.getPropertyValue(property),
-        );
+      fakePseudoElement.id = `fake-pseudo-element-${nanoid()}`;
+
+      for (const property of Array.from(computedStyle)) {
+        const value = computedStyle.getPropertyValue(property);
+        fakePseudoElement.style.setProperty(property, value);
       }
 
-      fakePseudoElement.textContent = styles.content.slice(1, -1);
-
+      styleSheet.insertRule(
+        `#${fakePseudoElement.id}::before { content: ${computedStyle.content}; }`,
+      );
       styleSheet.insertRule(`${selector} { display: none !important; }`);
+
       document.adoptedStyleSheets = [...originalStyles, styleSheet];
 
-      switch (pseudoElementPart) {
-        case '::before': {
-          element.insertAdjacentElement('afterbegin', fakePseudoElement);
-          break;
-        }
+      if (is_before) {
+        element.insertAdjacentElement('afterbegin', fakePseudoElement);
+      }
 
-        case '::after': {
-          element.insertAdjacentElement('beforeend', fakePseudoElement);
-          break;
-        }
+      if (is_after) {
+        element.insertAdjacentElement('beforeend', fakePseudoElement);
       }
 
       const startingScrollY = window.scrollY;
@@ -63,6 +61,7 @@ function getAnchorsBySelectors(selectors: Selector[]) {
 
       result.push({
         fakePseudoElement,
+        computedStyle,
 
         removeFakePseudoElement() {
           fakePseudoElement.remove();
