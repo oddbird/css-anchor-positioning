@@ -545,6 +545,11 @@
             #1, even though it overflows.
           </li>
         </ol>
+        <p><strong>Note:</strong>
+          Early Chromium implementations used <code>position-try-options</code>
+          instead of <code>position-try-fallbacks</code>. We recommend adding
+          both properties, or using the <code>position-try</code> shorthand.
+        </p>
       </div>
       <pre><code class="language-css"
 >#my-anchor-try-tactics {
@@ -555,6 +560,7 @@
   position-anchor: --my-anchor-try-tactics;
   bottom: anchor(top);
   left: anchor(right);
+  position-try-options: flip-block, flip-inline, flip-start;
   position-try-fallbacks: flip-block, flip-inline, flip-start;
 }
 </code></pre>
