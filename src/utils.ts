@@ -59,13 +59,6 @@ export function splitCommaList(list: csstree.List<csstree.CssNode>) {
   );
 }
 
-// todo: check if this ends up being used
-export function splitCommaListValues(list: csstree.List<csstree.CssNode>) {
-  return splitCommaList(list).map((value) =>
-    value.map((identifier) => identifier.name).join(' '),
-  );
-}
-
 export function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }

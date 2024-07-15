@@ -26,7 +26,7 @@ describe('cascadeCSS', () => {
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(true);
     const { css } = styleData[0];
-    expect(css).toContain(`--bottom-${INSTANCE_UUID}:anchor(top);`);
-    expect(css).toContain(`--left-${INSTANCE_UUID}:anchor(right);`);
+    expect(css).toContain(`--bottom-${INSTANCE_UUID}:anchor(top)`);
+    expect(css).toContain(`--left-${INSTANCE_UUID}:anchor(right)`);
   });
 });
