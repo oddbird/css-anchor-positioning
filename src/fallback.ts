@@ -1,20 +1,31 @@
 import type * as csstree from 'css-tree';
+import { nanoid } from 'nanoid/non-secure';
 
 import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
   ANCHOR_SIDES,
   type AnchorSideKeyword,
-  type PositionTryOptionsTryTactics,
+  type InsetProperty,
+  isInsetProp,
+  isMarginProp,
+  isSelfAlignmentProp,
+  isSizingProp,
   type TryBlock,
 } from './parse.js';
 import {
+  type DeclarationWithValue,
   generateCSS,
   getAST,
   getCSSPropertyValue,
   INSTANCE_UUID,
   isAnchorFunction,
+  splitCommaList,
 } from './utils.js';
+
+interface AtRuleRaw extends csstree.Atrule {
+  prelude: csstree.Raw | null;
+}
 
 type InsetAreaProperty =
   | 'left'
@@ -137,10 +148,94 @@ type InsetAreaPropertyChunks =
   | 'block'
   | 'inline';
 
+export type PositionTryOrder =
+  | 'normal'
+  | 'most-width'
+  | 'most-height'
+  | 'most-block-size'
+  | 'most-inline-size';
+
+const POSITION_TRY_ORDERS: PositionTryOrder[] = [
+  'normal',
+  'most-width',
+  'most-height',
+  'most-block-size',
+  'most-inline-size',
+];
+
+export type PositionTryOptionsTryTactics =
+  | 'flip-block'
+  | 'flip-inline'
+  | 'flip-start';
+
+const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
+
+interface PositionTryDefTactic {
+  type: 'try-tactic';
+  tactic: PositionTryOptionsTryTactics;
+}
+interface PositionTryDefInsetArea {
+  type: 'inset-area';
+  insetArea: InsetProperty;
+}
+interface PositionTryDefAtRule {
+  type: 'at-rule';
+  atRule: csstree.Identifier['name'];
+}
+interface PositionTryDefAtRuleWithTactic {
+  type: 'at-rule-with-try-tactic';
+  tactic: PositionTryOptionsTryTactics;
+  atRule: csstree.Identifier['name'];
+}
+
+type PositionTryObject =
+  | PositionTryDefTactic
+  | PositionTryDefInsetArea
+  | PositionTryDefAtRule
+  | PositionTryDefAtRuleWithTactic;
+
 export function isInsetAreaProp(
   property: string | InsetAreaProperty,
 ): property is InsetAreaProperty {
   return INSET_AREA_PROPS.includes(property as InsetAreaProperty);
+}
+
+function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
+  return node.type === 'Declaration';
+}
+
+function isPositionTryFallbacksDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return (
+    node.type === 'Declaration' && node.property === 'position-try-fallbacks'
+  );
+}
+
+function isPositionTryOrderDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try-order';
+}
+
+function isPositionTryDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try';
+}
+
+function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
+  return node.type === 'Atrule' && node.name === 'position-try';
+}
+
+function isPositionTryTactic(
+  name: string,
+): name is PositionTryOptionsTryTactics {
+  return POSITION_TRY_TACTICS.includes(name);
+}
+
+function isPositionTryOrder(name: string): name is PositionTryOrder {
+  return POSITION_TRY_ORDERS.includes(name as PositionTryOrder);
 }
 
 export function applyTryTactic(
@@ -372,4 +467,146 @@ export function applyTryTacticToBlock(
     declarations[newKey] = generateCSS(valueAst);
   });
   return declarations;
+}
+
+function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
+  const positionOptions = splitCommaList(list);
+  const tryObjects: PositionTryObject[] = [];
+  positionOptions.forEach((option) => {
+    if (option.length === 2 && isPositionTryTactic(option[0].name)) {
+      tryObjects.push({
+        tactic: option[0].name,
+        atRule: option[1].name,
+        type: 'at-rule-with-try-tactic',
+      });
+    } else if (option[0].name.startsWith('--')) {
+      tryObjects.push({
+        atRule: option[0].name,
+        type: 'at-rule',
+      });
+    } else if (isPositionTryTactic(option[0].name)) {
+      tryObjects.push({
+        tactic: option[0].name,
+        type: 'try-tactic',
+      });
+    } else if (isInsetProp(option[0].name)) {
+      tryObjects.push({
+        insetArea: option[0].name,
+        type: 'inset-area',
+      });
+    }
+  });
+  return tryObjects;
+}
+
+function getPositionTryOptionsDeclaration(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+) {
+  if (
+    isPositionTryFallbacksDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    return parsePositionTryFallbacks(node.value.children);
+  }
+  return [];
+}
+
+function getPositionTryDeclaration(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+): { order?: PositionTryOrder; options?: PositionTryObject[] } {
+  if (
+    isPositionTryDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    let order: PositionTryOrder | undefined;
+    // get potential order
+    const firstName = (node.value.children.first as csstree.Identifier).name;
+    if (firstName && isPositionTryOrder(firstName)) {
+      order = firstName;
+      node.value.children.shift();
+    }
+    const options = parsePositionTryFallbacks(node.value.children);
+
+    return { order, options };
+  }
+  return {};
+}
+
+function getPositionTryOrderDeclaration(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+) {
+  if (
+    isPositionTryOrderDeclaration(node) &&
+    node.value.children.first &&
+    rule?.value
+  ) {
+    return {
+      order: (node.value.children.first as csstree.Identifier)
+        .name as PositionTryOrder,
+    };
+  }
+  return {};
+}
+
+export function getPositionFallbackValues(
+  node: csstree.Declaration,
+  rule?: csstree.Raw,
+): { order?: PositionTryOrder; options?: PositionTryObject[] } {
+  const { order, options } = getPositionTryDeclaration(node, rule);
+  if (order || options) {
+    return { order, options };
+  }
+  const { order: orderDeclaration } = getPositionTryOrderDeclaration(
+    node,
+    rule,
+  );
+  const optionsNames = getPositionTryOptionsDeclaration(node, rule);
+  if (orderDeclaration || optionsNames) {
+    return { order: orderDeclaration, options: optionsNames };
+  }
+  return {};
+}
+
+// https://drafts.csswg.org/css-anchor-position-1/#accepted-position-try-properties
+export function isAcceptedPositionTryProperty(
+  declaration: csstree.Declaration,
+) {
+  return (
+    isInsetProp(declaration.property) ||
+    isMarginProp(declaration.property) ||
+    isSizingProp(declaration.property) ||
+    isSelfAlignmentProp(declaration.property) ||
+    ['position-anchor', 'inset-area'].includes(declaration.property)
+  );
+}
+
+export function getPositionTryRules(node: csstree.Atrule) {
+  if (
+    isPositionTryAtRule(node) &&
+    node.prelude?.value &&
+    node.block?.children
+  ) {
+    const name = node.prelude.value;
+    const tryBlocks: TryBlock[] = [];
+    const declarations = node.block.children.filter(
+      (d): d is DeclarationWithValue =>
+        isDeclaration(d) && isAcceptedPositionTryProperty(d),
+    );
+    const tryBlock: TryBlock = {
+      uuid: `${name}-try-${nanoid(12)}`,
+      declarations: Object.fromEntries(
+        declarations.map((d) => [d.property, generateCSS(d.value)]),
+      ),
+    };
+
+    tryBlocks.push(tryBlock);
+
+    return { name, blocks: tryBlocks };
+  }
+  return {};
 }
