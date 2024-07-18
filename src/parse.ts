@@ -535,15 +535,9 @@ export async function parseCSS(styleData: StyleData[]) {
               };
             }
           }
-          if (name && selector && fallbacks[name]) {
-            if (anchorPosition.fallbacks) {
-              anchorPosition.fallbacks = [
-                ...anchorPosition.fallbacks,
-                ...fallbacks[name].blocks,
-              ];
-            } else {
-              anchorPosition.fallbacks = fallbacks[name].blocks;
-            }
+          if (name && fallbacks[name]) {
+            anchorPosition.fallbacks ??= [];  
+            anchorPosition.fallbacks.push(...fallbacks[name].blocks);
 
             if (!fallbacks[name].targets.includes(selector)) {
               fallbacks[name].targets.push(selector);
