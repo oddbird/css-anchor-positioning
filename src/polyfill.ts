@@ -425,7 +425,7 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
 }
 
 let styleData: StyleData[] = [];
-let rootStyle: string | null;
+let rootStyle: string | null = null;
 let cleanups: (() => void)[] = [];
 let polyfilled = false;
 
@@ -495,5 +495,8 @@ export async function restore() {
   } else {
     document.documentElement.removeAttribute('style');
   }
+  styleData = [];
+  rootStyle = null;
+  cleanups = [];
   polyfilled = false;
 }
