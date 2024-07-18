@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
+    <link rel="stylesheet" href="/anchor-added.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -43,18 +44,31 @@
       }
     </style>
     <script type="module">
-      import polyfill from '/src/index-fn.ts';
+      import { polyfill, restore } from '/src/index-fn.ts';
 
       const btn = document.getElementById('apply-polyfill');
+      let applied = false;
+      window.polyfill = polyfill;
+      window.restore = restore;
 
       if (!('anchorName' in document.documentElement.style)) {
-        btn.addEventListener('click', () =>
-          polyfill().then((rules) => {
-            btn.innerText = 'Polyfill Applied';
-            btn.setAttribute('disabled', '');
-            console.log(rules);
-          }),
-        );
+        btn.addEventListener('click', () => {
+          btn.setAttribute('disabled', '');
+          if (applied) {
+            restore().then(() => {
+              applied = false;
+              btn.innerText = 'Apply Polyfill';
+              btn.removeAttribute('disabled');
+            });
+          } else {
+            polyfill().then((rules) => {
+              console.log(rules);
+              applied = true;
+              btn.innerText = 'Unapply Polyfill';
+              btn.removeAttribute('disabled');
+            });
+          }
+        });
       } else {
         btn.innerText = 'No Polyfill Needed';
         btn.setAttribute('disabled', '');
@@ -62,18 +76,6 @@
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
       }
-
-      const updateBtn = document.getElementById('toggle-anchor-width');
-      const updateAnchor = document.getElementById('my-anchor-update');
-      updateBtn.addEventListener('click', () => {
-        if (updateAnchor.getAttribute('data-small')) {
-          updateAnchor.setAttribute('data-large', true);
-          updateAnchor.removeAttribute('data-small');
-        } else {
-          updateAnchor.setAttribute('data-small', true);
-          updateAnchor.removeAttribute('data-large');
-        }
-      });
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
@@ -682,13 +684,27 @@
     <section id="anchor-update" class="demo-item">
       <h2>
         <a href="#anchor-update" aria-hidden="true">🔗</a>
-        Dynamically update anchors
+        Dynamically updated anchors
       </h2>
       <div style="position: relative" class="demo-elements">
         <div id="my-anchor-update" class="anchor">Anchor</div>
         <div id="my-target-update" class="target">Target</div>
       </div>
       <button id="toggle-anchor-width">Toggle anchor width</button>
+      <script>
+        document
+          .getElementById('toggle-anchor-width')
+          .addEventListener('click', () => {
+            const updateAnchor = document.getElementById('my-anchor-update');
+            if (updateAnchor.getAttribute('data-small')) {
+              updateAnchor.setAttribute('data-large', true);
+              updateAnchor.removeAttribute('data-small');
+            } else {
+              updateAnchor.setAttribute('data-small', true);
+              updateAnchor.removeAttribute('data-large');
+            }
+          });
+      </script>
       <p class="note">
         With polyfill applied: Target and Anchor's right edges line up. Target's
         top edge lines up with the bottom edge of the Anchor.
@@ -768,6 +784,66 @@
   position: absolute;
   top: anchor(--my-anchor-absolute bottom);
   left: anchor(--my-anchor-absolute right);
+}</code></pre>
+    </section>
+    <section id="anchor-added" class="demo-item">
+      <h2>
+        <a href="#anchor-added" aria-hidden="true">🔗</a>
+        Dynamically added anchors
+      </h2>
+      <div
+        style="position: relative"
+        class="demo-elements"
+        id="my-anchor-added-container"
+      >
+        <div id="my-anchor-added-original" class="anchor">Original Anchor</div>
+        <div id="my-target-added" class="target">Target</div>
+      </div>
+      <button id="add-anchor">Add anchor</button>
+      <script>
+        document.getElementById('add-anchor').addEventListener('click', () => {
+          const addBtn = document.getElementById('add-anchor');
+          let addedAnchor = document.getElementById('my-anchor-added-new');
+          if (addedAnchor) {
+            addedAnchor.remove();
+            addBtn.innerText = 'Add anchor';
+            window.polyfill();
+          } else {
+            addedAnchor = document.createElement('div');
+            addedAnchor.id = 'my-anchor-added-new';
+            addedAnchor.classList.add('anchor');
+            addedAnchor.innerText = 'Added Anchor';
+            document
+              .getElementById('my-anchor-added-container')
+              .prepend(addedAnchor);
+            addBtn.innerText = 'Remove anchor';
+            window.polyfill();
+          }
+        });
+      </script>
+      <p class="note">
+        With polyfill applied: Target and original Anchor's right edges line up.
+        Target's top edge lines up with the top edge of the original Anchor.
+        <br />
+        <br />
+        When another valid Anchor is added earlier in the DOM order and the
+        polyfill is re-applied, Target position updates relative to the added
+        Anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-added-new {
+  anchor-name: --my-anchor-added;
+  margin-bottom: 1rem;
+}
+
+#my-anchor-added-original {
+  anchor-name: --my-anchor-added;
+}
+
+#my-target-added {
+  position: absolute;
+  left: anchor(--my-anchor-added right);
+  top: anchor(--my-anchor-added top);
 }</code></pre>
     </section>
     <section id="sponsor">

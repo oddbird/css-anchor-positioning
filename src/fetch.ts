@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
+import { INLINE_STYLES_ID_ATTR } from './constants.js';
 import { type StyleData } from './utils.js';
 
 export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
@@ -26,15 +27,14 @@ async function fetchLinkedStylesheets(
       // fetch css and add to array
       const response = await fetch(data.url.toString());
       const css = await response.text();
-      return { ...data, css } as StyleData;
+      return { ...data, css, original: css } as StyleData;
     }),
   );
 }
 
 // Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, adds a new 'data-has-inline-styles' attribute with a
-// random UUID value, and then formats the styles in the same manner as CSS from
-// style tags.
+// For each element found, adds a new data attribute with a random UUID value,
+// and then formats the styles in the same manner as CSS from style tags.
 function fetchInlineStyles() {
   const elementsWithInlineAnchorStyles: NodeListOf<HTMLElement> =
     document.querySelectorAll('[style*="anchor"]');
@@ -42,11 +42,10 @@ function fetchInlineStyles() {
 
   elementsWithInlineAnchorStyles.forEach((el) => {
     const selector = nanoid(12);
-    const dataAttribute = 'data-has-inline-styles';
-    el.setAttribute(dataAttribute, selector);
-    const styles = el.getAttribute('style');
-    const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
-    inlineStyles.push({ el, css });
+    el.setAttribute(INLINE_STYLES_ID_ATTR, selector);
+    const styles = el.getAttribute('style') as string;
+    const css = `[${INLINE_STYLES_ID_ATTR}="${selector}"] { ${styles} }`;
+    inlineStyles.push({ el, css, original: styles });
   });
 
   return inlineStyles;
@@ -65,7 +64,7 @@ export async function fetchCSS(): Promise<StyleData[]> {
       }
     }
     if (el.tagName.toLowerCase() === 'style') {
-      sources.push({ el, css: el.innerHTML });
+      sources.push({ el, css: el.innerHTML, original: el.innerHTML });
     }
   });
 

@@ -6,7 +6,7 @@ describe('cascadeCSS', () => {
   it('moves position-anchor to custom property', async () => {
     const srcCSS = getSampleCSS('position-anchor');
     const styleData: StyleData[] = [
-      { css: srcCSS, el: document.createElement('div') },
+      { css: srcCSS, el: document.createElement('div'), original: srcCSS },
     ];
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(true);

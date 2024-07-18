@@ -7,6 +7,7 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
+import { POLYFILL_ID_ATTR, TARGET_STYLE_ATTR } from './constants.js';
 import { fetchCSS } from './fetch.js';
 import {
   type AnchorFunction,
@@ -22,7 +23,8 @@ import {
   type SizingProperty,
   type TryBlock,
 } from './parse.js';
-import { transformCSS } from './transform.js';
+import { replaceLink, transformCSS } from './transform.js';
+import { type StyleData } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -282,6 +284,7 @@ async function applyAnchorPositions(
   useAnimationFrame = false,
 ) {
   const root = document.documentElement;
+  const cleanups: (() => void)[] = [];
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
     InsetProperty | SizingProperty,
@@ -291,7 +294,7 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        autoUpdate(
+        const cleanup = autoUpdate(
           anchor,
           target,
           async () => {
@@ -312,6 +315,7 @@ async function applyAnchorPositions(
           },
           { animationFrame: useAnimationFrame },
         );
+        cleanups.push(cleanup);
       } else {
         // Use fallback value
         const resolved = await getPixelValue({
@@ -324,6 +328,7 @@ async function applyAnchorPositions(
       }
     }
   }
+  return cleanups;
 }
 
 async function applyPositionFallbacks(
@@ -331,8 +336,9 @@ async function applyPositionFallbacks(
   fallbacks: TryBlock[],
   useAnimationFrame = false,
 ) {
+  const cleanups: (() => void)[] = [];
   if (!fallbacks.length) {
-    return;
+    return cleanups;
   }
 
   const targets: NodeListOf<HTMLElement> = document.querySelectorAll(targetSel);
@@ -340,7 +346,7 @@ async function applyPositionFallbacks(
   for (const target of targets) {
     let checking = false;
     const offsetParent = await getOffsetParent(target);
-    autoUpdate(
+    const cleanup = autoUpdate(
       target,
       target,
       async () => {
@@ -354,7 +360,7 @@ async function applyPositionFallbacks(
         // reach one that does not cause the target's margin-box to overflow
         // its offsetParent (containing block).
         for (const [index, { uuid }] of fallbacks.entries()) {
-          target.setAttribute('data-anchor-polyfill', uuid);
+          target.setAttribute(POLYFILL_ID_ATTR, uuid);
           if (index === fallbacks.length - 1) {
             checking = false;
             break;
@@ -388,37 +394,57 @@ async function applyPositionFallbacks(
       },
       { animationFrame: useAnimationFrame },
     );
+    cleanups.push(cleanup);
   }
+  return cleanups;
 }
 
 async function position(rules: AnchorPositions, useAnimationFrame = false) {
+  const cleanups = [];
   for (const pos of Object.values(rules)) {
     // Handle `anchor()` and `anchor-size()` functions...
-    await applyAnchorPositions(pos.declarations ?? {}, useAnimationFrame);
+    cleanups.push(
+      ...(await applyAnchorPositions(
+        pos.declarations ?? {},
+        useAnimationFrame,
+      )),
+    );
   }
 
   for (const [targetSel, position] of Object.entries(rules)) {
     // Handle `@position-fallback` blocks...
-    await applyPositionFallbacks(
-      targetSel,
-      position.fallbacks ?? [],
-      useAnimationFrame,
+    cleanups.push(
+      ...(await applyPositionFallbacks(
+        targetSel,
+        position.fallbacks ?? [],
+        useAnimationFrame,
+      )),
     );
   }
+  return cleanups;
 }
 
+let styleData: StyleData[] = [];
+let rootStyle: string | null = null;
+let cleanups: (() => void)[] = [];
+let polyfilled = false;
+
 export async function polyfill(animationFrame?: boolean) {
+  if (polyfilled) {
+    await restore();
+  }
+  rootStyle = document.documentElement.getAttribute('style');
   const useAnimationFrame =
     animationFrame === undefined
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
       : animationFrame;
   // fetch CSS from stylesheet and inline style
-  let styleData = await fetchCSS();
+  styleData = await fetchCSS();
 
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = await cascadeCSS(styleData);
   if (cascadeCausedChanges) {
-    styleData = await transformCSS(styleData);
+    await transformCSS(styleData);
   }
   // parse CSS
   const { rules, inlineStyles } = await parseCSS(styleData);
@@ -428,8 +454,49 @@ export async function polyfill(animationFrame?: boolean) {
     await transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
-    await position(rules, useAnimationFrame);
+    cleanups = await position(rules, useAnimationFrame);
   }
 
+  polyfilled = true;
   return rules;
+}
+
+export async function restore() {
+  for (const cleanup of cleanups) {
+    cleanup();
+  }
+  document.querySelectorAll(`[${POLYFILL_ID_ATTR}]`).forEach((el) => {
+    el.removeAttribute(POLYFILL_ID_ATTR);
+  });
+  document.querySelectorAll(`[${TARGET_STYLE_ATTR}]`).forEach((el) => {
+    const original = el.getAttribute(TARGET_STYLE_ATTR);
+    if (original) {
+      el.setAttribute('style', original);
+    } else {
+      el.removeAttribute('style');
+    }
+    el.removeAttribute(TARGET_STYLE_ATTR);
+  });
+  for (const { el, original, changed, url } of styleData) {
+    if (changed) {
+      if (el.tagName.toLowerCase() === 'style') {
+        el.innerHTML = original;
+      } else if (el.tagName.toLowerCase() === 'link') {
+        if (url) {
+          await replaceLink(el as HTMLLinkElement, original, url);
+        }
+      } else {
+        el.setAttribute('style', original);
+      }
+    }
+  }
+  if (rootStyle) {
+    document.documentElement.setAttribute('style', rootStyle);
+  } else {
+    document.documentElement.removeAttribute('style');
+  }
+  styleData = [];
+  rootStyle = null;
+  cleanups = [];
+  polyfilled = false;
 }
