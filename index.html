@@ -419,10 +419,76 @@
   bottom: anchor(var(--anchor-var) top);
 }</code></pre>
     </section>
+    <section id="position-try-tactics" class="demo-item">
+      <h2>
+        <a href="#position-try-tactics" aria-hidden="true">🔗</a>
+        Positioning with try tactics
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="scroll-container">
+          <div class="placefiller-above-anchor"></div>
+          <div class="placefiller-before-anchor"></div>
+          <span id="my-anchor-try-tactics" class="anchor"
+            >position-try-fallbacks Anchor</span
+          >
+          <div id="my-target-try-tactics" class="target">Target</div>
+          <div class="placefiller-after-anchor"></div>
+        </div>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied, the following positions are attempted in order:
+        </p>
+        <ol>
+          <li>
+            Align the bottom, left edge of the target with the top, right edge
+            of the anchor.
+          </li>
+          <li>
+            Apply <code>flip-block</code>, flipping across the inline axis, and
+            align the top, left edge of the target with the bottom, right edge
+            of the anchor.
+          </li>
+          <li>
+            Apply <code>flip-inline</code>, flipping across the block axis, and
+            align the bottom, right edge of the target with the top, left edge
+            of the anchor.
+          </li>
+          <li>
+            Apply <code>flip-start</code>, flipping across a diagonal line from
+            upper left to lower right, and align the top, right edge of the
+            target with the bottom, left edge of the anchor.
+          </li>
+          <li>
+            When every position overflows, revert to the initial base styles in
+            #1, even though it overflows.
+          </li>
+        </ol>
+        <p>
+          <strong>Note:</strong> Early Chromium implementations used
+          <code>position-try-options</code> instead of
+          <code>position-try-fallbacks</code>. We recommend adding both
+          properties, or using the <code>position-try</code> shorthand.
+        </p>
+      </div>
+      <pre><code class="language-css"
+>#my-anchor-try-tactics {
+  anchor-name: --my-anchor-try-tactics;
+}
+
+#my-target-try-tactics {
+  position: absolute;
+  position-anchor: --my-anchor-try-tactics;
+  bottom: anchor(top);
+  left: anchor(right);
+  position-try-options: flip-block, flip-inline, flip-start;
+}</code></pre>
+    </section>
     <section id="position-try" class="demo-item">
       <h2>
         <a href="#position-try" aria-hidden="true">🔗</a>
-        Fallbacks with <code>@position-try</code>
+        Fallbacks with <code>position-try-fallbacks</code> and
+        <code>@position-try</code>
       </h2>
       <div style="position: relative" class="demo-elements">
         <div class="scroll-container">
@@ -454,7 +520,7 @@
           </li>
           <li>
             Align the top, right edge of the target with the bottom, right edge
-            of the anchor, and increase the height and width of the target.
+            of the anchor, and set the height and width of the target to 100px.
           </li>
           <li>
             When every position overflows, revert to the initial base styles in
@@ -471,7 +537,7 @@
   position: absolute;
 
   /* First try to align the bottom, left edge of the target
-  with the top, left edge of the anchor. */
+     with the top, left edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   left: anchor(--my-anchor-fallback left);
   position-try-fallbacks: --bottom-left, --top-right, --bottom-right;
@@ -482,6 +548,9 @@
      with the bottom, left edge of the anchor. */
   top: anchor(--my-anchor-fallback bottom);
   left: anchor(--my-anchor-fallback left);
+  /* Values set by the initial styles will still be applied
+     unless they are explicitly reverted. */
+  bottom: revert;
 }
 
 @position-try --top-right {
@@ -489,6 +558,7 @@
      with the top, right edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   right: anchor(--my-anchor-fallback right);
+  left: revert;
 }
 
 @position-try --bottom-right {
@@ -498,73 +568,9 @@
   right: anchor(--my-anchor-fallback right);
   width: 100px;
   height: 100px;
+  bottom: revert;
+  left: revert;
 }</code></pre>
-    </section>
-    <section id="position-try-tactics" class="demo-item">
-      <h2>
-        <a href="#position-try-tactics" aria-hidden="true">🔗</a>
-        Positioning with try tactics
-      </h2>
-      <div style="position: relative" class="demo-elements">
-        <div class="scroll-container">
-          <div class="placefiller-above-anchor"></div>
-          <div class="placefiller-before-anchor"></div>
-          <span id="my-anchor-try-tactics" class="anchor"
-            >@position-try-tactics Anchor</span
-          >
-          <div id="my-target-try-tactics" class="target">Target</div>
-          <div class="placefiller-after-anchor"></div>
-        </div>
-      </div>
-      <div class="note">
-        <p>
-          With polyfill applied, the following positions are attempted in order:
-        </p>
-        <ol>
-          <li>
-            Align the bottom, left edge of the target with the top, right edge
-            of the anchor.
-          </li>
-          <li>
-            Apply `flip-block`, flipping across the inline axis, and align the
-            top, left edge of the target with the bottom, right edge of the
-            anchor.
-          </li>
-          <li>
-            Apply `flip-inline`, flipping across the block axis, and align the
-            bottom, right edge of the target with the top, left edge of the
-            anchor.
-          </li>
-          <li>
-            Apply `flip-start`, flipping across a diagonal line from upper left
-            to lower right, and align the top, right edge of the target with the
-            bottom, left edge of the anchor.
-          </li>
-          <li>
-            When every position overflows, revert to the initial base styles in
-            #1, even though it overflows.
-          </li>
-        </ol>
-        <p>
-          <strong>Note:</strong> Early Chromium implementations used
-          <code>position-try-options</code> instead of
-          <code>position-try-fallbacks</code>. We recommend adding both
-          properties, or using the <code>position-try</code> shorthand.
-        </p>
-      </div>
-      <pre><code class="language-css"
->#my-anchor-try-tactics {
-  anchor-name: --my-anchor-try-tactics;
-}
-#my-target-try-tactics {
-  position: absolute;
-  position-anchor: --my-anchor-try-tactics;
-  bottom: anchor(top);
-  left: anchor(right);
-  position-try-options: flip-block, flip-inline, flip-start;
-  position-try-fallbacks: flip-block, flip-inline, flip-start;
-}
-</code></pre>
     </section>
     <section id="anchor-scroll" class="demo-item">
       <h2>
