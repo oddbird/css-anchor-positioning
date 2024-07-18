@@ -62,7 +62,3 @@ export function splitCommaList(list: csstree.List<csstree.CssNode>) {
 export function getCSSPropertyValue(el: HTMLElement, prop: string) {
   return getComputedStyle(el).getPropertyValue(prop).trim();
 }
-
-export function getBlockId(el: HTMLElement) {
-  return getCSSPropertyValue(el, `--block-id-${INSTANCE_UUID}`);
-}

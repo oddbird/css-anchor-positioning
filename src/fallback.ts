@@ -372,6 +372,7 @@ function mapInsetArea(
   tactic: PositionTryOptionsTryTactics,
 ) {
   if (tactic === 'flip-start') {
+    // TODO: Handle flip-start
     return prop;
   } else {
     const mapping = insetAreaPropertyMapping[tactic];
@@ -442,7 +443,7 @@ export function applyTryTacticToBlock(
     }
 
     if (isAnchorFunction(valueAst.children.first)) {
-      valueAst.children.first.children.map((item) => {
+      valueAst.children.first.children.forEach((item) => {
         if (
           item.type === 'Identifier' &&
           ANCHOR_SIDES.includes(item.name as AnchorSideKeyword)
@@ -453,11 +454,10 @@ export function applyTryTacticToBlock(
     }
 
     if (key === 'inset-area') {
-      valueAst.children.map((id) => {
+      valueAst.children.forEach((id) => {
         if (id.type === 'Identifier' && isInsetAreaProp(id.name)) {
           id.name = mapInsetArea(id.name, tactic);
         }
-        return id;
       });
     }
     if (key.startsWith('margin')) {
@@ -499,29 +499,18 @@ function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
   return tryObjects;
 }
 
-function getPositionTryOptionsDeclaration(
-  node: csstree.Declaration,
-  rule?: csstree.Raw,
-) {
-  if (
-    isPositionTryFallbacksDeclaration(node) &&
-    node.value.children.first &&
-    rule?.value
-  ) {
+function getPositionTryFallbacksDeclaration(node: csstree.Declaration) {
+  if (isPositionTryFallbacksDeclaration(node) && node.value.children.first) {
     return parsePositionTryFallbacks(node.value.children);
   }
   return [];
 }
 
-function getPositionTryDeclaration(
-  node: csstree.Declaration,
-  rule?: csstree.Raw,
-): { order?: PositionTryOrder; options?: PositionTryObject[] } {
-  if (
-    isPositionTryDeclaration(node) &&
-    node.value.children.first &&
-    rule?.value
-  ) {
+function getPositionTryDeclaration(node: csstree.Declaration): {
+  order?: PositionTryOrder;
+  options?: PositionTryObject[];
+} {
+  if (isPositionTryDeclaration(node) && node.value.children.first) {
     let order: PositionTryOrder | undefined;
     // get potential order
     const firstName = (node.value.children.first as csstree.Identifier).name;
@@ -536,15 +525,8 @@ function getPositionTryDeclaration(
   return {};
 }
 
-function getPositionTryOrderDeclaration(
-  node: csstree.Declaration,
-  rule?: csstree.Raw,
-) {
-  if (
-    isPositionTryOrderDeclaration(node) &&
-    node.value.children.first &&
-    rule?.value
-  ) {
+function getPositionTryOrderDeclaration(node: csstree.Declaration) {
+  if (isPositionTryOrderDeclaration(node) && node.value.children.first) {
     return {
       order: (node.value.children.first as csstree.Identifier)
         .name as PositionTryOrder,
@@ -553,19 +535,16 @@ function getPositionTryOrderDeclaration(
   return {};
 }
 
-export function getPositionFallbackValues(
-  node: csstree.Declaration,
-  rule?: csstree.Raw,
-): { order?: PositionTryOrder; options?: PositionTryObject[] } {
-  const { order, options } = getPositionTryDeclaration(node, rule);
+export function getPositionFallbackValues(node: csstree.Declaration): {
+  order?: PositionTryOrder;
+  options?: PositionTryObject[];
+} {
+  const { order, options } = getPositionTryDeclaration(node);
   if (order || options) {
     return { order, options };
   }
-  const { order: orderDeclaration } = getPositionTryOrderDeclaration(
-    node,
-    rule,
-  );
-  const optionsNames = getPositionTryOptionsDeclaration(node, rule);
+  const { order: orderDeclaration } = getPositionTryOrderDeclaration(node);
+  const optionsNames = getPositionTryFallbacksDeclaration(node);
   if (orderDeclaration || optionsNames) {
     return { order: orderDeclaration, options: optionsNames };
   }

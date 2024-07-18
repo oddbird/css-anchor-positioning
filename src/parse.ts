@@ -503,12 +503,12 @@ export async function parseCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const rule = this.rule?.prelude as csstree.Raw | undefined;
-        // Parse `position-try-fallbacks` declaration
-        const { order, options } = getPositionFallbackValues(node, rule);
         const selector = rule?.value;
         if (!selector) return;
+        // Parse `position-try-fallbacks` declaration
+        const { order, options } = getPositionFallbackValues(node);
         const anchorPosition: AnchorPosition = {};
-        if (order && selector) {
+        if (order) {
           anchorPosition.order = order;
         }
         options?.forEach((tryObject) => {
@@ -578,15 +578,14 @@ export async function parseCSS(styleData: StyleData[]) {
             changed = true;
           }
         });
-        if (selector && Object.keys(anchorPosition).length > 0) {
+        if (Object.keys(anchorPosition).length > 0) {
           if (validPositions[selector]) {
             if (anchorPosition.order) {
               validPositions[selector].order = anchorPosition.order;
             }
             if (anchorPosition.fallbacks) {
-              if (!validPositions[selector].fallbacks)
-                validPositions[selector].fallbacks = [];
-              validPositions[selector].fallbacks?.push(
+              validPositions[selector].fallbacks ??= [];
+              validPositions[selector].fallbacks.push(
                 ...anchorPosition.fallbacks,
               );
             }
