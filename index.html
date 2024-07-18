@@ -24,15 +24,18 @@
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
+    <link rel="stylesheet" href="/position-anchor.css" />
     <link rel="stylesheet" href="/position-fallback.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
+    <link rel="stylesheet" href="/anchor-name-list.css" />
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
     <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
+    <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-added.css" />
     <style>
       #my-anchor-style-tag {
@@ -93,12 +96,12 @@
           rel="noopener noreferrer"
           >WPT examples</a
         >
-        <a
+        <!-- <a
           href="https://anchor-position-wpt.netlify.app/"
           target="_blank"
           rel="noopener noreferrer"
           >WPT results</a
-        >
+        > -->
         <a
           href="https://w3c.github.io/csswg-drafts/css-anchor-position/"
           target="_blank"
@@ -176,6 +179,19 @@
           >.
         </li>
       </ul>
+      <p>
+        <strong>Note: </strong>This polyfill was implemented against an early
+        version of the spec, and updates were paused to allow the syntax to
+        solidify. Now that browsers are working on implementation, we would like
+        to bring it up to date, and welcome
+        <a
+          href="https://github.com/oddbird/css-anchor-positioning"
+          target="_blank"
+          rel="noopener noreferrer"
+          >code contributions</a
+        >
+        and <a href="#sponsor">financial support</a> to make that happen.
+      </p>
     </section>
     <section id="anchor-positioning" class="demo-item">
       <h2>
@@ -298,6 +314,51 @@
   bottom: anchor(top);
 }</code></pre>
     </section>
+    <section id="position-anchor" class="demo-item">
+      <h2>
+        <a href="#position-anchor" aria-hidden="true">🔗</a>
+        Positioning with <code>anchor()</code> [
+        <code>position-anchor</code> property]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-position-anchor-a" class="anchor">Anchor A</div>
+        <div id="my-position-target-a" class="target">Target A</div>
+        <div id="my-position-anchor-b" class="anchor">Anchor B</div>
+        <div id="my-position-target-b" class="target">Target B</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Targets are positioned at the top right corner of
+        their respective Anchors.
+      </p>
+      <pre><code class="language-html"
+>&lt;div id="my-position-anchor-a" class="anchor"&gt;Anchor A&lt;/div&gt;
+&lt;div id="my-position-target-a" class="target"&gt;Target A&lt;/div&gt;
+&lt;div id="my-position-anchor-b" class="anchor"&gt;Anchor B&lt;/div&gt;
+&lt;div id="my-position-target-b" class="target"&gt;Target B&lt;/div&gt;</code>
+
+<code class="language-css"
+>#my-position-target-a {
+  position-anchor: --my-position-anchor-a;
+}
+
+#my-position-target-b {
+  position-anchor: --my-position-anchor-b;
+}
+
+.target {
+  position: absolute;
+  bottom: anchor(top);
+  left: anchor(right);
+}
+
+#my-position-anchor-a {
+  anchor-name: --my-position-anchor-a;
+}
+
+#my-position-anchor-b {
+  anchor-name: --my-position-anchor-b;
+}</code></pre>
+    </section>
     <section id="anchor-positioning-popover" class="demo-item">
       <h2>
         <a href="#anchor-positioning-popover" aria-hidden="true">🔗</a>
@@ -376,6 +437,11 @@
         </div>
       </div>
       <div class="note">
+        <p>
+          <strong>Note: </strong>The <code>@position-fallback</code> syntax has
+          been replaced in the spec, and will be deprecated in the next version
+          of this Polyfill.
+        </p>
         <p>
           With polyfill applied, the following positions are attempted in order:
         </p>
@@ -663,6 +729,68 @@
   top: anchor(--my-anchor-update bottom);
 }</code></pre>
     </section>
+    <section id="anchor-name-list" class="demo-item">
+      <h2>
+        <a href="#anchor-name-list" aria-hidden="true">🔗</a>
+        Use a list of anchor names
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-name-list" class="anchor">Anchor</div>
+        <div id="my-target-name-list-a" class="target">Target A</div>
+        <div id="my-target-name-list-b" class="target">Target B</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target A is positioned at Anchor's top left
+        corner. Target B is positioned at Anchor's bottom right corner.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-name-list {
+  anchor-name: --my-anchor-name-a, --my-anchor-name-b;
+}
+
+#my-target-name-list-a {
+  position: absolute;
+  right: anchor(--my-anchor-name-a left);
+  bottom: anchor(--my-anchor-name-a top);
+}
+
+#my-target-name-list-b {
+  position: absolute;
+  left: anchor(--my-anchor-name-b right);
+  top: anchor(--my-anchor-name-b bottom);
+}
+</code></pre>
+    </section>
+    <section id="anchor-absolute" class="demo-item">
+      <h2>
+        <a href="#anchor-absolute" aria-hidden="true">🔗</a>
+        Absolutely positioned anchor
+      </h2>
+      <div style="position: relative; height: 150px" class="demo-elements">
+        <div id="my-anchor-absolute-one" class="anchor">Anchor one</div>
+        <div id="my-target-absolute-one" class="target">Target one</div>
+        <div id="my-anchor-absolute-two" class="anchor">Anchor two</div>
+        <div id="my-target-absolute-two" class="target">Target two</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target one is positioned at the bottom right
+        corner of Anchor one. Target two is positioned at the bottom right
+        corner of Anchor two.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-absolute-one,
+#my-anchor-absolute-two {
+  position: absolute;
+  anchor-name: --my-anchor-absolute;
+}
+
+#my-target-absolute-one,
+#my-target-absolute-two {
+  position: absolute;
+  top: anchor(--my-anchor-absolute bottom);
+  left: anchor(--my-anchor-absolute right);
+}</code></pre>
+    </section>
     <section id="anchor-added" class="demo-item">
       <h2>
         <a href="#anchor-added" aria-hidden="true">🔗</a>
@@ -722,6 +850,29 @@
   left: anchor(--my-anchor-added right);
   top: anchor(--my-anchor-added top);
 }</code></pre>
+    </section>
+    <section id="sponsor">
+      <h2>Sponsor OddBird's OSS Work</h2>
+      <p>
+        At OddBird, we love contributing to the languages & tools developers
+        rely on. We're currently working on polyfills for new Popover & Anchor
+        Positioning functionality, as well as CSS specifications for functions,
+        mixins, and responsive typography. Help us keep this work sustainable
+        and centered on your needs as a developer! We display sponsor logos and
+        avatars on our
+        <a
+          href="https://www.oddbird.net/polyfill/#open-source-sponsors"
+          target="_blank"
+          rel="noopener noreferrer"
+          >website</a
+        >.
+      </p>
+      <a
+        href="https://github.com/sponsors/oddbird"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Sponsor OddBird's OSS Work</a
+      >
     </section>
     <footer>
       <p>

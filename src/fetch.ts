@@ -1,14 +1,7 @@
 import { nanoid } from 'nanoid/non-secure';
 
 import { INLINE_STYLES_ID_ATTR } from './constants.js';
-
-export interface StyleData {
-  el: HTMLElement;
-  css: string;
-  url?: URL;
-  changed?: boolean;
-  original: string;
-}
+import { type StyleData } from './utils.js';
 
 export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
   return Boolean(

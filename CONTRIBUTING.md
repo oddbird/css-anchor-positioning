@@ -1,4 +1,4 @@
-# Contributing to CSS Anchor Positioning
+# Contributing to the CSS Anchor Positioning Polyfill
 
 Ideas, issues, and pull-requests are welcome!
 
@@ -13,18 +13,30 @@ Ideas, issues, and pull-requests are welcome!
 
 Please follow the [OddBird Code of Conduct](https://www.oddbird.net/conduct/).
 
+## How it works
+
+At a high level, the CSS Anchor Positioning Polyfill parses all relevant CSS on
+the page, and finds any uses of CSS Anchor Positioning syntax (e.g. `anchor()`,
+`anchor-name`, `anchor-size()`, `position-try`, `@position-try`, etc.). It
+replaces each use of `anchor()` with a unique CSS custom property. It then
+determines pixel values for each CSS custom property based on the individual
+`anchor()` usage (that is, the anchor element, target element, anchor side, and
+inset property it's applied to), and sets those values on the root element of
+the document. This allows the CSS cascade to determine which styles actually
+apply to which elements on the page.
+
 ## Development
 
 - Clone the repository.
-- Install dependencies: `yarn install`.
-- Start dev server: `yarn serve`. Visit `localhost:3000`.
+- Install dependencies: `npm install`.
+- Start dev server: `npm run serve`. Visit `localhost:3000`.
 
 ## Code style
 
 JS code is formatted with prettier, and CSS is formatted with stylelint.
 
-- Lint: `yarn lint:ci`
-- Format & lint: `yarn lint`
+- Lint: `npm run lint:ci`
+- Format & lint: `npm run lint`
 
 We recommend setting up your IDE to automatically format code for you.
 
@@ -32,11 +44,11 @@ We recommend setting up your IDE to automatically format code for you.
 
 Unit tests and end-to-end tests are available in the `tests/` folder.
 
-- Run all tests: `yarn test`
-- Run unit tests: `yarn test:unit`
+- Run all tests: `npm run test`
+- Run unit tests: `npm run test:unit`
 - Run end-to-end tests:
   - Configure Playwright (this step is only required once or when the version of
     `@playwright/test` changes in package.json):
     `npx playwright install --with-deps`
-  - Run tests (Chromium only): `yarn test:e2e`
-  - Run tests (Chromium, Firefox & Webkit): `yarn test:e2e:ci`
+  - Run tests (Chromium only): `npm run test:e2e`
+  - Run tests (Chromium, Firefox & Webkit): `npm run test:e2e:ci`

@@ -1,28 +1,30 @@
 import {
   autoUpdate,
   detectOverflow,
-  MiddlewareState,
+  type MiddlewareState,
   platform,
   type Rect,
 } from '@floating-ui/dom';
 
+import { cascadeCSS } from './cascade.js';
 import { POLYFILL_ID_ATTR, TARGET_STYLE_ATTR } from './constants.js';
-import { fetchCSS, StyleData } from './fetch.js';
+import { fetchCSS } from './fetch.js';
 import {
-  AnchorFunction,
-  AnchorFunctionDeclaration,
+  type AnchorFunction,
+  type AnchorFunctionDeclaration,
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
   getCSSPropertyValue,
-  InsetProperty,
+  type InsetProperty,
   isInsetProp,
   isSizingProp,
   parseCSS,
-  SizingProperty,
-  TryBlock,
+  type SizingProperty,
+  type TryBlock,
 } from './parse.js';
 import { replaceLink, transformCSS } from './transform.js';
+import { type StyleData } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -439,12 +441,17 @@ export async function polyfill(animationFrame?: boolean) {
   // fetch CSS from stylesheet and inline style
   styleData = await fetchCSS();
 
+  // pre parse CSS styles that we need to cascade
+  const cascadeCausedChanges = await cascadeCSS(styleData);
+  if (cascadeCausedChanges) {
+    styleData = await transformCSS(styleData);
+  }
   // parse CSS
   const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // update source code
-    await transformCSS(styleData, inlineStyles);
+    await transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
     cleanups = await position(rules, useAnimationFrame);

@@ -51,7 +51,7 @@ describe('transformCSS', () => {
     ];
     const inlineStyles = new Map();
     inlineStyles.set(div, { '--foo': '--bar' });
-    const promise = transformCSS(styleData, inlineStyles);
+    const promise = transformCSS(styleData, inlineStyles, true);
     link = document.querySelector('link') as HTMLLinkElement;
     link.dispatchEvent(new Event('load'));
     await promise;

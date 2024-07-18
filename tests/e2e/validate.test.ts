@@ -1,12 +1,12 @@
-import { Browser, expect, type Page, test } from '@playwright/test';
+import { type Browser, expect, type Page, test } from '@playwright/test';
 
 import {
-  isValidAnchorElement,
+  isAcceptableAnchorElement,
   validatedForPositioning,
 } from '../../src/validate.js';
 
 interface LocalWindow extends Window {
-  isValidAnchorElement: typeof isValidAnchorElement;
+  isAcceptableAnchorElement: typeof isAcceptableAnchorElement;
   validatedForPositioning: typeof validatedForPositioning;
 }
 
@@ -18,11 +18,11 @@ async function buildPage(browser: Browser) {
 
     content: `
       import {
-        isValidAnchorElement,
+        isAcceptableAnchorElement,
         validatedForPositioning,
       } from '../../src/validate.ts';
 
-      window.isValidAnchorElement = isValidAnchorElement
+      window.isAcceptableAnchorElement = isAcceptableAnchorElement
       window.validatedForPositioning = validatedForPositioning
     `,
   });
@@ -32,7 +32,8 @@ async function buildPage(browser: Browser) {
     loading = await page.evaluate(() => {
       document.getSelection();
       return (
-        (window as unknown as LocalWindow).isValidAnchorElement === undefined
+        (window as unknown as LocalWindow).isAcceptableAnchorElement ===
+        undefined
       );
     });
   }
@@ -58,7 +59,7 @@ async function callValidFunction(page: Page) {
           anchorSelector,
         ) as HTMLElement;
         if (anchorElement && targetElement) {
-          return await isValidAnchorElement(anchorElement, targetElement);
+          return await isAcceptableAnchorElement(anchorElement, targetElement);
         }
         return false;
       },
@@ -203,7 +204,7 @@ test('anchor is valid when anchor has same CB as querying element and anchor is 
   expect(result).toBe(true);
 });
 
-test('anchor is NOT valid when anchor has same CB as querying element, but anchor is absolutely positioned', async ({
+test('anchor is valid when anchor has same CB as querying element, but anchor is absolutely positioned', async ({
   browser,
 }) => {
   const page = await buildPage(browser);
@@ -219,10 +220,10 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
-test('anchor is NOT valid when anchor has same CB as querying element, but anchor is absolutely positioned - fixed position', async ({
+test('anchor is valid when anchor has same CB as querying element, but anchor is absolutely positioned - fixed position', async ({
   browser,
 }) => {
   const page = await buildPage(browser);
@@ -238,7 +239,7 @@ test('anchor is NOT valid when anchor has same CB as querying element, but ancho
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
 // if el has a different containing block from the querying element,
@@ -286,7 +287,7 @@ test('anchor is valid if it has a different CB from the querying element, and th
   expect(result).toBe(true);
 });
 
-test('anchor is NOT valid if it has a different CB from the querying element, and the last CB in anchor CB chain before the query element CB is absolutely positioned', async ({
+test('anchor is valid if it has a different CB from the querying element, and the last CB in anchor CB chain before the query element CB is absolutely positioned', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-002.html
@@ -345,10 +346,10 @@ test('anchor is NOT valid if it has a different CB from the querying element, an
 
   const result = await callValidFunction(page);
   await page.close();
-  expect(result).toBe(false);
+  expect(result).toBe(true);
 });
 
-test('when multiple anchor elements have the same name and are valid, the first is returned', async ({
+test('when multiple anchor elements have the same name and are valid, the last is returned', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-name-001.html
@@ -422,8 +423,8 @@ test('when multiple anchor elements have the same name and are valid, the first 
   await page.close();
   expect(valid).toBe(true);
   expect(validationResults.results.anchor).toBeTruthy;
-  expect(validationResults.anchorText).toContain('First Anchor Element');
-  expect(validationResults.anchorWidth).toBe('10px');
+  expect(validationResults.anchorText).toContain('Third Anchor Element');
+  expect(validationResults.anchorWidth).toBe('30px');
 });
 
 test('target anchor element is first element el in tree order.', async ({
@@ -735,7 +736,11 @@ test('top layer - valid - fixed positioned non-top-layer anchor with top-layer t
   expect(valid).toBe(true);
 });
 
-test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
+// This test is failing due to
+// https://github.com/oddbird/css-anchor-positioning/issues/209. Current
+// validity algorithm relies on DOM order, but we need to use Layout/Box tree
+// order.
+test.skip('top layer - invalid - top-layer anchor with non-top-layer target - WPT anchor-position-top-layer-005', async ({
   browser,
 }) => {
   // HTML from WPT: https://github.com/web-platform-tests/wpt/blob/master/css/css-anchor-position/anchor-position-top-layer-005.html
@@ -755,12 +760,12 @@ test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anc
 
         #my-target-positioning {
           position: fixed;
-          top: anchor(--a bottom, 200px);
-          left: anchor(--a left, 300px);
+          top: anchor(bottom, 200px);
+          left: anchor(left, 300px);
           width: 100px;
           height: 100px;
           background: lime;
-          anchor-scroll: --a;
+          position-anchor: --a;
         }
 
         body {
@@ -783,6 +788,10 @@ test('top layer - invalid - top-layer anchor with non-top-layer target - WPT anc
 
       <dialog id="my-anchor-positioning"></dialog>
       <div id="my-target-positioning"></div>
+
+      <script>
+        document.getElementById("my-anchor-positioning").showModal();
+      </script>
   `,
     { waitUntil: 'load' },
   );

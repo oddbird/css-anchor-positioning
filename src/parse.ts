@@ -2,12 +2,15 @@ import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
 import { POLYFILL_ID_ATTR, TARGET_STYLE_ATTR } from './constants.js';
-import { StyleData } from './fetch.js';
+import {
+  type DeclarationWithValue,
+  generateCSS,
+  getAST,
+  getDeclarationValue,
+  POSITION_ANCHOR_PROPERTY,
+  type StyleData,
+} from './utils.js';
 import { validatedForPositioning } from './validate.js';
-
-interface DeclarationWithValue extends csstree.Declaration {
-  value: csstree.Value;
-}
 
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
@@ -250,6 +253,12 @@ export function isBoxAlignmentProp(
   return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
 }
 
+export function isPositionAnchorDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-anchor';
+}
+
 function parseAnchorFn(
   node: csstree.FunctionNode,
   replaceCss?: boolean,
@@ -264,7 +273,7 @@ function parseAnchorFn(
   const args: csstree.CssNode[] = [];
   node.children.toArray().forEach((child) => {
     if (foundComma) {
-      fallbackValue = `${fallbackValue}${csstree.generate(child)}`;
+      fallbackValue = `${fallbackValue}${generateCSS(child)}`;
       return;
     }
     if (child.type === 'Operator' && child.value === ',') {
@@ -336,13 +345,15 @@ function parseAnchorFn(
 function getAnchorNameData(node: csstree.CssNode, rule?: csstree.Raw) {
   if (
     isAnchorNameDeclaration(node) &&
-    node.value.children.first &&
+    !node.value.children.isEmpty &&
     rule?.value
   ) {
-    const name = (node.value.children.first as csstree.Identifier).name;
-    return { name, selector: rule.value };
+    return node.value.children.map((item) => {
+      const { name } = item as csstree.Identifier;
+      return { name, selector: rule.value };
+    });
   }
-  return {};
+  return [];
 }
 
 let anchorNames: AnchorNames = {};
@@ -374,7 +385,7 @@ function getAnchorFunctionData(
 ) {
   if ((isAnchorFunction(node) || isAnchorSizeFunction(node)) && declaration) {
     if (declaration.property.startsWith('--')) {
-      const original = csstree.generate(declaration.value);
+      const original = generateCSS(declaration.value);
       const data = parseAnchorFn(node, true);
       // Store the original anchor function so that we can restore it later
       customPropOriginals[data.uuid] = original;
@@ -400,7 +411,7 @@ function getPositionFallbackDeclaration(
   rule?: csstree.Raw,
 ) {
   if (isFallbackDeclaration(node) && node.value.children.first && rule?.value) {
-    const name = (node.value.children.first as csstree.Identifier).name;
+    const name = getDeclarationValue(node);
     return { name, selector: rule.value };
   }
   return {};
@@ -424,7 +435,7 @@ function getPositionFallbackRules(node: csstree.Atrule) {
         const tryBlock: TryBlock = {
           uuid: `${name}-try-${nanoid(12)}`,
           declarations: Object.fromEntries(
-            declarations.map((d) => [d.property, csstree.generate(d.value)]),
+            declarations.map((d) => [d.property, generateCSS(d.value)]),
           ),
         };
         tryBlocks.push(tryBlock);
@@ -447,24 +458,23 @@ async function getAnchorEl(
   const customPropName = anchorObj.customPropName;
   if (targetEl && !anchorName) {
     const anchorAttr = targetEl.getAttribute('anchor');
-    if (customPropName) {
+    const positionAnchorProperty = getCSSPropertyValue(
+      targetEl,
+      POSITION_ANCHOR_PROPERTY,
+    );
+
+    if (positionAnchorProperty) {
+      anchorName = positionAnchorProperty;
+    } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     } else if (anchorAttr) {
-      return await validatedForPositioning(targetEl, [`#${anchorAttr}`]);
+      return await validatedForPositioning(targetEl, [
+        `#${CSS.escape(anchorAttr)}`,
+      ]);
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
   return await validatedForPositioning(targetEl, anchorSelectors);
-}
-
-function getAST(cssText: string) {
-  const ast = csstree.parse(cssText, {
-    parseAtrulePrelude: false,
-    parseRulePrelude: false,
-    parseCustomProperty: true,
-  });
-
-  return ast;
 }
 
 export async function parseCSS(styleData: StyleData[]) {
@@ -546,7 +556,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -558,17 +568,18 @@ export async function parseCSS(styleData: StyleData[]) {
       const rule = this.rule?.prelude as csstree.Raw | undefined;
 
       // Parse `anchor-name` declaration
-      const { name: anchorName, selector: anchorSelector } = getAnchorNameData(
-        node,
-        rule,
+      const anchorNameData = getAnchorNameData(node, rule);
+      anchorNameData.forEach(
+        ({ name: anchorName, selector: anchorSelector }) => {
+          if (anchorName && anchorSelector) {
+            if (anchorNames[anchorName]) {
+              anchorNames[anchorName].push(anchorSelector);
+            } else {
+              anchorNames[anchorName] = [anchorSelector];
+            }
+          }
+        },
       );
-      if (anchorName && anchorSelector) {
-        if (anchorNames[anchorName]) {
-          anchorNames[anchorName].push(anchorSelector);
-        } else {
-          anchorNames[anchorName] = [anchorSelector];
-        }
-      }
 
       // Parse `anchor()` function
       const {
@@ -593,7 +604,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -669,7 +680,7 @@ export async function parseCSS(styleData: StyleData[]) {
             // now being re-assigned to another custom property...
             const uuid = `${child.name}-anchor-${nanoid(12)}`;
             // Store the original declaration so that we can restore it later
-            const original = csstree.generate(declaration.value);
+            const original = generateCSS(declaration.value);
             customPropOriginals[uuid] = original;
             // Store a mapping of the new property to the original property
             // name, as well as the unique uuid(s) temporarily used to replace
@@ -693,7 +704,7 @@ export async function parseCSS(styleData: StyleData[]) {
       });
       if (changed) {
         // Update CSS
-        styleObj.css = csstree.generate(ast);
+        styleObj.css = generateCSS(ast);
         styleObj.changed = true;
       }
     }
@@ -850,7 +861,7 @@ export async function parseCSS(styleData: StyleData[]) {
     });
     if (changed) {
       // Update CSS
-      styleObj.css = csstree.generate(ast);
+      styleObj.css = generateCSS(ast);
       styleObj.changed = true;
     }
   }
@@ -883,9 +894,10 @@ export async function parseCSS(styleData: StyleData[]) {
                   property: `${this.declaration.property}-${propUuid}`,
                   value: {
                     type: 'Raw',
-                    value: csstree
-                      .generate(this.declaration.value)
-                      .replace(`var(${child.name})`, `var(${value})`),
+                    value: generateCSS(this.declaration.value).replace(
+                      `var(${child.name})`,
+                      `var(${value})`,
+                    ),
                   },
                 });
                 changed = true;
@@ -904,7 +916,7 @@ export async function parseCSS(styleData: StyleData[]) {
       });
       if (changed) {
         // Update CSS
-        styleObj.css = csstree.generate(ast);
+        styleObj.css = generateCSS(ast);
         styleObj.changed = true;
       }
     }

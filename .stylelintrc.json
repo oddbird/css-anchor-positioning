@@ -6,6 +6,7 @@
       true,
       { "ignoreAtRules": ["position-fallback", "try"] }
     ],
+    "declaration-block-no-redundant-longhand-properties": null,
     "function-no-unknown": [
       true,
       { "ignoreFunctions": ["anchor", "anchor-size"] }
@@ -13,7 +14,11 @@
     "property-no-unknown": [
       true,
       {
-        "ignoreProperties": ["anchor-name", "position-fallback"]
+        "ignoreProperties": [
+          "anchor-name",
+          "position-anchor",
+          "position-fallback"
+        ]
       }
     ]
   }

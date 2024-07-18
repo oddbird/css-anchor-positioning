@@ -1,5 +1,5 @@
 import { INLINE_STYLES_ID_ATTR } from './constants.js';
-import { type StyleData } from './fetch.js';
+import { type StyleData } from './utils.js';
 
 export async function replaceLink(
   el: HTMLLinkElement,
@@ -32,15 +32,18 @@ export async function replaceLink(
 export async function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
+  cleanup = false,
 ) {
+  const updatedStyleData: StyleData[] = [];
   styleData.forEach(async (data) => {
-    const { el, css, changed } = data;
+    const { el, css, changed, original } = data;
+    const updatedObject: StyleData = { el, css, changed: false, original };
     if (changed) {
       if (el.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el.tagName.toLowerCase() === 'link') {
-        data.el = await replaceLink(el as HTMLLinkElement, css);
+        updatedObject.el = await replaceLink(el as HTMLLinkElement, css);
       } else if (el.hasAttribute(INLINE_STYLES_ID_ATTR)) {
         // Handle inline styles
         const attr = el.getAttribute(INLINE_STYLES_ID_ATTR);
@@ -61,8 +64,10 @@ export async function transformCSS(
       }
     }
     // Remove no-longer-needed data-attribute
-    if (el.hasAttribute(INLINE_STYLES_ID_ATTR)) {
+    if (cleanup && el.hasAttribute(INLINE_STYLES_ID_ATTR)) {
       el.removeAttribute(INLINE_STYLES_ID_ATTR);
     }
+    updatedStyleData.push(updatedObject);
   });
+  return updatedStyleData;
 }

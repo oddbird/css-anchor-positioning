@@ -1,6 +1,6 @@
 import { POLYFILL_ID_ATTR } from '../../src/constants.js';
-import { type StyleData } from '../../src/fetch.js';
-import { AnchorPositions, parseCSS } from '../../src/parse.js';
+import { type AnchorPositions, parseCSS } from '../../src/parse.js';
+import { POSITION_ANCHOR_PROPERTY, type StyleData } from '../../src/utils.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
@@ -161,6 +161,123 @@ describe('parseCSS', () => {
       },
     };
 
+    expect(rules).toEqual(expected);
+  });
+
+  it('parses `position-anchor` on different selector', async () => {
+    document.body.innerHTML = `
+    <div style="position: relative">
+      <div id="my-anchor"></div>
+      <div id="my-target-1" class="my-targets"></div>
+      <div id="my-target-2" class="my-targets"></div>
+    </div>`;
+    const css = `
+      #my-target-1 {
+        top: anchor(bottom);
+      }
+      #my-target-2 {
+        bottom: anchor(top);
+      }
+      .my-targets {
+        position: absolute;
+        position-anchor: --my-anchor;
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+      }
+      #my-anchor {
+        anchor-name: --my-anchor;
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected = {
+      '#my-target-1': {
+        declarations: {
+          top: [
+            {
+              anchorName: undefined,
+              anchorEl: document.getElementById('my-anchor'),
+              targetEl: document.getElementById('my-target-1'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+      '#my-target-2': {
+        declarations: {
+          bottom: [
+            {
+              anchorName: undefined,
+              anchorEl: document.getElementById('my-anchor'),
+              targetEl: document.getElementById('my-target-2'),
+              anchorSide: 'top',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+    expect(rules).toEqual(expected);
+  });
+
+  it('parses `position-anchor` declared multiple times', async () => {
+    document.body.innerHTML = `
+    <div style="position: relative">
+      <div id="my-anchor"></div>
+      <div id="my-target-1"></div>
+      <div id="my-target-2"></div>
+    </div>`;
+    const css = `
+      #my-target-1 {
+        top: anchor(bottom);
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+        position-anchor: --my-anchor;
+        position: absolute;
+      }
+      #my-target-2 {
+        bottom: anchor(top);
+        position-anchor: --my-anchor;
+        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+        position: absolute;
+      }
+      #my-anchor {
+        anchor-name: --my-anchor;
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected = {
+      '#my-target-1': {
+        declarations: {
+          top: [
+            {
+              anchorName: undefined,
+              anchorEl: document.getElementById('my-anchor'),
+              targetEl: document.getElementById('my-target-1'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+      '#my-target-2': {
+        declarations: {
+          bottom: [
+            {
+              anchorName: undefined,
+              anchorEl: document.getElementById('my-anchor'),
+              targetEl: document.getElementById('my-target-2'),
+              anchorSide: 'top',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
     expect(rules).toEqual(expected);
   });
 
@@ -342,6 +459,66 @@ describe('parseCSS', () => {
     expect(rules).toEqual(expected);
   });
 
+  it('parses `anchor-name` with a list of names', async () => {
+    document.body.innerHTML =
+      '<div style="position: relative"><div id="my-anchor-name-list"></div><div id="my-target-name-list-a"></div><div id="my-target-name-list-b"></div></div>';
+    const css = getSampleCSS('anchor-name-list');
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected = {
+      '#my-target-name-list-a': {
+        declarations: {
+          right: [
+            {
+              anchorSide: 'left',
+              anchorEl: document.getElementById('my-anchor-name-list'),
+              targetEl: document.getElementById('my-target-name-list-a'),
+              anchorName: '--my-anchor-name-a',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+          bottom: [
+            {
+              anchorSide: 'top',
+              anchorEl: document.getElementById('my-anchor-name-list'),
+              targetEl: document.getElementById('my-target-name-list-a'),
+              anchorName: '--my-anchor-name-a',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+      '#my-target-name-list-b': {
+        declarations: {
+          left: [
+            {
+              anchorSide: 'right',
+              anchorEl: document.getElementById('my-anchor-name-list'),
+              targetEl: document.getElementById('my-target-name-list-b'),
+              anchorName: '--my-anchor-name-b',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+          top: [
+            {
+              anchorSide: 'bottom',
+              anchorEl: document.getElementById('my-anchor-name-list'),
+              targetEl: document.getElementById('my-target-name-list-b'),
+              anchorName: '--my-anchor-name-b',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
+
   it('parses `anchor()` function (math)', async () => {
     document.body.innerHTML =
       '<div style="position: relative"><div id="my-target-math"></div><div id="my-anchor-math"></div></div>';
@@ -427,7 +604,7 @@ describe('parseCSS', () => {
             },
             {
               anchorName: '--anchor',
-              anchorEl: document.getElementById('a1'),
+              anchorEl: document.getElementById('a2'),
               targetEl: document.getElementById('t3'),
               anchorSide: 'bottom',
               fallbackValue: '0px',

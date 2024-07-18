@@ -3,7 +3,6 @@ name: Lint & Test
 on:
   push:
   pull_request:
-    types: [reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,26 +14,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
+          cache: npm
       - name: Install dependencies
         run: |
-          yarn install --immutable
+          npm install
           npx playwright install --with-deps
-      - run: yarn test:ci
+      - run: npm run test:ci
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
-          cache: yarn
+          cache: npm
       - name: Lint
         run: |
-          yarn install --immutable
-          yarn lint:ci
+          npm install
+          npm run lint:ci
