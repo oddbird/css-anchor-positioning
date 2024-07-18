@@ -444,7 +444,7 @@ export async function polyfill(animationFrame?: boolean) {
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = await cascadeCSS(styleData);
   if (cascadeCausedChanges) {
-    styleData = await transformCSS(styleData);
+    await transformCSS(styleData);
   }
   // parse CSS
   const { rules, inlineStyles } = await parseCSS(styleData);

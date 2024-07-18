@@ -34,16 +34,14 @@ export async function transformCSS(
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
   cleanup = false,
 ) {
-  const updatedStyleData: StyleData[] = [];
   styleData.forEach(async (data) => {
-    const { el, css, changed, original } = data;
-    const updatedObject: StyleData = { el, css, changed: false, original };
-    if (changed) {
+    const { el, css, changed, updated } = data;
+    if (changed && !updated) {
       if (el.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el.tagName.toLowerCase() === 'link') {
-        updatedObject.el = await replaceLink(el as HTMLLinkElement, css);
+        data.el = await replaceLink(el as HTMLLinkElement, css);
       } else if (el.hasAttribute(INLINE_STYLES_ID_ATTR)) {
         // Handle inline styles
         const attr = el.getAttribute(INLINE_STYLES_ID_ATTR);
@@ -62,12 +60,11 @@ export async function transformCSS(
           el.setAttribute('style', styles);
         }
       }
+      data.updated = true;
     }
     // Remove no-longer-needed data-attribute
     if (cleanup && el.hasAttribute(INLINE_STYLES_ID_ATTR)) {
       el.removeAttribute(INLINE_STYLES_ID_ATTR);
     }
-    updatedStyleData.push(updatedObject);
   });
-  return updatedStyleData;
 }

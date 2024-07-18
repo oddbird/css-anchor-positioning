@@ -31,6 +31,7 @@ export interface StyleData {
   url?: URL;
   changed?: boolean;
   original: string;
+  updated?: boolean;
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;
