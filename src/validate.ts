@@ -9,14 +9,19 @@ export interface PseudoElement extends VirtualElement {
   removeFakePseudoElement(): void;
 }
 
+/**
+  Like `document.querySelectorAll`, but if the selector has a pseudo-element
+  it will return a wrapper for the rest of the polyfill to use.
+*/
 function getAnchorsBySelectors(selectors: Selector[]) {
   const result: (HTMLElement | PseudoElement)[] = [];
 
   for (const { selector, elementPart, pseudoElementPart } of selectors) {
-    const is_before = pseudoElementPart === '::before';
-    const is_after = pseudoElementPart === '::after';
+    const isBefore = pseudoElementPart === '::before';
+    const isAfter = pseudoElementPart === '::after';
 
-    if (pseudoElementPart && !(is_before || is_after)) continue;
+    // Current we only support `::before` and `::after` pseudo-elements.
+    if (pseudoElementPart && !(isBefore || isAfter)) continue;
 
     const elements = Array.from(
       document.querySelectorAll<HTMLElement>(elementPart),
@@ -28,30 +33,34 @@ function getAnchorsBySelectors(selectors: Selector[]) {
     }
 
     for (const element of elements) {
+      // Floating UI needs `Element.getBoundingClientRect` to calculate the position for the anchored element,
+      // since there isn't a way to get it for pseudo-elements;
+      // we create a temporary "fake pseudo-element" that we use as reference.
       const computedStyle = getComputedStyle(element, pseudoElementPart);
       const fakePseudoElement = document.createElement('div');
-      const styleSheet = new CSSStyleSheet();
-      const originalStyles = Array.from(document.adoptedStyleSheets);
+      const sheet = document.createElement('style');
 
       fakePseudoElement.id = `fake-pseudo-element-${nanoid()}`;
 
+      // Copy styles from pseudo-element to the "fake pseudo-element", `.cssText` does not work on Firefox.
       for (const property of Array.from(computedStyle)) {
         const value = computedStyle.getPropertyValue(property);
         fakePseudoElement.style.setProperty(property, value);
       }
 
-      styleSheet.insertRule(
-        `#${fakePseudoElement.id}::before { content: ${computedStyle.content}; }`,
-      );
-      styleSheet.insertRule(`${selector} { display: none !important; }`);
+      // For the `content` property, since normal elements don't have it,
+      // we add the content to a pseudo-element of the "fake pseudo-element".
+      sheet.textContent += `#${fakePseudoElement.id}${pseudoElementPart} { content: ${computedStyle.content}; }`;
+      // Hide the pseudo-element while the "fake pseudo-element" is visible.
+      sheet.textContent += `${selector} { display: none !important; }`;
 
-      document.adoptedStyleSheets = [...originalStyles, styleSheet];
+      document.head.append(sheet);
 
-      if (is_before) {
+      if (isBefore) {
         element.insertAdjacentElement('afterbegin', fakePseudoElement);
       }
 
-      if (is_after) {
+      if (isAfter) {
         element.insertAdjacentElement('beforeend', fakePseudoElement);
       }
 
@@ -60,17 +69,21 @@ function getAnchorsBySelectors(selectors: Selector[]) {
       const boundingClientRect = fakePseudoElement.getBoundingClientRect();
 
       result.push({
+        // Passed to `isAcceptableAnchorElement`.
         fakePseudoElement,
+        // For testing.
         computedStyle,
 
+        // For `validatedForPositioning` to "undo" the "fake pseudo-element" after it's been used.
         removeFakePseudoElement() {
           fakePseudoElement.remove();
-          document.adoptedStyleSheets = originalStyles;
+          sheet.remove();
         },
 
+        // https://floating-ui.com/docs/virtual-elements.
         getBoundingClientRect() {
           // NOTE this only takes into account viewport scroll and not any of it's parents,
-          // traversing parents on each scroll event would be expensive
+          // traversing parents on each scroll event would be expensive.
           return DOMRect.fromRect({
             x: boundingClientRect.x - (window.scrollX - startingScrollX),
             y: boundingClientRect.y - (window.scrollY - startingScrollY),

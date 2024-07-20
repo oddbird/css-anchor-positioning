@@ -21,6 +21,7 @@ html {
   --text: var(--gray-9);
   --note-color: var(--target);
   --page-margin: calc(var(--size-3) + 4vw);
+  --pseudo-element: var(--gray-0);
 
   background-color: var(--bg);
   color: var(--text);

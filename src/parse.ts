@@ -427,19 +427,11 @@ function getAnchorFunctionData(
   return {};
 }
 
-function getPositionFallbackDeclaration(
-  node: csstree.Declaration,
-  selectorList: csstree.SelectorList | undefined,
-) {
-  if (
-    isFallbackDeclaration(node) &&
-    node.value.children.first &&
-    selectorList
-  ) {
-    const name = getDeclarationValue(node);
-    return { name, selector: selectorList };
+function getPositionFallbackDeclaration(node: csstree.Declaration) {
+  if (isFallbackDeclaration(node) && node.value.children.first) {
+    return getDeclarationValue(node);
   }
-  return {};
+  return null;
 }
 
 function getPositionFallbackRules(node: csstree.Atrule) {
@@ -546,7 +538,7 @@ export async function parseCSS(styleData: StyleData[]) {
         const selectors = getSelectors(rule);
 
         // Parse `position-fallback` declaration
-        const { name } = getPositionFallbackDeclaration(node, rule);
+        const name = getPositionFallbackDeclaration(node);
         if (name && selectors.length && fallbacks[name]) {
           for (const { selector } of selectors) {
             validPositions[selector] = { fallbacks: fallbacks[name].blocks };
@@ -580,9 +572,9 @@ export async function parseCSS(styleData: StyleData[]) {
               },
             });
             // Store mapping of data-attr to target selector
-            for (const { selector } of selectors) {
-              fallbackTargets[dataAttr] = selector;
-            }
+            fallbackTargets[dataAttr] = selectors
+              .map(({ selector }) => selector)
+              .join(', ');
           }
           changed = true;
         }
@@ -684,7 +676,7 @@ export async function parseCSS(styleData: StyleData[]) {
           const declaration = this.declaration;
           const prop = declaration?.property;
           if (
-            rule?.children &&
+            rule?.children.isEmpty === false &&
             isVarFunction(node) &&
             declaration &&
             prop &&
@@ -755,7 +747,7 @@ export async function parseCSS(styleData: StyleData[]) {
         const prop = declaration?.property;
 
         if (
-          rule?.children &&
+          rule?.children.isEmpty === false &&
           isVarFunction(node) &&
           declaration &&
           prop &&
