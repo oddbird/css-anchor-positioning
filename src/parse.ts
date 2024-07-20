@@ -22,8 +22,8 @@ export interface Selector {
 }
 
 // `key` is the `anchor-name` value
-// `value` is an array of all element selectors with that anchor name
-type AnchorNames = Record<string, Selector[]>;
+// `value` is an array of all element selectors associated with that `anchor-name`
+type AnchorSelectors = Record<string, Selector[]>;
 
 export type InsetProperty =
   | 'top'
@@ -190,6 +190,12 @@ function isAnchorNameDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-name';
+}
+
+function isAnchorScopeDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'anchor-scope';
 }
 
 function isAnchorFunction(
@@ -377,7 +383,8 @@ function getSelectors(rule: csstree.SelectorList | undefined) {
     .toArray();
 }
 
-let anchorNames: AnchorNames = {};
+let anchorNames: AnchorSelectors = {};
+let anchorScopes: AnchorSelectors = {};
 // Mapping of custom property names, to anchor function data objects referenced
 // in their values
 let customPropAssignments: Record<string, AnchorFunction[]> = {};
@@ -395,6 +402,7 @@ let customPropReplacements: Record<string, Record<string, string>> = {};
 // to prevent data leaking from one call to another.
 function resetStores() {
   anchorNames = {};
+  anchorScopes = {};
   customPropAssignments = {};
   customPropOriginals = {};
   customPropReplacements = {};
@@ -599,6 +607,14 @@ export async function parseCSS(styleData: StyleData[]) {
         for (const name of getAnchorNames(node)) {
           anchorNames[name] ??= [];
           anchorNames[name].push(...selectors);
+        }
+      }
+
+      // Parse `anchor-scope` declarations
+      if (isAnchorScopeDeclaration(node) && selectors.length) {
+        for (const name of getAnchorNames(node)) {
+          anchorScopes[name] ??= [];
+          anchorScopes[name].push(...selectors);
         }
       }
 
