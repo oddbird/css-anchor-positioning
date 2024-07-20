@@ -723,4 +723,175 @@ describe('parseCSS', () => {
 
     expect(rules).toEqual({});
   });
+
+  it('respects `anchor-scope` when matching', async () => {
+    document.body.innerHTML = `
+      <ul>
+        <li><span class="positioned"></span></li>
+        <li><span class="positioned"></span></li>
+      </ul>
+    `;
+    const css = `
+      li {
+        anchor-name: --list-item;
+        anchor-scope: --list-item;
+      }
+      li .positioned {
+        position: absolute;
+        top: anchor(--list-item bottom);
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const li = document.querySelectorAll('li');
+    const positioned = document.querySelectorAll<HTMLElement>('.positioned');
+    const expected: AnchorPositions = {
+      'li .positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--list-item',
+              anchorEl: li[0],
+              targetEl: positioned[0],
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+            {
+              anchorName: '--list-item',
+              anchorEl: li[1],
+              targetEl: positioned[1],
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
+
+  it('does not allow matches from outside declaration `anchor-scope`', async () => {
+    document.body.innerHTML = `
+      <div class="scope anchor"></div>
+      <div class="positioned"></div>
+    `;
+    const css = `
+      .scope {
+        anchor-scope: all;
+      }
+      .anchor {
+        anchor-name: --scoped-anchor;
+      }
+      .positioned {
+        position: absolute;
+        top: anchor(--scoped-anchor bottom);
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected: AnchorPositions = {
+      '.positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--scoped-anchor',
+              anchorEl: null,
+              targetEl: document.querySelector<HTMLElement>('.positioned'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
+
+  it('does not allow matching anchor declared in an inner `anchor-scope`', async () => {
+    document.body.innerHTML = `
+      <div class="scope">
+        <div class="anchor"></div>
+        <div class="scope anchor"></div>
+        <div class="positioned"></div>
+      </div>
+    `;
+    const css = `
+      .scope {
+        anchor-scope: all;
+      }
+      .anchor {
+        anchor-name: --scoped-anchor;
+      }
+      .positioned {
+        position: absolute;
+        top: anchor(--scoped-anchor bottom);
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected: AnchorPositions = {
+      '.positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--scoped-anchor',
+              anchorEl: document.querySelector<HTMLElement>('.anchor'),
+              targetEl: document.querySelector<HTMLElement>('.positioned'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
+
+  it('does not allow matching anchor declared in an outer `anchor-scope`', async () => {
+    document.body.innerHTML = `
+      <div class="scope">
+        <div class="anchor"></div>
+        <div class="scope positioned"></div>
+      </div>
+    `;
+    const css = `
+      .scope {
+        anchor-scope: --scoped-anchor;
+      }
+      .anchor {
+        anchor-name: --scoped-anchor;
+      }
+      .positioned {
+        position: absolute;
+        top: anchor(--scoped-anchor bottom);
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected: AnchorPositions = {
+      '.positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--scoped-anchor',
+              anchorEl: null,
+              targetEl: document.querySelector<HTMLElement>('.positioned'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
 });

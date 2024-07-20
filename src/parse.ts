@@ -1029,5 +1029,5 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  return { rules: validPositions, inlineStyles };
+  return { rules: validPositions, inlineStyles, anchorScopes };
 }
