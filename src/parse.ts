@@ -25,6 +25,8 @@ export interface Selector {
 // `value` is an array of all element selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
 
+const ALL_SCOPE = 'all';
+
 export type InsetProperty =
   | 'top'
   | 'left'
@@ -497,11 +499,18 @@ async function getAnchorEl(
 
       return await validatedForPositioning(targetEl, [
         { selector: elementPart, elementPart },
-      ]);
+      ], []);
     }
   }
-  const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
-  return await validatedForPositioning(targetEl, anchorSelectors);
+  const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
+  const allScopeSelectors = anchorName ? anchorScopes[ALL_SCOPE] || [] : [];
+  const anchorNameScopeSelectors = anchorName
+    ? anchorScopes[anchorName] || []
+    : [];
+  return await validatedForPositioning(targetEl, anchorSelectors, [
+    ...allScopeSelectors,
+    ...anchorNameScopeSelectors,
+  ]);
 }
 
 export async function parseCSS(styleData: StyleData[]) {

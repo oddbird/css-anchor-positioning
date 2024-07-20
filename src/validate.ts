@@ -178,6 +178,7 @@ async function getContainingBlock(element: HTMLElement) {
 export async function isAcceptableAnchorElement(
   el: HTMLElement,
   queryEl: HTMLElement,
+  scopeSelectors: Selector[],
 ) {
   const elContainingBlock = await getContainingBlock(el);
   const queryElContainingBlock = await getContainingBlock(queryEl);
@@ -243,9 +244,24 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+  // el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+  if (getScope(el, scopeSelectors) !== getScope(queryEl, scopeSelectors)) {
+    return false;
+  }
 
   return true;
+}
+
+function getScope(element: Element, scopeSelectors: Selector[]) {
+  while (
+    !scopeSelectors.some((selector) => element.matches(selector.selector))
+  ) {
+    if (!element.parentElement) {
+      return null;
+    }
+    element = element.parentElement;
+  }
+  return element;
 }
 
 /**
@@ -257,6 +273,7 @@ export async function isAcceptableAnchorElement(
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
   anchorSelectors: Selector[],
+  scopeSelectors: Selector[],
 ) {
   if (
     !(
@@ -278,6 +295,7 @@ export async function validatedForPositioning(
       await isAcceptableAnchorElement(
         isPseudoElement ? anchor.fakePseudoElement : anchor,
         targetEl,
+        scopeSelectors,
       )
     ) {
       if (isPseudoElement) anchor.removeFakePseudoElement();
