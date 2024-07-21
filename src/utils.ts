@@ -31,4 +31,7 @@ export interface StyleData {
   changed?: boolean;
 }
 
-export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${nanoid(12)}`;
+export const SHIFTED_PROPERTIES: Record<string, string> = {
+  'position-anchor': `--position-anchor-${nanoid(12)}`,
+  'anchor-scope': `--anchor-scope-${nanoid(12)}`,
+};

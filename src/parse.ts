@@ -6,7 +6,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
-  POSITION_ANCHOR_PROPERTY,
+  SHIFTED_PROPERTIES,
   type StyleData,
 } from './utils.js';
 import { type PseudoElement, validatedForPositioning } from './validate.js';
@@ -25,7 +25,10 @@ export interface Selector {
 // `value` is an array of all element selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
 
-const ALL_SCOPE = 'all';
+export const enum AnchorScopeValue {
+  All = 'all',
+  None = 'none',
+}
 
 export type InsetProperty =
   | 'top'
@@ -184,7 +187,9 @@ type Fallbacks = Record<
   }
 >;
 
-function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
+export function isDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
 
@@ -264,12 +269,6 @@ export function isBoxAlignmentProp(
   property: string,
 ): property is BoxAlignmentProperty {
   return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
-}
-
-export function isPositionAnchorDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-anchor';
 }
 
 function parseAnchorFn(
@@ -487,7 +486,7 @@ async function getAnchorEl(
     const anchorAttr = targetEl.getAttribute('anchor');
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
-      POSITION_ANCHOR_PROPERTY,
+      SHIFTED_PROPERTIES['position-anchor'],
     );
 
     if (positionAnchorProperty) {
@@ -497,20 +496,27 @@ async function getAnchorEl(
     } else if (anchorAttr) {
       const elementPart = `#${CSS.escape(anchorAttr)}`;
 
-      return await validatedForPositioning(targetEl, [
-        { selector: elementPart, elementPart },
-      ], []);
+      return await validatedForPositioning(
+        targetEl,
+        null,
+        [{ selector: elementPart, elementPart }],
+        [],
+      );
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
-  const allScopeSelectors = anchorName ? anchorScopes[ALL_SCOPE] || [] : [];
+  const allScopeSelectors = anchorName
+    ? anchorScopes[AnchorScopeValue.All] || []
+    : [];
   const anchorNameScopeSelectors = anchorName
     ? anchorScopes[anchorName] || []
     : [];
-  return await validatedForPositioning(targetEl, anchorSelectors, [
-    ...allScopeSelectors,
-    ...anchorNameScopeSelectors,
-  ]);
+  return await validatedForPositioning(
+    targetEl,
+    anchorName || null,
+    anchorSelectors,
+    [...allScopeSelectors, ...anchorNameScopeSelectors],
+  );
 }
 
 export async function parseCSS(styleData: StyleData[]) {

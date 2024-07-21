@@ -1,5 +1,5 @@
 import { type AnchorPositions, parseCSS } from '../../src/parse.js';
-import { POSITION_ANCHOR_PROPERTY, type StyleData } from '../../src/utils.js';
+import { SHIFTED_PROPERTIES, type StyleData } from '../../src/utils.js';
 import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
 
 describe('parseCSS', () => {
@@ -180,7 +180,7 @@ describe('parseCSS', () => {
       .my-targets {
         position: absolute;
         position-anchor: --my-anchor;
-        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
       }
       #my-anchor {
         anchor-name: --my-anchor;
@@ -231,14 +231,14 @@ describe('parseCSS', () => {
     const css = `
       #my-target-1 {
         top: anchor(bottom);
-        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
         position-anchor: --my-anchor;
         position: absolute;
       }
       #my-target-2 {
         bottom: anchor(top);
         position-anchor: --my-anchor;
-        ${POSITION_ANCHOR_PROPERTY}: --my-anchor;
+        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
         position: absolute;
       }
       #my-anchor {
@@ -735,6 +735,7 @@ describe('parseCSS', () => {
       li {
         anchor-name: --list-item;
         anchor-scope: --list-item;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: --list-item;
       }
       li .positioned {
         position: absolute;
@@ -781,6 +782,7 @@ describe('parseCSS', () => {
     const css = `
       .scope {
         anchor-scope: all;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: all;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -823,6 +825,7 @@ describe('parseCSS', () => {
     const css = `
       .scope {
         anchor-scope: all;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: all;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -864,6 +867,7 @@ describe('parseCSS', () => {
     const css = `
       .scope {
         anchor-scope: --scoped-anchor;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: --scoped-anchor;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -882,6 +886,48 @@ describe('parseCSS', () => {
             {
               anchorName: '--scoped-anchor',
               anchorEl: null,
+              targetEl: document.querySelector<HTMLElement>('.positioned'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
+
+  it('should respect cascade when determining `anchor-scope`', async () => {
+    document.body.innerHTML = `
+      <div class="scope anchor"></div>
+      <div class="positioned"></div>
+    `;
+    const css = `
+      .scope {
+        anchor-scope: --scoped-anchor;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: --scoped-anchor;
+      }
+      .anchor {
+        anchor-name: --scoped-anchor;
+        anchor-scope: none;
+        ${SHIFTED_PROPERTIES['anchor-scope']}: none;
+      }
+      .positioned {
+        position: absolute;
+        top: anchor(--scoped-anchor bottom);
+      }
+    `;
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected = {
+      '.positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--scoped-anchor',
+              anchorEl: document.querySelector<HTMLElement>('.anchor'),
               targetEl: document.querySelector<HTMLElement>('.positioned'),
               anchorSide: 'bottom',
               fallbackValue: '0px',

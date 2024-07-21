@@ -1,22 +1,21 @@
 import * as csstree from 'css-tree';
 
-import { isPositionAnchorDeclaration } from './parse.js';
+import { isDeclaration } from './parse.js';
 import {
   generateCSS,
   getAST,
   getDeclarationValue,
-  POSITION_ANCHOR_PROPERTY,
+  SHIFTED_PROPERTIES,
   type StyleData,
 } from './utils.js';
 
-// Move `position-anchor` declaration to cascadable `--position-anchor`
-// property.
+// Shift property declarations custom properties which are subject to cascade and inheritance.
 function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
-  if (isPositionAnchorDeclaration(node) && block) {
+  if (isDeclaration(node) && SHIFTED_PROPERTIES[node.property] && block) {
     block.children.appendData({
       type: 'Declaration',
       important: false,
-      property: POSITION_ANCHOR_PROPERTY,
+      property: SHIFTED_PROPERTIES[node.property],
       value: {
         type: 'Raw',
         value: getDeclarationValue(node),
