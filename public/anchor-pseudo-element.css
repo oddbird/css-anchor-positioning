@@ -1,0 +1,13 @@
+#my-anchor-pseudo-element::before {
+  content: '::before';
+  margin-right: 1ch;
+  background-color: var(--pseudo-element);
+  anchor-name: --my-anchor-pseudo-element;
+}
+
+#my-target-pseudo-element {
+  position: absolute;
+  position-anchor: --my-anchor-pseudo-element;
+  top: anchor(bottom);
+  left: anchor(right);
+}

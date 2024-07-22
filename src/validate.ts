@@ -1,6 +1,102 @@
-import { platform } from '@floating-ui/dom';
+import { platform, type VirtualElement } from '@floating-ui/dom';
+import { nanoid } from 'nanoid/non-secure';
 
-import { getCSSPropertyValue } from './parse.js';
+import { getCSSPropertyValue, type Selector } from './parse.js';
+
+export interface PseudoElement extends VirtualElement {
+  fakePseudoElement: HTMLElement;
+  computedStyle: CSSStyleDeclaration;
+  removeFakePseudoElement(): void;
+}
+
+/**
+  Like `document.querySelectorAll`, but if the selector has a pseudo-element
+  it will return a wrapper for the rest of the polyfill to use.
+*/
+function getAnchorsBySelectors(selectors: Selector[]) {
+  const result: (HTMLElement | PseudoElement)[] = [];
+
+  for (const { selector, elementPart, pseudoElementPart } of selectors) {
+    const isBefore = pseudoElementPart === '::before';
+    const isAfter = pseudoElementPart === '::after';
+
+    // Current we only support `::before` and `::after` pseudo-elements.
+    if (pseudoElementPart && !(isBefore || isAfter)) continue;
+
+    const elements = Array.from(
+      document.querySelectorAll<HTMLElement>(elementPart),
+    );
+
+    if (!pseudoElementPart) {
+      result.push(...elements);
+      continue;
+    }
+
+    for (const element of elements) {
+      // Floating UI needs `Element.getBoundingClientRect` to calculate the position for the anchored element,
+      // since there isn't a way to get it for pseudo-elements;
+      // we create a temporary "fake pseudo-element" that we use as reference.
+      const computedStyle = getComputedStyle(element, pseudoElementPart);
+      const fakePseudoElement = document.createElement('div');
+      const sheet = document.createElement('style');
+
+      fakePseudoElement.id = `fake-pseudo-element-${nanoid()}`;
+
+      // Copy styles from pseudo-element to the "fake pseudo-element", `.cssText` does not work on Firefox.
+      for (const property of Array.from(computedStyle)) {
+        const value = computedStyle.getPropertyValue(property);
+        fakePseudoElement.style.setProperty(property, value);
+      }
+
+      // For the `content` property, since normal elements don't have it,
+      // we add the content to a pseudo-element of the "fake pseudo-element".
+      sheet.textContent += `#${fakePseudoElement.id}${pseudoElementPart} { content: ${computedStyle.content}; }`;
+      // Hide the pseudo-element while the "fake pseudo-element" is visible.
+      sheet.textContent += `${selector} { display: none !important; }`;
+
+      document.head.append(sheet);
+
+      if (isBefore) {
+        element.insertAdjacentElement('afterbegin', fakePseudoElement);
+      }
+
+      if (isAfter) {
+        element.insertAdjacentElement('beforeend', fakePseudoElement);
+      }
+
+      const startingScrollY = window.scrollY;
+      const startingScrollX = window.scrollX;
+      const boundingClientRect = fakePseudoElement.getBoundingClientRect();
+
+      result.push({
+        // Passed to `isAcceptableAnchorElement`.
+        fakePseudoElement,
+        // For testing.
+        computedStyle,
+
+        // For `validatedForPositioning` to "undo" the "fake pseudo-element" after it's been used.
+        removeFakePseudoElement() {
+          fakePseudoElement.remove();
+          sheet.remove();
+        },
+
+        // https://floating-ui.com/docs/virtual-elements.
+        getBoundingClientRect() {
+          // NOTE this only takes into account viewport scroll and not any of it's parents,
+          // traversing parents on each scroll event would be expensive.
+          return DOMRect.fromRect({
+            x: boundingClientRect.x - (window.scrollX - startingScrollX),
+            y: boundingClientRect.y - (window.scrollY - startingScrollY),
+            width: boundingClientRect.width,
+            height: boundingClientRect.height,
+          });
+        },
+      });
+    }
+  }
+
+  return result;
+}
 
 // Given an element and CSS style property,
 // checks if the CSS property equals a certain value
@@ -134,8 +230,6 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is either an element or a part-like pseudo-element.
-
   // el is not in the skipped contents of another element.
   {
     let currentParent = el.parentElement;
@@ -162,7 +256,7 @@ export async function isAcceptableAnchorElement(
  */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
-  anchorSelectors: string[],
+  anchorSelectors: Selector[],
 ) {
   if (
     !(
@@ -174,14 +268,20 @@ export async function validatedForPositioning(
     return null;
   }
 
-  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
-    anchorSelectors.join(', '),
-  );
+  const anchorElements = getAnchorsBySelectors(anchorSelectors);
 
   for (let index = anchorElements.length - 1; index >= 0; index--) {
     const anchor = anchorElements[index];
+    const isPseudoElement = 'fakePseudoElement' in anchor;
 
-    if (await isAcceptableAnchorElement(anchor, targetEl)) {
+    if (
+      await isAcceptableAnchorElement(
+        isPseudoElement ? anchor.fakePseudoElement : anchor,
+        targetEl,
+      )
+    ) {
+      if (isPseudoElement) anchor.removeFakePseudoElement();
+
       return anchor;
     }
   }
