@@ -9,6 +9,20 @@ export interface PseudoElement extends VirtualElement {
   removeFakePseudoElement(): void;
 }
 
+function findFirstScrollingElement(element: HTMLElement) {
+  let currentElement: HTMLElement | null = element;
+
+  while (currentElement) {
+    if (hasStyle(currentElement, 'overflow', 'scroll')) {
+      return currentElement;
+    }
+
+    currentElement = currentElement.parentElement;
+  }
+
+  return currentElement;
+}
+
 /**
   Like `document.querySelectorAll`, but if the selector has a pseudo-element
   it will return a wrapper for the rest of the polyfill to use.
@@ -64,15 +78,32 @@ function getAnchorsBySelectors(selectors: Selector[]) {
         element.insertAdjacentElement('beforeend', fakePseudoElement);
       }
 
-      const startingScrollY = window.scrollY;
-      const startingScrollX = window.scrollX;
       const boundingClientRect = fakePseudoElement.getBoundingClientRect();
+
+      const { scrollY: startingScrollY, scrollX: startingScrollX } = globalThis;
+      let firstScrollingElement: {
+        scrollTop: number;
+        scrollLeft: number;
+      } | null = findFirstScrollingElement(element);
+
+      // Avoid doubled scroll
+      if (firstScrollingElement === document.documentElement) {
+        firstScrollingElement = null;
+      }
+
+      firstScrollingElement ??= { scrollTop: 0, scrollLeft: 0 };
+
+      const { scrollTop: startingScrollTop, scrollLeft: startingScrollLeft } =
+        firstScrollingElement;
 
       result.push({
         // Passed to `isAcceptableAnchorElement`.
         fakePseudoElement,
         // For testing.
         computedStyle,
+
+        // For https://floating-ui.com/docs/autoupdate#ancestorscroll to work on `VirtualElement`s.
+        contextElement: element,
 
         // For `validatedForPositioning` to "undo" the "fake pseudo-element" after it's been used.
         removeFakePseudoElement() {
@@ -82,11 +113,19 @@ function getAnchorsBySelectors(selectors: Selector[]) {
 
         // https://floating-ui.com/docs/virtual-elements.
         getBoundingClientRect() {
-          // NOTE this only takes into account viewport scroll and not any of it's parents,
-          // traversing parents on each scroll event would be expensive.
+          const { scrollY, scrollX } = globalThis;
+          const { scrollTop, scrollLeft } = firstScrollingElement;
+
           return DOMRect.fromRect({
-            x: boundingClientRect.x - (window.scrollX - startingScrollX),
-            y: boundingClientRect.y - (window.scrollY - startingScrollY),
+            y:
+              boundingClientRect.y +
+              (startingScrollY - scrollY) +
+              (startingScrollTop - scrollTop),
+            x:
+              boundingClientRect.x +
+              (startingScrollX - scrollX) +
+              (startingScrollLeft - scrollLeft),
+
             width: boundingClientRect.width,
             height: boundingClientRect.height,
           });
