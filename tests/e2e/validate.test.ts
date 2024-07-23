@@ -64,7 +64,12 @@ async function callValidFunction(page: Page) {
           anchorSelector.selector,
         ) as HTMLElement;
         if (anchorElement && targetElement) {
-          return await isAcceptableAnchorElement(anchorElement, targetElement);
+          return await isAcceptableAnchorElement(
+            anchorElement,
+            /* anchorName: */ null,
+            targetElement,
+            /* scopeSelector: */ null,
+          );
         }
         return false;
       },
@@ -412,9 +417,12 @@ test('when multiple anchor elements have the same name and are valid, the last i
       ) as HTMLElement;
 
       const validatedData = {} as Data;
-      const anchor = await validatedForPositioning(targetElement, [
-        anchorSelector,
-      ]).then((value) => value);
+      const anchor = await validatedForPositioning(
+        targetElement,
+        /* anchorName: */ null,
+        [anchorSelector],
+        /* scopeSelectors: */ [],
+      ).then((value) => value);
 
       validatedData.results = { anchor };
 
@@ -503,9 +511,12 @@ test('target anchor element is first element el in tree order.', async ({
       ) as HTMLElement;
 
       const validatedData = {} as Data;
-      const anchor = await validatedForPositioning(targetElement, [
-        anchorSelector,
-      ]).then((value) => value);
+      const anchor = await validatedForPositioning(
+        targetElement,
+        /* anchorName: */ null,
+        [anchorSelector],
+        /* scopeSelectors: */ [],
+      ).then((value) => value);
 
       validatedData.results = { anchor };
       if (anchor) {

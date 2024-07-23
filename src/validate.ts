@@ -1,7 +1,12 @@
 import { platform, type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
 
-import { getCSSPropertyValue, type Selector } from './parse.js';
+import {
+  AnchorScopeValue,
+  getCSSPropertyValue,
+  type Selector,
+} from './parse.js';
+import { SHIFTED_PROPERTIES } from './utils.js';
 
 export interface PseudoElement extends VirtualElement {
   fakePseudoElement: HTMLElement;
@@ -177,7 +182,9 @@ async function getContainingBlock(element: HTMLElement) {
  */
 export async function isAcceptableAnchorElement(
   el: HTMLElement,
+  anchorName: string | null,
   queryEl: HTMLElement,
+  scopeSelector: string | null,
 ) {
   const elContainingBlock = await getContainingBlock(el);
   const queryElContainingBlock = await getContainingBlock(queryEl);
@@ -243,9 +250,52 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+  // el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+  if (
+    anchorName &&
+    scopeSelector &&
+    getScope(el, anchorName, scopeSelector) !==
+      getScope(queryEl, anchorName, scopeSelector)
+  ) {
+    return false;
+  }
 
   return true;
+}
+
+function getScope(
+  element: HTMLElement,
+  anchorName: string,
+  scopeSelector: string,
+) {
+  while (!hasScope(element, anchorName, scopeSelector)) {
+    if (!element.parentElement) {
+      return null;
+    }
+    element = element.parentElement;
+  }
+  return element;
+}
+
+function hasScope(
+  element: HTMLElement,
+  anchorName: string,
+  scopeSelector: string,
+) {
+  // Unlike the real `anchor-scope`, our `--anchor-scope` custom property inherits.
+  // We check that the element matches the scope selector, so we can be guaranteed that the computed
+  // value we read was set explicitly, not inherited.
+  if (!element.matches(scopeSelector)) {
+    return false;
+  }
+  // Just because the element matches a rule that sets the scope we're looking for, does not mean
+  // that that rule is actually selected in the cascade. We read our `--anchor-scope` custom
+  // property to confirm which rule is actually applied.
+  const computedScope = getCSSPropertyValue(
+    element,
+    SHIFTED_PROPERTIES['anchor-scope'],
+  );
+  return computedScope === anchorName || computedScope === AnchorScopeValue.All;
 }
 
 /**
@@ -256,7 +306,9 @@ export async function isAcceptableAnchorElement(
  */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
+  anchorName: string | null,
   anchorSelectors: Selector[],
+  scopeSelectors: Selector[],
 ) {
   if (
     !(
@@ -270,6 +322,9 @@ export async function validatedForPositioning(
 
   const anchorElements = getAnchorsBySelectors(anchorSelectors);
 
+  // TODO: handle anchor-scope for pseudo-elements.
+  const scopeSelector = scopeSelectors.map((s) => s.selector).join(',') || null;
+
   for (let index = anchorElements.length - 1; index >= 0; index--) {
     const anchor = anchorElements[index];
     const isPseudoElement = 'fakePseudoElement' in anchor;
@@ -277,7 +332,9 @@ export async function validatedForPositioning(
     if (
       await isAcceptableAnchorElement(
         isPseudoElement ? anchor.fakePseudoElement : anchor,
+        anchorName,
         targetEl,
+        scopeSelector,
       )
     ) {
       if (isPseudoElement) anchor.removeFakePseudoElement();

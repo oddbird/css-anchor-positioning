@@ -6,7 +6,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
-  POSITION_ANCHOR_PROPERTY,
+  SHIFTED_PROPERTIES,
   type StyleData,
 } from './utils.js';
 import { type PseudoElement, validatedForPositioning } from './validate.js';
@@ -22,8 +22,13 @@ export interface Selector {
 }
 
 // `key` is the `anchor-name` value
-// `value` is an array of all element selectors with that anchor name
-type AnchorNames = Record<string, Selector[]>;
+// `value` is an array of all element selectors associated with that `anchor-name`
+type AnchorSelectors = Record<string, Selector[]>;
+
+export const enum AnchorScopeValue {
+  All = 'all',
+  None = 'none',
+}
 
 export type InsetProperty =
   | 'top'
@@ -182,7 +187,9 @@ type Fallbacks = Record<
   }
 >;
 
-function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
+export function isDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
 
@@ -190,6 +197,12 @@ function isAnchorNameDeclaration(
   node: csstree.CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-name';
+}
+
+function isAnchorScopeDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'anchor-scope';
 }
 
 function isAnchorFunction(
@@ -256,12 +269,6 @@ export function isBoxAlignmentProp(
   property: string,
 ): property is BoxAlignmentProperty {
   return BOX_ALIGNMENT_PROPS.includes(property as BoxAlignmentProperty);
-}
-
-export function isPositionAnchorDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-anchor';
 }
 
 function parseAnchorFn(
@@ -377,7 +384,8 @@ function getSelectors(rule: csstree.SelectorList | undefined) {
     .toArray();
 }
 
-let anchorNames: AnchorNames = {};
+let anchorNames: AnchorSelectors = {};
+let anchorScopes: AnchorSelectors = {};
 // Mapping of custom property names, to anchor function data objects referenced
 // in their values
 let customPropAssignments: Record<string, AnchorFunction[]> = {};
@@ -395,6 +403,7 @@ let customPropReplacements: Record<string, Record<string, string>> = {};
 // to prevent data leaking from one call to another.
 function resetStores() {
   anchorNames = {};
+  anchorScopes = {};
   customPropAssignments = {};
   customPropOriginals = {};
   customPropReplacements = {};
@@ -477,7 +486,7 @@ async function getAnchorEl(
     const anchorAttr = targetEl.getAttribute('anchor');
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
-      POSITION_ANCHOR_PROPERTY,
+      SHIFTED_PROPERTIES['position-anchor'],
     );
 
     if (positionAnchorProperty) {
@@ -487,13 +496,27 @@ async function getAnchorEl(
     } else if (anchorAttr) {
       const elementPart = `#${CSS.escape(anchorAttr)}`;
 
-      return await validatedForPositioning(targetEl, [
-        { selector: elementPart, elementPart },
-      ]);
+      return await validatedForPositioning(
+        targetEl,
+        null,
+        [{ selector: elementPart, elementPart }],
+        [],
+      );
     }
   }
-  const anchorSelectors = anchorName ? anchorNames[anchorName] ?? [] : [];
-  return await validatedForPositioning(targetEl, anchorSelectors);
+  const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
+  const allScopeSelectors = anchorName
+    ? anchorScopes[AnchorScopeValue.All] || []
+    : [];
+  const anchorNameScopeSelectors = anchorName
+    ? anchorScopes[anchorName] || []
+    : [];
+  return await validatedForPositioning(
+    targetEl,
+    anchorName || null,
+    anchorSelectors,
+    [...allScopeSelectors, ...anchorNameScopeSelectors],
+  );
 }
 
 export async function parseCSS(styleData: StyleData[]) {
@@ -599,6 +622,14 @@ export async function parseCSS(styleData: StyleData[]) {
         for (const name of getAnchorNames(node)) {
           anchorNames[name] ??= [];
           anchorNames[name].push(...selectors);
+        }
+      }
+
+      // Parse `anchor-scope` declarations
+      if (isAnchorScopeDeclaration(node) && selectors.length) {
+        for (const name of getAnchorNames(node)) {
+          anchorScopes[name] ??= [];
+          anchorScopes[name].push(...selectors);
         }
       }
 
@@ -1004,5 +1035,5 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  return { rules: validPositions, inlineStyles };
+  return { rules: validPositions, inlineStyles, anchorScopes };
 }
