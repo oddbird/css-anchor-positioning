@@ -777,7 +777,13 @@
         Pseudo-element anchor
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-anchor-pseudo-element" class="anchor">Anchor</div>
+        <div class="scroll-container">
+          <div class="placefiller-above-anchor"></div>
+          <div class="placefiller-before-anchor"></div>
+          <span id="my-anchor-pseudo-element" class="anchor">Anchor</span>
+          <div class="placefiller-after-anchor"></div>
+        </div>
+
         <div id="my-target-pseudo-element" class="target">Target</div>
       </div>
       <p class="note">
