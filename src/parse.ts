@@ -2,6 +2,7 @@ import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
 import {
+  AnchorScopeValue,
   getCSSPropertyValue,
   type PseudoElement,
   type Selector,
@@ -11,6 +12,7 @@ import {
   generateCSS,
   getAST,
   getDeclarationValue,
+  isDeclaration,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -22,11 +24,6 @@ interface AtRuleRaw extends csstree.Atrule {
 // `key` is the `anchor-name` value
 // `value` is an array of all element selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
-
-export const enum AnchorScopeValue {
-  All = 'all',
-  None = 'none',
-}
 
 export type InsetProperty =
   | 'top'
@@ -184,12 +181,6 @@ type Fallbacks = Record<
     blocks: TryBlock[];
   }
 >;
-
-export function isDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration';
-}
 
 function isAnchorNameDeclaration(
   node: csstree.CssNode,

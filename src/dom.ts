@@ -1,19 +1,39 @@
 import { type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
-import { SHIFTED_PROPERTIES } from './utils.js';
+import { SHIFTED_PROPERTIES } from './cascade.js';
 
+/**
+ * Representation of a CSS selector that allows getting the element part and pseudo-element part.
+ */
 export interface Selector {
   selector: string;
   elementPart: string;
   pseudoElementPart?: string;
 }
 
+/**
+ * Used instead of an HTMLElement as a handle for pseudo-elements.
+ */
 export interface PseudoElement extends VirtualElement {
   fakePseudoElement: HTMLElement;
   computedStyle: CSSStyleDeclaration;
   removeFakePseudoElement(): void;
 }
 
+/**
+ * Possible values for `anchor-scope` (in addition any valid dashed identifier)
+ */
+export const enum AnchorScopeValue {
+  All = 'all',
+  None = 'none',
+}
+
+/**
+ * Gets the computed value of a CSS property for an element or pseudo-element.
+ *
+ * Note: values for properties that are not natively supported are *awlways* subject to CSS
+ * inheritance.
+ */
 export function getCSSPropertyValue(
   el: HTMLElement | PseudoElement,
   prop: string,
@@ -24,8 +44,12 @@ export function getCSSPropertyValue(
   return computedStyle.getPropertyValue(prop).trim();
 }
 
-// Given an element and CSS style property,
-// checks if the CSS property equals a certain value
+/**
+ * Checks whether a given element or pseudo-element has the given property value.
+ *
+ * Note: values for properties that are not natively supported are *awlways* subject to CSS
+ * inheritance.
+ */
 export function hasStyle(
   element: HTMLElement | PseudoElement,
   cssProperty: string,
@@ -34,6 +58,9 @@ export function hasStyle(
   return getCSSPropertyValue(element, cssProperty) === value;
 }
 
+/**
+ * Creates a DOM element to use in place of a pseudo-element.
+ */
 function createFakePseudoElement(
   element: HTMLElement,
   { selector, pseudoElementPart }: Selector,
@@ -67,6 +94,10 @@ function createFakePseudoElement(
   return { fakePseudoElement, sheet, computedStyle };
 }
 
+/**
+ * Finds the first scollable parent of the given element
+ * (or the element itself if the element is scrollable).
+ */
 function findFirstScrollingElement(element: HTMLElement) {
   let currentElement: HTMLElement | null = element;
 
@@ -81,6 +112,10 @@ function findFirstScrollingElement(element: HTMLElement) {
   return currentElement;
 }
 
+/**
+ * Gets the scroll position of the first scrollable parent
+ * (or the scoll position of the element itself, if it is scrollable).
+ */
 function getContainerScrollPosition(element: HTMLElement) {
   let containerScrollPosition: {
     scrollTop: number;
@@ -96,9 +131,9 @@ function getContainerScrollPosition(element: HTMLElement) {
 }
 
 /**
-  Like `document.querySelectorAll`, but if the selector has a pseudo-element
-  it will return a wrapper for the rest of the polyfill to use.
-*/
+ * Like `document.querySelectorAll`, but if the selector has a pseudo-element it will return a
+ * wrapper for the rest of the polyfill to use.
+ */
 export function getElementsBySelector(selector: Selector) {
   const { elementPart, pseudoElementPart } = selector;
   const result: (HTMLElement | PseudoElement)[] = [];
@@ -162,4 +197,42 @@ export function getElementsBySelector(selector: Selector) {
   }
 
   return result;
+}
+
+/**
+ * Checks whether the given element has the given anchor name, based on the element's computed
+ * style.
+ *
+ * Note: because our `--anchor-name` custom property inherits, this function should only be called
+ * for elements which are known to have an explicitly set value for `anchor-name`.
+ */
+export function hasAnchorName(
+  el: PseudoElement | HTMLElement,
+  anchorName: string | null,
+) {
+  const computedAnchorName = getCSSPropertyValue(el, 'anchor-name');
+  if (!anchorName) {
+    return !computedAnchorName;
+  }
+  return computedAnchorName
+    .split(',')
+    .map((name) => name.trim())
+    .includes(anchorName);
+}
+
+/**
+ * Checks whether the given element serves as a scope for the given anchor.
+ *
+ * Note: because our `--anchor-scope` custom property inherits, this function should only be called
+ * for elements which are known to have an explicitly set value for `anchor-scope`.
+ */
+export function hasAnchorScope(
+  el: PseudoElement | HTMLElement,
+  anchorName: string,
+) {
+  const computedAnchorScope = getCSSPropertyValue(el, 'anchor-scope');
+  return (
+    computedAnchorScope === anchorName ||
+    computedAnchorScope === AnchorScopeValue.All
+  );
 }

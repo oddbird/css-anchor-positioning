@@ -1,5 +1,4 @@
 import * as csstree from 'css-tree';
-import { nanoid } from 'nanoid/non-secure';
 
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
@@ -20,6 +19,12 @@ export function generateCSS(ast: csstree.CssNode) {
   });
 }
 
+export function isDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration';
+}
+
 export function getDeclarationValue(node: DeclarationWithValue) {
   return (node.value.children.first as csstree.Identifier).name;
 }
@@ -30,9 +35,3 @@ export interface StyleData {
   url?: URL;
   changed?: boolean;
 }
-
-export const SHIFTED_PROPERTIES: Record<string, string> = {
-  'position-anchor': `--position-anchor-${nanoid(12)}`,
-  'anchor-scope': `--anchor-scope-${nanoid(12)}`,
-  'anchor-name': `--anchor-name-${nanoid(12)}`,
-};

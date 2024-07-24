@@ -1,6 +1,10 @@
 import { type AnchorPositions, parseCSS } from '../../src/parse.js';
-import { SHIFTED_PROPERTIES, type StyleData } from '../../src/utils.js';
-import { getSampleCSS, sampleBaseCSS } from './../helpers.js';
+import { type StyleData } from '../../src/utils.js';
+import {
+  cascadeCSSForTest,
+  getSampleCSS,
+  sampleBaseCSS,
+} from './../helpers.js';
 
 describe('parseCSS', () => {
   afterAll(() => {
@@ -170,7 +174,7 @@ describe('parseCSS', () => {
       <div id="my-target-1" class="my-targets"></div>
       <div id="my-target-2" class="my-targets"></div>
     </div>`;
-    const css = `
+    const css = cascadeCSSForTest(`
       #my-target-1 {
         top: anchor(bottom);
       }
@@ -180,12 +184,11 @@ describe('parseCSS', () => {
       .my-targets {
         position: absolute;
         position-anchor: --my-anchor;
-        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
       }
       #my-anchor {
         anchor-name: --my-anchor;
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
@@ -228,23 +231,21 @@ describe('parseCSS', () => {
       <div id="my-target-1"></div>
       <div id="my-target-2"></div>
     </div>`;
-    const css = `
+    const css = cascadeCSSForTest(`
       #my-target-1 {
         top: anchor(bottom);
-        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
         position-anchor: --my-anchor;
         position: absolute;
       }
       #my-target-2 {
         bottom: anchor(top);
         position-anchor: --my-anchor;
-        ${SHIFTED_PROPERTIES['position-anchor']}: --my-anchor;
         position: absolute;
       }
       #my-anchor {
         anchor-name: --my-anchor;
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
@@ -284,7 +285,7 @@ describe('parseCSS', () => {
     document.body.innerHTML =
       '<div style="position: relative"><div id="f1"></div><div id="a2"></div></div>';
     const anchorEl = document.getElementById('a2');
-    const css = `
+    const css = cascadeCSSForTest(`
       #a1 {
         anchor-name: --my-anchor;
       }
@@ -295,7 +296,7 @@ describe('parseCSS', () => {
         position: absolute;
         top: anchor(--my-anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
@@ -569,7 +570,7 @@ describe('parseCSS', () => {
         <div id="t4" class="target"></div>
       </div>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       .anchor {
         anchor-name: --anchor;
       }
@@ -578,7 +579,7 @@ describe('parseCSS', () => {
         position: absolute;
         top: anchor(--anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {
@@ -731,17 +732,16 @@ describe('parseCSS', () => {
         <li><span class="positioned"></span></li>
       </ul>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       li {
         anchor-name: --list-item;
         anchor-scope: --list-item;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: --list-item;
       }
       li .positioned {
         position: absolute;
         top: anchor(--list-item bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const li = document.querySelectorAll('li');
@@ -779,10 +779,9 @@ describe('parseCSS', () => {
       <div class="scope anchor"></div>
       <div class="positioned"></div>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       .scope {
         anchor-scope: all;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: all;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -791,7 +790,7 @@ describe('parseCSS', () => {
         position: absolute;
         top: anchor(--scoped-anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected: AnchorPositions = {
@@ -822,10 +821,9 @@ describe('parseCSS', () => {
         <div class="positioned"></div>
       </div>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       .scope {
         anchor-scope: all;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: all;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -834,7 +832,7 @@ describe('parseCSS', () => {
         position: absolute;
         top: anchor(--scoped-anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected: AnchorPositions = {
@@ -864,10 +862,9 @@ describe('parseCSS', () => {
         <div class="scope positioned"></div>
       </div>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       .scope {
         anchor-scope: --scoped-anchor;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: --scoped-anchor;
       }
       .anchor {
         anchor-name: --scoped-anchor;
@@ -876,7 +873,7 @@ describe('parseCSS', () => {
         position: absolute;
         top: anchor(--scoped-anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected: AnchorPositions = {
@@ -904,21 +901,19 @@ describe('parseCSS', () => {
       <div class="scope anchor"></div>
       <div class="positioned"></div>
     `;
-    const css = `
+    const css = cascadeCSSForTest(`
       .scope {
         anchor-scope: --scoped-anchor;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: --scoped-anchor;
       }
       .anchor {
         anchor-name: --scoped-anchor;
         anchor-scope: none;
-        ${SHIFTED_PROPERTIES['anchor-scope']}: none;
       }
       .positioned {
         position: absolute;
         top: anchor(--scoped-anchor bottom);
       }
-    `;
+    `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const expected = {

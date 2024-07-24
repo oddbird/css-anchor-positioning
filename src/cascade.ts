@@ -1,32 +1,42 @@
 import * as csstree from 'css-tree';
+import { nanoid } from 'nanoid/non-secure';
 
-import { isDeclaration } from './parse.js';
-import {
-  generateCSS,
-  getAST,
-  getDeclarationValue,
-  SHIFTED_PROPERTIES,
-  type StyleData,
-} from './utils.js';
+import { generateCSS, getAST, isDeclaration, type StyleData } from './utils.js';
 
-// Shift property declarations custom properties which are subject to cascade and inheritance.
-function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
+/**
+ * Map of CSS property to CSS custom property that the property's value is shifted into.
+ * This is used to subject properties that are not yet natively supported to the CSS cascade and
+ * inheritance rules.
+ */
+export const SHIFTED_PROPERTIES: Record<string, string> = {
+  'position-anchor': `--position-anchor-${nanoid(12)}`,
+  'anchor-scope': `--anchor-scope-${nanoid(12)}`,
+  'anchor-name': `--anchor-name-${nanoid(12)}`,
+};
+
+/**
+ * Shift property declarations for properties that are not yet natively supported into custom
+ * properties.
+ */
+function shiftUnsupportedProperties(
+  node: csstree.CssNode,
+  block?: csstree.Block,
+) {
   if (isDeclaration(node) && SHIFTED_PROPERTIES[node.property] && block) {
     block.children.appendData({
-      type: 'Declaration',
-      important: false,
+      ...node,
       property: SHIFTED_PROPERTIES[node.property],
-      value: {
-        type: 'Raw',
-        value: getDeclarationValue(node),
-      },
     });
     return { updated: true };
   }
   return {};
 }
 
-export async function cascadeCSS(styleData: StyleData[]) {
+/**
+ * Update the given style data to enable cascading and inheritance of properties that are not yet
+ * natively supported.
+ */
+export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -34,7 +44,7 @@ export async function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
-        const { updated } = shiftPositionAnchorData(node, block);
+        const { updated } = shiftUnsupportedProperties(node, block);
         if (updated) {
           changed = true;
         }

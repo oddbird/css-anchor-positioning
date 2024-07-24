@@ -3,10 +3,11 @@ import { platform } from '@floating-ui/dom';
 import {
   getCSSPropertyValue,
   getElementsBySelector,
+  hasAnchorName,
+  hasAnchorScope,
   hasStyle,
   type Selector,
 } from './dom.js';
-import { AnchorScopeValue } from './parse.js';
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
@@ -167,31 +168,19 @@ function getScope(
   anchorName: string,
   scopeSelector: string,
 ) {
-  while (!hasScope(element, anchorName, scopeSelector)) {
+  // Unlike the real `anchor-scope`, our `--anchor-scope` custom property inherits.
+  // We first check that the element matches the scope selector, so we can be guaranteed that the
+  // computed value we read was set explicitly, not inherited. Then we verify that the specified
+  // anchor scope is actually the one applied by the CSS cascade.
+  while (
+    !(element.matches(scopeSelector) && hasAnchorScope(element, anchorName))
+  ) {
     if (!element.parentElement) {
       return null;
     }
     element = element.parentElement;
   }
   return element;
-}
-
-function hasScope(
-  element: HTMLElement,
-  anchorName: string,
-  scopeSelector: string,
-) {
-  // Unlike the real `anchor-scope`, our `--anchor-scope` custom property inherits.
-  // We check that the element matches the scope selector, so we can be guaranteed that the computed
-  // value we read was set explicitly, not inherited.
-  if (!element.matches(scopeSelector)) {
-    return false;
-  }
-  // Just because the element matches a rule that sets the scope we're looking for, does not mean
-  // that that rule is actually selected in the cascade. We read our `--anchor-scope` custom
-  // property to confirm which rule is actually applied.
-  const computedScope = getCSSPropertyValue(element, 'anchor-scope');
-  return computedScope === anchorName || computedScope === AnchorScopeValue.All;
 }
 
 /**
@@ -219,7 +208,11 @@ export async function validatedForPositioning(
   const anchorElements = anchorSelectors
     // Any element that matches a selector that sets the specified `anchor-name` could be a
     // potential match.
-    .flatMap(getElementsBySelector);
+    .flatMap(getElementsBySelector)
+    // Narrow down the potential match elements to just the ones whose computed `anchor-name`
+    // matches the specified one. This accounts for the `anchor-name` value that was actually
+    // applied by the CSS cascade.
+    .filter((el) => hasAnchorName(el, anchorName));
 
   // TODO: handle anchor-scope for pseudo-elements.
   const scopeSelector = scopeSelectors.map((s) => s.selector).join(',') || null;
