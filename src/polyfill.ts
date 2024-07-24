@@ -7,6 +7,7 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
+import { getCSSPropertyValue } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
   type AnchorFunction,
@@ -14,7 +15,6 @@ import {
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
-  getCSSPropertyValue,
   type InsetProperty,
   isInsetProp,
   isSizingProp,

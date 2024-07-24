@@ -1,9 +1,8 @@
 import { type Browser, expect, type Page, test } from '@playwright/test';
 
-import type { Selector } from '../../src/parse.js';
+import { type PseudoElement, type Selector } from '../../src/dom.js';
 import {
   isAcceptableAnchorElement,
-  type PseudoElement,
   validatedForPositioning,
 } from '../../src/validate.js';
 
