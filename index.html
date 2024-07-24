@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
+    <link rel="stylesheet" href="/anchor-media-query.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -801,6 +802,32 @@
   position-anchor: --my-anchor-pseudo-element;
   top: anchor(bottom);
   left: anchor(right);
+}</code></pre>
+    </section>
+    <section id="anchor-declared-in-media-query" class="demo-item">
+      <h2>
+        <a href="#anchor-declared-in-media-query" aria-hidden="true">🔗</a>
+        Anchor declared in media query
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-media-query" class="anchor">Anchor</div>
+        <div id="my-target-media-query" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at Anchor's bottom right
+        corner.
+      </p>
+      <pre><code class="language-css"
+>@media all {
+  #my-anchor-media-query {
+    anchor-name: --my-anchor-media-query;
+  }
+}
+
+#my-target-media-query {
+  position: absolute;
+  top: anchor(--my-anchor-media-query bottom);
+  left: anchor(--my-anchor-media-query right);
 }</code></pre>
     </section>
     <section id="sponsor">

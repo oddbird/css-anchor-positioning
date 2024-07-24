@@ -935,4 +935,43 @@ describe('parseCSS', () => {
 
     expect(rules).toEqual(expected);
   });
+
+  it('should respect cascade when determining `anchor-name`', async () => {
+    document.body.innerHTML = `
+      <div class="anchor"></div>
+      <div class="positioned"></div>
+    `;
+    const css = cascadeCSSForTest(`
+      .anchor {
+        anchor-name: --name;
+      }
+      .anchor {
+        anchor-name: --other-name;
+      }
+      .positioned {
+        position: absolute;
+        top: anchor(--name bottom);
+      }
+    `);
+    document.head.innerHTML = `<style>${css}</style>`;
+    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const expected = {
+      '.positioned': {
+        declarations: {
+          top: [
+            {
+              anchorName: '--name',
+              anchorEl: null,
+              targetEl: document.querySelector<HTMLElement>('.positioned'),
+              anchorSide: 'bottom',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+            },
+          ],
+        },
+      },
+    };
+
+    expect(rules).toEqual(expected);
+  });
 });
