@@ -1,9 +1,11 @@
 import { type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
+
 import { SHIFTED_PROPERTIES } from './cascade.js';
 
 /**
- * Representation of a CSS selector that allows getting the element part and pseudo-element part.
+ * Representation of a CSS selector that allows getting the element part and
+ * pseudo-element part.
  */
 export interface Selector {
   selector: string;
@@ -21,7 +23,8 @@ export interface PseudoElement extends VirtualElement {
 }
 
 /**
- * Possible values for `anchor-scope` (in addition any valid dashed identifier)
+ * Possible values for `anchor-scope`
+ * (in addition to any valid dashed identifier)
  */
 export const enum AnchorScopeValue {
   All = 'all',
@@ -31,8 +34,8 @@ export const enum AnchorScopeValue {
 /**
  * Gets the computed value of a CSS property for an element or pseudo-element.
  *
- * Note: values for properties that are not natively supported are *awlways* subject to CSS
- * inheritance.
+ * Note: values for properties that are not natively supported are *always*
+ * subject to CSS inheritance.
  */
 export function getCSSPropertyValue(
   el: HTMLElement | PseudoElement,
@@ -45,10 +48,11 @@ export function getCSSPropertyValue(
 }
 
 /**
- * Checks whether a given element or pseudo-element has the given property value.
+ * Checks whether a given element or pseudo-element has the given property
+ * value.
  *
- * Note: values for properties that are not natively supported are *awlways* subject to CSS
- * inheritance.
+ * Note: values for properties that are not natively supported are *always*
+ * subject to CSS inheritance.
  */
 export function hasStyle(
   element: HTMLElement | PseudoElement,
@@ -65,16 +69,18 @@ function createFakePseudoElement(
   element: HTMLElement,
   { selector, pseudoElementPart }: Selector,
 ) {
-  // Floating UI needs `Element.getBoundingClientRect` to calculate the position for the anchored element,
-  // since there isn't a way to get it for pseudo-elements;
-  // we create a temporary "fake pseudo-element" that we use as reference.
+  // Floating UI needs `Element.getBoundingClientRect` to calculate the position
+  // for the anchored element, since there isn't a way to get it for
+  // pseudo-elements; we create a temporary "fake pseudo-element" that we use as
+  // reference.
   const computedStyle = getComputedStyle(element, pseudoElementPart);
   const fakePseudoElement = document.createElement('div');
   const sheet = document.createElement('style');
 
   fakePseudoElement.id = `fake-pseudo-element-${nanoid()}`;
 
-  // Copy styles from pseudo-element to the "fake pseudo-element", `.cssText` does not work on Firefox.
+  // Copy styles from pseudo-element to the "fake pseudo-element", `.cssText`
+  // does not work on Firefox.
   for (const property of Array.from(computedStyle)) {
     const value = computedStyle.getPropertyValue(property);
     fakePseudoElement.style.setProperty(property, value);
@@ -95,7 +101,7 @@ function createFakePseudoElement(
 }
 
 /**
- * Finds the first scollable parent of the given element
+ * Finds the first scrollable parent of the given element
  * (or the element itself if the element is scrollable).
  */
 function findFirstScrollingElement(element: HTMLElement) {
@@ -114,7 +120,7 @@ function findFirstScrollingElement(element: HTMLElement) {
 
 /**
  * Gets the scroll position of the first scrollable parent
- * (or the scoll position of the element itself, if it is scrollable).
+ * (or the scroll position of the element itself, if it is scrollable).
  */
 function getContainerScrollPosition(element: HTMLElement) {
   let containerScrollPosition: {
@@ -131,8 +137,8 @@ function getContainerScrollPosition(element: HTMLElement) {
 }
 
 /**
- * Like `document.querySelectorAll`, but if the selector has a pseudo-element it will return a
- * wrapper for the rest of the polyfill to use.
+ * Like `document.querySelectorAll`, but if the selector has a pseudo-element it
+ * will return a wrapper for the rest of the polyfill to use.
  */
 export function getElementsBySelector(selector: Selector) {
   const { elementPart, pseudoElementPart } = selector;
@@ -171,10 +177,11 @@ export function getElementsBySelector(selector: Selector) {
         sheet.remove();
       },
 
-      // For https://floating-ui.com/docs/autoupdate#ancestorscroll to work on `VirtualElement`s.
+      // For https://floating-ui.com/docs/autoupdate#ancestorscroll to work on
+      // `VirtualElement`s.
       contextElement: element,
 
-      // https://floating-ui.com/docs/virtual-elements.
+      // https://floating-ui.com/docs/virtual-elements
       getBoundingClientRect() {
         const { scrollY, scrollX } = globalThis;
         const { scrollTop, scrollLeft } = containerScrollPosition;
@@ -200,11 +207,12 @@ export function getElementsBySelector(selector: Selector) {
 }
 
 /**
- * Checks whether the given element has the given anchor name, based on the element's computed
- * style.
+ * Checks whether the given element has the given anchor name, based on the
+ * element's computed style.
  *
- * Note: because our `--anchor-name` custom property inherits, this function should only be called
- * for elements which are known to have an explicitly set value for `anchor-name`.
+ * Note: because our `--anchor-name` custom property inherits, this function
+ * should only be called for elements which are known to have an explicitly set
+ * value for `anchor-name`.
  */
 export function hasAnchorName(
   el: PseudoElement | HTMLElement,
@@ -223,8 +231,9 @@ export function hasAnchorName(
 /**
  * Checks whether the given element serves as a scope for the given anchor.
  *
- * Note: because our `--anchor-scope` custom property inherits, this function should only be called
- * for elements which are known to have an explicitly set value for `anchor-scope`.
+ * Note: because our `--anchor-scope` custom property inherits, this function
+ * should only be called for elements which are known to have an explicitly set
+ * value for `anchor-scope`.
  */
 export function hasAnchorScope(
   el: PseudoElement | HTMLElement,

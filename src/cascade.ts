@@ -4,9 +4,9 @@ import { nanoid } from 'nanoid/non-secure';
 import { generateCSS, getAST, isDeclaration, type StyleData } from './utils.js';
 
 /**
- * Map of CSS property to CSS custom property that the property's value is shifted into.
- * This is used to subject properties that are not yet natively supported to the CSS cascade and
- * inheritance rules.
+ * Map of CSS property to CSS custom property that the property's value is
+ * shifted into. This is used to subject properties that are not yet natively
+ * supported to the CSS cascade and inheritance rules.
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = {
   'position-anchor': `--position-anchor-${nanoid(12)}`,
@@ -15,8 +15,8 @@ export const SHIFTED_PROPERTIES: Record<string, string> = {
 };
 
 /**
- * Shift property declarations for properties that are not yet natively supported into custom
- * properties.
+ * Shift property declarations for properties that are not yet natively
+ * supported into custom properties.
  */
 function shiftUnsupportedProperties(
   node: csstree.CssNode,
@@ -33,8 +33,8 @@ function shiftUnsupportedProperties(
 }
 
 /**
- * Update the given style data to enable cascading and inheritance of properties that are not yet
- * natively supported.
+ * Update the given style data to enable cascading and inheritance of properties
+ * that are not yet natively supported.
  */
 export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {

@@ -77,7 +77,8 @@ export const resolveLogicalSizeKeyword = (
 };
 
 // This should also check the writing-mode
-// See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
+// See:
+// https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
 // https://trello.com/c/KnqCnHx3
 export const getAxis = (position?: string) => {
   switch (position) {
@@ -344,8 +345,8 @@ async function applyPositionFallbacks(
       target,
       target,
       async () => {
-        // If this auto-update was triggered while the polyfill is already looping
-        // through the possible `@try` blocks, do not check again.
+        // If this auto-update was triggered while the polyfill is already
+        // looping through the possible `@try` blocks, do not check again.
         if (checking) {
           return;
         }
@@ -379,7 +380,8 @@ async function applyPositionFallbacks(
               padding: getMargins(target),
             },
           );
-          // If none of the sides overflow, use this `@try` block and stop loop...
+          // If none of the sides overflow, use this `@try` block and stop
+          // loop...
           if (Object.values(overflow).every((side) => side <= 0)) {
             checking = false;
             break;

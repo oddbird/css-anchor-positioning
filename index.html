@@ -810,24 +810,29 @@
         Anchor declared in media query
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-anchor-media-query" class="anchor">Anchor</div>
+        <div id="my-anchor-media-query" class="anchor">Screen Anchor</div>
+        <div id="my-print-anchor-media-query" class="anchor">Print Anchor</div>
         <div id="my-target-media-query" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target is positioned at Anchor's bottom right
-        corner.
+        With polyfill applied: Target and Screen Anchor's right and top edges
+        line up.
       </p>
       <pre><code class="language-css"
->@media all {
-  #my-anchor-media-query {
+>@media print {
+  #my-print-anchor-media-query {
     anchor-name: --my-anchor-media-query;
   }
 }
 
+#my-anchor-media-query {
+  anchor-name: --my-anchor-media-query;
+}
+
 #my-target-media-query {
   position: absolute;
-  top: anchor(--my-anchor-media-query bottom);
-  left: anchor(--my-anchor-media-query right);
+  top: anchor(--my-anchor-media-query top);
+  right: anchor(--my-anchor-media-query right);
 }</code></pre>
     </section>
     <section id="sponsor">

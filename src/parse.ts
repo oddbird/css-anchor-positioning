@@ -22,7 +22,7 @@ interface AtRuleRaw extends csstree.Atrule {
 }
 
 // `key` is the `anchor-name` value
-// `value` is an array of all element selectors associated with that `anchor-name`
+// `value` is an array of all selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
 
 export type InsetProperty =

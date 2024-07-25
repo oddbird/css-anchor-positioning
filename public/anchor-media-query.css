@@ -1,11 +1,15 @@
-@media all {
-  #my-anchor-media-query {
+@media print {
+  #my-print-anchor-media-query {
     anchor-name: --my-anchor-media-query;
   }
 }
 
+#my-anchor-media-query {
+  anchor-name: --my-anchor-media-query;
+}
+
 #my-target-media-query {
   position: absolute;
-  top: anchor(--my-anchor-media-query bottom);
-  left: anchor(--my-anchor-media-query right);
+  top: anchor(--my-anchor-media-query top);
+  right: anchor(--my-anchor-media-query right);
 }
