@@ -7,6 +7,7 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
+import { getCSSPropertyValue } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
   type AnchorFunction,
@@ -14,7 +15,6 @@ import {
   type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
-  getCSSPropertyValue,
   type InsetProperty,
   isInsetProp,
   isSizingProp,
@@ -77,7 +77,8 @@ export const resolveLogicalSizeKeyword = (
 };
 
 // This should also check the writing-mode
-// See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
+// See:
+// https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
 // https://trello.com/c/KnqCnHx3
 export const getAxis = (position?: string) => {
   switch (position) {
@@ -344,8 +345,8 @@ async function applyPositionFallbacks(
       target,
       target,
       async () => {
-        // If this auto-update was triggered while the polyfill is already looping
-        // through the possible `@try` blocks, do not check again.
+        // If this auto-update was triggered while the polyfill is already
+        // looping through the possible `@try` blocks, do not check again.
         if (checking) {
           return;
         }
@@ -379,7 +380,8 @@ async function applyPositionFallbacks(
               padding: getMargins(target),
             },
           );
-          // If none of the sides overflow, use this `@try` block and stop loop...
+          // If none of the sides overflow, use this `@try` block and stop
+          // loop...
           if (Object.values(overflow).every((side) => side <= 0)) {
             checking = false;
             break;

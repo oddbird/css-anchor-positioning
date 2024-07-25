@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
+    <link rel="stylesheet" href="/anchor-media-query.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -801,6 +802,37 @@
   position-anchor: --my-anchor-pseudo-element;
   top: anchor(bottom);
   left: anchor(right);
+}</code></pre>
+    </section>
+    <section id="anchor-declared-in-media-query" class="demo-item">
+      <h2>
+        <a href="#anchor-declared-in-media-query" aria-hidden="true">🔗</a>
+        Anchor declared in media query
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-media-query" class="anchor">Screen Anchor</div>
+        <div id="my-print-anchor-media-query" class="anchor">Print Anchor</div>
+        <div id="my-target-media-query" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target and Screen Anchor's right and top edges
+        line up.
+      </p>
+      <pre><code class="language-css"
+>@media print {
+  #my-print-anchor-media-query {
+    anchor-name: --my-anchor-media-query;
+  }
+}
+
+#my-anchor-media-query {
+  anchor-name: --my-anchor-media-query;
+}
+
+#my-target-media-query {
+  position: absolute;
+  top: anchor(--my-anchor-media-query top);
+  right: anchor(--my-anchor-media-query right);
 }</code></pre>
     </section>
     <section id="sponsor">

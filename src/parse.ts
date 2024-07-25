@@ -2,33 +2,28 @@ import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
 import {
+  AnchorScopeValue,
+  getCSSPropertyValue,
+  type PseudoElement,
+  type Selector,
+} from './dom.js';
+import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
   getDeclarationValue,
-  SHIFTED_PROPERTIES,
+  isDeclaration,
   type StyleData,
 } from './utils.js';
-import { type PseudoElement, validatedForPositioning } from './validate.js';
+import { validatedForPositioning } from './validate.js';
 
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }
 
-export interface Selector {
-  selector: string;
-  elementPart: string;
-  pseudoElementPart?: string;
-}
-
 // `key` is the `anchor-name` value
-// `value` is an array of all element selectors associated with that `anchor-name`
+// `value` is an array of all selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
-
-export const enum AnchorScopeValue {
-  All = 'all',
-  None = 'none',
-}
 
 export type InsetProperty =
   | 'top'
@@ -186,12 +181,6 @@ type Fallbacks = Record<
     blocks: TryBlock[];
   }
 >;
-
-export function isDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration';
-}
 
 function isAnchorNameDeclaration(
   node: csstree.CssNode,
@@ -472,10 +461,6 @@ function getPositionFallbackRules(node: csstree.Atrule) {
   return {};
 }
 
-export function getCSSPropertyValue(el: HTMLElement, prop: string) {
-  return getComputedStyle(el).getPropertyValue(prop).trim();
-}
-
 async function getAnchorEl(
   targetEl: HTMLElement | null,
   anchorObj: AnchorFunction,
@@ -486,7 +471,7 @@ async function getAnchorEl(
     const anchorAttr = targetEl.getAttribute('anchor');
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
-      SHIFTED_PROPERTIES['position-anchor'],
+      'position-anchor',
     );
 
     if (positionAnchorProperty) {
