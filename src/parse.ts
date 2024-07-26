@@ -540,9 +540,11 @@ export async function parseCSS(styleData: StyleData[]) {
     csstree.walk(ast, {
       visit: 'Declaration',
       enter(node) {
-        const rule = this.rule?.prelude as csstree.Raw | undefined;
-        const selector = rule?.value;
-        if (!selector) return;
+        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const selectors = getSelectors(rule);
+        if (!selectors.length) return;
+        // todo: better handle multiple selectors
+        const selector = selectors.map((s) => s.selector).join(',');
         // Parse `position-try-fallbacks` declaration
         const { order, options } = getPositionFallbackValues(node);
         const anchorPosition: AnchorPosition = {};
