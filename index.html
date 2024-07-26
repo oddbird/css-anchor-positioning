@@ -10,11 +10,6 @@
       rel="stylesheet"
       href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
     />
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.css"
-      crossorigin="anonymous"
-    />
     <script
       src="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.min.js"
       crossorigin="anonymous"
@@ -37,6 +32,8 @@
     <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
+    <link rel="stylesheet" href="/anchor-pseudo-element.css" />
+    <link rel="stylesheet" href="/anchor-media-query.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -364,9 +361,6 @@
         Anchoring a <code>popover</code>
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-target-popover" class="target" popover="auto">
-          Popover (Target)
-        </div>
         <button
           id="my-anchor-popover"
           class="anchor"
@@ -374,6 +368,9 @@
         >
           Anchor (click to open)
         </button>
+        <div id="my-target-popover" class="target" popover>
+          Popover (Target)
+        </div>
       </div>
       <p class="note">
         With polyfill applied: Target is positioned at the bottom right corner
@@ -841,6 +838,69 @@
   position: absolute;
   top: anchor(--my-anchor-absolute bottom);
   left: anchor(--my-anchor-absolute right);
+}</code></pre>
+    </section>
+    <section id="anchor-pseudo-element" class="demo-item">
+      <h2>
+        <a href="#anchor-pseudo-element" aria-hidden="true">🔗</a>
+        Pseudo-element anchor
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="scroll-container">
+          <div class="placefiller-above-anchor"></div>
+          <div class="placefiller-before-anchor"></div>
+          <span id="my-anchor-pseudo-element" class="anchor">Anchor</span>
+          <div class="placefiller-after-anchor"></div>
+        </div>
+
+        <div id="my-target-pseudo-element" class="target">Target</div>
+      </div>
+      <p class="note">
+        Target is positioned at the bottom right corner of the Anchor's
+        <code>::before</code> pseudo-element.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-pseudo-element::before {
+  content: '::before';
+  anchor-name: --my-anchor-pseudo-element;
+}
+
+#my-target-pseudo-element {
+  position: absolute;
+  position-anchor: --my-anchor-pseudo-element;
+  top: anchor(bottom);
+  left: anchor(right);
+}</code></pre>
+    </section>
+    <section id="anchor-declared-in-media-query" class="demo-item">
+      <h2>
+        <a href="#anchor-declared-in-media-query" aria-hidden="true">🔗</a>
+        Anchor declared in media query
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-anchor-media-query" class="anchor">Screen Anchor</div>
+        <div id="my-print-anchor-media-query" class="anchor">Print Anchor</div>
+        <div id="my-target-media-query" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target and Screen Anchor's right and top edges
+        line up.
+      </p>
+      <pre><code class="language-css"
+>@media print {
+  #my-print-anchor-media-query {
+    anchor-name: --my-anchor-media-query;
+  }
+}
+
+#my-anchor-media-query {
+  anchor-name: --my-anchor-media-query;
+}
+
+#my-target-media-query {
+  position: absolute;
+  top: anchor(--my-anchor-media-query top);
+  right: anchor(--my-anchor-media-query right);
 }</code></pre>
     </section>
     <section id="sponsor">

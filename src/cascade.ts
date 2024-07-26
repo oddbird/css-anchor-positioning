@@ -1,27 +1,38 @@
 import * as csstree from 'css-tree';
+import { nanoid } from 'nanoid/non-secure';
 
-import { isInsetProp, isPositionAnchorDeclaration } from './parse.js';
+import { isInsetProp } from './parse.js';
 import {
   generateCSS,
   getAST,
-  getDeclarationValue,
   INSTANCE_UUID,
-  POSITION_ANCHOR_PROPERTY,
+  isDeclaration,
   type StyleData,
 } from './utils.js';
 
-// Move `position-anchor` declaration to cascadable `--position-anchor`
-// property.
-function shiftPositionAnchorData(node: csstree.CssNode, block?: csstree.Block) {
-  if (isPositionAnchorDeclaration(node) && block) {
+/**
+ * Map of CSS property to CSS custom property that the property's value is
+ * shifted into. This is used to subject properties that are not yet natively
+ * supported to the CSS cascade and inheritance rules.
+ */
+export const SHIFTED_PROPERTIES: Record<string, string> = {
+  'position-anchor': `--position-anchor-${nanoid(12)}`,
+  'anchor-scope': `--anchor-scope-${nanoid(12)}`,
+  'anchor-name': `--anchor-name-${nanoid(12)}`,
+};
+
+/**
+ * Shift property declarations for properties that are not yet natively
+ * supported into custom properties.
+ */
+function shiftUnsupportedProperties(
+  node: csstree.CssNode,
+  block?: csstree.Block,
+) {
+  if (isDeclaration(node) && SHIFTED_PROPERTIES[node.property] && block) {
     block.children.appendData({
-      type: 'Declaration',
-      important: false,
-      property: POSITION_ANCHOR_PROPERTY,
-      value: {
-        type: 'Raw',
-        value: getDeclarationValue(node),
-      },
+      ...node,
+      property: SHIFTED_PROPERTIES[node.property],
     });
     return { updated: true };
   }
@@ -53,14 +64,11 @@ export async function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
-        const { updated: positionUpdated } = shiftPositionAnchorData(
-          node,
-          block,
-        );
 
         const insetUpdated = shiftInsetProperties(node, block);
 
-        changed = changed || positionUpdated || insetUpdated;
+        const { updated } = shiftUnsupportedProperties(node, block);
+        changed = changed || updated || insetUpdated;
       },
     });
 

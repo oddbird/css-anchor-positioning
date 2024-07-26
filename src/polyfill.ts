@@ -7,6 +7,7 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
+import { getCSSPropertyValue } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
   type AnchorFunction,
@@ -22,7 +23,6 @@ import {
   type TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
-import { getCSSPropertyValue } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -77,7 +77,8 @@ export const resolveLogicalSizeKeyword = (
 };
 
 // This should also check the writing-mode
-// See: https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
+// See:
+// https://github.com/oddbird/css-anchor-positioning/pull/22#discussion_r966348526
 // https://trello.com/c/KnqCnHx3
 export const getAxis = (position?: string) => {
   switch (position) {
@@ -369,8 +370,8 @@ async function applyPositionFallbacks(
       target,
       target,
       async () => {
-        // If this auto-update was triggered while the polyfill is already looping
-        // through the possible `@position-try` blocks, do not check again.
+        // If this auto-update was triggered while the polyfill is already
+        // looping through the possible `@try` blocks, do not check again.
         if (checking) {
           return;
         }

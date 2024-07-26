@@ -16,7 +16,6 @@ export function isAnchorFunction(
 export function getAST(cssText: string) {
   return csstree.parse(cssText, {
     parseAtrulePrelude: false,
-    parseRulePrelude: false,
     parseCustomProperty: true,
   });
 }
@@ -27,6 +26,12 @@ export function generateCSS(ast: csstree.CssNode) {
     // with old browsers.
     mode: 'spec',
   });
+}
+
+export function isDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration';
 }
 
 export function getDeclarationValue(node: DeclarationWithValue) {

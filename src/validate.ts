@@ -1,12 +1,13 @@
 import { platform } from '@floating-ui/dom';
 
-import { getCSSPropertyValue } from './utils.js';
-
-// Given an element and CSS style property,
-// checks if the CSS property equals a certain value
-function hasStyle(element: HTMLElement, cssProperty: string, value: string) {
-  return getCSSPropertyValue(element, cssProperty) === value;
-}
+import {
+  getCSSPropertyValue,
+  getElementsBySelector,
+  hasAnchorName,
+  hasAnchorScope,
+  hasStyle,
+  type Selector,
+} from './dom.js';
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
@@ -76,12 +77,15 @@ async function getContainingBlock(element: HTMLElement) {
 }
 
 /**
- * Validates that el is a acceptable anchor element for an absolutely positioned element query el
+ * Validates that el is a acceptable anchor element for an absolutely positioned
+ * element query el
  * https://drafts.csswg.org/css-anchor-position-1/#acceptable-anchor-element
  */
 export async function isAcceptableAnchorElement(
   el: HTMLElement,
+  anchorName: string | null,
   queryEl: HTMLElement,
+  scopeSelector: string | null,
 ) {
   const elContainingBlock = await getContainingBlock(el);
   const queryElContainingBlock = await getContainingBlock(queryEl);
@@ -134,8 +138,6 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is either an element or a part-like pseudo-element.
-
   // el is not in the skipped contents of another element.
   {
     let currentParent = el.parentElement;
@@ -149,9 +151,39 @@ export async function isAcceptableAnchorElement(
     }
   }
 
-  // TODO el is in scope for query el, per the effects of anchor-scope on query el or its ancestors.
+  // el is in scope for query el, per the effects of anchor-scope on query el or
+  // its ancestors.
+  if (
+    anchorName &&
+    scopeSelector &&
+    getScope(el, anchorName, scopeSelector) !==
+      getScope(queryEl, anchorName, scopeSelector)
+  ) {
+    return false;
+  }
 
   return true;
+}
+
+function getScope(
+  element: HTMLElement,
+  anchorName: string,
+  scopeSelector: string,
+) {
+  // Unlike the real `anchor-scope`, our `--anchor-scope` custom property
+  // inherits. We first check that the element matches the scope selector, so we
+  // can be guaranteed that the computed value we read was set explicitly, not
+  // inherited. Then we verify that the specified anchor scope is actually the
+  // one applied by the CSS cascade.
+  while (
+    !(element.matches(scopeSelector) && hasAnchorScope(element, anchorName))
+  ) {
+    if (!element.parentElement) {
+      return null;
+    }
+    element = element.parentElement;
+  }
+  return element;
 }
 
 /**
@@ -162,7 +194,9 @@ export async function isAcceptableAnchorElement(
  */
 export async function validatedForPositioning(
   targetEl: HTMLElement | null,
-  anchorSelectors: string[],
+  anchorName: string | null,
+  anchorSelectors: Selector[],
+  scopeSelectors: Selector[],
 ) {
   if (
     !(
@@ -174,14 +208,32 @@ export async function validatedForPositioning(
     return null;
   }
 
-  const anchorElements: NodeListOf<HTMLElement> = document.querySelectorAll(
-    anchorSelectors.join(', '),
-  );
+  const anchorElements = anchorSelectors
+    // Any element that matches a selector that sets the specified `anchor-name`
+    // could be a potential match.
+    .flatMap(getElementsBySelector)
+    // Narrow down the potential match elements to just the ones whose computed
+    // `anchor-name` matches the specified one. This accounts for the
+    // `anchor-name` value that was actually applied by the CSS cascade.
+    .filter((el) => hasAnchorName(el, anchorName));
+
+  // TODO: handle anchor-scope for pseudo-elements.
+  const scopeSelector = scopeSelectors.map((s) => s.selector).join(',') || null;
 
   for (let index = anchorElements.length - 1; index >= 0; index--) {
     const anchor = anchorElements[index];
+    const isPseudoElement = 'fakePseudoElement' in anchor;
 
-    if (await isAcceptableAnchorElement(anchor, targetEl)) {
+    if (
+      await isAcceptableAnchorElement(
+        isPseudoElement ? anchor.fakePseudoElement : anchor,
+        anchorName,
+        targetEl,
+        scopeSelector,
+      )
+    ) {
+      if (isPseudoElement) anchor.removeFakePseudoElement();
+
       return anchor;
     }
   }

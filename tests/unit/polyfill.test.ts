@@ -91,7 +91,7 @@ describe('getPixelValue [anchor() fn]', () => {
   const obj = {
     anchorRect,
     fallback: '0px',
-    targetEl: {},
+    targetEl: document.createElement('test'),
   };
 
   beforeAll(() => {
@@ -162,7 +162,7 @@ describe('getPixelValue [anchor-size() fn]', () => {
   const obj = {
     anchorRect,
     fallback: '0px',
-    targetEl: {},
+    targetEl: document.createElement('test'),
   };
 
   beforeAll(() => {

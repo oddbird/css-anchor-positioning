@@ -1,4 +1,4 @@
-# Contributing to CSS Anchor Positioning
+# Contributing to the CSS Anchor Positioning Polyfill
 
 Ideas, issues, and pull-requests are welcome!
 
@@ -12,6 +12,18 @@ Ideas, issues, and pull-requests are welcome!
 ## Conduct
 
 Please follow the [OddBird Code of Conduct](https://www.oddbird.net/conduct/).
+
+## How it works
+
+At a high level, the CSS Anchor Positioning Polyfill parses all relevant CSS on
+the page, and finds any uses of CSS Anchor Positioning syntax (e.g. `anchor()`,
+`anchor-name`, `anchor-size()`, `position-try`, `@position-try`, etc.). It
+replaces each use of `anchor()` with a unique CSS custom property. It then
+determines pixel values for each CSS custom property based on the individual
+`anchor()` usage (that is, the anchor element, target element, anchor side, and
+inset property it's applied to), and sets those values on the root element of
+the document. This allows the CSS cascade to determine which styles actually
+apply to which elements on the page.
 
 ## Development
 
