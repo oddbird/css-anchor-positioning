@@ -1,5 +1,10 @@
-import { applyTryTactic } from '../../src/fallback.js';
-import { INSTANCE_UUID } from '../../src/utils.js';
+import type * as csstree from 'css-tree';
+
+import {
+  applyTryTactic,
+  getPositionTryDeclaration,
+} from '../../src/fallback.js';
+import { getAST, INSTANCE_UUID } from '../../src/utils.js';
 
 const setup = (styles: string) => {
   document.body.innerHTML = `<div id="ref" style="${styles}">Test</div>`;
@@ -326,6 +331,66 @@ describe('fallback', () => {
       ])('%s', (name, styles, expected) => {
         setup(styles);
         expect(applyTryTactic('#ref', 'flip-start')).toMatchObject(expected);
+      });
+    });
+  });
+
+  describe('getPositionTryDeclaration', () => {
+    const getResult = (css: string) => {
+      const res = getAST(`a{${css}}`);
+
+      return getPositionTryDeclaration(
+        ((res as csstree.StyleSheet).children.first as csstree.Rule).block
+          .children.first as csstree.Declaration,
+      );
+    };
+
+    it('parses order', () => {
+      const res = getResult('position-try: most-inline-size flip-block');
+      expect(res).toMatchObject({
+        order: 'most-inline-size',
+        options: [{ tactic: 'flip-block', type: 'try-tactic' }],
+      });
+    });
+
+    it('parses try-tactics', () => {
+      const res = getResult('position-try: flip-block, flip-inline;');
+      expect(res).toMatchObject({
+        order: undefined,
+        options: [
+          { tactic: 'flip-block', type: 'try-tactic' },
+          { tactic: 'flip-inline', type: 'try-tactic' },
+        ],
+      });
+    });
+    it('parses position-try rules', () => {
+      const res = getResult('position-try: --top, --bottom;');
+      expect(res).toMatchObject({
+        order: undefined,
+        options: [
+          { atRule: '--top', type: 'at-rule' },
+          { atRule: '--bottom', type: 'at-rule' },
+        ],
+      });
+    });
+    it.skip('parses position-try rules modified by try tactic', () => {
+      const res = getResult(
+        'position-try: --top flip-block, flip-inline --bottom;',
+      );
+      expect(res).toMatchObject({
+        order: undefined,
+        options: [
+          {
+            atRule: '--top',
+            tactic: 'flip-block',
+            type: 'at-rule-with-try-tactic',
+          },
+          {
+            atRule: '--bottom',
+            tactic: 'flip-inline',
+            type: 'at-rule-with-try-tactic',
+          },
+        ],
       });
     });
   });

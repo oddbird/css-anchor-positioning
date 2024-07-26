@@ -506,7 +506,7 @@ function getPositionTryFallbacksDeclaration(node: csstree.Declaration) {
   return [];
 }
 
-function getPositionTryDeclaration(node: csstree.Declaration): {
+export function getPositionTryDeclaration(node: csstree.Declaration): {
   order?: PositionTryOrder;
   options?: PositionTryObject[];
 } {
