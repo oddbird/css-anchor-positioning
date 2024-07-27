@@ -1,7 +1,7 @@
 import type * as csstree from 'css-tree';
 
 import {
-  applyTryTactic,
+  applyTryTactics,
   getPositionTryDeclaration,
 } from '../../src/fallback.js';
 import { getAST, INSTANCE_UUID } from '../../src/utils.js';
@@ -14,7 +14,7 @@ describe('fallback', () => {
   afterAll(() => {
     document.body.innerHTML = '';
   });
-  describe('applyTryTactic', () => {
+  describe('applyTryTactics', () => {
     describe('flip-block', () => {
       it.each([
         [
@@ -109,7 +109,7 @@ describe('fallback', () => {
         ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactic('#ref', 'flip-block')).toMatchObject(expected);
+        expect(applyTryTactics('#ref', ['flip-block'])).toMatchObject(expected);
       });
     });
 
@@ -207,7 +207,9 @@ describe('fallback', () => {
         ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactic('#ref', 'flip-inline')).toMatchObject(expected);
+        expect(applyTryTactics('#ref', ['flip-inline'])).toMatchObject(
+          expected,
+        );
       });
     });
     describe('flip-start', () => {
@@ -330,7 +332,7 @@ describe('fallback', () => {
         // ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactic('#ref', 'flip-start')).toMatchObject(expected);
+        expect(applyTryTactics('#ref', ['flip-start'])).toMatchObject(expected);
       });
     });
   });
@@ -349,7 +351,7 @@ describe('fallback', () => {
       const res = getResult('position-try: most-inline-size flip-block');
       expect(res).toMatchObject({
         order: 'most-inline-size',
-        options: [{ tactic: 'flip-block', type: 'try-tactic' }],
+        options: [{ tactics: ['flip-block'], type: 'try-tactic' }],
       });
     });
 
@@ -358,8 +360,20 @@ describe('fallback', () => {
       expect(res).toMatchObject({
         order: undefined,
         options: [
-          { tactic: 'flip-block', type: 'try-tactic' },
-          { tactic: 'flip-inline', type: 'try-tactic' },
+          { tactics: ['flip-block'], type: 'try-tactic' },
+          { tactics: ['flip-inline'], type: 'try-tactic' },
+        ],
+      });
+    });
+    it('parses try-tactics with multiple', () => {
+      const res = getResult(
+        'position-try: flip-block flip-start, flip-inline;',
+      );
+      expect(res).toMatchObject({
+        order: undefined,
+        options: [
+          { tactics: ['flip-block', 'flip-start'], type: 'try-tactic' },
+          { tactics: ['flip-inline'], type: 'try-tactic' },
         ],
       });
     });

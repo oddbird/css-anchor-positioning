@@ -1,0 +1,19 @@
+#my-anchor-try-tactics-combined {
+  anchor-name: --my-anchor-try-tactics-combined;
+}
+
+#my-target-try-tactics-combined {
+  position: absolute;
+  position-anchor: --my-anchor-try-tactics-combined;
+  bottom: anchor(top);
+  left: anchor(right);
+  position-try:
+    flip-block flip-inline,
+    flip-start --bottom-left;
+}
+
+@position-try --bottom-left {
+  top: anchor(--my-anchor-fallback bottom);
+  left: anchor(--my-anchor-fallback left);
+  bottom: revert;
+}

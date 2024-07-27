@@ -8,7 +8,7 @@ import {
   type Selector,
 } from './dom.js';
 import {
-  applyTryTactic,
+  applyTryTactics,
   getPositionFallbackValues,
   getPositionTryRules,
   type PositionTryOrder,
@@ -558,17 +558,17 @@ export async function parseCSS(styleData: StyleData[]) {
           }
           if (tryObject.type === 'try-tactic') {
             // add new item to fallbacks store
-            name = `${selector}-${tryObject.tactic}`;
-            const tacticAppliedRules = applyTryTactic(
+            name = `${selector}-${tryObject.tactics.join('-')}`;
+            const tacticAppliedRules = applyTryTactics(
               selector,
-              tryObject.tactic,
+              tryObject.tactics,
             );
             if (tacticAppliedRules) {
               fallbacks[name] = {
                 targets: [selector],
                 blocks: [
                   {
-                    uuid: `${tryObject.tactic}-try-${nanoid(12)}`,
+                    uuid: `${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
                     declarations: tacticAppliedRules,
                   },
                 ],

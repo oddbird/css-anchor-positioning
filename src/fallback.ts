@@ -172,7 +172,7 @@ const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
 
 interface PositionTryDefTactic {
   type: 'try-tactic';
-  tactic: PositionTryOptionsTryTactics;
+  tactics: PositionTryOptionsTryTactics[];
 }
 interface PositionTryDefInsetArea {
   type: 'inset-area';
@@ -184,7 +184,7 @@ interface PositionTryDefAtRule {
 }
 interface PositionTryDefAtRuleWithTactic {
   type: 'at-rule-with-try-tactic';
-  tactic: PositionTryOptionsTryTactics;
+  tactics: PositionTryOptionsTryTactics[];
   atRule: csstree.Identifier['name'];
 }
 
@@ -238,17 +238,19 @@ function isPositionTryOrder(name: string): name is PositionTryOrder {
   return POSITION_TRY_ORDERS.includes(name as PositionTryOrder);
 }
 
-export function applyTryTactic(
+export function applyTryTactics(
   selector: string,
-  tactic: PositionTryOptionsTryTactics,
+  tactics: PositionTryOptionsTryTactics[],
 ) {
   // todo: This currently only uses the styles from the first match. Each
   // element may have different styles and need a separate fallback definition.
   const el: HTMLElement | null = document.querySelector(selector);
   if (el) {
-    const rules = getExistingInsetRules(el);
-    const adjustedRules = applyTryTacticToBlock(rules, tactic);
-    return adjustedRules;
+    let rules = getExistingInsetRules(el);
+    tactics.forEach((tactic) => {
+      rules = applyTryTacticToBlock(rules, tactic);
+    });
+    return rules;
   }
 }
 
@@ -473,26 +475,44 @@ function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
   const positionOptions = splitCommaList(list);
   const tryObjects: PositionTryObject[] = [];
   positionOptions.forEach((option) => {
-    if (option.length === 2 && isPositionTryTactic(option[0].name)) {
+    const identifiers: {
+      atRules: PositionTryDefAtRuleWithTactic['atRule'][];
+      tactics: PositionTryOptionsTryTactics[];
+      insetAreas: InsetProperty[];
+    } = {
+      atRules: [],
+      tactics: [],
+      insetAreas: [],
+    };
+    option.forEach((opt) => {
+      if (isPositionTryTactic(opt.name)) identifiers.tactics.push(opt.name);
+      else if (opt.name.startsWith('--')) identifiers.atRules.push(opt.name);
+      else if (isInsetProp(opt.name)) identifiers.insetAreas.push(opt.name);
+    });
+    // Inset area can not be combined or have multiple
+    if (identifiers.insetAreas.length) {
       tryObjects.push({
-        tactic: option[0].name,
-        atRule: option[1].name,
+        insetArea: identifiers.insetAreas[0],
+        type: 'inset-area',
+      });
+      // multiple tactics can modify a single at rule
+    } else if (identifiers.atRules.length && identifiers.tactics.length) {
+      tryObjects.push({
+        tactics: identifiers.tactics,
+        atRule: identifiers.atRules[0],
         type: 'at-rule-with-try-tactic',
       });
-    } else if (option[0].name.startsWith('--')) {
+      // A single at rule
+    } else if (identifiers.atRules.length) {
       tryObjects.push({
-        atRule: option[0].name,
+        atRule: identifiers.atRules[0],
         type: 'at-rule',
       });
-    } else if (isPositionTryTactic(option[0].name)) {
+      // One or multiple combined try tactics
+    } else if (identifiers.tactics.length) {
       tryObjects.push({
-        tactic: option[0].name,
+        tactics: identifiers.tactics,
         type: 'try-tactic',
-      });
-    } else if (isInsetProp(option[0].name)) {
-      tryObjects.push({
-        insetArea: option[0].name,
-        type: 'inset-area',
       });
     }
   });
