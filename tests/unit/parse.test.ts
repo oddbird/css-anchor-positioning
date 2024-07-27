@@ -667,6 +667,7 @@ describe('parseCSS', () => {
       </div>
     `;
     const css = getSampleCSS('position-try');
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const anchorEl = document.getElementById('my-anchor-fallback');
     const targetEl = document.getElementById('my-target-fallback');
