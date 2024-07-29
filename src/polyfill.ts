@@ -10,9 +10,7 @@ import { cascadeCSS } from './cascade.js';
 import { getCSSPropertyValue } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
-  type AnchorFunction,
   type AnchorFunctionDeclaration,
-  type AnchorPositions,
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
@@ -23,6 +21,11 @@ import {
   type TryBlock,
 } from './parse.js';
 import { transformCSS } from './transform.js';
+import {
+  resolveAnchors,
+  ResolvedAnchorFunction,
+  ResolvedAnchorPositions,
+} from './validate.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -286,7 +289,7 @@ async function applyAnchorPositions(
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
     InsetProperty | SizingProperty,
-    AnchorFunction[],
+    ResolvedAnchorFunction[],
   ][]) {
     for (const anchorValue of anchorValues) {
       const anchor = anchorValue.anchorEl;
@@ -393,7 +396,10 @@ async function applyPositionFallbacks(
   }
 }
 
-async function position(rules: AnchorPositions, useAnimationFrame = false) {
+async function position(
+  rules: ResolvedAnchorPositions,
+  useAnimationFrame = false,
+) {
   for (const pos of Object.values(rules)) {
     // Handle `anchor()` and `anchor-size()` functions...
     await applyAnchorPositions(pos.declarations ?? {}, useAnimationFrame);
@@ -423,15 +429,17 @@ export async function polyfill(animationFrame?: boolean) {
     styleData = await transformCSS(styleData);
   }
   // parse CSS
-  const { rules, inlineStyles } = await parseCSS(styleData);
+  const parsedCSS = parseCSS(styleData);
+  // resolve anchor elements
+  const { resolvedAnchors, inlineStyles } = await resolveAnchors(parsedCSS);
 
-  if (Object.values(rules).length) {
+  if (Object.values(resolvedAnchors).length) {
     // update source code
     await transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
-    await position(rules, useAnimationFrame);
+    await position(resolvedAnchors, useAnimationFrame);
   }
 
-  return rules;
+  return resolvedAnchors;
 }

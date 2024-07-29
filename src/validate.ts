@@ -1,13 +1,52 @@
 import { platform } from '@floating-ui/dom';
+import { nanoid } from 'nanoid/non-secure';
 
 import {
+  AnchorScopeValue,
   getCSSPropertyValue,
   getElementsBySelector,
   hasAnchorName,
   hasAnchorScope,
   hasStyle,
+  PseudoElement,
   type Selector,
 } from './dom.js';
+import type {
+  AnchorFunction,
+  AnchorSelectors,
+  InsetProperty,
+  ParsedAnchorData,
+  SizingProperty,
+  TryBlock,
+} from './parse.js';
+
+/**
+ * Represents an anchor function with the anchor and target elements resolved.
+ */
+export interface ResolvedAnchorFunction extends AnchorFunction {
+  targetEl?: HTMLElement | null;
+  anchorEl?: HTMLElement | PseudoElement | null;
+}
+
+/**
+ * Mapping of declared properties to resolved anchor functions for the property.
+ */
+export type ResolvedAnchorFunctionDeclaration = Partial<
+  Record<InsetProperty | SizingProperty, ResolvedAnchorFunction[]>
+>;
+
+/**
+ * The complete resolved anchor position data for a selector.
+ */
+interface ResolvedAnchorPosition {
+  declarations?: ResolvedAnchorFunctionDeclaration;
+  fallbacks?: TryBlock[];
+}
+
+/**
+ * Mapping of selectors to resolved anchor position data for that selector.
+ */
+export type ResolvedAnchorPositions = Record<string, ResolvedAnchorPosition>;
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
@@ -239,4 +278,131 @@ export async function validatedForPositioning(
   }
 
   return null;
+}
+
+/**
+ * Resolves the anchor element for the givne target element and anchor function.
+ */
+async function resolveAnchorEl(
+  targetEl: HTMLElement | null,
+  anchorObj: AnchorFunction,
+  anchorNames: AnchorSelectors,
+  anchorScopes: AnchorSelectors,
+) {
+  let anchorName = anchorObj.anchorName;
+  const customPropName = anchorObj.customPropName;
+  if (targetEl && !anchorName) {
+    const anchorAttr = targetEl.getAttribute('anchor');
+    const positionAnchorProperty = getCSSPropertyValue(
+      targetEl,
+      'position-anchor',
+    );
+
+    if (positionAnchorProperty) {
+      anchorName = positionAnchorProperty;
+    } else if (customPropName) {
+      anchorName = getCSSPropertyValue(targetEl, customPropName);
+    } else if (anchorAttr) {
+      const elementPart = `#${CSS.escape(anchorAttr)}`;
+
+      return await validatedForPositioning(
+        targetEl,
+        null,
+        [{ selector: elementPart, elementPart }],
+        [],
+      );
+    }
+  }
+  const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
+  const allScopeSelectors = anchorName
+    ? anchorScopes[AnchorScopeValue.All] || []
+    : [];
+  const anchorNameScopeSelectors = anchorName
+    ? anchorScopes[anchorName] || []
+    : [];
+  return await validatedForPositioning(
+    targetEl,
+    anchorName || null,
+    anchorSelectors,
+    [...allScopeSelectors, ...anchorNameScopeSelectors],
+  );
+}
+
+/**
+ * Resolves all anchor functions and returns combined data for the rest of the
+ * polyfill to use.
+ */
+export async function resolveAnchors({
+  anchorFunctions,
+  tryBlockTargets,
+  tryBlocks,
+  anchorNames,
+  anchorScopes,
+}: ParsedAnchorData) {
+  const resolvedAnchors: ResolvedAnchorPositions = {};
+  for (const [selector, blocks] of Object.entries(tryBlocks)) {
+    resolvedAnchors[selector] = { fallbacks: blocks };
+  }
+
+  // Store inline style custom property mappings for each target element
+  const inlineStyles = new Map<HTMLElement, Record<string, string>>();
+  // Store any `anchor()` fns
+  for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
+    let targets: NodeListOf<HTMLElement>;
+    if (
+      targetSel.startsWith('[data-anchor-polyfill=') &&
+      tryBlockTargets[targetSel]
+    ) {
+      // If we're dealing with a `@position-fallback` `@try` block,
+      // then the targets are places where that `position-fallback` is used.
+      targets = document.querySelectorAll(tryBlockTargets[targetSel]);
+    } else {
+      targets = document.querySelectorAll(targetSel);
+    }
+    for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
+      InsetProperty | SizingProperty,
+      AnchorFunction[],
+    ][]) {
+      for (const anchorObj of anchorObjects) {
+        for (const targetEl of targets) {
+          // For every target element, find a valid anchor element
+          const anchorEl = await resolveAnchorEl(
+            targetEl,
+            anchorObj,
+            anchorNames,
+            anchorScopes,
+          );
+          const uuid = `--anchor-${nanoid(12)}`;
+          // Store new mapping, in case inline styles have changed and will
+          // be overwritten -- in which case new mappings will be re-added
+          inlineStyles.set(targetEl, {
+            ...(inlineStyles.get(targetEl) ?? {}),
+            [anchorObj.uuid]: uuid,
+          });
+          // Point original uuid to new uuid
+          targetEl.setAttribute(
+            'style',
+            `${anchorObj.uuid}: var(${uuid}); ${
+              targetEl.getAttribute('style') ?? ''
+            }`,
+          );
+          // Populate new data for each anchor/target combo
+          resolvedAnchors[targetSel] = {
+            ...(resolvedAnchors[targetSel] ?? {}),
+            declarations: {
+              ...(resolvedAnchors[targetSel]?.declarations ?? {}),
+              [targetProperty]: [
+                ...(resolvedAnchors[targetSel]?.declarations?.[
+                  targetProperty as InsetProperty
+                ] ?? []),
+                { ...anchorObj, anchorEl, targetEl, uuid },
+              ],
+            },
+          };
+        }
+      }
+    }
+  }
+
+  return { resolvedAnchors, inlineStyles };
 }
