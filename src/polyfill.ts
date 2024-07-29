@@ -20,12 +20,12 @@ import {
   type SizingProperty,
   type TryBlock,
 } from './parse.js';
-import { transformCSS } from './transform.js';
 import {
   resolveAnchors,
   ResolvedAnchorFunction,
   ResolvedAnchorPositions,
-} from './validate.js';
+} from './resolve.js';
+import { transformCSS } from './transform.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 

@@ -1,11 +1,7 @@
 import { parseCSS } from '../../src/parse.js';
+import { resolveAnchors, ResolvedAnchorPositions } from '../../src/resolve.js';
 import { type StyleData } from '../../src/utils.js';
-import { resolveAnchors, ResolvedAnchorPositions } from '../../src/validate.js';
-import {
-  cascadeCSSForTest,
-  getSampleCSS,
-  sampleBaseCSS,
-} from './../helpers.js';
+import { cascadeCSSForTest, getSampleCSS, sampleBaseCSS } from '../helpers.js';
 
 describe('parseCSS', () => {
   afterAll(() => {
