@@ -13,15 +13,17 @@ import {
   type AnchorFunction,
   type AnchorFunctionDeclaration,
   type AnchorPositions,
+  parseCSS,
+  type TryBlock,
+} from './parse.js';
+import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
   isInsetProp,
   isSizingProp,
-  parseCSS,
   type SizingProperty,
-  type TryBlock,
-} from './parse.js';
+} from './syntax.js';
 import { transformCSS } from './transform.js';
 
 const platformWithCache = { ...platform, _c: new Map() };

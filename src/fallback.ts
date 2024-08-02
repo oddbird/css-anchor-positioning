@@ -3,19 +3,21 @@ import { nanoid } from 'nanoid/non-secure';
 
 import { getCSSPropertyValue } from './dom.js';
 import {
+  type AnchorPosition,
+  type AnchorPositions,
+  type TryBlock,
+} from './parse.js';
+import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
   ANCHOR_SIDES,
-  type AnchorPosition,
-  type AnchorPositions,
   type AnchorSideKeyword,
   type InsetProperty,
   isInsetProp,
   isMarginProp,
   isSelfAlignmentProp,
   isSizingProp,
-  type TryBlock,
-} from './parse.js';
+} from './syntax.js';
 import {
   type DeclarationWithValue,
   generateCSS,

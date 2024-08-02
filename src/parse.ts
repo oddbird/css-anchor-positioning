@@ -9,6 +9,17 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
+  type AcceptedPositionTryProperty,
+  type AnchorSide,
+  type AnchorSize,
+  type InsetProperty,
+  isAnchorSide,
+  isAnchorSize,
+  isInsetProp,
+  isSizingProp,
+  type SizingProperty,
+} from './syntax.js';
+import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
@@ -21,159 +32,6 @@ import { validatedForPositioning } from './validate.js';
 // `key` is the `anchor-name` value
 // `value` is an array of all selectors associated with that `anchor-name`
 type AnchorSelectors = Record<string, Selector[]>;
-
-export type InsetProperty =
-  | 'top'
-  | 'left'
-  | 'right'
-  | 'bottom'
-  | 'inset-block-start'
-  | 'inset-block-end'
-  | 'inset-inline-start'
-  | 'inset-inline-end'
-  | 'inset-block'
-  | 'inset-inline'
-  | 'inset';
-
-export const INSET_PROPS: InsetProperty[] = [
-  'left',
-  'right',
-  'top',
-  'bottom',
-  'inset-block-start',
-  'inset-block-end',
-  'inset-inline-start',
-  'inset-inline-end',
-  'inset-block',
-  'inset-inline',
-  'inset',
-];
-
-export type MarginProperty =
-  | 'margin-block-start'
-  | 'margin-block-end'
-  | 'margin-block'
-  | 'margin-inline-start'
-  | 'margin-inline-end'
-  | 'margin-inline'
-  | 'margin-bottom'
-  | 'margin-left'
-  | 'margin-right'
-  | 'margin-top'
-  | 'margin';
-
-export const MARGIN_PROPERTIES: MarginProperty[] = [
-  'margin-block-start',
-  'margin-block-end',
-  'margin-block',
-  'margin-inline-start',
-  'margin-inline-end',
-  'margin-inline',
-  'margin-bottom',
-  'margin-left',
-  'margin-right',
-  'margin-top',
-  'margin',
-];
-
-export type SizingProperty =
-  | 'width'
-  | 'height'
-  | 'min-width'
-  | 'min-height'
-  | 'max-width'
-  | 'max-height'
-  | 'block-size'
-  | 'inline-size'
-  | 'min-block-size'
-  | 'min-inline-size'
-  | 'max-block-size'
-  | 'max-inline-size';
-
-const SIZING_PROPS: SizingProperty[] = [
-  'width',
-  'height',
-  'min-width',
-  'min-height',
-  'max-width',
-  'max-height',
-  'block-size',
-  'inline-size',
-  'min-block-size',
-  'min-inline-size',
-  'max-block-size',
-  'max-inline-size',
-];
-
-export type SelfAlignmentProperty =
-  | 'justify-self'
-  | 'align-self'
-  | 'place-self';
-
-const SELF_ALIGNMENT_PROPS: SelfAlignmentProperty[] = [
-  'justify-self',
-  'align-self',
-  'place-self',
-];
-
-export type AcceptedPositionTryProperty =
-  | InsetProperty
-  | MarginProperty
-  | SizingProperty
-  | SelfAlignmentProperty
-  | 'position-anchor'
-  | 'inset-area';
-
-export const ACCEPTED_POSITION_TRY_PROPERTIES: AcceptedPositionTryProperty[] = [
-  ...INSET_PROPS,
-  ...MARGIN_PROPERTIES,
-  ...SIZING_PROPS,
-  ...SELF_ALIGNMENT_PROPS,
-  'position-anchor',
-  'inset-area',
-];
-
-export type AnchorSideKeyword =
-  | 'top'
-  | 'left'
-  | 'right'
-  | 'bottom'
-  | 'start'
-  | 'end'
-  | 'self-start'
-  | 'self-end'
-  | 'center';
-
-export const ANCHOR_SIDES: AnchorSideKeyword[] = [
-  'top',
-  'left',
-  'right',
-  'bottom',
-  'start',
-  'end',
-  'self-start',
-  'self-end',
-  'center',
-];
-
-export type AnchorSide = AnchorSideKeyword | number;
-
-export type AnchorSize =
-  | 'width'
-  | 'height'
-  | 'block'
-  | 'inline'
-  | 'self-block'
-  | 'self-inline';
-
-const ANCHOR_SIZES: AnchorSize[] = [
-  'width',
-  'height',
-  'block',
-  'inline',
-  'self-block',
-  'self-inline',
-];
 
 export interface AnchorFunction {
   targetEl?: HTMLElement | null;
@@ -245,34 +103,6 @@ function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
 
 function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
-}
-
-export function isInsetProp(
-  property: string | AnchorSide,
-): property is InsetProperty {
-  return INSET_PROPS.includes(property as InsetProperty);
-}
-
-function isAnchorSide(property: string): property is AnchorSideKeyword {
-  return ANCHOR_SIDES.includes(property as AnchorSideKeyword);
-}
-
-export function isSizingProp(property: string): property is SizingProperty {
-  return SIZING_PROPS.includes(property as SizingProperty);
-}
-
-export function isMarginProp(property: string): property is MarginProperty {
-  return MARGIN_PROPERTIES.includes(property as MarginProperty);
-}
-
-function isAnchorSize(property: string): property is AnchorSize {
-  return ANCHOR_SIZES.includes(property as AnchorSize);
-}
-
-export function isSelfAlignmentProp(
-  property: string,
-): property is SelfAlignmentProperty {
-  return SELF_ALIGNMENT_PROPS.includes(property as SelfAlignmentProperty);
 }
 
 function parseAnchorFn(
