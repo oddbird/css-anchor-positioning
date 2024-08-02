@@ -291,7 +291,7 @@ export function getExistingInsetRules(el: HTMLElement) {
   return rules;
 }
 
-const tryTacticsMapping: Record<
+const tryTacticsPropertyMapping: Record<
   PositionTryOptionsTryTactics,
   Partial<Record<AcceptedPositionTryProperty, AcceptedPositionTryProperty>>
 > = {
@@ -378,7 +378,7 @@ function mapProperty(
   property: AcceptedPositionTryProperty,
   tactic: PositionTryOptionsTryTactics,
 ) {
-  const mapping = tryTacticsMapping[tactic];
+  const mapping = tryTacticsPropertyMapping[tactic];
   return mapping[property] || property;
 }
 
@@ -442,6 +442,7 @@ function mapMargin(
   }
 }
 
+// Parses a value into an AST.
 const getValueAST = (property: string, val: string) => {
   const ast = getAST(`#id{${property}: ${val};}`) as csstree.Block;
   const astDeclaration = (ast.children.first as csstree.Rule)?.block.children
@@ -675,10 +676,10 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         }
         options?.forEach((tryObject) => {
           let name;
+          // Apply try fallback
           if (tryObject.type === 'at-rule') {
             name = tryObject.atRule;
-          }
-          if (tryObject.type === 'try-tactic') {
+          } else if (tryObject.type === 'try-tactic') {
             // add new item to fallbacks store
             name = `${selector}-${tryObject.tactics.join('-')}`;
             const tacticAppliedRules = applyTryTactics(
@@ -697,6 +698,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               };
             }
           }
+
           if (name && fallbacks[name]) {
             anchorPosition.fallbacks ??= [];
             anchorPosition.fallbacks.push(...fallbacks[name].blocks);

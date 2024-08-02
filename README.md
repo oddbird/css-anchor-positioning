@@ -81,8 +81,14 @@ implementation, we would like to bring it up to date.
 While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
 
-- The `@position-try` rule
-- The `position-try-fallbacks`, `position-try-order`, or `position-try` properties
+- The following portions of Position Fallback:
+  - `position-try-order`. If `try-size` is specified in `position-try`
+    shorthand, it will be parsed, and `try-tactics` will be applied, but the
+    `try-size` will be ignored.
+  - The `flip-start` `try-tactic` is only partially supported. The tactic is
+    only applied to property names and anchor sides.
+  - a `try-tactic` modifying an `@position-try` rule
+  - an `inset-area` as a `try-tactic`
 - `anchor-scope` property on pseudo-elements
 - `inset-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
