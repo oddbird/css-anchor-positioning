@@ -1,10 +1,13 @@
-import type * as csstree from 'css-tree';
+import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+import { getCSSPropertyValue } from './dom.js';
 import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
   ANCHOR_SIDES,
+  type AnchorPosition,
+  type AnchorPositions,
   type AnchorSideKeyword,
   type InsetProperty,
   isInsetProp,
@@ -17,15 +20,31 @@ import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
-  getCSSPropertyValue,
+  getSelectors,
   INSTANCE_UUID,
   isAnchorFunction,
   splitCommaList,
+  type StyleData,
 } from './utils.js';
 
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }
+
+// `key` is the `@position-try` block uuid
+// `value` is the target element selector
+type FallbackTargets = Record<string, string>;
+
+type Fallbacks = Record<
+  // `key` is the `position-fallback` value (name)
+  string,
+  {
+    // `targets` is an array of selectors where this `position-fallback` is used
+    targets: string[];
+    // `blocks` is an array of `@try` block declarations (in order)
+    blocks: TryBlock[];
+  }
+>;
 
 type InsetAreaProperty =
   | 'left'
@@ -608,4 +627,134 @@ export function getPositionTryRules(node: csstree.Atrule) {
     return { name, blocks: tryBlocks };
   }
   return {};
+}
+
+export function parsePositionFallbacks(styleData: StyleData[]) {
+  const fallbacks: Fallbacks = {};
+  const fallbackTargets: FallbackTargets = {};
+  const validPositions: AnchorPositions = {};
+  // First, find all uses of `@position-try`
+  for (const styleObj of styleData) {
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Atrule',
+      enter(node) {
+        // Parse `@position-try` rules
+        const { name, blocks } = getPositionTryRules(node);
+        if (name && blocks?.length) {
+          // This will override earlier `@position-try` lists
+          // with the same name:
+          // (e.g. multiple `@position-try --my-fallback {...}` uses
+          // with the same `--my-fallback` name)
+          fallbacks[name] = {
+            targets: [],
+            blocks: blocks,
+          };
+        }
+      },
+    });
+  }
+  for (const styleObj of styleData) {
+    let changed = false;
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Declaration',
+      enter(node) {
+        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const selectors = getSelectors(rule);
+        if (!selectors.length) return;
+        // todo: better handle multiple selectors
+        const selector = selectors.map((s) => s.selector).join(',');
+        // Parse `position-try-fallbacks` declaration
+        const { order, options } = getPositionFallbackValues(node);
+        const anchorPosition: AnchorPosition = {};
+        if (order) {
+          anchorPosition.order = order;
+        }
+        options?.forEach((tryObject) => {
+          let name;
+          if (tryObject.type === 'at-rule') {
+            name = tryObject.atRule;
+          }
+          if (tryObject.type === 'try-tactic') {
+            // add new item to fallbacks store
+            name = `${selector}-${tryObject.tactics.join('-')}`;
+            const tacticAppliedRules = applyTryTactics(
+              selector,
+              tryObject.tactics,
+            );
+            if (tacticAppliedRules) {
+              fallbacks[name] = {
+                targets: [selector],
+                blocks: [
+                  {
+                    uuid: `${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                    declarations: tacticAppliedRules,
+                  },
+                ],
+              };
+            }
+          }
+          if (name && fallbacks[name]) {
+            anchorPosition.fallbacks ??= [];
+            anchorPosition.fallbacks.push(...fallbacks[name].blocks);
+
+            if (!fallbacks[name].targets.includes(selector)) {
+              fallbacks[name].targets.push(selector);
+            }
+            // Add each `@position-try` block, scoped to a unique data-attr
+            for (const block of fallbacks[name].blocks) {
+              const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+              this.stylesheet?.children.prependData({
+                type: 'Rule',
+                prelude: {
+                  type: 'Raw',
+                  value: dataAttr,
+                },
+                block: {
+                  type: 'Block',
+                  children: new csstree.List<csstree.CssNode>().fromArray(
+                    Object.entries(block.declarations).map(([prop, val]) => ({
+                      type: 'Declaration',
+                      important: true,
+                      property: prop,
+                      value: {
+                        type: 'Raw',
+                        value: val,
+                      },
+                    })),
+                  ),
+                },
+              });
+              // Store mapping of data-attr to target selector
+              fallbackTargets[dataAttr] = selector;
+            }
+            changed = true;
+          }
+        });
+        if (Object.keys(anchorPosition).length > 0) {
+          if (validPositions[selector]) {
+            if (anchorPosition.order) {
+              validPositions[selector].order = anchorPosition.order;
+            }
+            if (anchorPosition.fallbacks) {
+              validPositions[selector].fallbacks ??= [];
+              validPositions[selector].fallbacks.push(
+                ...anchorPosition.fallbacks,
+              );
+            }
+            //  = {order: anchorPosition.order, fallbacks: [...[validPositions[selector].fallbacks], ...[anchorPosition.fallbacks]]};
+          } else {
+            validPositions[selector] = anchorPosition;
+          }
+        }
+      },
+    });
+    if (changed) {
+      // Update CSS
+      styleObj.css = generateCSS(ast);
+      styleObj.changed = true;
+    }
+  }
+  return { fallbackTargets, validPositions };
 }

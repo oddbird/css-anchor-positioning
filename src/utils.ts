@@ -1,6 +1,8 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
+import type { Selector } from './dom.js';
+
 export const INSTANCE_UUID = nanoid();
 
 export interface DeclarationWithValue extends csstree.Declaration {
@@ -64,6 +66,26 @@ export function splitCommaList(list: csstree.List<csstree.CssNode>) {
   );
 }
 
-export function getCSSPropertyValue(el: HTMLElement, prop: string) {
-  return getComputedStyle(el).getPropertyValue(prop).trim();
+export function getSelectors(rule: csstree.SelectorList | undefined) {
+  if (!rule) return [];
+
+  return (rule.children as csstree.List<csstree.Selector>)
+    .map((selector) => {
+      let pseudoElementPart: string | undefined;
+
+      if (selector.children.last?.type === 'PseudoElementSelector') {
+        selector = csstree.clone(selector) as csstree.Selector;
+        pseudoElementPart = generateCSS(selector.children.last!);
+        selector.children.pop();
+      }
+
+      const elementPart = generateCSS(selector);
+
+      return {
+        selector: elementPart + (pseudoElementPart ?? ''),
+        elementPart,
+        pseudoElementPart,
+      } satisfies Selector;
+    })
+    .toArray();
 }
