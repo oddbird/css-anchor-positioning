@@ -259,7 +259,7 @@ function isPositionTryOrder(name: string): name is PositionTryOrder {
   return POSITION_TRY_ORDERS.includes(name as PositionTryOrder);
 }
 
-export function applyTryTactics(
+export function applyTryTacticsToSelector(
   selector: string,
   tactics: PositionTryOptionsTryTactics[],
 ) {
@@ -273,6 +273,16 @@ export function applyTryTactics(
     });
     return rules;
   }
+}
+export function applyTryTacticsToAtRule(
+  block: TryBlock,
+  tactics: PositionTryOptionsTryTactics[],
+) {
+  let rules = block.declarations;
+  tactics.forEach((tactic) => {
+    rules = applyTryTacticToBlock(rules, tactic);
+  });
+  return rules;
 }
 
 type InsetRules = Partial<Record<AcceptedPositionTryProperty, string>>;
@@ -682,7 +692,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
           } else if (tryObject.type === 'try-tactic') {
             // add new item to fallbacks store
             name = `${selector}-${tryObject.tactics.join('-')}`;
-            const tacticAppliedRules = applyTryTactics(
+            const tacticAppliedRules = applyTryTacticsToSelector(
               selector,
               tryObject.tactics,
             );
@@ -692,6 +702,25 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
                 blocks: [
                   {
                     uuid: `${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                    declarations: tacticAppliedRules,
+                  },
+                ],
+              };
+            }
+          } else if (tryObject.type === 'at-rule-with-try-tactic') {
+            // add new item to fallbacks store
+            name = `${tryObject.atRule}-${tryObject.tactics.join('-')}`;
+            const declarations = fallbacks[tryObject.atRule].blocks[0];
+            const tacticAppliedRules = applyTryTacticsToAtRule(
+              declarations,
+              tryObject.tactics,
+            );
+            if (tacticAppliedRules) {
+              fallbacks[name] = {
+                targets: [selector],
+                blocks: [
+                  {
+                    uuid: `${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
                     declarations: tacticAppliedRules,
                   },
                 ],

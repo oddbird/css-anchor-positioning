@@ -9,11 +9,11 @@
   left: anchor(right);
   position-try:
     flip-block flip-inline,
-    flip-start --bottom-left;
+    flip-inline --bottom-left-combined;
 }
 
-@position-try --bottom-left {
-  top: anchor(--my-anchor-fallback bottom);
-  left: anchor(--my-anchor-fallback left);
+@position-try --bottom-left-combined {
+  top: anchor(bottom);
+  left: anchor(left);
   bottom: revert;
 }

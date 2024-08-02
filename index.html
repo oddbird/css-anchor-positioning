@@ -601,9 +601,9 @@
             with the bottom, right edge of the anchor.
           </li>
           <li>
-            (Not working yet). Apply <code>flip-inline --bottom-left</code>,
-            flipping across the block axis, and align the bottom, right edge of
-            the target with the top, left edge of the anchor.
+            Apply <code>flip-inline --bottom-left-combined</code>, flipping
+            across the block axis, and align the top, right edge of the target
+            with the bottom, right edge of the anchor.
           </li>
         </ol>
       </div>
@@ -620,7 +620,7 @@
   position-try: flip-block flip-inline, flip-inline --bottom-left;
 }
 
-@position-try --bottom-left {
+@position-try --bottom-left-combined {
   top: anchor(bottom);
   left: anchor(left);
   bottom: revert;

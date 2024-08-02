@@ -1,7 +1,7 @@
 import type * as csstree from 'css-tree';
 
 import {
-  applyTryTactics,
+  applyTryTacticsToSelector,
   getPositionTryDeclaration,
 } from '../../src/fallback.js';
 import { getAST, INSTANCE_UUID } from '../../src/utils.js';
@@ -109,7 +109,9 @@ describe('fallback', () => {
         ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactics('#ref', ['flip-block'])).toMatchObject(expected);
+        expect(applyTryTacticsToSelector('#ref', ['flip-block'])).toMatchObject(
+          expected,
+        );
       });
     });
 
@@ -207,9 +209,9 @@ describe('fallback', () => {
         ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactics('#ref', ['flip-inline'])).toMatchObject(
-          expected,
-        );
+        expect(
+          applyTryTacticsToSelector('#ref', ['flip-inline']),
+        ).toMatchObject(expected);
       });
     });
     describe('flip-start', () => {
@@ -332,7 +334,9 @@ describe('fallback', () => {
         // ],
       ])('%s', (name, styles, expected) => {
         setup(styles);
-        expect(applyTryTactics('#ref', ['flip-start'])).toMatchObject(expected);
+        expect(applyTryTacticsToSelector('#ref', ['flip-start'])).toMatchObject(
+          expected,
+        );
       });
     });
   });
@@ -387,7 +391,7 @@ describe('fallback', () => {
         ],
       });
     });
-    it.skip('parses position-try rules modified by try tactic', () => {
+    it('parses position-try rules modified by try tactic', () => {
       const res = getResult(
         'position-try: --top flip-block, flip-inline --bottom;',
       );
@@ -396,12 +400,12 @@ describe('fallback', () => {
         options: [
           {
             atRule: '--top',
-            tactic: 'flip-block',
+            tactics: ['flip-block'],
             type: 'at-rule-with-try-tactic',
           },
           {
             atRule: '--bottom',
-            tactic: 'flip-inline',
+            tactics: ['flip-inline'],
             type: 'at-rule-with-try-tactic',
           },
         ],
