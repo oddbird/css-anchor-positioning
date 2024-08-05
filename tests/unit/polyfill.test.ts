@@ -1,4 +1,3 @@
-import { type AnchorSide, type AnchorSize } from '../../src/parse.js';
 import {
   getAxis,
   getAxisProperty,
@@ -7,6 +6,7 @@ import {
   resolveLogicalSideKeyword,
   resolveLogicalSizeKeyword,
 } from '../../src/polyfill.js';
+import { type AnchorSide, type AnchorSize } from '../../src/syntax.js';
 
 describe('resolveLogicalSideKeyword', () => {
   it.each([

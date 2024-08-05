@@ -1,7 +1,18 @@
 import * as csstree from 'css-tree';
+import { nanoid } from 'nanoid/non-secure';
+
+import type { Selector } from './dom.js';
+
+export const INSTANCE_UUID = nanoid();
 
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
+}
+
+export function isAnchorFunction(
+  node: csstree.CssNode | null,
+): node is csstree.FunctionNode {
+  return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
 export function getAST(cssText: string) {
@@ -34,4 +45,47 @@ export interface StyleData {
   css: string;
   url?: URL;
   changed?: boolean;
+}
+
+export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
+
+export function splitCommaList(list: csstree.List<csstree.CssNode>) {
+  return list.toArray().reduce(
+    (acc: csstree.Identifier[][], child) => {
+      if (child.type === 'Operator' && child.value === ',') {
+        acc.push([]);
+        return acc;
+      }
+      if (child.type === 'Identifier') {
+        acc[acc.length - 1].push(child);
+      }
+
+      return acc;
+    },
+    [[]],
+  );
+}
+
+export function getSelectors(rule: csstree.SelectorList | undefined) {
+  if (!rule) return [];
+
+  return (rule.children as csstree.List<csstree.Selector>)
+    .map((selector) => {
+      let pseudoElementPart: string | undefined;
+
+      if (selector.children.last?.type === 'PseudoElementSelector') {
+        selector = csstree.clone(selector) as csstree.Selector;
+        pseudoElementPart = generateCSS(selector.children.last!);
+        selector.children.pop();
+      }
+
+      const elementPart = generateCSS(selector);
+
+      return {
+        selector: elementPart + (pseudoElementPart ?? ''),
+        elementPart,
+        pseudoElementPart,
+      } satisfies Selector;
+    })
+    .toArray();
 }

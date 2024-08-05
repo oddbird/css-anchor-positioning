@@ -1,0 +1,793 @@
+import * as csstree from 'css-tree';
+import { nanoid } from 'nanoid/non-secure';
+
+import { getCSSPropertyValue } from './dom.js';
+import {
+  type AnchorPosition,
+  type AnchorPositions,
+  type TryBlock,
+} from './parse.js';
+import {
+  ACCEPTED_POSITION_TRY_PROPERTIES,
+  type AcceptedPositionTryProperty,
+  ANCHOR_SIDES,
+  type AnchorSideKeyword,
+  type InsetProperty,
+  isInsetProp,
+  isMarginProp,
+  isSelfAlignmentProp,
+  isSizingProp,
+} from './syntax.js';
+import {
+  type DeclarationWithValue,
+  generateCSS,
+  getAST,
+  getSelectors,
+  INSTANCE_UUID,
+  isAnchorFunction,
+  splitCommaList,
+  type StyleData,
+} from './utils.js';
+
+interface AtRuleRaw extends csstree.Atrule {
+  prelude: csstree.Raw | null;
+}
+
+// `key` is the `@position-try` block uuid
+// `value` is the target element selector
+type FallbackTargets = Record<string, string>;
+
+type Fallbacks = Record<
+  // `key` is the `position-fallback` value (name)
+  string,
+  {
+    // `targets` is an array of selectors where this `position-fallback` is used
+    targets: string[];
+    // `blocks` is an array of `@try` block declarations (in order)
+    blocks: TryBlock[];
+  }
+>;
+
+type InsetAreaProperty =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'span-left'
+  | 'span-right'
+  | 'x-start'
+  | 'x-end'
+  | 'span-x-start'
+  | 'span-x-end'
+  | 'x-self-start'
+  | 'x-self-end'
+  | 'span-x-self-start'
+  | 'span-x-self-end'
+  | 'span-all'
+  | 'top'
+  | 'bottom'
+  | 'span-top'
+  | 'span-bottom'
+  | 'y-start'
+  | 'y-end'
+  | 'span-y-start'
+  | 'span-y-end'
+  | 'y-self-start'
+  | 'y-self-end'
+  | 'span-y-self-start'
+  | 'span-y-self-end'
+  | 'block-start'
+  | 'block-end'
+  | 'span-block-start'
+  | 'span-block-end'
+  | 'inline-start'
+  | 'inline-end'
+  | 'span-inline-start'
+  | 'span-inline-end'
+  | 'self-block-start'
+  | 'self-block-end'
+  | 'span-self-block-start'
+  | 'span-self-block-end'
+  | 'self-inline-start'
+  | 'self-inline-end'
+  | 'span-self-inline-start'
+  | 'span-self-inline-end'
+  | 'start'
+  | 'end'
+  | 'span-start'
+  | 'span-end'
+  | 'self-start'
+  | 'self-end'
+  | 'span-self-start'
+  | 'span-self-end';
+
+const INSET_AREA_PROPS: InsetAreaProperty[] = [
+  'left',
+  'center',
+  'right',
+  'span-left',
+  'span-right',
+  'x-start',
+  'x-end',
+  'span-x-start',
+  'span-x-end',
+  'x-self-start',
+  'x-self-end',
+  'span-x-self-start',
+  'span-x-self-end',
+  'span-all',
+  'top',
+  'bottom',
+  'span-top',
+  'span-bottom',
+  'y-start',
+  'y-end',
+  'span-y-start',
+  'span-y-end',
+  'y-self-start',
+  'y-self-end',
+  'span-y-self-start',
+  'span-y-self-end',
+  'block-start',
+  'block-end',
+  'span-block-start',
+  'span-block-end',
+  'inline-start',
+  'inline-end',
+  'span-inline-start',
+  'span-inline-end',
+  'self-block-start',
+  'self-block-end',
+  'span-self-block-start',
+  'span-self-block-end',
+  'self-inline-start',
+  'self-inline-end',
+  'span-self-inline-start',
+  'span-self-inline-end',
+  'start',
+  'end',
+  'span-start',
+  'span-end',
+  'self-start',
+  'self-end',
+  'span-self-start',
+  'span-self-end',
+];
+
+type InsetAreaPropertyChunks =
+  | 'left'
+  | 'center'
+  | 'right'
+  | 'span'
+  | 'x'
+  | 'start'
+  | 'end'
+  | 'self'
+  | 'all'
+  | 'top'
+  | 'bottom'
+  | 'y'
+  | 'block'
+  | 'inline';
+
+export type PositionTryOrder =
+  | 'normal'
+  | 'most-width'
+  | 'most-height'
+  | 'most-block-size'
+  | 'most-inline-size';
+
+const POSITION_TRY_ORDERS: PositionTryOrder[] = [
+  'normal',
+  'most-width',
+  'most-height',
+  'most-block-size',
+  'most-inline-size',
+];
+
+export type PositionTryOptionsTryTactics =
+  | 'flip-block'
+  | 'flip-inline'
+  | 'flip-start';
+
+const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
+
+interface PositionTryDefTactic {
+  type: 'try-tactic';
+  tactics: PositionTryOptionsTryTactics[];
+}
+interface PositionTryDefInsetArea {
+  type: 'inset-area';
+  insetArea: InsetProperty;
+}
+interface PositionTryDefAtRule {
+  type: 'at-rule';
+  atRule: csstree.Identifier['name'];
+}
+interface PositionTryDefAtRuleWithTactic {
+  type: 'at-rule-with-try-tactic';
+  tactics: PositionTryOptionsTryTactics[];
+  atRule: csstree.Identifier['name'];
+}
+
+type PositionTryObject =
+  | PositionTryDefTactic
+  | PositionTryDefInsetArea
+  | PositionTryDefAtRule
+  | PositionTryDefAtRuleWithTactic;
+
+export function isInsetAreaProp(
+  property: string | InsetAreaProperty,
+): property is InsetAreaProperty {
+  return INSET_AREA_PROPS.includes(property as InsetAreaProperty);
+}
+
+function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
+  return node.type === 'Declaration';
+}
+
+function isPositionTryFallbacksDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return (
+    node.type === 'Declaration' && node.property === 'position-try-fallbacks'
+  );
+}
+
+function isPositionTryOrderDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try-order';
+}
+
+function isPositionTryDeclaration(
+  node: csstree.CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-try';
+}
+
+function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
+  return node.type === 'Atrule' && node.name === 'position-try';
+}
+
+function isPositionTryTactic(
+  name: string,
+): name is PositionTryOptionsTryTactics {
+  return POSITION_TRY_TACTICS.includes(name);
+}
+
+function isPositionTryOrder(name: string): name is PositionTryOrder {
+  return POSITION_TRY_ORDERS.includes(name as PositionTryOrder);
+}
+
+export function applyTryTacticsToSelector(
+  selector: string,
+  tactics: PositionTryOptionsTryTactics[],
+) {
+  // todo: This currently only uses the styles from the first match. Each
+  // element may have different styles and need a separate fallback definition.
+  const el: HTMLElement | null = document.querySelector(selector);
+  if (el) {
+    let rules = getExistingInsetRules(el);
+    tactics.forEach((tactic) => {
+      rules = applyTryTacticToBlock(rules, tactic);
+    });
+    return rules;
+  }
+}
+export function applyTryTacticsToAtRule(
+  block: TryBlock,
+  tactics: PositionTryOptionsTryTactics[],
+) {
+  let rules = block.declarations;
+  tactics.forEach((tactic) => {
+    rules = applyTryTacticToBlock(rules, tactic);
+  });
+  return rules;
+}
+
+type InsetRules = Partial<Record<AcceptedPositionTryProperty, string>>;
+
+export function getExistingInsetRules(el: HTMLElement) {
+  const rules: InsetRules = {};
+  ACCEPTED_POSITION_TRY_PROPERTIES.forEach((prop) => {
+    const propVal = getCSSPropertyValue(
+      el as HTMLElement,
+      `--${prop}-${INSTANCE_UUID}`,
+    );
+    if (propVal) {
+      rules[prop] = propVal;
+    }
+  });
+  return rules;
+}
+
+const tryTacticsPropertyMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<AcceptedPositionTryProperty, AcceptedPositionTryProperty>>
+> = {
+  'flip-block': {
+    top: 'bottom',
+    bottom: 'top',
+    'inset-block-start': 'inset-block-end',
+    'inset-block-end': 'inset-block-start',
+    'margin-top': 'margin-bottom',
+    'margin-bottom': 'margin-top',
+  },
+  'flip-inline': {
+    left: 'right',
+    right: 'left',
+    'inset-inline-start': 'inset-inline-end',
+    'inset-inline-end': 'inset-inline-start',
+    'margin-left': 'margin-right',
+    'margin-right': 'margin-left',
+  },
+  'flip-start': {
+    left: 'top',
+    right: 'bottom',
+    top: 'left',
+    bottom: 'right',
+    'inset-block-start': 'inset-block-end',
+    'inset-block-end': 'inset-block-start',
+    'inset-inline-start': 'inset-inline-end',
+    'inset-inline-end': 'inset-inline-start',
+    'inset-block': 'inset-inline',
+    'inset-inline': 'inset-block',
+  },
+};
+
+const anchorSideMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<AnchorSideKeyword, AnchorSideKeyword>>
+> = {
+  'flip-block': {
+    top: 'bottom',
+    bottom: 'top',
+    start: 'end',
+    end: 'start',
+    'self-end': 'self-start',
+    'self-start': 'self-end',
+  },
+  'flip-inline': {
+    left: 'right',
+    right: 'left',
+    start: 'end',
+    end: 'start',
+    'self-end': 'self-start',
+    'self-start': 'self-end',
+  },
+  'flip-start': {
+    top: 'left',
+    left: 'top',
+    right: 'bottom',
+    bottom: 'right',
+  },
+};
+
+const insetAreaPropertyMapping: Record<
+  PositionTryOptionsTryTactics,
+  Partial<Record<InsetAreaPropertyChunks, InsetAreaPropertyChunks>>
+> = {
+  'flip-block': {
+    top: 'bottom',
+    bottom: 'top',
+    start: 'end',
+    end: 'start',
+  },
+  'flip-inline': {
+    left: 'right',
+    right: 'left',
+    start: 'end',
+    end: 'start',
+  },
+  'flip-start': {
+    // TODO: Requires fuller logic
+  },
+};
+
+function mapProperty(
+  property: AcceptedPositionTryProperty,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const mapping = tryTacticsPropertyMapping[tactic];
+  return mapping[property] || property;
+}
+
+function mapAnchorSide(
+  side: AnchorSideKeyword,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const mapping = anchorSideMapping[tactic];
+  return mapping[side] || side;
+}
+
+function mapInsetArea(
+  prop: InsetAreaProperty,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  if (tactic === 'flip-start') {
+    // TODO: Handle flip-start
+    return prop;
+  } else {
+    const mapping = insetAreaPropertyMapping[tactic];
+    return prop
+      .split('-')
+      .map((value) => mapping[value as InsetAreaPropertyChunks] || value)
+      .join('-');
+  }
+}
+
+function mapMargin(
+  key: string,
+  valueAst: csstree.Value,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  // TODO: Handle flip-start
+  if (key === 'margin') {
+    const [first, second, third, fourth] = valueAst.children.toArray();
+    if (tactic === 'flip-block') {
+      if (fourth) {
+        valueAst.children.fromArray([third, second, first, fourth]);
+      } else if (third) {
+        valueAst.children.fromArray([third, second, first]);
+      } // No change needed for 1 or 2 values
+    } else if (tactic === 'flip-inline') {
+      if (fourth) {
+        valueAst.children.fromArray([first, fourth, third, second]);
+      } // No change needed for 1, 2 or 3 values
+    }
+  } else if (key === 'margin-block') {
+    const [first, second] = valueAst.children.toArray();
+    if (tactic === 'flip-block') {
+      if (second) {
+        valueAst.children.fromArray([second, first]);
+      }
+    }
+  } else if (key === 'margin-inline') {
+    const [first, second] = valueAst.children.toArray();
+    if (tactic === 'flip-inline') {
+      if (second) {
+        valueAst.children.fromArray([second, first]);
+      }
+    }
+  }
+}
+
+// Parses a value into an AST.
+const getValueAST = (property: string, val: string) => {
+  const ast = getAST(`#id{${property}: ${val};}`) as csstree.Block;
+  const astDeclaration = (ast.children.first as csstree.Rule)?.block.children
+    .first as csstree.Declaration;
+  return astDeclaration.value as csstree.Value;
+};
+
+export function applyTryTacticToBlock(
+  rules: InsetRules,
+  tactic: PositionTryOptionsTryTactics,
+) {
+  const declarations: TryBlock['declarations'] = {};
+  Object.entries(rules).forEach(([_key, value]) => {
+    const key = _key as AcceptedPositionTryProperty;
+    const valueAst = getValueAST(key, value);
+
+    const newKey = mapProperty(key as AcceptedPositionTryProperty, tactic);
+
+    // If we're changing the property, revert the original if it hasn't been set.
+    if (newKey !== key) {
+      declarations[key] ??= 'revert';
+    }
+
+    if (isAnchorFunction(valueAst.children.first)) {
+      valueAst.children.first.children.forEach((item) => {
+        if (
+          item.type === 'Identifier' &&
+          ANCHOR_SIDES.includes(item.name as AnchorSideKeyword)
+        ) {
+          item.name = mapAnchorSide(item.name as AnchorSideKeyword, tactic);
+        }
+      });
+    }
+
+    if (key === 'inset-area') {
+      valueAst.children.forEach((id) => {
+        if (id.type === 'Identifier' && isInsetAreaProp(id.name)) {
+          id.name = mapInsetArea(id.name, tactic);
+        }
+      });
+    }
+    if (key.startsWith('margin')) {
+      mapMargin(key, valueAst, tactic);
+    }
+
+    declarations[newKey] = generateCSS(valueAst);
+  });
+  return declarations;
+}
+
+function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
+  const positionOptions = splitCommaList(list);
+  const tryObjects: PositionTryObject[] = [];
+  positionOptions.forEach((option) => {
+    const identifiers: {
+      atRules: PositionTryDefAtRuleWithTactic['atRule'][];
+      tactics: PositionTryOptionsTryTactics[];
+      insetAreas: InsetProperty[];
+    } = {
+      atRules: [],
+      tactics: [],
+      insetAreas: [],
+    };
+    option.forEach((opt) => {
+      if (isPositionTryTactic(opt.name)) identifiers.tactics.push(opt.name);
+      else if (opt.name.startsWith('--')) identifiers.atRules.push(opt.name);
+      else if (isInsetProp(opt.name)) identifiers.insetAreas.push(opt.name);
+    });
+    // Inset area can not be combined or have multiple
+    if (identifiers.insetAreas.length) {
+      tryObjects.push({
+        insetArea: identifiers.insetAreas[0],
+        type: 'inset-area',
+      });
+      // multiple tactics can modify a single at rule
+    } else if (identifiers.atRules.length && identifiers.tactics.length) {
+      tryObjects.push({
+        tactics: identifiers.tactics,
+        atRule: identifiers.atRules[0],
+        type: 'at-rule-with-try-tactic',
+      });
+      // A single at rule
+    } else if (identifiers.atRules.length) {
+      tryObjects.push({
+        atRule: identifiers.atRules[0],
+        type: 'at-rule',
+      });
+      // One or multiple combined try tactics
+    } else if (identifiers.tactics.length) {
+      tryObjects.push({
+        tactics: identifiers.tactics,
+        type: 'try-tactic',
+      });
+    }
+  });
+  return tryObjects;
+}
+
+function getPositionTryFallbacksDeclaration(node: csstree.Declaration) {
+  if (isPositionTryFallbacksDeclaration(node) && node.value.children.first) {
+    return parsePositionTryFallbacks(node.value.children);
+  }
+  return [];
+}
+
+export function getPositionTryDeclaration(node: csstree.Declaration): {
+  order?: PositionTryOrder;
+  options?: PositionTryObject[];
+} {
+  if (isPositionTryDeclaration(node) && node.value.children.first) {
+    let order: PositionTryOrder | undefined;
+    // get potential order
+    const firstName = (node.value.children.first as csstree.Identifier).name;
+    if (firstName && isPositionTryOrder(firstName)) {
+      order = firstName;
+      node.value.children.shift();
+    }
+    const options = parsePositionTryFallbacks(node.value.children);
+
+    return { order, options };
+  }
+  return {};
+}
+
+function getPositionTryOrderDeclaration(node: csstree.Declaration) {
+  if (isPositionTryOrderDeclaration(node) && node.value.children.first) {
+    return {
+      order: (node.value.children.first as csstree.Identifier)
+        .name as PositionTryOrder,
+    };
+  }
+  return {};
+}
+
+export function getPositionFallbackValues(node: csstree.Declaration): {
+  order?: PositionTryOrder;
+  options?: PositionTryObject[];
+} {
+  const { order, options } = getPositionTryDeclaration(node);
+  if (order || options) {
+    return { order, options };
+  }
+  const { order: orderDeclaration } = getPositionTryOrderDeclaration(node);
+  const optionsNames = getPositionTryFallbacksDeclaration(node);
+  if (orderDeclaration || optionsNames) {
+    return { order: orderDeclaration, options: optionsNames };
+  }
+  return {};
+}
+
+// https://drafts.csswg.org/css-anchor-position-1/#accepted-position-try-properties
+export function isAcceptedPositionTryProperty(
+  declaration: csstree.Declaration,
+) {
+  return (
+    isInsetProp(declaration.property) ||
+    isMarginProp(declaration.property) ||
+    isSizingProp(declaration.property) ||
+    isSelfAlignmentProp(declaration.property) ||
+    ['position-anchor', 'inset-area'].includes(declaration.property)
+  );
+}
+
+export function getPositionTryRules(node: csstree.Atrule) {
+  if (
+    isPositionTryAtRule(node) &&
+    node.prelude?.value &&
+    node.block?.children
+  ) {
+    const name = node.prelude.value;
+    const tryBlocks: TryBlock[] = [];
+    const declarations = node.block.children.filter(
+      (d): d is DeclarationWithValue =>
+        isDeclaration(d) && isAcceptedPositionTryProperty(d),
+    );
+    const tryBlock: TryBlock = {
+      uuid: `${name}-try-${nanoid(12)}`,
+      declarations: Object.fromEntries(
+        declarations.map((d) => [d.property, generateCSS(d.value)]),
+      ),
+    };
+
+    tryBlocks.push(tryBlock);
+
+    return { name, blocks: tryBlocks };
+  }
+  return {};
+}
+
+export function parsePositionFallbacks(styleData: StyleData[]) {
+  const fallbacks: Fallbacks = {};
+  const fallbackTargets: FallbackTargets = {};
+  const validPositions: AnchorPositions = {};
+  // First, find all uses of `@position-try`
+  for (const styleObj of styleData) {
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Atrule',
+      enter(node) {
+        // Parse `@position-try` rules
+        const { name, blocks } = getPositionTryRules(node);
+        if (name && blocks?.length) {
+          // This will override earlier `@position-try` lists
+          // with the same name:
+          // (e.g. multiple `@position-try --my-fallback {...}` uses
+          // with the same `--my-fallback` name)
+          fallbacks[name] = {
+            targets: [],
+            blocks: blocks,
+          };
+        }
+      },
+    });
+  }
+  for (const styleObj of styleData) {
+    let changed = false;
+    const ast = getAST(styleObj.css);
+    csstree.walk(ast, {
+      visit: 'Declaration',
+      enter(node) {
+        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const selectors = getSelectors(rule);
+        if (!selectors.length) return;
+        // todo: better handle multiple selectors
+        const selector = selectors.map((s) => s.selector).join(',');
+        // Parse `position-try-fallbacks` declaration
+        const { order, options } = getPositionFallbackValues(node);
+        const anchorPosition: AnchorPosition = {};
+        if (order) {
+          anchorPosition.order = order;
+        }
+        options?.forEach((tryObject) => {
+          let name;
+          // Apply try fallback
+          if (tryObject.type === 'at-rule') {
+            name = tryObject.atRule;
+          } else if (tryObject.type === 'try-tactic') {
+            // add new item to fallbacks store
+            name = `${selector}-${tryObject.tactics.join('-')}`;
+            const tacticAppliedRules = applyTryTacticsToSelector(
+              selector,
+              tryObject.tactics,
+            );
+            if (tacticAppliedRules) {
+              fallbacks[name] = {
+                targets: [selector],
+                blocks: [
+                  {
+                    uuid: `${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                    declarations: tacticAppliedRules,
+                  },
+                ],
+              };
+            }
+          } else if (tryObject.type === 'at-rule-with-try-tactic') {
+            // add new item to fallbacks store
+            name = `${tryObject.atRule}-${tryObject.tactics.join('-')}`;
+            const declarations = fallbacks[tryObject.atRule].blocks[0];
+            const tacticAppliedRules = applyTryTacticsToAtRule(
+              declarations,
+              tryObject.tactics,
+            );
+            if (tacticAppliedRules) {
+              fallbacks[name] = {
+                targets: [selector],
+                blocks: [
+                  {
+                    uuid: `${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                    declarations: tacticAppliedRules,
+                  },
+                ],
+              };
+            }
+          }
+
+          if (name && fallbacks[name]) {
+            anchorPosition.fallbacks ??= [];
+            anchorPosition.fallbacks.push(...fallbacks[name].blocks);
+
+            if (!fallbacks[name].targets.includes(selector)) {
+              fallbacks[name].targets.push(selector);
+            }
+            // Add each `@position-try` block, scoped to a unique data-attr
+            for (const block of fallbacks[name].blocks) {
+              const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+              this.stylesheet?.children.prependData({
+                type: 'Rule',
+                prelude: {
+                  type: 'Raw',
+                  value: dataAttr,
+                },
+                block: {
+                  type: 'Block',
+                  children: new csstree.List<csstree.CssNode>().fromArray(
+                    Object.entries(block.declarations).map(([prop, val]) => ({
+                      type: 'Declaration',
+                      important: true,
+                      property: prop,
+                      value: {
+                        type: 'Raw',
+                        value: val,
+                      },
+                    })),
+                  ),
+                },
+              });
+              // Store mapping of data-attr to target selector
+              fallbackTargets[dataAttr] = selector;
+            }
+            changed = true;
+          }
+        });
+        if (Object.keys(anchorPosition).length > 0) {
+          if (validPositions[selector]) {
+            if (anchorPosition.order) {
+              validPositions[selector].order = anchorPosition.order;
+            }
+            if (anchorPosition.fallbacks) {
+              validPositions[selector].fallbacks ??= [];
+              validPositions[selector].fallbacks.push(
+                ...anchorPosition.fallbacks,
+              );
+            }
+            //  = {order: anchorPosition.order, fallbacks: [...[validPositions[selector].fallbacks], ...[anchorPosition.fallbacks]]};
+          } else {
+            validPositions[selector] = anchorPosition;
+          }
+        }
+      },
+    });
+    if (changed) {
+      // Update CSS
+      styleObj.css = generateCSS(ast);
+      styleObj.changed = true;
+    }
+  }
+  return { fallbackTargets, validPositions };
+}

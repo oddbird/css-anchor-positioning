@@ -1,7 +1,12 @@
 import * as csstree from 'css-tree';
-import { nanoid } from 'nanoid/non-secure';
 
-import { generateCSS, getAST, isDeclaration, type StyleData } from './utils.js';
+import {
+  generateCSS,
+  getAST,
+  INSTANCE_UUID,
+  isDeclaration,
+  type StyleData,
+} from './utils.js';
 
 /**
  * Map of CSS property to CSS custom property that the property's value is
@@ -9,9 +14,20 @@ import { generateCSS, getAST, isDeclaration, type StyleData } from './utils.js';
  * supported to the CSS cascade and inheritance rules.
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = {
-  'position-anchor': `--position-anchor-${nanoid(12)}`,
-  'anchor-scope': `--anchor-scope-${nanoid(12)}`,
-  'anchor-name': `--anchor-name-${nanoid(12)}`,
+  'position-anchor': `--position-anchor-${INSTANCE_UUID}`,
+  'anchor-scope': `--anchor-scope-${INSTANCE_UUID}`,
+  'anchor-name': `--anchor-name-${INSTANCE_UUID}`,
+  left: `--left-${INSTANCE_UUID}`,
+  right: `--right-${INSTANCE_UUID}`,
+  top: `--top-${INSTANCE_UUID}`,
+  bottom: `--bottom-${INSTANCE_UUID}`,
+  'inset-block-start': `--inset-block-start-${INSTANCE_UUID}`,
+  'inset-block-end': `--inset-block-end-${INSTANCE_UUID}`,
+  'inset-inline-start': `--inset-inline-start-${INSTANCE_UUID}`,
+  'inset-inline-end': `--inset-inline-end-${INSTANCE_UUID}`,
+  'inset-block': `--inset-block-${INSTANCE_UUID}`,
+  'inset-inline': `--inset-inline-${INSTANCE_UUID}`,
+  inset: `--inset-${INSTANCE_UUID}`,
 };
 
 /**
@@ -32,11 +48,7 @@ function shiftUnsupportedProperties(
   return {};
 }
 
-/**
- * Update the given style data to enable cascading and inheritance of properties
- * that are not yet natively supported.
- */
-export function cascadeCSS(styleData: StyleData[]) {
+export async function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -44,10 +56,9 @@ export function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
+
         const { updated } = shiftUnsupportedProperties(node, block);
-        if (updated) {
-          changed = true;
-        }
+        changed = updated || changed;
       },
     });
 
