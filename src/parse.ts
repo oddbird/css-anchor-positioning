@@ -1,12 +1,7 @@
 import * as csstree from 'css-tree';
 import { nanoid } from 'nanoid/non-secure';
 
-import {
-  AnchorScopeValue,
-  getCSSPropertyValue,
-  type PseudoElement,
-  type Selector,
-} from './dom.js';
+import { type Selector } from './dom.js';
 import {
   type DeclarationWithValue,
   generateCSS,
@@ -15,7 +10,6 @@ import {
   isDeclaration,
   type StyleData,
 } from './utils.js';
-import { validatedForPositioning } from './validate.js';
 
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
@@ -23,7 +17,7 @@ interface AtRuleRaw extends csstree.Atrule {
 
 // `key` is the `anchor-name` value
 // `value` is an array of all selectors associated with that `anchor-name`
-type AnchorSelectors = Record<string, Selector[]>;
+export type AnchorSelectors = Record<string, Selector[]>;
 
 export type InsetProperty =
   | 'top'
@@ -128,9 +122,18 @@ const ANCHOR_SIZES: AnchorSize[] = [
   'self-inline',
 ];
 
+/**
+ * Parsed anchor data to be used by the rest of the polyfill.
+ */
+export interface ParsedAnchorData {
+  anchorFunctions: AnchorFunctionDeclarations;
+  tryBlocks: TryBlocks;
+  tryBlockTargets: FallbackTargets;
+  anchorNames: AnchorSelectors;
+  anchorScopes: AnchorSelectors;
+}
+
 export interface AnchorFunction {
-  targetEl?: HTMLElement | null;
-  anchorEl?: HTMLElement | PseudoElement | null;
   anchorName?: string;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
@@ -147,16 +150,10 @@ export type AnchorFunctionDeclaration = Partial<
 
 // `key` is the target element selector
 // `value` is an object with all anchor-function declarations on that element
-type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
-
-interface AnchorPosition {
-  declarations?: AnchorFunctionDeclaration;
-  fallbacks?: TryBlock[];
-}
-
-// `key` is the target element selector
-// `value` is an object with all anchor-positioning data for that element
-export type AnchorPositions = Record<string, AnchorPosition>;
+export type AnchorFunctionDeclarations = Record<
+  string,
+  AnchorFunctionDeclaration
+>;
 
 export interface TryBlock {
   uuid: string;
@@ -169,7 +166,9 @@ export interface TryBlock {
 
 // `key` is the `@try` block uuid
 // `value` is the target element selector
-type FallbackTargets = Record<string, string>;
+export type FallbackTargets = Record<string, string>;
+
+export type TryBlocks = Record<string, TryBlock[]>;
 
 type Fallbacks = Record<
   // `key` is the `position-fallback` value (name)
@@ -461,55 +460,11 @@ function getPositionFallbackRules(node: csstree.Atrule) {
   return {};
 }
 
-async function getAnchorEl(
-  targetEl: HTMLElement | null,
-  anchorObj: AnchorFunction,
-) {
-  let anchorName = anchorObj.anchorName;
-  const customPropName = anchorObj.customPropName;
-  if (targetEl && !anchorName) {
-    const anchorAttr = targetEl.getAttribute('anchor');
-    const positionAnchorProperty = getCSSPropertyValue(
-      targetEl,
-      'position-anchor',
-    );
-
-    if (positionAnchorProperty) {
-      anchorName = positionAnchorProperty;
-    } else if (customPropName) {
-      anchorName = getCSSPropertyValue(targetEl, customPropName);
-    } else if (anchorAttr) {
-      const elementPart = `#${CSS.escape(anchorAttr)}`;
-
-      return await validatedForPositioning(
-        targetEl,
-        null,
-        [{ selector: elementPart, elementPart }],
-        [],
-      );
-    }
-  }
-  const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
-  const allScopeSelectors = anchorName
-    ? anchorScopes[AnchorScopeValue.All] || []
-    : [];
-  const anchorNameScopeSelectors = anchorName
-    ? anchorScopes[anchorName] || []
-    : [];
-  return await validatedForPositioning(
-    targetEl,
-    anchorName || null,
-    anchorSelectors,
-    [...allScopeSelectors, ...anchorNameScopeSelectors],
-  );
-}
-
-export async function parseCSS(styleData: StyleData[]) {
+export function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
-  const fallbackTargets: FallbackTargets = {};
+  const tryBlockTargets: FallbackTargets = {};
   const fallbacks: Fallbacks = {};
-  // Final data merged together under target-element selector key
-  const validPositions: AnchorPositions = {};
+  const tryBlocks: TryBlocks = {};
   resetStores();
 
   // First, find all uses of `@position-fallback`
@@ -549,7 +504,7 @@ export async function parseCSS(styleData: StyleData[]) {
         const name = getPositionFallbackDeclaration(node);
         if (name && selectors.length && fallbacks[name]) {
           for (const { selector } of selectors) {
-            validPositions[selector] = { fallbacks: fallbacks[name].blocks };
+            tryBlocks[selector] = fallbacks[name].blocks;
             if (!fallbacks[name].targets.includes(selector)) {
               fallbacks[name].targets.push(selector);
             }
@@ -580,7 +535,7 @@ export async function parseCSS(styleData: StyleData[]) {
               },
             });
             // Store mapping of data-attr to target selector
-            fallbackTargets[dataAttr] = selectors
+            tryBlockTargets[dataAttr] = selectors
               .map(({ selector }) => selector)
               .join(', ');
           }
@@ -965,60 +920,11 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  // Store inline style custom property mappings for each target element
-  const inlineStyles = new Map<HTMLElement, Record<string, string>>();
-  // Store any `anchor()` fns
-  for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
-    let targets: NodeListOf<HTMLElement>;
-    if (
-      targetSel.startsWith('[data-anchor-polyfill=') &&
-      fallbackTargets[targetSel]
-    ) {
-      // If we're dealing with a `@position-fallback` `@try` block,
-      // then the targets are places where that `position-fallback` is used.
-      targets = document.querySelectorAll(fallbackTargets[targetSel]);
-    } else {
-      targets = document.querySelectorAll(targetSel);
-    }
-    for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
-      InsetProperty | SizingProperty,
-      AnchorFunction[],
-    ][]) {
-      for (const anchorObj of anchorObjects) {
-        for (const targetEl of targets) {
-          // For every target element, find a valid anchor element
-          const anchorEl = await getAnchorEl(targetEl, anchorObj);
-          const uuid = `--anchor-${nanoid(12)}`;
-          // Store new mapping, in case inline styles have changed and will
-          // be overwritten -- in which case new mappings will be re-added
-          inlineStyles.set(targetEl, {
-            ...(inlineStyles.get(targetEl) ?? {}),
-            [anchorObj.uuid]: uuid,
-          });
-          // Point original uuid to new uuid
-          targetEl.setAttribute(
-            'style',
-            `${anchorObj.uuid}: var(${uuid}); ${
-              targetEl.getAttribute('style') ?? ''
-            }`,
-          );
-          // Populate new data for each anchor/target combo
-          validPositions[targetSel] = {
-            ...validPositions[targetSel],
-            declarations: {
-              ...validPositions[targetSel]?.declarations,
-              [targetProperty]: [
-                ...(validPositions[targetSel]?.declarations?.[
-                  targetProperty as InsetProperty
-                ] ?? []),
-                { ...anchorObj, anchorEl, targetEl, uuid },
-              ],
-            },
-          };
-        }
-      }
-    }
-  }
-
-  return { rules: validPositions, inlineStyles, anchorScopes };
+  return {
+    anchorFunctions,
+    tryBlocks,
+    tryBlockTargets,
+    anchorNames,
+    anchorScopes,
+  };
 }

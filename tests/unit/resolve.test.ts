@@ -1,10 +1,7 @@
-import { type AnchorPositions, parseCSS } from '../../src/parse.js';
+import { parseCSS } from '../../src/parse.js';
+import { resolveAnchors, ResolvedAnchorPositions } from '../../src/resolve.js';
 import { type StyleData } from '../../src/utils.js';
-import {
-  cascadeCSSForTest,
-  getSampleCSS,
-  sampleBaseCSS,
-} from './../helpers.js';
+import { cascadeCSSForTest, getSampleCSS, sampleBaseCSS } from '../helpers.js';
 
 describe('parseCSS', () => {
   afterAll(() => {
@@ -13,9 +10,10 @@ describe('parseCSS', () => {
   });
 
   it('handles css with no `anchor()` fn', async () => {
-    const { rules } = await parseCSS([{ css: sampleBaseCSS }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css: sampleBaseCSS }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
 
-    expect(rules).toEqual({});
+    expect(resolvedAnchors).toEqual({});
   });
 
   it('parses `anchor()` function', async () => {
@@ -29,7 +27,8 @@ describe('parseCSS', () => {
     const targetEl = document.getElementById('my-target-positioning');
     const css = getSampleCSS('anchor-positioning');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
 
     const expected = {
       '#my-target-positioning': {
@@ -58,7 +57,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` (implicit name via `anchor` attr)', async () => {
@@ -67,7 +66,8 @@ describe('parseCSS', () => {
       '<div id="my-implicit-target" anchor="my-implicit-anchor"></div></div>';
     const css = getSampleCSS('anchor-implicit');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-implicit-target': {
         declarations: {
@@ -97,7 +97,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` (name set via custom property)', async () => {
@@ -106,7 +106,8 @@ describe('parseCSS', () => {
       '<div id="my-anchor-name-prop"></div></div>';
     const css = getSampleCSS('anchor-name-custom-prop');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-name-prop': {
         declarations: {
@@ -134,7 +135,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function with unknown anchor name', async () => {
@@ -146,7 +147,8 @@ describe('parseCSS', () => {
       }
     `;
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#f1': {
         declarations: {
@@ -164,7 +166,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `position-anchor` on different selector', async () => {
@@ -190,7 +192,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-1': {
         declarations: {
@@ -221,7 +224,7 @@ describe('parseCSS', () => {
         },
       },
     };
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `position-anchor` declared multiple times', async () => {
@@ -247,7 +250,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-1': {
         declarations: {
@@ -278,7 +282,7 @@ describe('parseCSS', () => {
         },
       },
     };
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('handles duplicate anchor-names', async () => {
@@ -298,7 +302,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#f1': {
         declarations: {
@@ -316,7 +321,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function (custom properties)', async () => {
@@ -324,7 +329,8 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target"></div><div id="my-anchor"></div></div>';
     const css = getSampleCSS('anchor');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target': {
         declarations: {
@@ -352,7 +358,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function (custom property passed through)', async () => {
@@ -360,7 +366,8 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target-props"></div><div id="my-anchor-props"></div></div>';
     const css = getSampleCSS('anchor-custom-props');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-props': {
         declarations: {
@@ -388,7 +395,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function (multiple duplicate custom properties)', async () => {
@@ -396,7 +403,8 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="target-duplicate-custom-props"></div><div id="anchor-duplicate-custom-props"></div></div>';
     const css = getSampleCSS('anchor-duplicate-custom-props');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#target-duplicate-custom-props': {
         declarations: {
@@ -456,7 +464,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor-name` with a list of names', async () => {
@@ -464,7 +472,8 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-anchor-name-list"></div><div id="my-target-name-list-a"></div><div id="my-target-name-list-b"></div></div>';
     const css = getSampleCSS('anchor-name-list');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-name-list-a': {
         declarations: {
@@ -516,7 +525,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function (math)', async () => {
@@ -524,7 +533,8 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target-math"></div><div id="my-anchor-math"></div></div>';
     const css = getSampleCSS('anchor-math');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '#my-target-math': {
         declarations: {
@@ -552,7 +562,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor()` function with multiple anchors/targets', async () => {
@@ -581,7 +591,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '.target': {
         declarations: {
@@ -623,7 +634,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `anchor-size()` function', async () => {
@@ -636,7 +647,8 @@ describe('parseCSS', () => {
     const anchorEl = document.getElementById('my-anchor-size');
     const css = getSampleCSS('anchor-size');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
 
     const expected = {
       '#my-target-size': {
@@ -656,7 +668,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('parses `@position-fallback`', async () => {
@@ -667,8 +679,9 @@ describe('parseCSS', () => {
       </div>
     `;
     const css = getSampleCSS('position-fallback');
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
+    const expected: ResolvedAnchorPositions = {
       '#my-target-fallback': {
         fallbacks: [
           {
@@ -704,13 +717,14 @@ describe('parseCSS', () => {
         ],
       },
     };
-    for (const { uuid } of rules['#my-target-fallback']?.fallbacks ?? []) {
+    for (const { uuid } of resolvedAnchors['#my-target-fallback']?.fallbacks ??
+      []) {
       expected[`[data-anchor-polyfill="${uuid}"]`] = {
         declarations: expect.any(Object),
       };
     }
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('handles invalid/missing `position-fallback`', async () => {
@@ -720,9 +734,10 @@ describe('parseCSS', () => {
         position-fallback: --fallback;
       }
     `;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
 
-    expect(rules).toEqual({});
+    expect(resolvedAnchors).toEqual({});
   });
 
   it('respects `anchor-scope` when matching', async () => {
@@ -743,10 +758,11 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const li = document.querySelectorAll('li');
     const positioned = document.querySelectorAll<HTMLElement>('.positioned');
-    const expected: AnchorPositions = {
+    const expected: ResolvedAnchorPositions = {
       'li .positioned': {
         declarations: {
           top: [
@@ -771,7 +787,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('does not allow matches from outside declaration `anchor-scope`', async () => {
@@ -792,8 +808,9 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
+    const expected: ResolvedAnchorPositions = {
       '.positioned': {
         declarations: {
           top: [
@@ -810,7 +827,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('does not allow matching anchor declared in an inner `anchor-scope`', async () => {
@@ -834,8 +851,9 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
+    const expected: ResolvedAnchorPositions = {
       '.positioned': {
         declarations: {
           top: [
@@ -852,7 +870,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('does not allow matching anchor declared in an outer `anchor-scope`', async () => {
@@ -875,8 +893,9 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
+    const expected: ResolvedAnchorPositions = {
       '.positioned': {
         declarations: {
           top: [
@@ -893,7 +912,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('should respect cascade when determining `anchor-scope`', async () => {
@@ -915,7 +934,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '.positioned': {
         declarations: {
@@ -933,7 +953,7 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 
   it('should respect cascade when determining `anchor-name`', async () => {
@@ -954,7 +974,8 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const parsedCSS = parseCSS([{ css }] as StyleData[]);
+    const { resolvedAnchors } = await resolveAnchors(parsedCSS);
     const expected = {
       '.positioned': {
         declarations: {
@@ -972,6 +993,6 @@ describe('parseCSS', () => {
       },
     };
 
-    expect(rules).toEqual(expected);
+    expect(resolvedAnchors).toEqual(expected);
   });
 });

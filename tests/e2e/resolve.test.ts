@@ -4,7 +4,7 @@ import { type PseudoElement, type Selector } from '../../src/dom.js';
 import {
   isAcceptableAnchorElement,
   validatedForPositioning,
-} from '../../src/validate.js';
+} from '../../src/resolve.js';
 
 interface LocalWindow extends Window {
   isAcceptableAnchorElement: typeof isAcceptableAnchorElement;
@@ -21,7 +21,7 @@ async function buildPage(browser: Browser) {
       import {
         isAcceptableAnchorElement,
         validatedForPositioning,
-      } from '../../src/validate.ts';
+      } from '../../src/resolve.ts';
 
       window.isAcceptableAnchorElement = isAcceptableAnchorElement
       window.validatedForPositioning = validatedForPositioning
