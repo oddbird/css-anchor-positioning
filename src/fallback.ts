@@ -48,59 +48,7 @@ type Fallbacks = Record<
   }
 >;
 
-type InsetAreaProperty =
-  | 'left'
-  | 'center'
-  | 'right'
-  | 'span-left'
-  | 'span-right'
-  | 'x-start'
-  | 'x-end'
-  | 'span-x-start'
-  | 'span-x-end'
-  | 'x-self-start'
-  | 'x-self-end'
-  | 'span-x-self-start'
-  | 'span-x-self-end'
-  | 'span-all'
-  | 'top'
-  | 'bottom'
-  | 'span-top'
-  | 'span-bottom'
-  | 'y-start'
-  | 'y-end'
-  | 'span-y-start'
-  | 'span-y-end'
-  | 'y-self-start'
-  | 'y-self-end'
-  | 'span-y-self-start'
-  | 'span-y-self-end'
-  | 'block-start'
-  | 'block-end'
-  | 'span-block-start'
-  | 'span-block-end'
-  | 'inline-start'
-  | 'inline-end'
-  | 'span-inline-start'
-  | 'span-inline-end'
-  | 'self-block-start'
-  | 'self-block-end'
-  | 'span-self-block-start'
-  | 'span-self-block-end'
-  | 'self-inline-start'
-  | 'self-inline-end'
-  | 'span-self-inline-start'
-  | 'span-self-inline-end'
-  | 'start'
-  | 'end'
-  | 'span-start'
-  | 'span-end'
-  | 'self-start'
-  | 'self-end'
-  | 'span-self-start'
-  | 'span-self-end';
-
-const INSET_AREA_PROPS: InsetAreaProperty[] = [
+const INSET_AREA_PROPS = [
   'left',
   'center',
   'right',
@@ -151,7 +99,9 @@ const INSET_AREA_PROPS: InsetAreaProperty[] = [
   'self-end',
   'span-self-start',
   'span-self-end',
-];
+] as const;
+
+type InsetAreaProperty = (typeof INSET_AREA_PROPS)[number];
 
 type InsetAreaPropertyChunks =
   | 'left'
@@ -169,27 +119,24 @@ type InsetAreaPropertyChunks =
   | 'block'
   | 'inline';
 
-export type PositionTryOrder =
-  | 'normal'
-  | 'most-width'
-  | 'most-height'
-  | 'most-block-size'
-  | 'most-inline-size';
-
-const POSITION_TRY_ORDERS: PositionTryOrder[] = [
+const POSITION_TRY_ORDERS = [
   'normal',
   'most-width',
   'most-height',
   'most-block-size',
   'most-inline-size',
-];
+] as const;
+
+export type PositionTryOrder = (typeof POSITION_TRY_ORDERS)[number];
+
+const POSITION_TRY_TACTICS = [
+  'flip-block',
+  'flip-inline',
+  'flip-start',
+] as const;
 
 export type PositionTryOptionsTryTactics =
-  | 'flip-block'
-  | 'flip-inline'
-  | 'flip-start';
-
-const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
+  (typeof POSITION_TRY_TACTICS)[number];
 
 interface PositionTryDefTactic {
   type: 'try-tactic';
@@ -252,7 +199,7 @@ function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
 function isPositionTryTactic(
   name: string,
 ): name is PositionTryOptionsTryTactics {
-  return POSITION_TRY_TACTICS.includes(name);
+  return POSITION_TRY_TACTICS.includes(name as PositionTryOptionsTryTactics);
 }
 
 function isPositionTryOrder(name: string): name is PositionTryOrder {
