@@ -97,7 +97,9 @@ function isVarFunction(
   return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
-function isIdentifier(node: csstree.CssNode): node is csstree.Identifier {
+export function isIdentifier(
+  node: csstree.CssNode,
+): node is csstree.Identifier {
   return Boolean(node.type === 'Identifier' && node.name);
 }
 
@@ -293,8 +295,7 @@ export async function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   resetStores();
 
-  // Then, find all `position-try-fallbacks` declarations,
-  // and add in block contents (scoped to unique data-attrs)
+  // Parse `position-try` and related declarations/rules
   const { fallbackTargets, validPositions } = parsePositionFallbacks(styleData);
 
   for (const styleObj of styleData) {

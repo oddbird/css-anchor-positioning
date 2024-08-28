@@ -580,7 +580,7 @@
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
           <span id="my-anchor-try-tactics-combined" class="anchor"
-            >position-try combined Anchor</span
+            >position-try Anchor</span
           >
           <div id="my-target-try-tactics-combined" class="target">Target</div>
           <div class="placefiller-after-anchor"></div>
@@ -597,8 +597,8 @@
           </li>
           <li>
             Apply <code>flip-block flip-inline</code>, flipping across both the
-            block and inline axis, and align the top, left edge of the target
-            with the bottom, right edge of the anchor.
+            block and inline axis, and align the top, right edge of the target
+            with the bottom, left edge of the anchor.
           </li>
           <li>
             Apply <code>flip-inline --bottom-left-combined</code>, flipping
@@ -617,7 +617,7 @@
   position-anchor: --my-anchor-try-tactics-combined;
   bottom: anchor(top);
   left: anchor(right);
-  position-try: flip-block flip-inline, flip-inline --bottom-left;
+  position-try: flip-block flip-inline, flip-inline --bottom-left-combined;
 }
 
 @position-try --bottom-left-combined {

@@ -5,14 +5,15 @@ import { getCSSPropertyValue } from './dom.js';
 import {
   type AnchorPosition,
   type AnchorPositions,
+  isIdentifier,
   type TryBlock,
 } from './parse.js';
 import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
-  ANCHOR_SIDES,
   type AnchorSideKeyword,
   type InsetProperty,
+  isAnchorSide,
   isInsetProp,
   isMarginProp,
   isSelfAlignmentProp,
@@ -48,59 +49,7 @@ type Fallbacks = Record<
   }
 >;
 
-type InsetAreaProperty =
-  | 'left'
-  | 'center'
-  | 'right'
-  | 'span-left'
-  | 'span-right'
-  | 'x-start'
-  | 'x-end'
-  | 'span-x-start'
-  | 'span-x-end'
-  | 'x-self-start'
-  | 'x-self-end'
-  | 'span-x-self-start'
-  | 'span-x-self-end'
-  | 'span-all'
-  | 'top'
-  | 'bottom'
-  | 'span-top'
-  | 'span-bottom'
-  | 'y-start'
-  | 'y-end'
-  | 'span-y-start'
-  | 'span-y-end'
-  | 'y-self-start'
-  | 'y-self-end'
-  | 'span-y-self-start'
-  | 'span-y-self-end'
-  | 'block-start'
-  | 'block-end'
-  | 'span-block-start'
-  | 'span-block-end'
-  | 'inline-start'
-  | 'inline-end'
-  | 'span-inline-start'
-  | 'span-inline-end'
-  | 'self-block-start'
-  | 'self-block-end'
-  | 'span-self-block-start'
-  | 'span-self-block-end'
-  | 'self-inline-start'
-  | 'self-inline-end'
-  | 'span-self-inline-start'
-  | 'span-self-inline-end'
-  | 'start'
-  | 'end'
-  | 'span-start'
-  | 'span-end'
-  | 'self-start'
-  | 'self-end'
-  | 'span-self-start'
-  | 'span-self-end';
-
-const INSET_AREA_PROPS: InsetAreaProperty[] = [
+const INSET_AREA_PROPS = [
   'left',
   'center',
   'right',
@@ -151,7 +100,9 @@ const INSET_AREA_PROPS: InsetAreaProperty[] = [
   'self-end',
   'span-self-start',
   'span-self-end',
-];
+] as const;
+
+type InsetAreaProperty = (typeof INSET_AREA_PROPS)[number];
 
 type InsetAreaPropertyChunks =
   | 'left'
@@ -169,27 +120,24 @@ type InsetAreaPropertyChunks =
   | 'block'
   | 'inline';
 
-export type PositionTryOrder =
-  | 'normal'
-  | 'most-width'
-  | 'most-height'
-  | 'most-block-size'
-  | 'most-inline-size';
-
-const POSITION_TRY_ORDERS: PositionTryOrder[] = [
+const POSITION_TRY_ORDERS = [
   'normal',
   'most-width',
   'most-height',
   'most-block-size',
   'most-inline-size',
-];
+] as const;
+
+export type PositionTryOrder = (typeof POSITION_TRY_ORDERS)[number];
+
+const POSITION_TRY_TACTICS = [
+  'flip-block',
+  'flip-inline',
+  'flip-start',
+] as const;
 
 export type PositionTryOptionsTryTactics =
-  | 'flip-block'
-  | 'flip-inline'
-  | 'flip-start';
-
-const POSITION_TRY_TACTICS = ['flip-block', 'flip-inline', 'flip-start'];
+  (typeof POSITION_TRY_TACTICS)[number];
 
 interface PositionTryDefTactic {
   type: 'try-tactic';
@@ -252,7 +200,7 @@ function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
 function isPositionTryTactic(
   name: string,
 ): name is PositionTryOptionsTryTactics {
-  return POSITION_TRY_TACTICS.includes(name);
+  return POSITION_TRY_TACTICS.includes(name as PositionTryOptionsTryTactics);
 }
 
 function isPositionTryOrder(name: string): name is PositionTryOrder {
@@ -469,7 +417,7 @@ export function applyTryTacticToBlock(
     const key = _key as AcceptedPositionTryProperty;
     const valueAst = getValueAST(key, value);
 
-    const newKey = mapProperty(key as AcceptedPositionTryProperty, tactic);
+    const newKey = mapProperty(key, tactic);
 
     // If we're changing the property, revert the original if it hasn't been set.
     if (newKey !== key) {
@@ -478,18 +426,15 @@ export function applyTryTacticToBlock(
 
     if (isAnchorFunction(valueAst.children.first)) {
       valueAst.children.first.children.forEach((item) => {
-        if (
-          item.type === 'Identifier' &&
-          ANCHOR_SIDES.includes(item.name as AnchorSideKeyword)
-        ) {
-          item.name = mapAnchorSide(item.name as AnchorSideKeyword, tactic);
+        if (isIdentifier(item) && isAnchorSide(item.name)) {
+          item.name = mapAnchorSide(item.name, tactic);
         }
       });
     }
 
     if (key === 'inset-area') {
       valueAst.children.forEach((id) => {
-        if (id.type === 'Identifier' && isInsetAreaProp(id.name)) {
+        if (isIdentifier(id) && isInsetAreaProp(id.name)) {
           id.name = mapInsetArea(id.name, tactic);
         }
       });
@@ -646,6 +591,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
   const fallbacks: Fallbacks = {};
   const fallbackTargets: FallbackTargets = {};
   const validPositions: AnchorPositions = {};
+
   // First, find all uses of `@position-try`
   for (const styleObj of styleData) {
     const ast = getAST(styleObj.css);
@@ -667,6 +613,9 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
       },
     });
   }
+
+  // Then, find all `position-try` and related declarations,
+  // and add in block contents (scoped to unique data-attrs)
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -678,7 +627,8 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         if (!selectors.length) return;
         // todo: better handle multiple selectors
         const selector = selectors.map((s) => s.selector).join(',');
-        // Parse `position-try-fallbacks` declaration
+        // Parse `position-try`, `position-try-order`, and
+        // `position-try-fallbacks` declarations
         const { order, options } = getPositionFallbackValues(node);
         const anchorPosition: AnchorPosition = {};
         if (order) {
@@ -690,13 +640,14 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
           if (tryObject.type === 'at-rule') {
             name = tryObject.atRule;
           } else if (tryObject.type === 'try-tactic') {
-            // add new item to fallbacks store
+            // get existing styles and adjust based on the specified tactic
             name = `${selector}-${tryObject.tactics.join('-')}`;
             const tacticAppliedRules = applyTryTacticsToSelector(
               selector,
               tryObject.tactics,
             );
             if (tacticAppliedRules) {
+              // add new item to fallbacks store
               fallbacks[name] = {
                 targets: [selector],
                 blocks: [
@@ -708,7 +659,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               };
             }
           } else if (tryObject.type === 'at-rule-with-try-tactic') {
-            // add new item to fallbacks store
+            // get `@position-try` block styles and adjust based on the tactic
             name = `${tryObject.atRule}-${tryObject.tactics.join('-')}`;
             const declarations = fallbacks[tryObject.atRule].blocks[0];
             const tacticAppliedRules = applyTryTacticsToAtRule(
@@ -716,6 +667,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               tryObject.tactics,
             );
             if (tacticAppliedRules) {
+              // add new item to fallbacks store
               fallbacks[name] = {
                 targets: [selector],
                 blocks: [

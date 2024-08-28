@@ -9,7 +9,7 @@
      with the top, left edge of the anchor. */
   bottom: anchor(--my-anchor-fallback top);
   left: anchor(--my-anchor-fallback left);
-  width: anchor-size(--my-anchor-fallback width);
+  position-try-options: --bottom-left, --top-right, --bottom-right;
   position-try-fallbacks: --bottom-left, --top-right, --bottom-right;
 }
 
