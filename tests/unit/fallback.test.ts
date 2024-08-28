@@ -56,17 +56,17 @@ describe('fallback', () => {
           },
         ],
         [
-          'inset-area left top',
-          `${propWrap('inset-area')}: left top;`,
+          'position-area left top',
+          `${propWrap('position-area')}: left top;`,
           {
-            'inset-area': 'left bottom',
+            'position-area': 'left bottom',
           },
         ],
         [
-          'inset-area right bottom',
-          `${propWrap('inset-area')}: right bottom;`,
+          'position-area right bottom',
+          `${propWrap('position-area')}: right bottom;`,
           {
-            'inset-area': 'right top',
+            'position-area': 'right top',
           },
         ],
         [
@@ -156,17 +156,17 @@ describe('fallback', () => {
           },
         ],
         [
-          'inset-area left top',
-          `${propWrap('inset-area')}: left top;`,
+          'position-area left top',
+          `${propWrap('position-area')}: left top;`,
           {
-            'inset-area': 'right top',
+            'position-area': 'right top',
           },
         ],
         [
-          'inset-area right bottom',
-          `${propWrap('inset-area')}: right bottom;`,
+          'position-area right bottom',
+          `${propWrap('position-area')}: right bottom;`,
           {
-            'inset-area': 'left bottom',
+            'position-area': 'left bottom',
           },
         ],
         [
@@ -274,31 +274,31 @@ describe('fallback', () => {
           },
         ],
         [
-          'inset-area left top',
-          `${propWrap('inset-area')}: left top;`,
+          'position-area left top',
+          `${propWrap('position-area')}: left top;`,
           {
-            'inset-area': 'left top',
+            'position-area': 'left top',
           },
         ],
         // [
-        //   'inset-area left bottom',
-        //   `${propWrap('inset-area')}: left bottom;`,
+        //   'position-area left bottom',
+        //   `${propWrap('position-area')}: left bottom;`,
         //   {
-        //     'inset-area': 'right top',
+        //     'position-area': 'right top',
         //   },
         // ],
         [
-          'inset-area right bottom',
-          `${propWrap('inset-area')}: right bottom;`,
+          'position-area right bottom',
+          `${propWrap('position-area')}: right bottom;`,
           {
-            'inset-area': 'right bottom',
+            'position-area': 'right bottom',
           },
         ],
         // [
-        //   'inset-area right top',
-        //   `${propWrap('inset-area')}: right top;`,
+        //   'position-area right top',
+        //   `${propWrap('position-area')}: right top;`,
         //   {
-        //     'inset-area': 'left bottom',
+        //     'position-area': 'left bottom',
         //   },
         // ],
         // [

@@ -87,9 +87,9 @@ following features:
     `try-size` will be ignored.
   - The `flip-start` `try-tactic` is only partially supported. The tactic is
     only applied to property names and anchor sides.
-  - an `inset-area` as a `try-tactic`
+  - a `position-area` as a `try-tactic`
 - `anchor-scope` property on pseudo-elements
-- `inset-area` property
+- `position-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
 - anchor functions with `implicit` anchor-element

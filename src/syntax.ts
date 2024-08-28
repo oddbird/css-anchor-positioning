@@ -86,7 +86,7 @@ export const ACCEPTED_POSITION_TRY_PROPERTIES = [
   ...SIZING_PROPS,
   ...SELF_ALIGNMENT_PROPS,
   'position-anchor',
-  'inset-area',
+  'position-area',
 ] as const;
 
 export type AcceptedPositionTryProperty =

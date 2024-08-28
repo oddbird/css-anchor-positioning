@@ -145,8 +145,8 @@ interface PositionTryDefTactic {
   type: 'try-tactic';
   tactics: PositionTryOptionsTryTactics[];
 }
-interface PositionTryDefInsetArea {
-  type: 'inset-area';
+interface PositionTryDefPositionArea {
+  type: 'position-area';
   insetArea: InsetProperty;
 }
 interface PositionTryDefAtRule {
@@ -161,7 +161,7 @@ interface PositionTryDefAtRuleWithTactic {
 
 type PositionTryObject =
   | PositionTryDefTactic
-  | PositionTryDefInsetArea
+  | PositionTryDefPositionArea
   | PositionTryDefAtRule
   | PositionTryDefAtRuleWithTactic;
 
@@ -436,7 +436,7 @@ export function applyTryTacticToBlock(
       });
     }
 
-    if (key === 'inset-area') {
+    if (key === 'position-area') {
       valueAst.children.forEach((id) => {
         if (isIdentifier(id) && isInsetAreaProp(id.name)) {
           id.name = mapInsetArea(id.name, tactic);
@@ -474,7 +474,7 @@ function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
     if (identifiers.insetAreas.length) {
       tryObjects.push({
         insetArea: identifiers.insetAreas[0],
-        type: 'inset-area',
+        type: 'position-area',
       });
       // multiple tactics can modify a single at rule
     } else if (identifiers.atRules.length && identifiers.tactics.length) {
@@ -562,7 +562,7 @@ export function isAcceptedPositionTryProperty(
     isMarginProp(declaration.property) ||
     isSizingProp(declaration.property) ||
     isSelfAlignmentProp(declaration.property) ||
-    ['position-anchor', 'inset-area'].includes(declaration.property)
+    ['position-anchor', 'position-area'].includes(declaration.property)
   );
 }
 
