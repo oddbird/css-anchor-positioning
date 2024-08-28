@@ -39,7 +39,9 @@ interface AtRuleRaw extends csstree.Atrule {
 type FallbackTargets = Record<string, string>;
 
 type Fallbacks = Record<
-  // `key` is the `position-fallback` value (name)
+  // `key` is a reference to a specific `position-try-fallbacks` value, which may be a dashed ident
+  // name of a `@position-try` rule, or the selector combined with `try-tactics`
+  // and `@position-try` rules.
   string,
   {
     // `targets` is an array of selectors where this `position-fallback` is used
@@ -424,6 +426,8 @@ export function applyTryTacticToBlock(
       declarations[key] ??= 'revert';
     }
 
+    // todo: This does not support anchor functions that are nested or passed
+    // through custom properties.
     if (isAnchorFunction(valueAst.children.first)) {
       valueAst.children.first.children.forEach((item) => {
         if (isIdentifier(item) && isAnchorSide(item.name)) {
@@ -508,14 +512,15 @@ export function getPositionTryDeclaration(node: csstree.Declaration): {
   options?: PositionTryObject[];
 } {
   if (isPositionTryDeclaration(node) && node.value.children.first) {
+    const declarationNode = csstree.clone(node) as DeclarationWithValue;
     let order: PositionTryOrder | undefined;
     // get potential order
-    const firstName = (node.value.children.first as csstree.Identifier).name;
+    const firstName = (declarationNode.value.children.first as csstree.Identifier).name;
     if (firstName && isPositionTryOrder(firstName)) {
       order = firstName;
-      node.value.children.shift();
+      declarationNode.value.children.shift();
     }
-    const options = parsePositionTryFallbacks(node.value.children);
+    const options = parsePositionTryFallbacks(declarationNode.value.children);
 
     return { order, options };
   }
@@ -652,7 +657,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
                 targets: [selector],
                 blocks: [
                   {
-                    uuid: `${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                    uuid: `${selector}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
                     declarations: tacticAppliedRules,
                   },
                 ],

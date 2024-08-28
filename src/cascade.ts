@@ -48,6 +48,10 @@ function shiftUnsupportedProperties(
   return {};
 }
 
+/**
+ * Update the given style data to enable cascading and inheritance of properties
+ * that are not yet natively supported.
+ */
 export async function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
