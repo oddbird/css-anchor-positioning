@@ -612,9 +612,8 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
           // name: (e.g. multiple `@position-try --my-fallback {...}` uses with
           // the same `--my-fallback` name)
 
-          // Todo: this doesn't account for
-          // multiple selectors for a single `position-try-fallbacks` rule that
-          // uses an at position try rule.
+          // Todo: this doesn't account for multiple selectors for a single
+          // `position-try-fallbacks` rule that uses an at position try rule.
           fallbacks[name] = {
             targets: [],
             blocks: blocks,
