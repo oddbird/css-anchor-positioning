@@ -2,9 +2,24 @@
   anchor-name: --my-anchor-try-tactics;
 }
 
+#my-anchor-try-tactics-2 {
+  anchor-name: --my-anchor-try-tactics-2;
+  top: 5em;
+  left: 5em;
+  position: relative;
+}
+
 #my-target-try-tactics {
-  position: absolute;
   position-anchor: --my-anchor-try-tactics;
+}
+
+#my-target-try-tactics-2 {
+  position-anchor: --my-anchor-try-tactics-2;
+}
+
+#my-target-try-tactics,
+#my-target-try-tactics-2 {
+  position: absolute;
   bottom: anchor(top);
   left: anchor(right);
   position-try-options: flip-block, flip-inline, flip-start;

@@ -515,7 +515,9 @@ export function getPositionTryDeclaration(node: csstree.Declaration): {
     const declarationNode = csstree.clone(node) as DeclarationWithValue;
     let order: PositionTryOrder | undefined;
     // get potential order
-    const firstName = (declarationNode.value.children.first as csstree.Identifier).name;
+    const firstName = (
+      declarationNode.value.children.first as csstree.Identifier
+    ).name;
     if (firstName && isPositionTryOrder(firstName)) {
       order = firstName;
       declarationNode.value.children.shift();
@@ -606,10 +608,13 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         // Parse `@position-try` rules
         const { name, blocks } = getPositionTryRules(node);
         if (name && blocks?.length) {
-          // This will override earlier `@position-try` lists
-          // with the same name:
-          // (e.g. multiple `@position-try --my-fallback {...}` uses
-          // with the same `--my-fallback` name)
+          // This will override earlier `@position-try` lists with the same
+          // name: (e.g. multiple `@position-try --my-fallback {...}` uses with
+          // the same `--my-fallback` name)
+
+          // Todo: this doesn't account for
+          // multiple selectors for a single `position-try-fallbacks` rule that
+          // uses an at position try rule.
           fallbacks[name] = {
             targets: [],
             blocks: blocks,
@@ -630,8 +635,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         const rule = this.rule?.prelude as csstree.SelectorList | undefined;
         const selectors = getSelectors(rule);
         if (!selectors.length) return;
-        // todo: better handle multiple selectors
-        const selector = selectors.map((s) => s.selector).join(',');
+
         // Parse `position-try`, `position-try-order`, and
         // `position-try-fallbacks` declarations
         const { order, options } = getPositionFallbackValues(node);
@@ -639,105 +643,107 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         if (order) {
           anchorPosition.order = order;
         }
-        options?.forEach((tryObject) => {
-          let name;
-          // Apply try fallback
-          if (tryObject.type === 'at-rule') {
-            name = tryObject.atRule;
-          } else if (tryObject.type === 'try-tactic') {
-            // get existing styles and adjust based on the specified tactic
-            name = `${selector}-${tryObject.tactics.join('-')}`;
-            const tacticAppliedRules = applyTryTacticsToSelector(
-              selector,
-              tryObject.tactics,
-            );
-            if (tacticAppliedRules) {
-              // add new item to fallbacks store
-              fallbacks[name] = {
-                targets: [selector],
-                blocks: [
-                  {
-                    uuid: `${selector}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
-                    declarations: tacticAppliedRules,
-                  },
-                ],
-              };
+        selectors.forEach(({ selector }) => {
+          options?.forEach((tryObject) => {
+            let name;
+            // Apply try fallback
+            if (tryObject.type === 'at-rule') {
+              name = tryObject.atRule;
+            } else if (tryObject.type === 'try-tactic') {
+              // get existing styles and adjust based on the specified tactic
+              name = `${selector}-${tryObject.tactics.join('-')}`;
+              const tacticAppliedRules = applyTryTacticsToSelector(
+                selector,
+                tryObject.tactics,
+              );
+              if (tacticAppliedRules) {
+                // add new item to fallbacks store
+                fallbacks[name] = {
+                  targets: [selector],
+                  blocks: [
+                    {
+                      uuid: `${selector}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                      declarations: tacticAppliedRules,
+                    },
+                  ],
+                };
+              }
+            } else if (tryObject.type === 'at-rule-with-try-tactic') {
+              // get `@position-try` block styles and adjust based on the tactic
+              name = `${selector}-${tryObject.atRule}-${tryObject.tactics.join('-')}`;
+              const declarations = fallbacks[tryObject.atRule].blocks[0];
+              const tacticAppliedRules = applyTryTacticsToAtRule(
+                declarations,
+                tryObject.tactics,
+              );
+              if (tacticAppliedRules) {
+                // add new item to fallbacks store
+                fallbacks[name] = {
+                  targets: [selector],
+                  blocks: [
+                    {
+                      uuid: `${selector}-${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                      declarations: tacticAppliedRules,
+                    },
+                  ],
+                };
+              }
             }
-          } else if (tryObject.type === 'at-rule-with-try-tactic') {
-            // get `@position-try` block styles and adjust based on the tactic
-            name = `${tryObject.atRule}-${tryObject.tactics.join('-')}`;
-            const declarations = fallbacks[tryObject.atRule].blocks[0];
-            const tacticAppliedRules = applyTryTacticsToAtRule(
-              declarations,
-              tryObject.tactics,
-            );
-            if (tacticAppliedRules) {
-              // add new item to fallbacks store
-              fallbacks[name] = {
-                targets: [selector],
-                blocks: [
-                  {
-                    uuid: `${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
-                    declarations: tacticAppliedRules,
-                  },
-                ],
-              };
-            }
-          }
 
-          if (name && fallbacks[name]) {
-            anchorPosition.fallbacks ??= [];
-            anchorPosition.fallbacks.push(...fallbacks[name].blocks);
+            if (name && fallbacks[name]) {
+              anchorPosition.fallbacks ??= [];
+              anchorPosition.fallbacks.push(...fallbacks[name].blocks);
 
-            if (!fallbacks[name].targets.includes(selector)) {
-              fallbacks[name].targets.push(selector);
+              if (!fallbacks[name].targets.includes(selector)) {
+                fallbacks[name].targets.push(selector);
+              }
+              // Add each `@position-try` block, scoped to a unique data-attr
+              for (const block of fallbacks[name].blocks) {
+                const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+                this.stylesheet?.children.prependData({
+                  type: 'Rule',
+                  prelude: {
+                    type: 'Raw',
+                    value: dataAttr,
+                  },
+                  block: {
+                    type: 'Block',
+                    children: new csstree.List<csstree.CssNode>().fromArray(
+                      Object.entries(block.declarations).map(([prop, val]) => ({
+                        type: 'Declaration',
+                        important: true,
+                        property: prop,
+                        value: {
+                          type: 'Raw',
+                          value: val,
+                        },
+                      })),
+                    ),
+                  },
+                });
+                // Store mapping of data-attr to target selector
+                fallbackTargets[dataAttr] = selector;
+              }
+              changed = true;
             }
-            // Add each `@position-try` block, scoped to a unique data-attr
-            for (const block of fallbacks[name].blocks) {
-              const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
-              this.stylesheet?.children.prependData({
-                type: 'Rule',
-                prelude: {
-                  type: 'Raw',
-                  value: dataAttr,
-                },
-                block: {
-                  type: 'Block',
-                  children: new csstree.List<csstree.CssNode>().fromArray(
-                    Object.entries(block.declarations).map(([prop, val]) => ({
-                      type: 'Declaration',
-                      important: true,
-                      property: prop,
-                      value: {
-                        type: 'Raw',
-                        value: val,
-                      },
-                    })),
-                  ),
-                },
-              });
-              // Store mapping of data-attr to target selector
-              fallbackTargets[dataAttr] = selector;
+          });
+          if (Object.keys(anchorPosition).length > 0) {
+            if (validPositions[selector]) {
+              if (anchorPosition.order) {
+                validPositions[selector].order = anchorPosition.order;
+              }
+              if (anchorPosition.fallbacks) {
+                validPositions[selector].fallbacks ??= [];
+                validPositions[selector].fallbacks.push(
+                  ...anchorPosition.fallbacks,
+                );
+              }
+              //  = {order: anchorPosition.order, fallbacks: [...[validPositions[selector].fallbacks], ...[anchorPosition.fallbacks]]};
+            } else {
+              validPositions[selector] = anchorPosition;
             }
-            changed = true;
           }
         });
-        if (Object.keys(anchorPosition).length > 0) {
-          if (validPositions[selector]) {
-            if (anchorPosition.order) {
-              validPositions[selector].order = anchorPosition.order;
-            }
-            if (anchorPosition.fallbacks) {
-              validPositions[selector].fallbacks ??= [];
-              validPositions[selector].fallbacks.push(
-                ...anchorPosition.fallbacks,
-              );
-            }
-            //  = {order: anchorPosition.order, fallbacks: [...[validPositions[selector].fallbacks], ...[anchorPosition.fallbacks]]};
-          } else {
-            validPositions[selector] = anchorPosition;
-          }
-        }
       },
     });
     if (changed) {
