@@ -676,7 +676,7 @@ describe('parseCSS', () => {
         declarations: {
           bottom: [
             {
-              anchorName: '--my-anchor-fallback',
+              anchorName: undefined,
               anchorSide: 'top',
               fallbackValue: '0px',
               uuid: expect.any(String),
@@ -686,7 +686,7 @@ describe('parseCSS', () => {
           ],
           left: [
             {
-              anchorName: '--my-anchor-fallback',
+              anchorName: undefined,
               anchorSide: 'left',
               fallbackValue: '0px',
               uuid: expect.any(String),
@@ -701,23 +701,24 @@ describe('parseCSS', () => {
             uuid: expect.any(String),
             declarations: {
               bottom: 'revert',
-              top: 'anchor(--my-anchor-fallback bottom)',
-              left: 'anchor(--my-anchor-fallback left)',
+              top: 'anchor(bottom)',
+              left: 'anchor(left)',
             },
           },
           {
             uuid: expect.any(String),
             declarations: {
-              bottom: 'anchor(--my-anchor-fallback top)',
-              right: 'anchor(--my-anchor-fallback right)',
+              bottom: 'anchor(top)',
+              right: 'anchor(right)',
               left: 'revert',
+              width: 'revert',
             },
           },
           {
             uuid: expect.any(String),
             declarations: {
-              top: 'anchor(--my-anchor-fallback bottom)',
-              right: 'anchor(--my-anchor-fallback right)',
+              top: 'anchor(bottom)',
+              right: 'anchor(right)',
               left: 'revert',
               bottom: 'revert',
               width: '100px',
