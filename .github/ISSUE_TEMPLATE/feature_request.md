@@ -6,7 +6,7 @@ labels: enhancement
 assignees: ''
 ---
 
-**Is your feature request related to how popovers work in general?**
+**Is your feature request related to how anchor positioning works in general?**
 If the request is for changes to the [spec](https://drafts.csswg.org/css-anchor-position-1/), consider opening a request in the [CSS Working Group](https://github.com/w3c/csswg-drafts/issues?q=is:issue+is:open+%5Bcss-anchor-position%5D) repo.
 
 **Is your feature request related to how this polyfill works? Please describe.**
