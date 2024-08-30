@@ -52,7 +52,7 @@ function shiftUnsupportedProperties(
  * Update the given style data to enable cascading and inheritance of properties
  * that are not yet natively supported.
  */
-export async function cascadeCSS(styleData: StyleData[]) {
+export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
@@ -60,9 +60,10 @@ export async function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
-
         const { updated } = shiftUnsupportedProperties(node, block);
-        changed = updated || changed;
+        if (updated) {
+          changed = true;
+        }
       },
     });
 

@@ -393,20 +393,22 @@ async function applyPositionFallbacks(
 
           const overflow = await checkOverflow(target, offsetParent);
 
-          // If none of the sides overflow, use this `@try` block and stop loop...
+          // If none of the sides overflow, use this `@try` block and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {
             checking = false;
             target.setAttribute('data-anchor-polyfill-last-successful', uuid);
             break;
           }
-          // If it's the last fallback, and none have matched, revert to the last successful fallback.
+          // If it's the last fallback, and none have matched, revert to the
+          // last successful fallback.
           if (index === fallbacks.length - 1) {
             checking = false;
             const lastSuccessful = target.getAttribute(
               'data-anchor-polyfill-last-successful',
             );
-            if (lastSuccessful)
+            if (lastSuccessful) {
               target.setAttribute('data-anchor-polyfill', lastSuccessful);
+            }
             break;
           }
         }

@@ -12,7 +12,6 @@ import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
   type AnchorSideKeyword,
-  type InsetProperty,
   isAnchorSide,
   isInsetProp,
   isMarginProp,
@@ -39,9 +38,9 @@ interface AtRuleRaw extends csstree.Atrule {
 type FallbackTargets = Record<string, string>;
 
 type Fallbacks = Record<
-  // `key` is a reference to a specific `position-try-fallbacks` value, which may be a dashed ident
-  // name of a `@position-try` rule, or the selector combined with `try-tactics`
-  // and `@position-try` rules.
+  // `key` is a reference to a specific `position-try-fallbacks` value, which
+  // may be a dashed ident name of a `@position-try` rule, or the selector
+  // combined with `try-tactics` and `@position-try` rules.
   string,
   {
     // `targets` is an array of selectors where this `position-fallback` is used
@@ -51,7 +50,7 @@ type Fallbacks = Record<
   }
 >;
 
-const INSET_AREA_PROPS = [
+const POSITION_AREA_PROPS = [
   'left',
   'center',
   'right',
@@ -104,9 +103,9 @@ const INSET_AREA_PROPS = [
   'span-self-end',
 ] as const;
 
-type InsetAreaProperty = (typeof INSET_AREA_PROPS)[number];
+type PositionAreaProperty = (typeof POSITION_AREA_PROPS)[number];
 
-type InsetAreaPropertyChunks =
+type PositionAreaPropertyChunks =
   | 'left'
   | 'center'
   | 'right'
@@ -147,7 +146,7 @@ interface PositionTryDefTactic {
 }
 interface PositionTryDefPositionArea {
   type: 'position-area';
-  insetArea: InsetProperty;
+  positionArea: PositionAreaProperty;
 }
 interface PositionTryDefAtRule {
   type: 'at-rule';
@@ -165,10 +164,10 @@ type PositionTryObject =
   | PositionTryDefAtRule
   | PositionTryDefAtRuleWithTactic;
 
-export function isInsetAreaProp(
-  property: string | InsetAreaProperty,
-): property is InsetAreaProperty {
-  return INSET_AREA_PROPS.includes(property as InsetAreaProperty);
+export function isPositionAreaProp(
+  property: string | PositionAreaProperty,
+): property is PositionAreaProperty {
+  return POSITION_AREA_PROPS.includes(property as PositionAreaProperty);
 }
 
 function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
@@ -313,9 +312,9 @@ const anchorSideMapping: Record<
   },
 };
 
-const insetAreaPropertyMapping: Record<
+const PositionAreaPropertyMapping: Record<
   PositionTryOptionsTryTactics,
-  Partial<Record<InsetAreaPropertyChunks, InsetAreaPropertyChunks>>
+  Partial<Record<PositionAreaPropertyChunks, PositionAreaPropertyChunks>>
 > = {
   'flip-block': {
     top: 'bottom',
@@ -350,18 +349,18 @@ function mapAnchorSide(
   return mapping[side] || side;
 }
 
-function mapInsetArea(
-  prop: InsetAreaProperty,
+function mapPositionArea(
+  prop: PositionAreaProperty,
   tactic: PositionTryOptionsTryTactics,
 ) {
   if (tactic === 'flip-start') {
     // TODO: Handle flip-start
     return prop;
   } else {
-    const mapping = insetAreaPropertyMapping[tactic];
+    const mapping = PositionAreaPropertyMapping[tactic];
     return prop
       .split('-')
-      .map((value) => mapping[value as InsetAreaPropertyChunks] || value)
+      .map((value) => mapping[value as PositionAreaPropertyChunks] || value)
       .join('-');
   }
 }
@@ -438,8 +437,8 @@ export function applyTryTacticToBlock(
 
     if (key === 'position-area') {
       valueAst.children.forEach((id) => {
-        if (isIdentifier(id) && isInsetAreaProp(id.name)) {
-          id.name = mapInsetArea(id.name, tactic);
+        if (isIdentifier(id) && isPositionAreaProp(id.name)) {
+          id.name = mapPositionArea(id.name, tactic);
         }
       });
     }
@@ -459,21 +458,22 @@ function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
     const identifiers: {
       atRules: PositionTryDefAtRuleWithTactic['atRule'][];
       tactics: PositionTryOptionsTryTactics[];
-      insetAreas: InsetProperty[];
+      positionAreas: PositionAreaProperty[];
     } = {
       atRules: [],
       tactics: [],
-      insetAreas: [],
+      positionAreas: [],
     };
     option.forEach((opt) => {
       if (isPositionTryTactic(opt.name)) identifiers.tactics.push(opt.name);
       else if (opt.name.startsWith('--')) identifiers.atRules.push(opt.name);
-      else if (isInsetProp(opt.name)) identifiers.insetAreas.push(opt.name);
+      else if (isPositionAreaProp(opt.name))
+        identifiers.positionAreas.push(opt.name);
     });
-    // Inset area can not be combined or have multiple
-    if (identifiers.insetAreas.length) {
+    // Position area can not be combined or have multiple
+    if (identifiers.positionAreas.length) {
       tryObjects.push({
-        insetArea: identifiers.insetAreas[0],
+        positionArea: identifiers.positionAreas[0],
         type: 'position-area',
       });
       // multiple tactics can modify a single at rule
@@ -613,7 +613,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
           // the same `--my-fallback` name)
 
           // Todo: this doesn't account for multiple selectors for a single
-          // `position-try-fallbacks` rule that uses an at position try rule.
+          // `position-try-fallbacks` rule that uses an `@position-try` rule.
           fallbacks[name] = {
             targets: [],
             blocks: blocks,
