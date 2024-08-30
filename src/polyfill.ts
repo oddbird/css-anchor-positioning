@@ -4,6 +4,7 @@ import {
   type MiddlewareState,
   platform,
   type Rect,
+  type VirtualElement,
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
@@ -369,7 +370,7 @@ async function applyPositionFallbacks(
     const offsetParent = await getOffsetParent(target);
 
     autoUpdate(
-      target,
+      {} as VirtualElement,
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already
@@ -395,25 +396,25 @@ async function applyPositionFallbacks(
 
           // If none of the sides overflow, use this `@try` block and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {
-            checking = false;
             target.setAttribute('data-anchor-polyfill-last-successful', uuid);
+            checking = false;
             break;
           }
           // If it's the last fallback, and none have matched, revert to the
           // last successful fallback.
           if (index === fallbacks.length - 1) {
-            checking = false;
             const lastSuccessful = target.getAttribute(
               'data-anchor-polyfill-last-successful',
             );
             if (lastSuccessful) {
               target.setAttribute('data-anchor-polyfill', lastSuccessful);
             }
+            checking = false;
             break;
           }
         }
       },
-      { animationFrame: useAnimationFrame },
+      { animationFrame: useAnimationFrame, layoutShift: false },
     );
   }
 }
