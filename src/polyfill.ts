@@ -370,6 +370,10 @@ async function applyPositionFallbacks(
     const offsetParent = await getOffsetParent(target);
 
     autoUpdate(
+      // We're just checking whether the target element overflows, so we don't
+      // care about the position of the anchor element in this case. Passing in
+      // an empty object instead of a reference element avoids unnecessarily
+      // watching for irrelevant changes.
       {} as VirtualElement,
       target,
       async () => {
