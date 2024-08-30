@@ -35,19 +35,15 @@ interface AtRuleRaw extends csstree.Atrule {
 
 // `key` is the `@position-try` block uuid
 // `value` is the target element selector
-type FallbackTargets = Record<string, string>;
+type FallbackTargets = Record<string, string[]>;
 
 type Fallbacks = Record<
   // `key` is a reference to a specific `position-try-fallbacks` value, which
   // may be a dashed ident name of a `@position-try` rule, or the selector
   // combined with `try-tactics` and `@position-try` rules.
   string,
-  {
-    // `targets` is an array of selectors where this `position-fallback` is used
-    targets: string[];
-    // `blocks` is an array of `@try` block declarations (in order)
-    blocks: TryBlock[];
-  }
+  // `value` is a block of `@position-try` declarations
+  TryBlock
 >;
 
 const POSITION_AREA_PROPS = [
@@ -575,7 +571,6 @@ export function getPositionTryRules(node: csstree.Atrule) {
     node.block?.children
   ) {
     const name = node.prelude.value;
-    const tryBlocks: TryBlock[] = [];
     const declarations = node.block.children.filter(
       (d): d is DeclarationWithValue =>
         isDeclaration(d) && isAcceptedPositionTryProperty(d),
@@ -587,9 +582,7 @@ export function getPositionTryRules(node: csstree.Atrule) {
       ),
     };
 
-    tryBlocks.push(tryBlock);
-
-    return { name, blocks: tryBlocks };
+    return { name, tryBlock };
   }
   return {};
 }
@@ -606,18 +599,12 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
       visit: 'Atrule',
       enter(node) {
         // Parse `@position-try` rules
-        const { name, blocks } = getPositionTryRules(node);
-        if (name && blocks?.length) {
+        const { name, tryBlock } = getPositionTryRules(node);
+        if (name && tryBlock) {
           // This will override earlier `@position-try` lists with the same
           // name: (e.g. multiple `@position-try --my-fallback {...}` uses with
           // the same `--my-fallback` name)
-
-          // Todo: this doesn't account for multiple selectors for a single
-          // `position-try-fallbacks` rule that uses an `@position-try` rule.
-          fallbacks[name] = {
-            targets: [],
-            blocks: blocks,
-          };
+          fallbacks[name] = tryBlock;
         }
       },
     });
@@ -627,6 +614,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
   // and add in block contents (scoped to unique data-attrs)
   for (const styleObj of styleData) {
     let changed = false;
+    const fallbacksAdded = new Set();
     const ast = getAST(styleObj.css);
     csstree.walk(ast, {
       visit: 'Declaration',
@@ -658,19 +646,14 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               if (tacticAppliedRules) {
                 // add new item to fallbacks store
                 fallbacks[name] = {
-                  targets: [selector],
-                  blocks: [
-                    {
-                      uuid: `${selector}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
-                      declarations: tacticAppliedRules,
-                    },
-                  ],
+                  uuid: `${selector}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                  declarations: tacticAppliedRules,
                 };
               }
             } else if (tryObject.type === 'at-rule-with-try-tactic') {
               // get `@position-try` block styles and adjust based on the tactic
               name = `${selector}-${tryObject.atRule}-${tryObject.tactics.join('-')}`;
-              const declarations = fallbacks[tryObject.atRule].blocks[0];
+              const declarations = fallbacks[tryObject.atRule];
               const tacticAppliedRules = applyTryTacticsToAtRule(
                 declarations,
                 tryObject.tactics,
@@ -678,27 +661,24 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               if (tacticAppliedRules) {
                 // add new item to fallbacks store
                 fallbacks[name] = {
-                  targets: [selector],
-                  blocks: [
-                    {
-                      uuid: `${selector}-${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
-                      declarations: tacticAppliedRules,
-                    },
-                  ],
+                  uuid: `${selector}-${tryObject.atRule}-${tryObject.tactics.join('-')}-try-${nanoid(12)}`,
+                  declarations: tacticAppliedRules,
                 };
               }
             }
 
             if (name && fallbacks[name]) {
-              anchorPosition.fallbacks ??= [];
-              anchorPosition.fallbacks.push(...fallbacks[name].blocks);
+              const dataAttr = `[data-anchor-polyfill="${fallbacks[name].uuid}"]`;
+              // Store mapping of data-attr to target selectors
+              fallbackTargets[dataAttr] ??= [];
+              fallbackTargets[dataAttr].push(selector);
 
-              if (!fallbacks[name].targets.includes(selector)) {
-                fallbacks[name].targets.push(selector);
-              }
-              // Add each `@position-try` block, scoped to a unique data-attr
-              for (const block of fallbacks[name].blocks) {
-                const dataAttr = `[data-anchor-polyfill="${block.uuid}"]`;
+              if (!fallbacksAdded.has(name)) {
+                anchorPosition.fallbacks ??= [];
+                anchorPosition.fallbacks.push(fallbacks[name]);
+                fallbacksAdded.add(name);
+
+                // Add `@position-try` block, scoped to a unique data-attr
                 this.stylesheet?.children.prependData({
                   type: 'Rule',
                   prelude: {
@@ -708,22 +688,22 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
                   block: {
                     type: 'Block',
                     children: new csstree.List<csstree.CssNode>().fromArray(
-                      Object.entries(block.declarations).map(([prop, val]) => ({
-                        type: 'Declaration',
-                        important: true,
-                        property: prop,
-                        value: {
-                          type: 'Raw',
-                          value: val,
-                        },
-                      })),
+                      Object.entries(fallbacks[name].declarations).map(
+                        ([prop, val]) => ({
+                          type: 'Declaration',
+                          important: true,
+                          property: prop,
+                          value: {
+                            type: 'Raw',
+                            value: val,
+                          },
+                        }),
+                      ),
                     ),
                   },
                 });
-                // Store mapping of data-attr to target selector
-                fallbackTargets[dataAttr] = selector;
+                changed = true;
               }
-              changed = true;
             }
           });
           if (Object.keys(anchorPosition).length > 0) {

@@ -2,9 +2,21 @@
   anchor-name: --my-anchor-fallback;
 }
 
+#my-anchor-fallback-2 {
+  anchor-name: --my-anchor-fallback-2;
+}
+
 #my-target-fallback {
-  position: absolute;
   position-anchor: --my-anchor-fallback;
+}
+
+#my-target-fallback-2 {
+  position-anchor: --my-anchor-fallback-2;
+}
+
+#my-target-fallback,
+#my-target-fallback-2 {
+  position: absolute;
 
   /* First try to align the bottom, left edge of the target
      with the top, left edge of the anchor. */

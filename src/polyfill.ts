@@ -373,7 +373,8 @@ async function applyPositionFallbacks(
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already
-        // looping through the possible `@try` blocks, do not check again.
+        // looping through the possible `position-try-fallbacks` blocks, do not
+        // check again.
         if (checking) {
           return;
         }
@@ -382,18 +383,19 @@ async function applyPositionFallbacks(
         const defaultOverflow = await checkOverflow(target, offsetParent);
         // If none of the sides overflow, don't try fallbacks
         if (Object.values(defaultOverflow).every((side) => side <= 0)) {
+          target.removeAttribute('data-anchor-polyfill-last-successful');
           checking = false;
           return;
         }
-        // Apply the styles from each `@position-try` block (in order), stopping
-        // when we reach one that does not cause the target's margin-box to
-        // overflow its offsetParent (containing block).
+        // Apply the styles from each fallback block (in order), stopping when
+        // we reach one that does not cause the target's margin-box to overflow
+        // its offsetParent (containing block).
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
 
           const overflow = await checkOverflow(target, offsetParent);
 
-          // If none of the sides overflow, use this `@try` block and stop loop.
+          // If none of the sides overflow, use this fallback and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {
             checking = false;
             target.setAttribute('data-anchor-polyfill-last-successful', uuid);
@@ -408,6 +410,8 @@ async function applyPositionFallbacks(
             );
             if (lastSuccessful) {
               target.setAttribute('data-anchor-polyfill', lastSuccessful);
+            } else {
+              target.removeAttribute('data-anchor-polyfill');
             }
             break;
           }

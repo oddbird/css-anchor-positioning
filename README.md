@@ -90,8 +90,6 @@ following features:
   - a `position-area` as a `try-tactic`
   - Fallback does does not support anchor functions that are nested or passed
     through custom properties.
-  - Multiple selectors for a single `position-try-fallbacks` rule that uses an
-    `@position-try` rule is not supported.
 - Polyfill allows anchoring in scroll more permissively than the spec allows,
   for instance without a default `position-anchor`.
 - `anchor-scope` property on pseudo-elements
