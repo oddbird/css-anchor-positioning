@@ -4,6 +4,9 @@
 
 #my-anchor-fallback-2 {
   anchor-name: --my-anchor-fallback-2;
+  top: 70px;
+  left: 50px;
+  position: relative;
 }
 
 #my-target-fallback {
@@ -12,6 +15,7 @@
 
 #my-target-fallback-2 {
   position-anchor: --my-anchor-fallback-2;
+  opacity: 0.8;
 }
 
 #my-target-fallback,
