@@ -675,11 +675,11 @@ export async function parseCSS(styleData: StyleData[]) {
     let targets: NodeListOf<HTMLElement>;
     if (
       targetSel.startsWith('[data-anchor-polyfill=') &&
-      fallbackTargets[targetSel]
+      fallbackTargets[targetSel]?.length
     ) {
-      // If we're dealing with a `@position-fallback` `@try` block,
+      // If we're dealing with a `@position-try` block,
       // then the targets are places where that `position-fallback` is used.
-      targets = document.querySelectorAll(fallbackTargets[targetSel]);
+      targets = document.querySelectorAll(fallbackTargets[targetSel].join(','));
     } else {
       targets = document.querySelectorAll(targetSel);
     }

@@ -444,26 +444,27 @@
         <ol>
           <li>
             Align the bottom, left edge of the target with the top, right edge
-            of the anchor.
+            of its anchor.
           </li>
           <li>
             Apply <code>flip-block</code>, flipping across the inline axis, and
             align the top, left edge of the target with the bottom, right edge
-            of the anchor.
+            of its anchor.
           </li>
           <li>
             Apply <code>flip-inline</code>, flipping across the block axis, and
             align the bottom, right edge of the target with the top, left edge
-            of the anchor.
+            of its anchor.
           </li>
           <li>
             Apply <code>flip-start</code>, flipping across a diagonal line from
             upper left to lower right, and align the top, right edge of the
-            target with the bottom, left edge of the anchor.
+            target with the bottom, left edge of its anchor.
           </li>
           <li>
-            When every position overflows, use the last fallback position that
-            was successful.
+            When every position overflows, revert to the last successful
+            fallback position if there is one, otherwise revert to the initial
+            base styles.
           </li>
         </ol>
         <p>
@@ -478,9 +479,21 @@
   anchor-name: --my-anchor-try-tactics;
 }
 
+#my-anchor-try-tactics-2 {
+  anchor-name: --my-anchor-try-tactics-2;
+}
+
 #my-target-try-tactics {
-  position: absolute;
   position-anchor: --my-anchor-try-tactics;
+}
+
+#my-target-try-tactics-2 {
+  position-anchor: --my-anchor-try-tactics-2;
+}
+
+#my-target-try-tactics,
+#my-target-try-tactics-2 {
+  position: absolute;
   bottom: anchor(top);
   left: anchor(right);
   position-try-fallbacks: flip-block, flip-inline, flip-start;
@@ -500,6 +513,10 @@
             >@position-try Anchor</span
           >
           <div id="my-target-fallback" class="target">Target</div>
+          <span id="my-anchor-fallback-2" class="anchor"
+            >@position-try Anchor 2</span
+          >
+          <div id="my-target-fallback-2" class="target">Target 2</div>
           <div class="placefiller-after-anchor"></div>
         </div>
       </div>
@@ -510,23 +527,24 @@
         <ol>
           <li>
             Align the bottom, left edge of the target with the top, left edge of
-            the anchor.
+            its anchor.
           </li>
           <li>
             Align the top, left edge of the target with the bottom, left edge of
-            the anchor.
+            its anchor.
           </li>
           <li>
             Align the bottom, right edge of the target with the top, right edge
-            of the anchor.
+            of its anchor.
           </li>
           <li>
             Align the top, right edge of the target with the bottom, right edge
-            of the anchor, and set the height and width of the target to 100px.
+            of its anchor, and set the height and width of the target to 100px.
           </li>
           <li>
-            When every position overflows, revert to the initial base styles in
-            #1, even though it overflows.
+            When every position overflows, revert to the last successful
+            fallback position if there is one, otherwise revert to the initial
+            base styles.
           </li>
         </ol>
       </div>
@@ -535,9 +553,21 @@
   anchor-name: --my-anchor-fallback;
 }
 
+#my-anchor-fallback-2 {
+  anchor-name: --my-anchor-fallback-2;
+}
+
 #my-target-fallback {
-  position: absolute;
   position-anchor: --my-anchor-fallback;
+}
+
+#my-target-fallback-2 {
+  position-anchor: --my-anchor-fallback-2;
+}
+
+#my-target-fallback,
+#my-target-fallback-2 {
+  position: absolute;
 
   /* First try to align the bottom, left edge of the target
      with the top, left edge of the anchor. */
@@ -611,6 +641,11 @@
             Apply <code>flip-inline --bottom-left-combined</code>, flipping
             across the block axis, and align the top, right edge of the target
             with the bottom, right edge of the anchor.
+          </li>
+          <li>
+            When every position overflows, revert to the last successful
+            fallback position if there is one, otherwise revert to the initial
+            base styles.
           </li>
         </ol>
       </div>
