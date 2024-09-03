@@ -4,6 +4,7 @@ import {
   type MiddlewareState,
   platform,
   type Rect,
+  type VirtualElement,
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
@@ -369,7 +370,11 @@ async function applyPositionFallbacks(
     const offsetParent = await getOffsetParent(target);
 
     autoUpdate(
-      target,
+      // We're just checking whether the target element overflows, so we don't
+      // care about the position of the anchor element in this case. Passing in
+      // an empty object instead of a reference element avoids unnecessarily
+      // watching for irrelevant changes.
+      {} as VirtualElement,
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already
@@ -397,14 +402,13 @@ async function applyPositionFallbacks(
 
           // If none of the sides overflow, use this fallback and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {
-            checking = false;
             target.setAttribute('data-anchor-polyfill-last-successful', uuid);
+            checking = false;
             break;
           }
           // If it's the last fallback, and none have matched, revert to the
           // last successful fallback.
           if (index === fallbacks.length - 1) {
-            checking = false;
             const lastSuccessful = target.getAttribute(
               'data-anchor-polyfill-last-successful',
             );
@@ -413,11 +417,12 @@ async function applyPositionFallbacks(
             } else {
               target.removeAttribute('data-anchor-polyfill');
             }
+            checking = false;
             break;
           }
         }
       },
-      { animationFrame: useAnimationFrame },
+      { animationFrame: useAnimationFrame, layoutShift: false },
     );
   }
 }
