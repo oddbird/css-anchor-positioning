@@ -81,10 +81,19 @@ implementation, we would like to bring it up to date.
 While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
 
-- The `@position-try` rule
-- The `position-try-options`, `position-try-order`, or `position-try` properties
+- The following portions of Position Fallback:
+  - `position-try-order`. If `try-size` is specified in `position-try`
+    shorthand, it will be parsed, and `try-tactics` will be applied, but the
+    `try-size` will be ignored.
+  - The `flip-start` `try-tactic` is only partially supported. The tactic is
+    only applied to property names and anchor sides.
+  - a `position-area` as a `try-tactic`
+  - Fallback does does not support anchor functions that are nested or passed
+    through custom properties.
+- Polyfill allows anchoring in scroll more permissively than the spec allows,
+  for instance without a default `position-anchor`.
 - `anchor-scope` property on pseudo-elements
-- `inset-area` property
+- `position-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
 - anchor functions with `implicit` anchor-element
