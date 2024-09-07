@@ -4,6 +4,7 @@ import {
   type MiddlewareState,
   platform,
   type Rect,
+  type VirtualElement,
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
@@ -13,15 +14,17 @@ import {
   type AnchorFunction,
   type AnchorFunctionDeclaration,
   type AnchorPositions,
+  parseCSS,
+  type TryBlock,
+} from './parse.js';
+import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
   isInsetProp,
   isSizingProp,
-  parseCSS,
   type SizingProperty,
-  type TryBlock,
-} from './parse.js';
+} from './syntax.js';
 import { transformCSS } from './transform.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
@@ -327,6 +330,30 @@ async function applyAnchorPositions(
   }
 }
 
+async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
+  const rects = await platform.getElementRects({
+    reference: target,
+    floating: target,
+    strategy: 'absolute',
+  });
+  const overflow = await detectOverflow(
+    {
+      x: target.offsetLeft,
+      y: target.offsetTop,
+      platform: platformWithCache,
+      rects,
+      elements: { floating: target },
+      strategy: 'absolute',
+    } as unknown as MiddlewareState,
+    {
+      boundary: offsetParent,
+      rootBoundary: 'document',
+      padding: getMargins(target),
+    },
+  );
+  return overflow;
+}
+
 async function applyPositionFallbacks(
   targetSel: string,
   fallbacks: TryBlock[],
@@ -341,54 +368,61 @@ async function applyPositionFallbacks(
   for (const target of targets) {
     let checking = false;
     const offsetParent = await getOffsetParent(target);
+
     autoUpdate(
-      target,
+      // We're just checking whether the target element overflows, so we don't
+      // care about the position of the anchor element in this case. Passing in
+      // an empty object instead of a reference element avoids unnecessarily
+      // watching for irrelevant changes.
+      {} as VirtualElement,
       target,
       async () => {
         // If this auto-update was triggered while the polyfill is already
-        // looping through the possible `@try` blocks, do not check again.
+        // looping through the possible `position-try-fallbacks` blocks, do not
+        // check again.
         if (checking) {
           return;
         }
         checking = true;
-        // Apply the styles from each `@try` block (in order), stopping when we
-        // reach one that does not cause the target's margin-box to overflow
+        target.removeAttribute('data-anchor-polyfill');
+        const defaultOverflow = await checkOverflow(target, offsetParent);
+        // If none of the sides overflow, don't try fallbacks
+        if (Object.values(defaultOverflow).every((side) => side <= 0)) {
+          target.removeAttribute('data-anchor-polyfill-last-successful');
+          checking = false;
+          return;
+        }
+        // Apply the styles from each fallback block (in order), stopping when
+        // we reach one that does not cause the target's margin-box to overflow
         // its offsetParent (containing block).
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
-          if (index === fallbacks.length - 1) {
+
+          const overflow = await checkOverflow(target, offsetParent);
+
+          // If none of the sides overflow, use this fallback and stop loop.
+          if (Object.values(overflow).every((side) => side <= 0)) {
+            target.setAttribute('data-anchor-polyfill-last-successful', uuid);
             checking = false;
             break;
           }
-          const rects = await platform.getElementRects({
-            reference: target,
-            floating: target,
-            strategy: 'absolute',
-          });
-          const overflow = await detectOverflow(
-            {
-              x: target.offsetLeft,
-              y: target.offsetTop,
-              platform: platformWithCache,
-              rects,
-              elements: { floating: target },
-              strategy: 'absolute',
-            } as unknown as MiddlewareState,
-            {
-              boundary: offsetParent,
-              rootBoundary: 'document',
-              padding: getMargins(target),
-            },
-          );
-          // If none of the sides overflow, use this `@try` block and stop
-          // loop...
-          if (Object.values(overflow).every((side) => side <= 0)) {
+          // If it's the last fallback, and none have matched, revert to the
+          // last successful fallback.
+          if (index === fallbacks.length - 1) {
+            const lastSuccessful = target.getAttribute(
+              'data-anchor-polyfill-last-successful',
+            );
+            if (lastSuccessful) {
+              target.setAttribute('data-anchor-polyfill', lastSuccessful);
+            } else {
+              target.removeAttribute('data-anchor-polyfill');
+            }
             checking = false;
             break;
           }
         }
       },
-      { animationFrame: useAnimationFrame },
+      { animationFrame: useAnimationFrame, layoutShift: false },
     );
   }
 }
@@ -400,7 +434,7 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
   }
 
   for (const [targetSel, position] of Object.entries(rules)) {
-    // Handle `@position-fallback` blocks...
+    // Handle `@position-try` blocks...
     await applyPositionFallbacks(
       targetSel,
       position.fallbacks ?? [],

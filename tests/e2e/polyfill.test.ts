@@ -119,10 +119,10 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   await expect(target).not.toHaveCSS('left', '0px');
   await expect(target).not.toHaveCSS('width', '100px');
 
-  await target.evaluate(
-    (node: HTMLElement) =>
-      ((node.offsetParent as HTMLElement).style.height = '20px'),
-  );
+  await target.evaluate((node: HTMLElement) => {
+    (node.offsetParent as HTMLElement).scrollLeft = 180;
+    (node.offsetParent as HTMLElement).scrollTop = 120;
+  });
 
   await expect(target).toHaveCSS('width', '100px');
 });

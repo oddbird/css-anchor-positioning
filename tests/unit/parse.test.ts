@@ -664,39 +664,122 @@ describe('parseCSS', () => {
       <div style="position: relative">
         <div id="my-target-fallback" style="position: absolute"></div>
         <div id="my-anchor-fallback"></div>
+        <div id="my-target-fallback-2" style="position: absolute"></div>
+        <div id="my-anchor-fallback-2"></div>
       </div>
     `;
-    const css = getSampleCSS('position-fallback');
+    const css = getSampleCSS('position-try');
+    document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
+    const anchorEl = document.getElementById('my-anchor-fallback');
+    const targetEl = document.getElementById('my-target-fallback');
+    const anchor2El = document.getElementById('my-anchor-fallback-2');
+    const target2El = document.getElementById('my-target-fallback-2');
     const expected: AnchorPositions = {
       '#my-target-fallback': {
+        declarations: {
+          bottom: [
+            {
+              anchorName: undefined,
+              anchorSide: 'top',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl,
+              targetEl,
+            },
+          ],
+          left: [
+            {
+              anchorName: undefined,
+              anchorSide: 'left',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl,
+              targetEl,
+            },
+          ],
+          width: expect.any(Array),
+        },
         fallbacks: [
           {
             uuid: expect.any(String),
             declarations: {
-              bottom: 'anchor(--my-anchor-fallback top)',
-              left: 'anchor(--my-anchor-fallback left)',
+              bottom: 'revert',
+              top: 'anchor(bottom)',
+              left: 'anchor(left)',
             },
           },
           {
             uuid: expect.any(String),
             declarations: {
-              top: 'anchor(--my-anchor-fallback bottom)',
-              left: 'anchor(--my-anchor-fallback left)',
+              bottom: 'anchor(top)',
+              right: 'anchor(right)',
+              left: 'revert',
+              width: 'revert',
             },
           },
           {
             uuid: expect.any(String),
             declarations: {
-              bottom: 'anchor(--my-anchor-fallback top)',
-              right: 'anchor(--my-anchor-fallback right)',
+              top: 'anchor(bottom)',
+              right: 'anchor(right)',
+              left: 'revert',
+              bottom: 'revert',
+              width: '100px',
+              height: '100px',
+            },
+          },
+        ],
+      },
+      '#my-target-fallback-2': {
+        declarations: {
+          bottom: [
+            {
+              anchorName: undefined,
+              anchorSide: 'top',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl: anchor2El,
+              targetEl: target2El,
+            },
+          ],
+          left: [
+            {
+              anchorName: undefined,
+              anchorSide: 'left',
+              fallbackValue: '0px',
+              uuid: expect.any(String),
+              anchorEl: anchor2El,
+              targetEl: target2El,
+            },
+          ],
+          width: expect.any(Array),
+        },
+        fallbacks: [
+          {
+            uuid: expect.any(String),
+            declarations: {
+              bottom: 'revert',
+              top: 'anchor(bottom)',
+              left: 'anchor(left)',
             },
           },
           {
             uuid: expect.any(String),
             declarations: {
-              top: 'anchor(--my-anchor-fallback bottom)',
-              right: 'anchor(--my-anchor-fallback right)',
+              bottom: 'anchor(top)',
+              right: 'anchor(right)',
+              left: 'revert',
+              width: 'revert',
+            },
+          },
+          {
+            uuid: expect.any(String),
+            declarations: {
+              top: 'anchor(bottom)',
+              right: 'anchor(right)',
+              left: 'revert',
+              bottom: 'revert',
               width: '100px',
               height: '100px',
             },
