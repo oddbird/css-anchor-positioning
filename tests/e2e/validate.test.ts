@@ -440,7 +440,7 @@ test('when multiple anchor elements have the same name and are valid, the last i
 
   await page.close();
   expect(valid).toBe(true);
-  expect(validationResults.results.anchor).toBeTruthy;
+  expect(validationResults.results.anchor).toBeTruthy();
   expect(validationResults.anchorText).toContain('Third Anchor Element');
   expect(validationResults.anchorWidth).toBe('30px');
 });
@@ -535,7 +535,7 @@ test('target anchor element is first element el in tree order.', async ({
 
   await page.close();
   expect(valid).toBe(true);
-  expect(validationResults.results.anchor).toBeTruthy;
+  expect(validationResults.results.anchor).toBeTruthy();
   expect(validationResults.anchorWidth).toBe('9px');
 });
 
