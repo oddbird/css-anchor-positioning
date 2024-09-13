@@ -431,7 +431,7 @@ export function applyTryTacticToBlock(
             }
           });
         }
-      }
+      },
     });
 
     if (key === 'position-area') {
