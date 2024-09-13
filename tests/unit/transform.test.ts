@@ -55,9 +55,7 @@ describe('transformCSS', () => {
       <link id="the-link" media="screen" title="stylish" rel="stylesheet" href="/sample.css"/>
     `;
     let link = document.querySelector('link') as HTMLLinkElement;
-    const styleData = [
-      { el: link, css: 'html { margin: 0; }', changed: true },
-    ];
+    const styleData = [{ el: link, css: 'html { margin: 0; }', changed: true }];
     const inlineStyles = new Map();
     const promise = transformCSS(styleData, inlineStyles, true);
     link = document.querySelector('link') as HTMLLinkElement;
