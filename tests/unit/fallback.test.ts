@@ -48,6 +48,14 @@ describe('fallback', () => {
           },
         ],
         [
+          'flips anchor functions that are nested',
+          `${propWrap('bottom')}: calc(anchor(top) + 5px);${propWrap('top')}:calc(calc(anchor(--a top) + 5px) - 0.5em)`,
+          {
+            top: 'calc(anchor(bottom) + 5px)',
+            bottom: 'calc(calc(anchor(--a bottom) + 5px) - 0.5em)',
+          },
+        ],
+        [
           'does not flip left and right anchors',
           `${propWrap('left')}: anchor(right);${propWrap('right')}:anchor(--a left)`,
           {
@@ -145,6 +153,14 @@ describe('fallback', () => {
           {
             left: 'anchor(self-end)',
             right: 'anchor(self-start)',
+          },
+        ],
+        [
+          'flips anchor functions that are nested',
+          `${propWrap('right')}: calc(anchor(left) + 5px);${propWrap('left')}:calc(calc(anchor(--a left) + 5px) - 0.5em)`,
+          {
+            left: 'calc(anchor(right) + 5px)',
+            right: 'calc(calc(anchor(--a right) + 5px) - 0.5em)',
           },
         ],
         [

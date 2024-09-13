@@ -421,15 +421,20 @@ export function applyTryTacticToBlock(
       declarations[key] ??= 'revert';
     }
 
-    // todo: This does not support anchor functions that are nested or passed
-    // through custom properties.
-    if (isAnchorFunction(valueAst.children.first)) {
-      valueAst.children.first.children.forEach((item) => {
-        if (isIdentifier(item) && isAnchorSide(item.name)) {
-          item.name = mapAnchorSide(item.name, tactic);
+    // todo: This does not support percentage anchor-side values, nor anchor
+    // functions that are passed through custom properties.
+    csstree.walk(valueAst, {
+      visit: 'Function',
+      enter(node) {
+        if (isAnchorFunction(node)) {
+          node.children.forEach((item) => {
+            if (isIdentifier(item) && isAnchorSide(item.name)) {
+              item.name = mapAnchorSide(item.name, tactic);
+            }
+          });
         }
-      });
-    }
+      },
+    });
 
     if (key === 'position-area') {
       valueAst.children.forEach((id) => {
