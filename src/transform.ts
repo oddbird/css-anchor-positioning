@@ -12,13 +12,16 @@ export async function transformCSS(
       if (el.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
-      } else if (el.tagName.toLowerCase() === 'link') {
+      } else if (el instanceof HTMLLinkElement) {
         // Create new link
         const blob = new Blob([css], { type: 'text/css' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = url;
+        link.id = el.id;
+        link.media = el.media;
+        link.title = el.title;
         const promise = new Promise((res) => {
           link.onload = res;
         });
