@@ -88,8 +88,8 @@ following features:
   - The `flip-start` `try-tactic` is only partially supported. The tactic is
     only applied to property names and anchor sides.
   - a `position-area` as a `try-tactic`
-  - Fallback does does not support anchor functions that are nested or passed
-    through custom properties.
+  - Fallback does not support percentage anchor-side values, nor anchor
+    functions that are passed through custom properties.
 - Polyfill allows anchoring in scroll more permissively than the spec allows,
   for instance without a default `position-anchor`.
 - `anchor-scope` property on pseudo-elements

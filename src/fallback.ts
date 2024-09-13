@@ -24,6 +24,7 @@ import {
   getAST,
   getSelectors,
   INSTANCE_UUID,
+  isAnchorFunction,
   splitCommaList,
   type StyleData,
 } from './utils.js';
@@ -420,11 +421,12 @@ export function applyTryTacticToBlock(
       declarations[key] ??= 'revert';
     }
 
-    // todo: This does not support anchor functions that are passed through custom properties.
+    // todo: This does not support percentage anchor-side values, nor anchor
+    // functions that are passed through custom properties.
     csstree.walk(valueAst, {
       visit: 'Function',
       enter(node) {
-        if (node.name === 'anchor') {
+        if (isAnchorFunction(node)) {
           node.children.forEach((item) => {
             if (isIdentifier(item) && isAnchorSide(item.name)) {
               item.name = mapAnchorSide(item.name, tactic);
