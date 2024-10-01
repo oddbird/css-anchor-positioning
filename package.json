@@ -78,9 +78,9 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.6.10",
+    "@floating-ui/dom": "^1.6.11",
     "@types/css-tree": "^2.3.8",
-    "css-tree": "^2.3.1",
+    "css-tree": "^3.0.0",
     "nanoid": "^5.0.7"
   },
   "devDependencies": {
@@ -113,7 +113,7 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
-    "vitest": "^2.0.5"
+    "vitest": "^2.1.1"
   },
   "resolutions": {
     "tslib": ">=2"
