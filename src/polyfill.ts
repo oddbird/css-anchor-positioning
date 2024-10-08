@@ -26,7 +26,6 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
-import type { StyleData } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
