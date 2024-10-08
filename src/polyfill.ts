@@ -26,6 +26,7 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
+import type { StyleData } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -443,13 +444,14 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
   }
 }
 
-export async function polyfill(animationFrame?: boolean) {
+export async function polyfill(animationFrame?: boolean, el?: HTMLStyleElement) {
   const useAnimationFrame =
     animationFrame === undefined
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
       : animationFrame;
+
   // fetch CSS from stylesheet and inline style
-  let styleData = await fetchCSS();
+  let styleData = el ? [{el, css: el.textContent ?? ''}] : await fetchCSS();
 
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = await cascadeCSS(styleData);
