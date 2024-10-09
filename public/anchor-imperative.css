@@ -1,0 +1,5 @@
+#my-target-imperative-link-el {
+  position: absolute;
+  bottom: anchor(--my-anchor-imperative top);
+  left: anchor(--my-anchor-imperative right);
+}

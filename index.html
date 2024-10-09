@@ -45,6 +45,11 @@
         bottom: anchor(--my-anchor-style-tag start);
         right: anchor(--my-anchor-style-tag left);
       }
+
+      #my-anchor-imperative {
+        inline-size: fit-content;
+        margin-inline: auto;
+      }
     </style>
     <script type="module">
       import polyfill from '/src/index-fn.ts';
@@ -78,6 +83,89 @@
           updateAnchor.removeAttribute('data-large');
         }
       });
+
+      async function prepareImperativePolyfill() {
+        return new Promise((resolve) => {
+          // anchor style element
+          const anchorStyleEl = document.createElement('style');
+          anchorStyleEl.id = 'my-style-imperative-anchor';
+          anchorStyleEl.textContent = [
+            '#my-anchor-imperative {',
+            'anchor-name: --my-anchor-imperative;',
+            '}',
+          ].join('');
+
+          // style element
+          const styleEl = document.createElement('style');
+          styleEl.id = 'my-style-imperative-style-el';
+          styleEl.textContent = [
+            '#my-target-imperative-style-el {',
+            'position: absolute;',
+            'bottom: anchor(--my-anchor-imperative top);',
+            'right: anchor(--my-anchor-imperative left);',
+            '}',
+          ].join('');
+
+          // link element
+          const linkEl = document.createElement('link');
+          linkEl.id = 'my-style-imperative-link-el';
+          linkEl.rel = 'stylesheet';
+          linkEl.href = '/anchor-imperative.css';
+
+          document.head.append(anchorStyleEl, styleEl, linkEl);
+
+          // inline style
+          const el = document.getElementById(
+            'my-target-imperative-inline-style',
+          );
+          if (el) {
+            el.setAttribute(
+              'style',
+              [
+                'position: absolute',
+                'top: anchor(--my-anchor-imperative bottom)',
+                'left: anchor(--my-anchor-imperative right)',
+              ].join(';'),
+            );
+          }
+
+          // Make sure all styles are properly added to the DOM
+          setTimeout(() => resolve(), 0);
+        });
+      }
+
+      const imperativeBtn = document.getElementById(
+        'apply-polyfill-imperatively',
+      );
+      if (!('anchorName' in document.documentElement.style)) {
+        imperativeBtn.addEventListener('click', () => {
+          prepareImperativePolyfill()
+            .then(() =>
+              polyfill({
+                useAnimationFrame: true,
+                elements: [
+                  document.getElementById('my-style-imperative-anchor'),
+                  document.getElementById('my-style-imperative-link-el'),
+                  document.getElementById('my-style-imperative-style-el'),
+                  document.getElementById('my-target-imperative-inline-style'),
+                ],
+              }),
+            )
+            .then((rules) => {
+              imperativeBtn.innerText = 'Polyfill Applied';
+              imperativeBtn.setAttribute('disabled', '');
+              console.log(rules);
+            });
+        });
+      } else {
+        prepareImperativePolyfill().then(() => {
+          imperativeBtn.innerText = 'No Polyfill Needed';
+          imperativeBtn.setAttribute('disabled', '');
+          console.log(
+            'anchor-positioning is supported in this browser; polyfill skipped.',
+          );
+        });
+      }
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
@@ -1001,6 +1089,80 @@
   top: anchor(--my-anchor-media-query top);
   right: anchor(--my-anchor-media-query right);
 }</code></pre>
+    </section>
+    <section
+      id="anchor-imperative"
+      class="demo-item"
+      style="position: relative"
+    >
+      <h2>
+        <a href="#imperative" aria-hidden="true">🔗</a>
+        Imperatively apply polyfill
+      </h2>
+      <button id="apply-polyfill-imperatively">Polyfill these elements</button>
+      <div class="demo-elements">
+        <div id="my-anchor-imperative" class="anchor">Anchor</div>
+        <div id="my-target-imperative-style-el" class="target">
+          Target 1 (with <code>&lt;style&gt;</code>)
+        </div>
+        <div id="my-target-imperative-link-el" class="target">
+          Target 2 (with <code>&lt;link&gt;</code>)
+        </div>
+        <div id="my-target-imperative-inline-style" class="target">
+          Target 3 (with inline style)
+        </div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target 1, 2, and 3 are positioned at Anchor’s
+        top-left, top-right, and bottom-right corners respectively.
+      </p>
+      <pre><code class="language-html" data-dependencies="css,js">&lt;style id="my-style-imperative-anchor"&gt;
+  #my-anchor-imperative {
+    anchor-name: --my-anchor-imperative;
+  }
+&lt;/style&gt;
+&lt;style id="my-style-imperative-style-el"&gt;
+  #my-target-imperative-style-el {
+    position: absolute;
+    bottom: anchor(--my-anchor-imperative top);
+    right: anchor(--my-anchor-imperative left);
+  }
+&lt;/style&gt;
+&lt;link rel="stylesheet" href="/anchor-imperative.css" id="my-style-imperative-link-el"&gt;
+&lt;!--
+CSS inside the anchor-imperative.css file:
+
+#my-target-imperative-link-el {
+  position: absolute;
+  bottom: anchor(--my-anchor-imperative top);
+  left: anchor(--my-anchor-imperative right);
+}
+--&gt;
+
+&lt;div id="my-anchor-imperative" class="anchor"&gt;...&lt;/div&gt;
+&lt;div id="my-target-imperative-style-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-imperative-link-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-imperative-inline-style" class="target"
+  style="position: absolute;
+    top: anchor(--my-anchor-imperative bottom);
+    left: anchor(--my-anchor-imperative right);"
+&gt;...&lt;/div&gt;
+
+&lt;script&gt;
+  polyfill({
+    useAnimationFrame: true,
+    elements: [
+      // The &lt;style&gt; element for anchor
+      document.getElementById('my-style-imperative-anchor'),
+      // The &lt;style&gt; element
+      document.getElementById('my-style-imperative-style-el'),
+      // The &lt;link&gt; element
+      document.getElementById('my-style-imperative-link-el'),
+      // The target element with inline styles
+      document.getElementById('my-target-imperative-inline-style'),
+    ],
+  });
+&lt;/script&gt;</code></pre>
     </section>
     <section id="sponsor">
       <h2>Sponsor OddBird's OSS Work</h2>
