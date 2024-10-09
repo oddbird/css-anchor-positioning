@@ -37,13 +37,13 @@ const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
 function fetchInlineStyles(elements: HTMLElement[] = []) {
-  const elementsWithInlineAnchorStyles:
-    | NodeListOf<HTMLElement>
-    | HTMLElement[] = elements.length
+  const elementsWithInlineAnchorStyles: HTMLElement[] = elements.length
     ? elements.filter((el) =>
         el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
       )
-    : document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY);
+    : Array.from(
+        document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+      );
   const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
@@ -61,8 +61,9 @@ function fetchInlineStyles(elements: HTMLElement[] = []) {
 export async function fetchCSS(
   elements: HTMLElement[] = [],
 ): Promise<StyleData[]> {
-  const targetElements: NodeListOf<HTMLElement> | HTMLElement[] =
-    elements.length ? elements : document.querySelectorAll('link, style');
+  const targetElements: HTMLElement[] = elements.length
+    ? elements
+    : Array.from(document.querySelectorAll('link, style'));
   const sources: Partial<StyleData>[] = [];
 
   targetElements.forEach((el) => {
