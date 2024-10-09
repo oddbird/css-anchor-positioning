@@ -31,13 +31,19 @@ async function fetchLinkedStylesheets(
   );
 }
 
+const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
 // Searches for all elements with inline style attributes that include `anchor`.
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
-function fetchInlineStyles() {
-  const elementsWithInlineAnchorStyles: NodeListOf<HTMLElement> =
-    document.querySelectorAll('[style*="anchor"]');
+function fetchInlineStyles(elements: HTMLElement[] = []) {
+  const elementsWithInlineAnchorStyles:
+    | NodeListOf<HTMLElement>
+    | HTMLElement[] = elements.length
+    ? elements.filter((el) =>
+        el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+      )
+    : document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY);
   const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
@@ -52,12 +58,14 @@ function fetchInlineStyles() {
   return inlineStyles;
 }
 
-export async function fetchCSS(): Promise<StyleData[]> {
-  const elements: NodeListOf<HTMLElement> =
-    document.querySelectorAll('link, style');
+export async function fetchCSS(
+  elements: HTMLElement[] = [],
+): Promise<StyleData[]> {
+  const targetElements: NodeListOf<HTMLElement> | HTMLElement[] =
+    elements.length ? elements : document.querySelectorAll('link, style');
   const sources: Partial<StyleData>[] = [];
 
-  elements.forEach((el) => {
+  targetElements.forEach((el) => {
     if (el.tagName.toLowerCase() === 'link') {
       const url = getStylesheetUrl(el as HTMLLinkElement);
       if (url) {
@@ -69,7 +77,7 @@ export async function fetchCSS(): Promise<StyleData[]> {
     }
   });
 
-  const inlines = fetchInlineStyles();
+  const inlines = fetchInlineStyles(elements);
 
   return await fetchLinkedStylesheets([...sources, ...inlines]);
 }

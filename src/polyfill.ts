@@ -443,14 +443,33 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
   }
 }
 
-export async function polyfill(animationFrame?: boolean, el?: HTMLStyleElement) {
+export interface PolyfillOptions {
+  useAnimationFrame?: boolean;
+  elements?: HTMLElement[];
+}
+
+function getPolyfillOptions(
+  useAnimationFrameOrOption: boolean | PolyfillOptions = {},
+) {
+  const options =
+    typeof useAnimationFrameOrOption === 'boolean'
+      ? { useAnimationFrame: useAnimationFrameOrOption }
+      : useAnimationFrameOrOption;
   const useAnimationFrame =
-    animationFrame === undefined
+    options.useAnimationFrame === undefined
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
-      : animationFrame;
+      : options.useAnimationFrame;
+
+  return Object.assign(options, { useAnimationFrame });
+}
+
+export async function polyfill(
+  useAnimationFrameOrOption: boolean | PolyfillOptions = {},
+) {
+  const options = getPolyfillOptions(useAnimationFrameOrOption);
 
   // fetch CSS from stylesheet and inline style
-  let styleData = el ? [{el, css: el.textContent ?? ''}] : await fetchCSS();
+  let styleData = await fetchCSS(options.elements);
 
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = await cascadeCSS(styleData);
@@ -465,7 +484,7 @@ export async function polyfill(animationFrame?: boolean, el?: HTMLStyleElement) 
     await transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
-    await position(rules, useAnimationFrame);
+    await position(rules, options.useAnimationFrame);
   }
 
   return rules;
