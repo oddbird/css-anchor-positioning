@@ -115,16 +115,16 @@
           document.head.append(anchorStyleEl, styleEl, linkEl);
 
           // inline style
-          document.getElementById(
-            'my-target-imperative-inline-style',
-          )?.setAttribute(
-            'style',
-            [
-              'position: absolute',
-              'top: anchor(--my-anchor-imperative bottom)',
-              'left: anchor(--my-anchor-imperative right)',
-            ].join(';'),
-          );
+          document
+            .getElementById('my-target-imperative-inline-style')
+            ?.setAttribute(
+              'style',
+              [
+                'position: absolute',
+                'top: anchor(--my-anchor-imperative bottom)',
+                'left: anchor(--my-anchor-imperative right)',
+              ].join(';'),
+            );
 
           // Make sure all styles are properly added to the DOM
           setTimeout(() => resolve(), 0);
