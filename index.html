@@ -84,51 +84,46 @@
         }
       });
 
-      async function prepareImperativePolyfill() {
-        return new Promise((resolve) => {
-          // anchor style element
-          const anchorStyleEl = document.createElement('style');
-          anchorStyleEl.id = 'my-style-imperative-anchor';
-          anchorStyleEl.textContent = [
-            '#my-anchor-imperative {',
-            'anchor-name: --my-anchor-imperative;',
-            '}',
-          ].join('');
+      function prepareImperativePolyfill() {
+        // anchor style element
+        const anchorStyleEl = document.createElement('style');
+        anchorStyleEl.id = 'my-style-imperative-anchor';
+        anchorStyleEl.textContent = [
+          '#my-anchor-imperative {',
+          'anchor-name: --my-anchor-imperative;',
+          '}',
+        ].join('');
 
-          // style element
-          const styleEl = document.createElement('style');
-          styleEl.id = 'my-style-imperative-style-el';
-          styleEl.textContent = [
-            '#my-target-imperative-style-el {',
-            'position: absolute;',
-            'bottom: anchor(--my-anchor-imperative top);',
-            'right: anchor(--my-anchor-imperative left);',
-            '}',
-          ].join('');
+        // style element
+        const styleEl = document.createElement('style');
+        styleEl.id = 'my-style-imperative-style-el';
+        styleEl.textContent = [
+          '#my-target-imperative-style-el {',
+          'position: absolute;',
+          'bottom: anchor(--my-anchor-imperative top);',
+          'right: anchor(--my-anchor-imperative left);',
+          '}',
+        ].join('');
 
-          // link element
-          const linkEl = document.createElement('link');
-          linkEl.id = 'my-style-imperative-link-el';
-          linkEl.rel = 'stylesheet';
-          linkEl.href = '/anchor-imperative.css';
+        // link element
+        const linkEl = document.createElement('link');
+        linkEl.id = 'my-style-imperative-link-el';
+        linkEl.rel = 'stylesheet';
+        linkEl.href = '/anchor-imperative.css';
 
-          document.head.append(anchorStyleEl, styleEl, linkEl);
+        document.head.append(anchorStyleEl, styleEl, linkEl);
 
-          // inline style
-          document
-            .getElementById('my-target-imperative-inline-style')
-            ?.setAttribute(
-              'style',
-              [
-                'position: absolute',
-                'top: anchor(--my-anchor-imperative bottom)',
-                'left: anchor(--my-anchor-imperative right)',
-              ].join(';'),
-            );
-
-          // Make sure all styles are properly added to the DOM
-          setTimeout(() => resolve(), 0);
-        });
+        // inline style
+        document
+          .getElementById('my-target-imperative-inline-style')
+          ?.setAttribute(
+            'style',
+            [
+              'position: absolute',
+              'top: anchor(--my-anchor-imperative bottom)',
+              'left: anchor(--my-anchor-imperative right)',
+            ].join(';'),
+          );
       }
 
       const imperativeBtn = document.getElementById(
@@ -136,23 +131,20 @@
       );
       if (!('anchorName' in document.documentElement.style)) {
         imperativeBtn.addEventListener('click', () => {
-          prepareImperativePolyfill()
-            .then(() =>
-              polyfill({
-                useAnimationFrame: true,
-                elements: [
-                  document.getElementById('my-style-imperative-anchor'),
-                  document.getElementById('my-style-imperative-link-el'),
-                  document.getElementById('my-style-imperative-style-el'),
-                  document.getElementById('my-target-imperative-inline-style'),
-                ],
-              }),
-            )
-            .then((rules) => {
-              imperativeBtn.innerText = 'Polyfill Applied';
-              imperativeBtn.setAttribute('disabled', '');
-              console.log(rules);
-            });
+          prepareImperativePolyfill();
+          polyfill({
+            useAnimationFrame: true,
+            elements: [
+              document.getElementById('my-style-imperative-anchor'),
+              document.getElementById('my-style-imperative-link-el'),
+              document.getElementById('my-style-imperative-style-el'),
+              document.getElementById('my-target-imperative-inline-style'),
+            ],
+          }).then((rules) => {
+            imperativeBtn.innerText = 'Polyfill Applied';
+            imperativeBtn.setAttribute('disabled', '');
+            console.log(rules);
+          });
         });
       } else {
         prepareImperativePolyfill().then(() => {
