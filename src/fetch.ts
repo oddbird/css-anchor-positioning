@@ -36,10 +36,10 @@ const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
-function fetchInlineStyles(elements: HTMLElement[] = []) {
-  const elementsWithInlineAnchorStyles: HTMLElement[] = elements.length
+function fetchInlineStyles(elements?: HTMLElement[]) {
+  const elementsWithInlineAnchorStyles: HTMLElement[] = Array.isArray(elements)
     ? elements.filter((el) =>
-        el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+        el?.matches?.(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
       )
     : Array.from(
         document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
@@ -47,6 +47,9 @@ function fetchInlineStyles(elements: HTMLElement[] = []) {
   const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles.forEach((el) => {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
     const selector = nanoid(12);
     const dataAttribute = 'data-has-inline-styles';
     el.setAttribute(dataAttribute, selector);
@@ -58,15 +61,16 @@ function fetchInlineStyles(elements: HTMLElement[] = []) {
   return inlineStyles;
 }
 
-export async function fetchCSS(
-  elements: HTMLElement[] = [],
-): Promise<StyleData[]> {
-  const targetElements: HTMLElement[] = elements.length
+export async function fetchCSS(elements?: HTMLElement[]): Promise<StyleData[]> {
+  const targetElements: HTMLElement[] = Array.isArray(elements)
     ? elements
     : Array.from(document.querySelectorAll('link, style'));
   const sources: Partial<StyleData>[] = [];
 
   targetElements.forEach((el) => {
+    if (!(el instanceof HTMLElement)) {
+      return;
+    }
     if (el.tagName.toLowerCase() === 'link') {
       const url = getStylesheetUrl(el as HTMLLinkElement);
       if (url) {
