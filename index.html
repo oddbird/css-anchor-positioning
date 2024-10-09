@@ -147,13 +147,12 @@
           });
         });
       } else {
-        prepareImperativePolyfill().then(() => {
-          imperativeBtn.innerText = 'No Polyfill Needed';
-          imperativeBtn.setAttribute('disabled', '');
-          console.log(
-            'anchor-positioning is supported in this browser; polyfill skipped.',
-          );
-        });
+        prepareImperativePolyfill();
+        imperativeBtn.innerText = 'No Polyfill Needed';
+        imperativeBtn.setAttribute('disabled', '');
+        console.log(
+          'anchor-positioning is supported in this browser; polyfill skipped.',
+        );
       }
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
