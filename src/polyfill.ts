@@ -448,7 +448,7 @@ export interface PolyfillOptions {
   elements?: HTMLElement[];
 }
 
-function getPolyfillOptions(
+function normalizePolyfillOptions(
   useAnimationFrameOrOption: boolean | PolyfillOptions = {},
 ) {
   const options =
@@ -460,6 +460,10 @@ function getPolyfillOptions(
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
       : options.useAnimationFrame;
 
+  if (options.elements && !Array.isArray(options.elements)) {
+    options.elements = undefined;
+  }
+
   return Object.assign(options, { useAnimationFrame });
 }
 
@@ -467,7 +471,7 @@ function getPolyfillOptions(
 export async function polyfill(
   useAnimationFrameOrOption: boolean | PolyfillOptions = {},
 ) {
-  const options = getPolyfillOptions(useAnimationFrameOrOption);
+  const options = normalizePolyfillOptions(useAnimationFrameOrOption);
 
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options.elements);
