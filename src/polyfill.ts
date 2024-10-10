@@ -463,6 +463,7 @@ function getPolyfillOptions(
   return Object.assign(options, { useAnimationFrame });
 }
 
+// Support a boolean option for backwards compatibility.
 export async function polyfill(
   useAnimationFrameOrOption: boolean | PolyfillOptions = {},
 ) {
