@@ -126,3 +126,30 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
 
   await expect(target).toHaveCSS('width', '100px');
 });
+
+test('applies manual polyfill', async ({ page }) => {
+  await page.locator('#apply-polyfill-manually').click();
+  const anchorBox = await page.locator('#my-anchor-manual').boundingBox();
+  const target1Box = await page
+    .locator('#my-target-manual-style-el')
+    .boundingBox();
+  const target2Box = await page
+    .locator('#my-target-manual-link-el')
+    .boundingBox();
+  const target3Box = await page
+    .locator('#my-target-manual-inline-style')
+    .boundingBox();
+
+  if (!anchorBox || !target1Box || !target2Box || !target3Box) {
+    return;
+  }
+
+  expect(target1Box.x + target1Box.width).toBeCloseTo(anchorBox.x, 0);
+  expect(target1Box.y + target1Box.height).toBeCloseTo(anchorBox.y, 0);
+
+  expect(target2Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(target2Box.y + target2Box.height).toBeCloseTo(anchorBox.y, 0);
+
+  expect(target3Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(target3Box.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+});
