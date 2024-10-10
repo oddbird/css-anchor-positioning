@@ -179,7 +179,10 @@ describe('fetch styles imperatively', () => {
     const el5 = document.getElementById('el5')!;
 
     const styleData = await fetchCSS([
-      el1, el2, el3, el4,
+      el1,
+      el2,
+      el3,
+      el4,
 
       el5, // should be ignored
       // @ts-expect-error should be ignored

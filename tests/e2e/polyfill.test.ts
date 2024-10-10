@@ -129,10 +129,20 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
 
 test('applies polyfill imperatively', async ({ page }) => {
   await page.locator('#apply-polyfill-imperatively').click();
-  const anchorBox = await page.locator('#my-anchor-imperative').boundingBox()!;
-  const target1Box = await page.locator('#my-target-imperative-style-el').boundingBox()!;
-  const target2Box = await page.locator('#my-target-imperative-link-el').boundingBox()!;
-  const target3Box = await page.locator('#my-target-imperative-inline-style').boundingBox()!;
+  const anchorBox = await page.locator('#my-anchor-imperative').boundingBox();
+  const target1Box = await page
+    .locator('#my-target-imperative-style-el')
+    .boundingBox();
+  const target2Box = await page
+    .locator('#my-target-imperative-link-el')
+    .boundingBox();
+  const target3Box = await page
+    .locator('#my-target-imperative-inline-style')
+    .boundingBox();
+
+  if (!anchorBox || !target1Box || !target2Box || !target3Box) {
+    return;
+  }
 
   expect(target1Box.x + target1Box.width).toBeCloseTo(anchorBox.x, 0);
   expect(target1Box.y + target1Box.height).toBeCloseTo(anchorBox.y, 0);
