@@ -46,17 +46,16 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
       );
   const inlineStyles: Partial<StyleData>[] = [];
 
-  elementsWithInlineAnchorStyles.forEach((el) => {
-    if (!(el instanceof HTMLElement)) {
-      return;
-    }
-    const selector = nanoid(12);
-    const dataAttribute = 'data-has-inline-styles';
-    el.setAttribute(dataAttribute, selector);
-    const styles = el.getAttribute('style');
-    const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
-    inlineStyles.push({ el, css });
-  });
+  elementsWithInlineAnchorStyles
+    .filter((el) => el instanceof HTMLElement)
+    .forEach((el) => {
+      const selector = nanoid(12);
+      const dataAttribute = 'data-has-inline-styles';
+      el.setAttribute(dataAttribute, selector);
+      const styles = el.getAttribute('style');
+      const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
+      inlineStyles.push({ el, css });
+    });
 
   return inlineStyles;
 }
@@ -67,20 +66,19 @@ export async function fetchCSS(elements?: HTMLElement[]): Promise<StyleData[]> {
     : Array.from(document.querySelectorAll('link, style'));
   const sources: Partial<StyleData>[] = [];
 
-  targetElements.forEach((el) => {
-    if (!(el instanceof HTMLElement)) {
-      return;
-    }
-    if (el.tagName.toLowerCase() === 'link') {
-      const url = getStylesheetUrl(el as HTMLLinkElement);
-      if (url) {
-        sources.push({ el, url });
+  targetElements
+    .filter((el) => el instanceof HTMLElement)
+    .forEach((el) => {
+      if (el.tagName.toLowerCase() === 'link') {
+        const url = getStylesheetUrl(el as HTMLLinkElement);
+        if (url) {
+          sources.push({ el, url });
+        }
       }
-    }
-    if (el.tagName.toLowerCase() === 'style') {
-      sources.push({ el, css: el.innerHTML });
-    }
-  });
+      if (el.tagName.toLowerCase() === 'style') {
+        sources.push({ el, css: el.innerHTML });
+      }
+    });
 
   const inlines = fetchInlineStyles(elements);
 
