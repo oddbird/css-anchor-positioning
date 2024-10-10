@@ -55,9 +55,11 @@
     <script type="module">
       import polyfill from '/src/index-fn.ts';
 
+      const SUPPORTS_ANCHOR_POSITIONING = CSS.supports('anchor-name: --a');
+
       const btn = document.getElementById('apply-polyfill');
 
-      if (!('anchorName' in document.documentElement.style)) {
+      if (!SUPPORTS_ANCHOR_POSITIONING) {
         btn.addEventListener('click', () =>
           polyfill().then((rules) => {
             btn.innerText = 'Polyfill Applied';
@@ -128,9 +130,13 @@
       }
 
       const manualBtn = document.getElementById('apply-polyfill-manually');
-      if (!('anchorName' in document.documentElement.style)) {
-        manualBtn.addEventListener('click', () => {
-          prepareManualPolyfill();
+      if (SUPPORTS_ANCHOR_POSITIONING) {
+        manualBtn.innerText = 'Load Anchor Positioning CSS';
+      }
+      manualBtn.addEventListener('click', () => {
+        prepareManualPolyfill();
+
+        if (!SUPPORTS_ANCHOR_POSITIONING) {
           polyfill({
             useAnimationFrame: true,
             elements: [
@@ -141,18 +147,16 @@
             ],
           }).then((rules) => {
             manualBtn.innerText = 'Polyfill Applied';
-            manualBtn.setAttribute('disabled', '');
             console.log(rules);
           });
-        });
-      } else {
-        prepareManualPolyfill();
-        manualBtn.innerText = 'No Polyfill Needed';
+        } else {
+          manualBtn.innerText = 'Anchor Positioning CSS applied';
+          console.log(
+            'anchor-positioning is supported in this browser; polyfill skipped.',
+          );
+        }
         manualBtn.setAttribute('disabled', '');
-        console.log(
-          'anchor-positioning is supported in this browser; polyfill skipped.',
-        );
-      }
+      });
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
