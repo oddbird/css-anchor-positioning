@@ -98,7 +98,7 @@ describe('fetch inline styles', () => {
   });
 });
 
-describe('fetch styles imperatively', () => {
+describe('fetch styles manually', () => {
   let target5Css: string;
   let target6Css: string;
 
@@ -183,8 +183,8 @@ describe('fetch styles imperatively', () => {
       el2,
       el3,
       el4,
-
-      el5, // should be ignored
+      // should be ignore
+      el5,
       // @ts-expect-error should be ignored
       undefined,
       // @ts-expect-error should be ignore

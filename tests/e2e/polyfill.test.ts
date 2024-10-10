@@ -127,17 +127,17 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   await expect(target).toHaveCSS('width', '100px');
 });
 
-test('applies polyfill imperatively', async ({ page }) => {
-  await page.locator('#apply-polyfill-imperatively').click();
-  const anchorBox = await page.locator('#my-anchor-imperative').boundingBox();
+test('applies manual polyfill', async ({ page }) => {
+  await page.locator('#apply-polyfill-manually').click();
+  const anchorBox = await page.locator('#my-anchor-manual').boundingBox();
   const target1Box = await page
-    .locator('#my-target-imperative-style-el')
+    .locator('#my-target-manual-style-el')
     .boundingBox();
   const target2Box = await page
-    .locator('#my-target-imperative-link-el')
+    .locator('#my-target-manual-link-el')
     .boundingBox();
   const target3Box = await page
-    .locator('#my-target-imperative-inline-style')
+    .locator('#my-target-manual-inline-style')
     .boundingBox();
 
   if (!anchorBox || !target1Box || !target2Box || !target3Box) {

@@ -46,7 +46,7 @@
         right: anchor(--my-anchor-style-tag left);
       }
 
-      #anchor-imperative .demo-elements {
+      #anchor-manual .demo-elements {
         display: grid;
         place-content: center;
         padding-block: 4rem;
@@ -85,72 +85,70 @@
         }
       });
 
-      function prepareImperativePolyfill() {
+      function prepareManualPolyfill() {
         // anchor style element
         const anchorStyleEl = document.createElement('style');
-        anchorStyleEl.id = 'my-style-imperative-anchor';
+        anchorStyleEl.id = 'my-style-manual-anchor';
         anchorStyleEl.textContent = [
-          '#my-anchor-imperative {',
-          'anchor-name: --my-anchor-imperative;',
+          '#my-anchor-manual {',
+          'anchor-name: --my-anchor-manual;',
           '}',
         ].join('');
 
         // style element
         const styleEl = document.createElement('style');
-        styleEl.id = 'my-style-imperative-style-el';
+        styleEl.id = 'my-style-manual-style-el';
         styleEl.textContent = [
-          '#my-target-imperative-style-el {',
+          '#my-target-manual-style-el {',
           'position: absolute;',
-          'bottom: anchor(--my-anchor-imperative top);',
-          'right: anchor(--my-anchor-imperative left);',
+          'bottom: anchor(--my-anchor-manual top);',
+          'right: anchor(--my-anchor-manual left);',
           '}',
         ].join('');
 
         // link element
         const linkEl = document.createElement('link');
-        linkEl.id = 'my-style-imperative-link-el';
+        linkEl.id = 'my-style-manual-link-el';
         linkEl.rel = 'stylesheet';
-        linkEl.href = '/anchor-imperative.css';
+        linkEl.href = '/anchor-manual.css';
 
         document.head.append(anchorStyleEl, styleEl, linkEl);
 
         // inline style
         document
-          .getElementById('my-target-imperative-inline-style')
+          .getElementById('my-target-manual-inline-style')
           ?.setAttribute(
             'style',
             [
               'position: absolute',
-              'top: anchor(--my-anchor-imperative bottom)',
-              'left: anchor(--my-anchor-imperative right)',
+              'top: anchor(--my-anchor-manual bottom)',
+              'left: anchor(--my-anchor-manual right)',
             ].join(';'),
           );
       }
 
-      const imperativeBtn = document.getElementById(
-        'apply-polyfill-imperatively',
-      );
+      const manualBtn = document.getElementById('apply-polyfill-manually');
       if (!('anchorName' in document.documentElement.style)) {
-        imperativeBtn.addEventListener('click', () => {
-          prepareImperativePolyfill();
+        manualBtn.addEventListener('click', () => {
+          prepareManualPolyfill();
           polyfill({
             useAnimationFrame: true,
             elements: [
-              document.getElementById('my-style-imperative-anchor'),
-              document.getElementById('my-style-imperative-link-el'),
-              document.getElementById('my-style-imperative-style-el'),
-              document.getElementById('my-target-imperative-inline-style'),
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-link-el'),
+              document.getElementById('my-style-manual-style-el'),
+              document.getElementById('my-target-manual-inline-style'),
             ],
           }).then((rules) => {
-            imperativeBtn.innerText = 'Polyfill Applied';
-            imperativeBtn.setAttribute('disabled', '');
+            manualBtn.innerText = 'Polyfill Applied';
+            manualBtn.setAttribute('disabled', '');
             console.log(rules);
           });
         });
       } else {
-        prepareImperativePolyfill();
-        imperativeBtn.innerText = 'No Polyfill Needed';
-        imperativeBtn.setAttribute('disabled', '');
+        prepareManualPolyfill();
+        manualBtn.innerText = 'No Polyfill Needed';
+        manualBtn.setAttribute('disabled', '');
         console.log(
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
@@ -1079,25 +1077,21 @@
   right: anchor(--my-anchor-media-query right);
 }</code></pre>
     </section>
-    <section
-      id="anchor-imperative"
-      class="demo-item"
-      style="position: relative"
-    >
+    <section id="anchor-manual" class="demo-item" style="position: relative">
       <h2>
-        <a href="#imperative" aria-hidden="true">🔗</a>
-        Imperatively apply polyfill
+        <a href="#manual" aria-hidden="true">🔗</a>
+        Manually apply polyfill
       </h2>
-      <button id="apply-polyfill-imperatively">Polyfill these elements</button>
+      <button id="apply-polyfill-manually">Polyfill these elements</button>
       <div class="demo-elements">
-        <div id="my-anchor-imperative" class="anchor">Anchor</div>
-        <div id="my-target-imperative-style-el" class="target">
+        <div id="my-anchor-manual" class="anchor">Anchor</div>
+        <div id="my-target-manual-style-el" class="target">
           Target 1 (with <code>&lt;style&gt;</code>)
         </div>
-        <div id="my-target-imperative-link-el" class="target">
+        <div id="my-target-manual-link-el" class="target">
           Target 2 (with <code>&lt;link&gt;</code>)
         </div>
-        <div id="my-target-imperative-inline-style" class="target">
+        <div id="my-target-manual-inline-style" class="target">
           Target 3 (with inline style)
         </div>
       </div>
@@ -1105,36 +1099,36 @@
         With polyfill applied: Target 1, 2, and 3 are positioned at Anchor’s
         top-left, top-right, and bottom-right corners respectively.
       </p>
-      <pre><code class="language-html" data-dependencies="css,js">&lt;style id="my-style-imperative-anchor"&gt;
-  #my-anchor-imperative {
-    anchor-name: --my-anchor-imperative;
+      <pre><code class="language-html" data-dependencies="css,js">&lt;style id="my-style-manual-anchor"&gt;
+  #my-anchor-manual {
+    anchor-name: --my-anchor-manual;
   }
 &lt;/style&gt;
-&lt;style id="my-style-imperative-style-el"&gt;
-  #my-target-imperative-style-el {
+&lt;style id="my-style-manual-style-el"&gt;
+  #my-target-manual-style-el {
     position: absolute;
-    bottom: anchor(--my-anchor-imperative top);
-    right: anchor(--my-anchor-imperative left);
+    bottom: anchor(--my-anchor-manual top);
+    right: anchor(--my-anchor-manual left);
   }
 &lt;/style&gt;
-&lt;link rel="stylesheet" href="/anchor-imperative.css" id="my-style-imperative-link-el"&gt;
+&lt;link rel="stylesheet" href="/anchor-manual.css" id="my-style-manual-link-el"&gt;
 &lt;!--
-CSS inside the anchor-imperative.css file:
+CSS inside the anchor-manual.css file:
 
-#my-target-imperative-link-el {
+#my-target-manual-link-el {
   position: absolute;
-  bottom: anchor(--my-anchor-imperative top);
-  left: anchor(--my-anchor-imperative right);
+  bottom: anchor(--my-anchor-manual top);
+  left: anchor(--my-anchor-manual right);
 }
 --&gt;
 
-&lt;div id="my-anchor-imperative" class="anchor"&gt;...&lt;/div&gt;
-&lt;div id="my-target-imperative-style-el" class="target"&gt;...&lt;/div&gt;
-&lt;div id="my-target-imperative-link-el" class="target"&gt;...&lt;/div&gt;
-&lt;div id="my-target-imperative-inline-style" class="target"
+&lt;div id="my-anchor-manual" class="anchor"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-style-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-link-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-inline-style" class="target"
   style="position: absolute;
-    top: anchor(--my-anchor-imperative bottom);
-    left: anchor(--my-anchor-imperative right);"
+    top: anchor(--my-anchor-manual bottom);
+    left: anchor(--my-anchor-manual right);"
 &gt;...&lt;/div&gt;
 
 &lt;script&gt;
@@ -1142,13 +1136,13 @@ CSS inside the anchor-imperative.css file:
     useAnimationFrame: true,
     elements: [
       // The &lt;style&gt; element for anchor
-      document.getElementById('my-style-imperative-anchor'),
+      document.getElementById('my-style-manual-anchor'),
       // The &lt;style&gt; element
-      document.getElementById('my-style-imperative-style-el'),
+      document.getElementById('my-style-manual-style-el'),
       // The &lt;link&gt; element
-      document.getElementById('my-style-imperative-link-el'),
+      document.getElementById('my-style-manual-link-el'),
       // The target element with inline styles
-      document.getElementById('my-target-imperative-inline-style'),
+      document.getElementById('my-target-manual-inline-style'),
     ],
   });
 &lt;/script&gt;</code></pre>
