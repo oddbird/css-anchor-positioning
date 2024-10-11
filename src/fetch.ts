@@ -2,6 +2,8 @@ import { nanoid } from 'nanoid/non-secure';
 
 import { type StyleData } from './utils.js';
 
+const INVALID_MIME_TYPE_ERROR = 'InvalidMimeType';
+
 export function isStyleLink(link: HTMLLinkElement): link is HTMLLinkElement {
   return Boolean(
     (link.type === 'text/css' || link.rel === 'stylesheet') && link.href,
@@ -18,17 +20,35 @@ function getStylesheetUrl(link: HTMLLinkElement): URL | undefined {
 async function fetchLinkedStylesheets(
   sources: Partial<StyleData>[],
 ): Promise<StyleData[]> {
-  return Promise.all(
+  const results = await Promise.all(
     sources.map(async (data) => {
       if (!data.url) {
         return data as StyleData;
       }
       // fetch css and add to array
-      const response = await fetch(data.url.toString());
-      const css = await response.text();
-      return { ...data, css } as StyleData;
+      try {
+        const response = await fetch(data.url.toString());
+        const type = response.headers.get('content-type');
+        if (type !== 'text/css') {
+          const error = new Error(
+            `Error loading ${data.url}: expected content-type "text/css", got "${type}".`,
+          );
+          error.name = INVALID_MIME_TYPE_ERROR;
+          throw error;
+        }
+        const css = await response.text();
+        return { ...data, css } as StyleData;
+      } catch (error) {
+        if (error instanceof Error && error.name === INVALID_MIME_TYPE_ERROR) {
+          // eslint-disable-next-line no-console
+          console.warn(error);
+          return null;
+        }
+        throw error;
+      }
     }),
   );
+  return results.filter((loaded) => loaded !== null);
 }
 
 // Searches for all elements with inline style attributes that include `anchor`.

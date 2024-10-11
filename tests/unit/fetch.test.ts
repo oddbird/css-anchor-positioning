@@ -1,7 +1,7 @@
 import fetchMock from 'fetch-mock';
 
 import { fetchCSS } from '../../src/fetch.js';
-import { getSampleCSS } from '../helpers.js';
+import { getSampleCSS, requestWithCSSType } from '../helpers.js';
 
 describe('fetch stylesheet', () => {
   beforeAll(() => {
@@ -22,7 +22,7 @@ describe('fetch stylesheet', () => {
 
   it('fetches CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
-    fetchMock.getOnce('end:sample.css', css);
+    fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
     const styleData = await fetchCSS();
 
     expect(styleData).toHaveLength(2);
@@ -81,7 +81,7 @@ describe('fetch inline styles', () => {
 
   it('fetch returns inline CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
-    fetchMock.getOnce('end:sample.css', css);
+    fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
     const styleData = await fetchCSS();
 
     expect(styleData).toHaveLength(4);
