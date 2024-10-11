@@ -62,7 +62,7 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
 
 export async function fetchCSS(
   elements?: HTMLElement[],
-  includeInlineStyles?: boolean,
+  excludeInlineStyles?: boolean,
 ): Promise<StyleData[]> {
   const targetElements: HTMLElement[] =
     elements ?? Array.from(document.querySelectorAll('link, style'));
@@ -82,7 +82,13 @@ export async function fetchCSS(
       }
     });
 
-  const inlines = fetchInlineStyles(includeInlineStyles ? undefined : elements);
+  const elementsForInlines = excludeInlineStyles
+    ? elements?.length
+      ? elements // Only elements in `elements`
+      : [] // No elements
+    : undefined; // All elements
+
+  const inlines = fetchInlineStyles(elementsForInlines);
 
   return await fetchLinkedStylesheets([...sources, ...inlines]);
 }
