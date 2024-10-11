@@ -46,10 +46,9 @@
         right: anchor(--my-anchor-style-tag left);
       }
 
-      #anchor-manual .demo-elements {
-        display: grid;
-        place-content: center;
-        padding-block: 4rem;
+      #anchor-manual .anchor {
+        inline-size: fit-content;
+        margin: 3rem auto;
       }
     </style>
     <script type="module">
@@ -1126,7 +1125,7 @@
         Manually apply polyfill
       </h2>
       <button id="apply-polyfill-manually">Polyfill these elements</button>
-      <div id="anchor-manual-test-buttons">
+      <div id="anchor-manual-test-buttons" hidden>
         <!-- These buttons are for E2E testing only -->
         <button id="prepare-manual-polyfill">Prepare</button>
         <button id="apply-polyfill-manually-set1">Polyfill target 1</button>
