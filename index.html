@@ -129,6 +129,34 @@
           );
       }
 
+      // This event listener is for E2E testing only
+      document
+        .getElementById('prepare-manual-polyfill')
+        ?.addEventListener('click', () => prepareManualPolyfill(), {
+          once: true,
+        });
+      document
+        .getElementById('apply-polyfill-manually-set1')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-style-el'),
+            ],
+          });
+        });
+      document
+        .getElementById('apply-polyfill-manually-set2')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-link-el'),
+              document.getElementById('my-target-manual-inline-style'),
+            ],
+          });
+        });
+
       const manualBtn = document.getElementById('apply-polyfill-manually');
       if (SUPPORTS_ANCHOR_POSITIONING) {
         manualBtn.innerText = 'Load Anchor Positioning CSS';
@@ -1087,6 +1115,14 @@
         Manually apply polyfill
       </h2>
       <button id="apply-polyfill-manually">Polyfill these elements</button>
+      <!-- This button is for E2E testing only -->
+      <div hidden id="anchor-manual-test-buttons">
+        <button id="prepare-manual-polyfill">Prepare</button>
+        <button id="apply-polyfill-manually-set1">Polyfill target 1</button>
+        <button id="apply-polyfill-manually-set2">
+          Polyfill target 2 and 3
+        </button>
+      </div>
       <div class="demo-elements">
         <div id="my-anchor-manual" class="anchor">Anchor</div>
         <div id="my-target-manual-style-el" class="target">

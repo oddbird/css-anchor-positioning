@@ -129,20 +129,16 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
 
 test('applies manual polyfill', async ({ page }) => {
   await page.locator('#apply-polyfill-manually').click();
-  const anchorBox = await page.locator('#my-anchor-manual').boundingBox();
-  const target1Box = await page
+  const anchorBox = (await page.locator('#my-anchor-manual').boundingBox())!;
+  const target1Box = (await page
     .locator('#my-target-manual-style-el')
-    .boundingBox();
-  const target2Box = await page
+    .boundingBox())!;
+  const target2Box = (await page
     .locator('#my-target-manual-link-el')
-    .boundingBox();
-  const target3Box = await page
+    .boundingBox())!;
+  const target3Box = (await page
     .locator('#my-target-manual-inline-style')
-    .boundingBox();
-
-  if (!anchorBox || !target1Box || !target2Box || !target3Box) {
-    return;
-  }
+    .boundingBox())!;
 
   expect(target1Box.x + target1Box.width).toBeCloseTo(anchorBox.x, 0);
   expect(target1Box.y + target1Box.height).toBeCloseTo(anchorBox.y, 0);
@@ -152,4 +148,64 @@ test('applies manual polyfill', async ({ page }) => {
 
   expect(target3Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
   expect(target3Box.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+});
+
+test('applies manual polyfill for multiple elements separately', async ({
+  page,
+}) => {
+  const buttonContainer = page.locator('#anchor-manual-test-buttons');
+  await buttonContainer.evaluate((node: HTMLDivElement) => {
+    node.hidden = false;
+  });
+  await buttonContainer.waitFor({ state: 'visible' });
+
+  const prepareButton = page.locator('#prepare-manual-polyfill');
+  await prepareButton.click();
+
+  const anchorBox = (await page.locator('#my-anchor-manual').boundingBox())!;
+  const target1Box = (await page
+    .locator('#my-target-manual-style-el')
+    .boundingBox())!;
+  const target2Box = (await page
+    .locator('#my-target-manual-link-el')
+    .boundingBox())!;
+  const target3Box = (await page
+    .locator('#my-target-manual-inline-style')
+    .boundingBox())!;
+
+  expect(target1Box.x + target1Box.width).not.toBeCloseTo(anchorBox.x, 0);
+  expect(target1Box.y + target1Box.height).not.toBeCloseTo(anchorBox.y, 0);
+
+  expect(target2Box.x).not.toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(target2Box.y + target2Box.height).not.toBeCloseTo(anchorBox.y, 0);
+
+  expect(target3Box.x).not.toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(target3Box.y).not.toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+
+  const set1Button = page.locator('#apply-polyfill-manually-set1');
+  const set2Button = page.locator('#apply-polyfill-manually-set2');
+
+  await set1Button.click();
+
+  const newTarget1Box = (await page
+    .locator('#my-target-manual-style-el')
+    .boundingBox())!;
+
+  expect(newTarget1Box.x + newTarget1Box.width).toBeCloseTo(anchorBox.x, 0);
+  expect(newTarget1Box.y + newTarget1Box.height).toBeCloseTo(anchorBox.y, 0);
+
+  await set2Button.click();
+
+  const newTarget2Box = (await page
+    .locator('#my-target-manual-link-el')
+    .boundingBox())!;
+  const newTarget3Box = (await page
+    .locator('#my-target-manual-inline-style')
+    .boundingBox())!;
+
+  expect(newTarget2Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(newTarget2Box.y + newTarget2Box.height).toBeCloseTo(anchorBox.y, 0);
+
+  expect(newTarget3Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+  expect(newTarget3Box.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
 });
