@@ -261,7 +261,10 @@ test('applies manual polyfill with automatic inline style polyfill', async ({
   expect(newTarget1Box.y + newTarget1Box.height).toBeCloseTo(anchorBox.y, 0);
 
   expect(newTarget2Box.x).not.toBeCloseTo(anchorBox.x + anchorBox.width, 0);
-  expect(newTarget2Box.y + newTarget2Box.height).not.toBeCloseTo(anchorBox.y, 0);
+  expect(newTarget2Box.y + newTarget2Box.height).not.toBeCloseTo(
+    anchorBox.y,
+    0,
+  );
 
   expect(newTarget3Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
   expect(newTarget3Box.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
