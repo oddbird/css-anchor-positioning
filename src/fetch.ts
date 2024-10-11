@@ -29,7 +29,7 @@ async function fetchLinkedStylesheets(
       try {
         const response = await fetch(data.url.toString());
         const type = response.headers.get('content-type');
-        if (type !== 'text/css') {
+        if (!type?.startsWith('text/css')) {
           const error = new Error(
             `Error loading ${data.url}: expected content-type "text/css", got "${type}".`,
           );
