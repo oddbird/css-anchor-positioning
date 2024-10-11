@@ -60,7 +60,10 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
   return inlineStyles;
 }
 
-export async function fetchCSS(elements?: HTMLElement[]): Promise<StyleData[]> {
+export async function fetchCSS(
+  elements?: HTMLElement[],
+  includeInlineStyles?: boolean,
+): Promise<StyleData[]> {
   const targetElements: HTMLElement[] =
     elements ?? Array.from(document.querySelectorAll('link, style'));
   const sources: Partial<StyleData>[] = [];
@@ -79,7 +82,7 @@ export async function fetchCSS(elements?: HTMLElement[]): Promise<StyleData[]> {
       }
     });
 
-  const inlines = fetchInlineStyles(elements);
+  const inlines = fetchInlineStyles(includeInlineStyles ? undefined : elements);
 
   return await fetchLinkedStylesheets([...sources, ...inlines]);
 }

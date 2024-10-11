@@ -446,6 +446,7 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
 export interface PolyfillOptions {
   useAnimationFrame?: boolean;
   elements?: HTMLElement[];
+  includeInlineStyles?: boolean;
 }
 
 function normalizePolyfillOptions(
@@ -474,7 +475,7 @@ export async function polyfill(
   const options = normalizePolyfillOptions(useAnimationFrameOrOption);
 
   // fetch CSS from stylesheet and inline style
-  let styleData = await fetchCSS(options.elements);
+  let styleData = await fetchCSS(options.elements, options.includeInlineStyles);
 
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = await cascadeCSS(styleData);

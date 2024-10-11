@@ -129,7 +129,7 @@
           );
       }
 
-      // This event listener is for E2E testing only
+      // These event listeners are for E2E testing only
       document
         .getElementById('prepare-manual-polyfill')
         ?.addEventListener('click', () => prepareManualPolyfill(), {
@@ -154,6 +154,17 @@
               document.getElementById('my-style-manual-link-el'),
               document.getElementById('my-target-manual-inline-style'),
             ],
+          });
+        });
+      document
+        .getElementById('apply-polyfill-manually-set3')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-style-el'),
+            ],
+            includeInlineStyles: true,
           });
         });
 
@@ -1115,12 +1126,15 @@
         Manually apply polyfill
       </h2>
       <button id="apply-polyfill-manually">Polyfill these elements</button>
-      <!-- This button is for E2E testing only -->
-      <div hidden id="anchor-manual-test-buttons">
+      <div id="anchor-manual-test-buttons">
+      <!-- These buttons are for E2E testing only -->
         <button id="prepare-manual-polyfill">Prepare</button>
         <button id="apply-polyfill-manually-set1">Polyfill target 1</button>
         <button id="apply-polyfill-manually-set2">
           Polyfill target 2 and 3
+        </button>
+        <button id="apply-polyfill-manually-set3">
+          Polyfill target 1 and 3
         </button>
       </div>
       <div class="demo-elements">
