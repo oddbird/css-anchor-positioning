@@ -184,20 +184,23 @@ describe('fetch styles manually', () => {
     const el4 = document.getElementById('el4')!;
     const el5 = document.getElementById('el5')!;
 
-    const styleData = await fetchCSS([
-      el1,
-      el2,
-      el3,
-      el4,
-      // should be ignored
-      el5,
-      // @ts-expect-error should be ignored
-      undefined,
-      // @ts-expect-error should be ignored
-      null,
-      // @ts-expect-error should be ignored
-      123,
-    ], true);
+    const styleData = await fetchCSS(
+      [
+        el1,
+        el2,
+        el3,
+        el4,
+        // should be ignored
+        el5,
+        // @ts-expect-error should be ignored
+        undefined,
+        // @ts-expect-error should be ignored
+        null,
+        // @ts-expect-error should be ignored
+        123,
+      ],
+      true,
+    );
 
     expect(styleData).toHaveLength(4);
 

@@ -38,9 +38,10 @@ const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
 // style tags.
 function fetchInlineStyles(elements?: HTMLElement[]) {
   const elementsWithInlineAnchorStyles: HTMLElement[] = elements
-    ? elements.filter((el) =>
-        el instanceof HTMLElement &&
-        el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+    ? elements.filter(
+        (el) =>
+          el instanceof HTMLElement &&
+          el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
       )
     : Array.from(
         document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
