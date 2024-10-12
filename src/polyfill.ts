@@ -467,7 +467,7 @@ export async function polyfill(
   useAnimationFrameOrOption?: boolean | AnchorPositioningPolyfillOptions,
 ) {
   const options = normalizePolyfillOptions(
-    useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS
+    useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
   );
 
   // fetch CSS from stylesheet and inline style
