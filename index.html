@@ -177,7 +177,6 @@
 
         if (!SUPPORTS_ANCHOR_POSITIONING) {
           polyfill({
-            useAnimationFrame: true,
             elements: [
               document.getElementById('my-style-manual-anchor'),
               document.getElementById('my-style-manual-link-el'),
@@ -1123,7 +1122,7 @@
     <section id="anchor-manual" class="demo-item" style="position: relative">
       <h2>
         <a href="#manual" aria-hidden="true">🔗</a>
-        Manually apply polyfill
+        Manually apply polyfill to specific styles
       </h2>
       <button id="apply-polyfill-manually">Polyfill these elements</button>
       <div id="anchor-manual-test-buttons" hidden>
@@ -1165,7 +1164,7 @@
     right: anchor(--my-anchor-manual left);
   }
 &lt;/style&gt;
-&lt;link rel="stylesheet" href="/anchor-manual.css" id="my-style-manual-link-el"&gt;
+&lt;link rel="stylesheet" href="/anchor-manual.css" id="my-style-manual-link-el" /&gt;
 &lt;!--
 CSS inside the anchor-manual.css file:
 
@@ -1187,7 +1186,6 @@ CSS inside the anchor-manual.css file:
 
 &lt;script&gt;
   polyfill({
-    useAnimationFrame: true,
     elements: [
       // The &lt;style&gt; element for anchor
       document.getElementById('my-style-manual-anchor'),

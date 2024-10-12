@@ -162,8 +162,14 @@ describe('fetch styles manually', () => {
     document.body.innerHTML = '';
   });
 
-  it('fetches nothing with `elements` being an empty array', async () => {
+  it('fetches only inline styles if `elements` is empty', async () => {
     const styleData = await fetchCSS([]);
+
+    expect(styleData).toHaveLength(2);
+  });
+
+  it('fetches nothing if `elements` is empty and exclusing inline styles', async () => {
+    const styleData = await fetchCSS([], true);
 
     expect(styleData).toHaveLength(0);
   });
@@ -183,15 +189,15 @@ describe('fetch styles manually', () => {
       el2,
       el3,
       el4,
-      // should be ignore
+      // should be ignored
       el5,
       // @ts-expect-error should be ignored
       undefined,
-      // @ts-expect-error should be ignore
+      // @ts-expect-error should be ignored
       null,
       // @ts-expect-error should be ignored
       123,
-    ]);
+    ], true);
 
     expect(styleData).toHaveLength(4);
 

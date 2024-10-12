@@ -448,7 +448,7 @@ export interface PolyfillOptions {
   // positions
   useAnimationFrame?: boolean;
 
-  // An array of explictily targeted elements to polyfill
+  // An array of explicitly targeted elements to polyfill
   elements?: HTMLElement[];
 
   // Whether to exclude elements with eligible inline styles. When not defined
@@ -472,7 +472,7 @@ function normalizePolyfillOptions(
       ? Boolean(window.UPDATE_ANCHOR_ON_ANIMATION_FRAME)
       : options.useAnimationFrame;
 
-  if (options.elements && !Array.isArray(options.elements)) {
+  if (!Array.isArray(options.elements)) {
     options.elements = undefined;
   }
 
