@@ -7,7 +7,7 @@ describe('fetch stylesheet', () => {
   beforeAll(() => {
     // Set up our document head
     document.head.innerHTML = `
-      <link type="text/css" href="/sample.css"/>
+      <link type="text/css" href="/sample.css" />
       <link rel="stylesheet" />
       <link />
       <style>

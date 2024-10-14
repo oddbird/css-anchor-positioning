@@ -25,6 +25,12 @@ async function fetchLinkedStylesheets(
       if (!data.url) {
         return data as StyleData;
       }
+      // TODO: Add MutationObserver to watch for disabled links being enabled
+      // https://github.com/oddbird/css-anchor-positioning/issues/246
+      if ((data.el as HTMLLinkElement | undefined)?.disabled) {
+        // Do not fetch or parse disabled stylesheets
+        return null;
+      }
       // fetch css and add to array
       try {
         const response = await fetch(data.url.toString());
