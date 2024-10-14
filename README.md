@@ -42,35 +42,73 @@ You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
 
 ## Configuration
 
-The polyfill accepts one argument (type: `boolean`, default: `false`), which
-determines whether anchor calculations should [update on every animation
-frame](https://floating-ui.com/docs/autoUpdate#animationframe) (e.g. when the
-anchor element is animated using `transform`s), in addition to always updating
-on scroll/resize. While this option is optimized for performance, it should be
-used sparingly.
+The polyfill supports a small number of options. When using the default version
+of the polyfill that executes automatically, options can be set by setting the
+value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
+
+```js
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
+      elements: undefined,
+      excludeInlineStyles: false,
+      useAnimationFrame: false,
+    };
+    import("https://unpkg.com/@oddbird/css-anchor-positioning");
+  }
+</script>
+```
+
+When manually applying the polyfill, options can be set by passing an object as
+an argument.
 
 ```js
 <script type="module">
   if (!("anchorName" in document.documentElement.style)) {
     const { default: polyfill } = await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js");
 
-    polyfill(true);
+    polyfill({
+      elements: undefined,
+      excludeInlineStyles: false,
+      useAnimationFrame: false,
+    });
   }
 </script>
 ```
 
-When using the default version of the polyfill that executes automatically, this
-option can be set by setting the value of
-`window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`.
+### elements
 
-```js
-<script type="module">
-  if (!("anchorName" in document.documentElement.style)) {
-    window.UPDATE_ANCHOR_ON_ANIMATION_FRAME = true;
-    import("https://unpkg.com/@oddbird/css-anchor-positioning");
-  }
-</script>
-```
+type: `HTMLElements[]`, default: `undefined`
+
+If set, the polyfill will only be applied to the specified elements instead of
+to all styles. Any specified `<link>` and `<style>` elements will be polyfilled.
+By default, all inline styles in the document will also be polyfilled, but if
+`excludeInlineStyles` is true, only inline styles on specified elements will be
+polyfilled.
+
+### excludeInlineStyles
+
+type: `boolean`, default: `false`
+
+When not defined or set to `false`, the polyfill will be applied to all elements
+that have eligible inline styles, regardless of whether the `elements` option is
+defined. When set to `true`, elements with eligible inline styles listed in the
+`elements` option will still be polyfilled, but no other elements in the
+document will be implicitly polyfilled.
+
+### useAnimationFrame
+
+type: `boolean`, default: `false`
+
+Determines whether anchor calculations should [update on every animation
+frame](https://floating-ui.com/docs/autoUpdate#animationframe) (e.g. when the
+anchor element is animated using `transform`s), in addition to always updating
+on scroll/resize. While this option is optimized for performance, it should be
+used sparingly.
+
+For legacy support, this option can also be set by setting the value of
+`window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`, or, when applying the polyfill
+manually, by passing a single boolean with `polyfill(true)`.
 
 ## Limitations
 
