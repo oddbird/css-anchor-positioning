@@ -3,7 +3,6 @@ import { transformCSS } from '../../src/transform.js';
 describe('transformCSS', () => {
   beforeAll(() => {
     global.URL.createObjectURL = vi.fn().mockReturnValue('/updated.css');
-    global.URL.revokeObjectURL = vi.fn();
   });
 
   it('parses and removes new anchor positioning CSS after transformation to JS', async () => {
