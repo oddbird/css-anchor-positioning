@@ -114,7 +114,7 @@ manually, by passing a single boolean with `polyfill(true)`.
 
 This polyfill was implemented against an early version of the spec, and updates
 were paused to allow the syntax to solidify. Now that browsers are working on
-implementation, we would like to bring it up to date.
+implementation, we are in the process of bringing it up to date.
 
 While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
