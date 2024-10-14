@@ -25,9 +25,10 @@ export async function transformCSS(
         const promise = new Promise((res) => {
           link.onload = res;
         });
-        el.replaceWith(link);
+        el.insertAdjacentElement('beforebegin', link);
         // Wait for new stylesheet to be loaded
         await promise;
+        el.remove();
         URL.revokeObjectURL(url);
         updatedObject.el = link;
       } else if (el.hasAttribute('data-has-inline-styles')) {
