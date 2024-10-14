@@ -25,3 +25,8 @@ export function cascadeCSSForTest(css: string) {
   cascadeCSS([styleObj]);
   return styleObj.css;
 }
+
+export const requestWithCSSType = (css: string) => ({
+  body: css,
+  headers: { 'Content-Type': 'text/css' },
+});
