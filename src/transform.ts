@@ -25,7 +25,7 @@ export async function transformCSS(
         const promise = new Promise((res) => {
           link.onload = res;
         });
-        el.insertAdjacentElement('afterend', link);
+        el.insertAdjacentElement('beforebegin', link);
         // Wait for new stylesheet to be loaded
         await promise;
         el.remove();
