@@ -29,7 +29,6 @@ export async function transformCSS(
         // Wait for new stylesheet to be loaded
         await promise;
         el.remove();
-        URL.revokeObjectURL(url);
         updatedObject.el = link;
       } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
