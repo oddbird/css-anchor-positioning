@@ -136,39 +136,48 @@
         ?.addEventListener('click', () => prepareManualPolyfill(), {
           once: true,
         });
-      document
-        .getElementById('apply-polyfill-manually-set1')
-        ?.addEventListener('click', () => {
-          polyfill({
-            elements: [
-              document.getElementById('my-style-manual-anchor'),
-              document.getElementById('my-style-manual-style-el'),
-            ],
-            excludeInlineStyles: true,
-          });
+      const manualSet1Button = document.getElementById(
+        'apply-polyfill-manually-set1',
+      );
+      manualSet1Button?.addEventListener('click', (e) => {
+        polyfill({
+          elements: [
+            document.getElementById('my-style-manual-anchor'),
+            document.getElementById('my-style-manual-style-el'),
+          ],
+          excludeInlineStyles: true,
+        }).then(() => {
+          manualSet1Button.setAttribute('disabled', '');
         });
-      document
-        .getElementById('apply-polyfill-manually-set2')
-        ?.addEventListener('click', () => {
-          polyfill({
-            elements: [
-              document.getElementById('my-style-manual-anchor'),
-              document.getElementById('my-style-manual-link-el'),
-              document.getElementById('my-target-manual-inline-style'),
-            ],
-            excludeInlineStyles: true,
-          });
+      });
+      const manualSet2Button = document.getElementById(
+        'apply-polyfill-manually-set2',
+      );
+      manualSet2Button?.addEventListener('click', (e) => {
+        polyfill({
+          elements: [
+            document.getElementById('my-style-manual-anchor'),
+            document.getElementById('my-style-manual-link-el'),
+            document.getElementById('my-target-manual-inline-style'),
+          ],
+          excludeInlineStyles: true,
+        }).then(() => {
+          manualSet2Button.setAttribute('disabled', '');
         });
-      document
-        .getElementById('apply-polyfill-manually-set3')
-        ?.addEventListener('click', () => {
-          polyfill({
-            elements: [
-              document.getElementById('my-style-manual-anchor'),
-              document.getElementById('my-style-manual-style-el'),
-            ],
-          });
+      });
+      const manualSet3Button = document.getElementById(
+        'apply-polyfill-manually-set3',
+      );
+      manualSet3Button?.addEventListener('click', (e) => {
+        polyfill({
+          elements: [
+            document.getElementById('my-style-manual-anchor'),
+            document.getElementById('my-style-manual-style-el'),
+          ],
+        }).then(() => {
+          manualSet3Button.setAttribute('disabled', '');
         });
+      });
 
       const manualBtn = document.getElementById('apply-polyfill-manually');
       if (SUPPORTS_ANCHOR_POSITIONING) {
@@ -187,6 +196,7 @@
             ],
           }).then((rules) => {
             manualBtn.innerText = 'Polyfill Applied';
+            manualBtn.setAttribute('disabled', '');
             console.log(rules);
           });
         } else {

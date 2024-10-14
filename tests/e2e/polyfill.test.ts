@@ -13,7 +13,8 @@ const anchorSelector = '#my-anchor-positioning';
 
 async function applyPolyfill(page: Page) {
   const btn = page.locator(btnSelector);
-  return await btn.click();
+  await btn.click();
+  return await expect(btn).toBeDisabled();
 }
 
 async function getElementWidth(page: Page, sel: string) {
@@ -128,7 +129,9 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
 });
 
 test('applies manual polyfill', async ({ page }) => {
-  await page.locator('#apply-polyfill-manually').click();
+  const applyButton = page.locator('#apply-polyfill-manually');
+  await applyButton.click();
+  await expect(applyButton).toBeDisabled();
   const anchorBox = (await page.locator('#my-anchor-manual').boundingBox())!;
   const target1Box = (await page
     .locator('#my-target-manual-style-el')
@@ -186,6 +189,7 @@ test('applies manual polyfill for multiple elements separately', async ({
   const set2Button = page.locator('#apply-polyfill-manually-set2');
 
   await set1Button.click();
+  await expect(set1Button).toBeDisabled();
 
   const newTarget1Box = (await page
     .locator('#my-target-manual-style-el')
@@ -195,6 +199,7 @@ test('applies manual polyfill for multiple elements separately', async ({
   expect(newTarget1Box.y + newTarget1Box.height).toBeCloseTo(anchorBox.y, 0);
 
   await set2Button.click();
+  await expect(set2Button).toBeDisabled();
 
   const newTarget2Box = (await page
     .locator('#my-target-manual-link-el')
@@ -245,6 +250,7 @@ test('applies manual polyfill with automatic inline style polyfill', async ({
   const set3Button = page.locator('#apply-polyfill-manually-set3');
 
   await set3Button.click();
+  await expect(set3Button).toBeDisabled();
 
   const newTarget1Box = (await page
     .locator('#my-target-manual-style-el')
