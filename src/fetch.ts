@@ -84,11 +84,7 @@ export async function fetchCSS(
       }
     });
 
-  const elementsForInlines = excludeInlineStyles
-    ? elements?.length
-      ? elements // Only elements in `elements`
-      : [] // No elements
-    : undefined; // All elements
+  const elementsForInlines = excludeInlineStyles ? (elements ?? []) : undefined;
 
   const inlines = fetchInlineStyles(elementsForInlines);
 
