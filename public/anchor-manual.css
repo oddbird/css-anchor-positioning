@@ -1,0 +1,5 @@
+#my-target-manual-link-el {
+  position: absolute;
+  bottom: anchor(--my-anchor-manual top);
+  left: anchor(--my-anchor-manual right);
+}

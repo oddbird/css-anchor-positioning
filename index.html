@@ -47,13 +47,20 @@
         bottom: anchor(--my-anchor-style-tag start);
         right: anchor(--my-anchor-style-tag left);
       }
+
+      #anchor-manual .anchor {
+        inline-size: fit-content;
+        margin: 3rem auto;
+      }
     </style>
     <script type="module">
       import polyfill from '/src/index-fn.ts';
 
+      const SUPPORTS_ANCHOR_POSITIONING = CSS.supports('anchor-name: --a');
+
       const btn = document.getElementById('apply-polyfill');
 
-      if (!('anchorName' in document.documentElement.style)) {
+      if (!SUPPORTS_ANCHOR_POSITIONING) {
         btn.addEventListener('click', () =>
           polyfill().then((rules) => {
             btn.innerText = 'Polyfill Applied';
@@ -79,6 +86,116 @@
           updateAnchor.setAttribute('data-small', true);
           updateAnchor.removeAttribute('data-large');
         }
+      });
+
+      function prepareManualPolyfill() {
+        // anchor style element
+        const anchorStyleEl = document.createElement('style');
+        anchorStyleEl.id = 'my-style-manual-anchor';
+        anchorStyleEl.textContent = [
+          '#my-anchor-manual {',
+          'anchor-name: --my-anchor-manual;',
+          '}',
+        ].join('');
+
+        // style element
+        const styleEl = document.createElement('style');
+        styleEl.id = 'my-style-manual-style-el';
+        styleEl.textContent = [
+          '#my-target-manual-style-el {',
+          'position: absolute;',
+          'bottom: anchor(--my-anchor-manual top);',
+          'right: anchor(--my-anchor-manual left);',
+          '}',
+        ].join('');
+
+        // link element
+        const linkEl = document.createElement('link');
+        linkEl.id = 'my-style-manual-link-el';
+        linkEl.rel = 'stylesheet';
+        linkEl.href = '/anchor-manual.css';
+
+        document.head.append(anchorStyleEl, styleEl, linkEl);
+
+        // inline style
+        document
+          .getElementById('my-target-manual-inline-style')
+          ?.setAttribute(
+            'style',
+            [
+              'position: absolute',
+              'top: anchor(--my-anchor-manual bottom)',
+              'left: anchor(--my-anchor-manual right)',
+            ].join(';'),
+          );
+      }
+
+      // These event listeners are for E2E testing only
+      document
+        .getElementById('prepare-manual-polyfill')
+        ?.addEventListener('click', () => prepareManualPolyfill(), {
+          once: true,
+        });
+      document
+        .getElementById('apply-polyfill-manually-set1')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-style-el'),
+            ],
+            excludeInlineStyles: true,
+          });
+        });
+      document
+        .getElementById('apply-polyfill-manually-set2')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-link-el'),
+              document.getElementById('my-target-manual-inline-style'),
+            ],
+            excludeInlineStyles: true,
+          });
+        });
+      document
+        .getElementById('apply-polyfill-manually-set3')
+        ?.addEventListener('click', () => {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-style-el'),
+            ],
+          });
+        });
+
+      const manualBtn = document.getElementById('apply-polyfill-manually');
+      if (SUPPORTS_ANCHOR_POSITIONING) {
+        manualBtn.innerText = 'Load Anchor Positioning CSS';
+      }
+      manualBtn.addEventListener('click', () => {
+        prepareManualPolyfill();
+
+        if (!SUPPORTS_ANCHOR_POSITIONING) {
+          polyfill({
+            elements: [
+              document.getElementById('my-style-manual-anchor'),
+              document.getElementById('my-style-manual-link-el'),
+              document.getElementById('my-style-manual-style-el'),
+              document.getElementById('my-target-manual-inline-style'),
+            ],
+          }).then((rules) => {
+            manualBtn.innerText = 'Polyfill Applied';
+            console.log(rules);
+          });
+        } else {
+          manualBtn.innerText = 'Anchor Positioning CSS applied';
+          console.log(
+            'anchor-positioning is supported in this browser; polyfill skipped.',
+          );
+        }
+        manualBtn.setAttribute('disabled', '');
       });
     </script>
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
@@ -1003,6 +1120,86 @@
   top: anchor(--my-anchor-media-query top);
   right: anchor(--my-anchor-media-query right);
 }</code></pre>
+    </section>
+    <section id="anchor-manual" class="demo-item" style="position: relative">
+      <h2>
+        <a href="#manual" aria-hidden="true">🔗</a>
+        Manually apply polyfill to specific styles
+      </h2>
+      <button id="apply-polyfill-manually">Polyfill these elements</button>
+      <div id="anchor-manual-test-buttons" hidden>
+        <!-- These buttons are for E2E testing only -->
+        <button id="prepare-manual-polyfill">Prepare</button>
+        <button id="apply-polyfill-manually-set1">Polyfill target 1</button>
+        <button id="apply-polyfill-manually-set2">
+          Polyfill target 2 and 3
+        </button>
+        <button id="apply-polyfill-manually-set3">
+          Polyfill target 1 and 3
+        </button>
+      </div>
+      <div class="demo-elements">
+        <div id="my-anchor-manual" class="anchor">Anchor</div>
+        <div id="my-target-manual-style-el" class="target">
+          Target 1 (with <code>&lt;style&gt;</code>)
+        </div>
+        <div id="my-target-manual-link-el" class="target">
+          Target 2 (with <code>&lt;link&gt;</code>)
+        </div>
+        <div id="my-target-manual-inline-style" class="target">
+          Target 3 (with inline style)
+        </div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target 1, 2, and 3 are positioned at Anchor’s
+        top-left, top-right, and bottom-right corners respectively.
+      </p>
+      <pre><code class="language-html" data-dependencies="css,js">&lt;style id="my-style-manual-anchor"&gt;
+  #my-anchor-manual {
+    anchor-name: --my-anchor-manual;
+  }
+&lt;/style&gt;
+&lt;style id="my-style-manual-style-el"&gt;
+  #my-target-manual-style-el {
+    position: absolute;
+    bottom: anchor(--my-anchor-manual top);
+    right: anchor(--my-anchor-manual left);
+  }
+&lt;/style&gt;
+&lt;link rel="stylesheet" href="/anchor-manual.css" id="my-style-manual-link-el" /&gt;
+&lt;!--
+CSS inside the anchor-manual.css file:
+
+#my-target-manual-link-el {
+  position: absolute;
+  bottom: anchor(--my-anchor-manual top);
+  left: anchor(--my-anchor-manual right);
+}
+--&gt;
+
+&lt;div id="my-anchor-manual" class="anchor"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-style-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-link-el" class="target"&gt;...&lt;/div&gt;
+&lt;div id="my-target-manual-inline-style" class="target"
+  style="position: absolute;
+    top: anchor(--my-anchor-manual bottom);
+    left: anchor(--my-anchor-manual right);"
+&gt;...&lt;/div&gt;
+
+&lt;script&gt;
+  polyfill({
+    elements: [
+      // The &lt;style&gt; element for anchor
+      document.getElementById('my-style-manual-anchor'),
+      // The &lt;style&gt; element
+      document.getElementById('my-style-manual-style-el'),
+      // The &lt;link&gt; element
+      document.getElementById('my-style-manual-link-el'),
+      // The target element with inline styles
+      document.getElementById('my-target-manual-inline-style'),
+    ],
+  });
+&lt;/script&gt;</code></pre>
     </section>
     <section id="sponsor">
       <h2>Sponsor OddBird's OSS Work</h2>
