@@ -175,8 +175,8 @@ describe('fetch styles manually', () => {
   });
 
   it('fetches styles only from the given elements', async () => {
-    fetchMock.getOnce('end:target5.css', target5Css);
-    fetchMock.getOnce('end:target6.css', target6Css);
+    fetchMock.getOnce('end:target5.css', requestWithCSSType(target5Css));
+    fetchMock.getOnce('end:target6.css', requestWithCSSType(target6Css));
 
     const el1 = document.getElementById('el1')!;
     const el2 = document.getElementById('el2')!;
