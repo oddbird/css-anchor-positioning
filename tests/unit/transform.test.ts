@@ -7,7 +7,7 @@ describe('transformCSS', () => {
 
   it('parses and removes new anchor positioning CSS after transformation to JS', async () => {
     document.head.innerHTML = `
-      <link type="text/css" href="/sample.css" data-link="true" />
+      <link type="text/css" href="/sample.css" data-link="true" crossorigin="anonymous" />
       <style>
         p { color: red; }
       </style>
@@ -43,6 +43,7 @@ describe('transformCSS', () => {
 
     expect(link.href).toContain('/updated.css');
     expect(link.getAttribute('data-link')).toBe('true');
+    expect(link.getAttribute('crossorigin')).toBeNull();
     expect(style.innerHTML).toBe('html { padding: 0; }');
     expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue;');
     expect(div2.getAttribute('style')).toBe('color: red;');
