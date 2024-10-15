@@ -1,5 +1,12 @@
 import { type StyleData } from './utils.js';
 
+const excludeAttributes = [
+  'crossorigin',
+  'href',
+  'integrity',
+  'referrerpolicy',
+];
+
 export async function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
@@ -18,9 +25,11 @@ export async function transformCSS(
         const url = URL.createObjectURL(blob);
         const link = document.createElement('link');
         for (const name of el.getAttributeNames()) {
-          const attr = el.getAttribute(name);
-          if (attr !== null && name !== 'href') {
-            link.setAttribute(name, attr);
+          if (!name.startsWith('on') && !excludeAttributes.includes(name)) {
+            const attr = el.getAttribute(name);
+            if (attr !== null) {
+              link.setAttribute(name, attr);
+            }
           }
         }
         link.setAttribute('href', url);
