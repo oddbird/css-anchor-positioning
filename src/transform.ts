@@ -1,5 +1,12 @@
 import { type StyleData } from './utils.js';
 
+const excludeAttributes = [
+  'crossorigin',
+  'href',
+  'integrity',
+  'referrerpolicy',
+];
+
 export async function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
@@ -17,11 +24,15 @@ export async function transformCSS(
         const blob = new Blob([css], { type: 'text/css' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = url;
-        link.id = el.id;
-        link.media = el.media;
-        link.title = el.title;
+        for (const name of el.getAttributeNames()) {
+          if (!name.startsWith('on') && !excludeAttributes.includes(name)) {
+            const attr = el.getAttribute(name);
+            if (attr !== null) {
+              link.setAttribute(name, attr);
+            }
+          }
+        }
+        link.setAttribute('href', url);
         const promise = new Promise((res) => {
           link.onload = res;
         });
