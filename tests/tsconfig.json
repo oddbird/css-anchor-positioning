@@ -4,7 +4,13 @@
     "isolatedModules": false,
     "types": ["vitest/globals"],
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true
   },
-  "include": ["./**/*.ts", "./../src/@types/"]
+  "include": [
+    "./**/*.ts",
+    "./../src/@types/",
+    "./../*.config.ts",
+    "./../*.config.js"
+  ]
 }

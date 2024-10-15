@@ -29,6 +29,8 @@ import {
   type StyleData,
 } from './utils.js';
 
+// https://github.com/import-js/eslint-plugin-import/issues/3019
+// eslint-disable-next-line import/namespace
 interface AtRuleRaw extends csstree.Atrule {
   prelude: csstree.Raw | null;
 }

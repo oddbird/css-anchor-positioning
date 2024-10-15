@@ -22,6 +22,7 @@ import { Agent } from 'http';
 import { Builder, By, until } from 'selenium-webdriver';
 
 import writeReport from './report.js';
+
 type Capabilities = Record<string, unknown>;
 
 const enum DataType {

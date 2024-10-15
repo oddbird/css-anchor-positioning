@@ -5,6 +5,8 @@ import type { Selector } from './dom.js';
 
 export const INSTANCE_UUID = nanoid();
 
+// https://github.com/import-js/eslint-plugin-import/issues/3019
+// eslint-disable-next-line import/namespace
 export interface DeclarationWithValue extends csstree.Declaration {
   value: csstree.Value;
 }
