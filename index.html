@@ -56,7 +56,8 @@
     <script type="module">
       import polyfill from '/src/index-fn.ts';
 
-      const SUPPORTS_ANCHOR_POSITIONING = CSS.supports('anchor-name: --a');
+      const SUPPORTS_ANCHOR_POSITIONING =
+        'anchorName' in document.documentElement.style;
 
       const btn = document.getElementById('apply-polyfill');
 
