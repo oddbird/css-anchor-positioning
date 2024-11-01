@@ -78,10 +78,10 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.6.11",
+    "@floating-ui/dom": "^1.6.12",
     "@types/css-tree": "^2.3.8",
     "css-tree": "^3.0.0",
-    "nanoid": "^5.0.7"
+    "nanoid": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "1.43.1",
