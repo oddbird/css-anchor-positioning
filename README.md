@@ -140,6 +140,7 @@ following features:
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
+- anchors or targets in constructed stylesheets (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - vertical/rtl writing-modes (partial support)
