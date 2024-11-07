@@ -1,0 +1,18 @@
+#anchor-scope li {
+  display: flex;
+  justify-content: space-between;
+  anchor-scope: --anchor-scope;
+}
+
+#anchor-scope .arrow {
+  anchor-name: --anchor-scope;
+  block-size: 1em;
+  inline-size: 1em;
+}
+
+#anchor-scope .target {
+  position: absolute;
+  position-anchor: --anchor-scope;
+  left: anchor(right);
+  top: anchor(center);
+}

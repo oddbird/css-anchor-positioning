@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <link rel="stylesheet" href="/anchor-media-query.css" />
+    <link rel="stylesheet" href="/anchor-scope.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -1211,6 +1212,54 @@ CSS inside the anchor-manual.css file:
     ],
   });
 &lt;/script&gt;</code></pre>
+    </section>
+    <section id="anchor-scope" class="demo-item">
+      <h2>
+        <a href="#anchor-scope" aria-hidden="true">🔗</a>
+        Scope an anchor name
+      </h2>
+      <div class="demo-elements">
+        <ul>
+          <li class="anchor">
+            <span>List item One</span><span class="arrow">▶</span>
+            <div class="target scoped-target">Target One</div>
+          </li>
+          <li class="anchor">
+            <span>List item Two</span><span class="arrow">▶</span>
+            <div class="target scoped-target">Target Two</div>
+          </li>
+          <li class="anchor">
+            <span>List item Three</span><span class="arrow">▶</span>
+            <div class="target scoped-target">Target Three</div>
+          </li>
+          <li class="anchor">
+            <span>List item Four</span><span class="arrow">▶</span>
+            <div class="target scoped-target">Target Four</div>
+          </li>
+          <li class="anchor">
+            <span>List item Five</span><span class="arrow">▶</span>
+            <div class="target scoped-target">Target Five</div>
+          </li>
+        </ul>
+      </div>
+      <p class="note">
+        With polyfill applied: Targets are positioned to the right of their
+        corresponding item's arrow.
+      </p>
+      <pre><code class="language-css">#anchor-scope li {
+  anchor-scope: --anchor-scope;
+}
+
+#anchor-scope .arrow{
+  anchor-name: --anchor-scope;
+}
+
+#anchor-scope .target {
+  position: absolute;
+  position-anchor: --anchor-scope;
+  left: anchor(right);
+  top: anchor(center);
+}</code></pre>
     </section>
     <section id="sponsor">
       <h2>Sponsor OddBird's OSS Work</h2>
