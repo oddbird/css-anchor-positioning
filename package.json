@@ -12,7 +12,7 @@
     "url": "https://github.com/oddbird/css-anchor-positioning.git"
   },
   "bugs": "https://github.com/oddbird/css-anchor-positioning/issues",
-  "homepage": "https://anchor-polyfill.netlify.app",
+  "homepage": "https://anchor-positioning.oddbird.net",
   "keywords": [
     "css",
     "polyfill",

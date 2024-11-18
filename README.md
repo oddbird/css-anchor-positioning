@@ -38,7 +38,8 @@ import polyfill from '@oddbird/css-anchor-positioning/fn';
 The `polyfill` function returns a promise that resolves when the polyfill has
 been applied.
 
-You can view a more complete demo [here](https://anchor-polyfill.netlify.app/).
+You can view a more complete demo
+[here](https://anchor-positioning.oddbird.net/).
 
 ## Configuration
 
