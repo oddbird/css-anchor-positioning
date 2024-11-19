@@ -4,11 +4,11 @@
 }
 
 html {
-  --brand-blue: lch(38.953 23.391 229.55);
-  --brand-pink: lch(50.161 77.603 3.8969);
+  --brand-blue: lch(38.953% 23.391 229.55deg);
+  --brand-pink: lch(50.161% 77.603 3.8969deg);
   --brand-pink-light: lch(from var(--brand-pink) calc(l + 8) c h);
   --brand-pink-dark: lch(from var(--brand-pink) calc(l - 20) c h);
-  --brand-orange: lch(70.149 72.526 55.336);
+  --brand-orange: lch(70.149% 72.526 55.336deg);
   --brand-orange-dark: lch(from var(--brand-orange) calc(l - 20) c h);
   --gray-1: lch(from var(--brand-blue) calc(l + 53) calc(c - 19) h);
   --gray-2: lch(from var(--brand-blue) calc(l + 14) calc(c - 19) h);
@@ -21,7 +21,7 @@ html {
   --border: var(--gray-3);
   --button-border: var(--text);
   --text: var(--gray-5);
-  --callout: lch(89 7 229);
+  --callout: lch(89% 7 229deg);
   --disabled-bg: var(--gray-3);
   --disabled-text: white;
   --target: var(--brand-blue);
@@ -175,7 +175,7 @@ footer p {
 /* prettier-ignore */
 [href*='://']::after {
   content: ' ↗';
-  font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+  font-family: system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,Cantarell,'Noto Sans',sans-serif;
 }
 
 a:any-link {
@@ -299,5 +299,5 @@ pre[class*="language-"] {
 
 :not(pre) > code[class*="language-"],
 pre[class*="language-"] {
-  background-color: lch(98 2 269.6);
+  background-color: lch(98% 2 269.6deg);
 }
