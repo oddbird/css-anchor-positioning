@@ -30,9 +30,11 @@ html {
   --note-color: var(--target);
   --page-margin: calc(1rem + 4vw);
   --pseudo-element: var(--action);
-  --font-serif: freight-text-pro,baskerville,palatino,cambria,georgia,serif;
-  --font-sans: freight-sans-pro,'Helvetica Neue',helvetica,arial,sans-serif;
-  --font-mono: 'Dank Mono','Operator Mono',inconsolata,'Fira Mono',ui-monospace,'SF Mono',monaco,'Droid Sans Mono','Source Code Pro','Cascadia Code',menlo,consolas,'DejaVu Sans Mono',monospace;
+  --font-serif: freight-text-pro, baskerville, palatino, cambria, georgia, serif;
+  --font-sans: freight-sans-pro, 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-mono: 'Dank Mono', 'Operator Mono', inconsolata, 'Fira Mono',
+    ui-monospace, 'SF Mono', monaco, 'Droid Sans Mono', 'Source Code Pro',
+    'Cascadia Code', menlo, consolas, 'DejaVu Sans Mono', monospace;
 
   background-color: var(--bg);
   color: var(--text);
@@ -108,7 +110,7 @@ header {
   }
 }
 
-:where(h1,h2,h3,h4,h5,h6) {
+:where(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-sans);
 }
 
@@ -292,12 +294,12 @@ code {
   font-size: 90%;
 }
 
-code[class*="language-"],
-pre[class*="language-"] {
+code[class*='language-'],
+pre[class*='language-'] {
   font-size: 0.9em;
 }
 
-:not(pre) > code[class*="language-"],
-pre[class*="language-"] {
+:not(pre) > code[class*='language-'],
+pre[class*='language-'] {
   background-color: lch(98% 2 269.6deg);
 }
