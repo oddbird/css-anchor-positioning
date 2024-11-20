@@ -61,45 +61,6 @@ describe('parseCSS', () => {
     expect(rules).toEqual(expected);
   });
 
-  it('parses `anchor()` (implicit name via `anchor` attr)', async () => {
-    document.body.innerHTML =
-      '<div style="position: relative"><div id="my-implicit-anchor"></div>' +
-      '<div id="my-implicit-target" anchor="my-implicit-anchor"></div></div>';
-    const css = getSampleCSS('anchor-implicit');
-    document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected = {
-      '#my-implicit-target': {
-        declarations: {
-          right: [
-            {
-              anchorName: undefined,
-              customPropName: undefined,
-              anchorEl: document.getElementById('my-implicit-anchor'),
-              targetEl: document.getElementById('my-implicit-target'),
-              anchorSide: 'left',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          ],
-          bottom: [
-            {
-              anchorName: undefined,
-              customPropName: undefined,
-              anchorEl: document.getElementById('my-implicit-anchor'),
-              targetEl: document.getElementById('my-implicit-target'),
-              anchorSide: 'top',
-              fallbackValue: '0px',
-              uuid: expect.any(String),
-            },
-          ],
-        },
-      },
-    };
-
-    expect(rules).toEqual(expected);
-  });
-
   it('parses `anchor()` (name set via custom property)', async () => {
     document.body.innerHTML =
       '<div style="position: relative"><div id="my-target-name-prop"></div>' +

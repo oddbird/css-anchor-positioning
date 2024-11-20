@@ -120,10 +120,6 @@ manually, by passing a single boolean with `polyfill(true)`.
 
 ## Limitations
 
-This polyfill was implemented against an early version of the spec, and updates
-were paused to allow the syntax to solidify. Now that browsers are working on
-implementation, we are in the process of bringing it up to date.
-
 While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
 
@@ -142,16 +138,16 @@ following features:
 - `position-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
-- anchor functions with `implicit` anchor-element
 - automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
-- anchors or targets in constructed stylesheets (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - vertical/rtl writing-modes (partial support)
+- implicit anchors or the `position-anchor: auto` keyword (pending resolution of
+  https://github.com/whatwg/html/pull/9144)
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.

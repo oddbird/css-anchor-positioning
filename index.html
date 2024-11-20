@@ -23,8 +23,6 @@
     </script>
     <link rel="stylesheet" href="/demo.css" />
 
-    <!-- Included to test invalid stylesheets -->
-    <link rel="stylesheet" href="/fake.css" />
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
@@ -39,12 +37,13 @@
     <link rel="stylesheet" href="/anchor-name-list.css" />
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
-    <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <link rel="stylesheet" href="/anchor-media-query.css" />
     <link rel="stylesheet" href="/anchor-scope.css" />
+    <!-- Included to test invalid stylesheets -->
+    <link rel="stylesheet" href="/fake.css" />
     <style>
       #my-anchor-style-tag {
         anchor-name: --my-anchor-style-tag;
@@ -217,6 +216,7 @@
         manualBtn.setAttribute('disabled', '');
       });
     </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
     <script
@@ -263,9 +263,9 @@
           rel="noopener noreferrer"
           >specification</a
         >
-        defines anchor positioning, "where a positioned element can size and
-        position itself relative to one or more 'anchor elements' elsewhere on
-        the page." This CSS Anchor Positioning Polyfill supports and is based on
+        defines anchor positioning, “where a positioned element can size and
+        position itself relative to one or more ‘anchor elements’ elsewhere on
+        the page.” This CSS Anchor Positioning Polyfill supports and is based on
         this specification.
       </p>
       <p>
@@ -320,10 +320,8 @@
         </li>
       </ul>
       <p>
-        <strong>Note: </strong>This polyfill was implemented against an early
-        version of the spec, and updates were paused to allow the syntax to
-        solidify. Now that browsers are working on implementation, we are in the
-        process of bringing it up to date, and welcome
+        <strong>Note: </strong>We strive to keep the polyfill up-to-date with
+        ongoing changes to the spec, and we welcome
         <a
           href="https://github.com/oddbird/css-anchor-positioning"
           target="_blank"
@@ -343,7 +341,7 @@
         <div id="my-anchor-positioning" class="anchor">Anchor</div>
       </div>
       <p class="note">
-        With polyfill applied: Target and Anchor's right edges line up. Target's
+        With polyfill applied: Target and Anchor’s right edges line up. Target’s
         top edge lines up with the bottom edge of the Anchor.
       </p>
       <pre><code class="language-css"
@@ -409,7 +407,7 @@
         </div>
       </div>
       <p class="note">
-        With polyfill applied: Target and Anchor's right edges line up. Target's
+        With polyfill applied: Target and Anchor’s right edges line up. Target’s
         top edge lines up with the bottom edge of the Anchor.
       </p>
       <pre><code class="language-css"
@@ -426,33 +424,6 @@
     top: anchor(--my-anchor-in-line bottom);
     right: anchor(--my-anchor-in-line right);
   "</code></pre>
-    </section>
-    <section id="implicit-name" class="demo-item">
-      <h2>
-        <a href="#implicit-name" aria-hidden="true">🔗</a>
-        Positioning with <code>anchor()</code> [implicit
-        <code>anchor</code> attribute]
-      </h2>
-      <div style="position: relative" class="demo-elements">
-        <div id="my-implicit-anchor" class="anchor">Anchor</div>
-        <div id="my-implicit-target" class="target" anchor="my-implicit-anchor">
-          Target
-        </div>
-      </div>
-      <p class="note">
-        With polyfill applied: Target is positioned at the top left corner of
-        the Anchor.
-      </p>
-      <pre><code class="language-html"
->&lt;div id="my-implicit-anchor"&gt;Anchor&lt;/div&gt;
-&lt;div id="my-implicit-target" anchor="my-implicit-anchor"&gt;Target&lt;/div&gt;</code>
-
-<code class="language-css"
->#my-implicit-target {
-  position: absolute;
-  right: anchor(implicit left);
-  bottom: anchor(top);
-}</code></pre>
     </section>
     <section id="position-anchor" class="demo-item">
       <h2>
@@ -861,7 +832,7 @@
         <div id="my-target-math" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's left edge is 10px left of the Anchor's
+        With polyfill applied: Target’s left edge is 10px left of the Anchor’s
         right edge). The top edge of the Target is 10px below the bottom edge of
         the Anchor.
       </p>
@@ -890,9 +861,9 @@
         <div id="my-target" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's top edge is positioned at 50% of the
+        With polyfill applied: Target’s top edge is positioned at 50% of the
         height of the Anchor. The right edge of the Target lines up with 100% of
-        the width of the Anchor (i.e. the Anchor's right edge).
+        the width of the Anchor (i.e. the Anchor’s right edge).
       </p>
       <pre><code class="language-css"
 >#my-anchor {
@@ -919,8 +890,8 @@
         <div id="my-target-props" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's left edge is positioned in Anchor's
-        horizontal center. Target's bottom edge is 10% above the bottom edge of
+        With polyfill applied: Target’s left edge is positioned in Anchor’s
+        horizontal center. Target’s bottom edge is 10% above the bottom edge of
         Anchor.
       </p>
       <pre><code class="language-css"
@@ -949,7 +920,7 @@
         <div id="target-duplicate-custom-props" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's top left corner is positioned in the
+        With polyfill applied: Target’s top left corner is positioned in the
         center (vertically and horizontally) of the Anchor.
       </p>
       <pre><code class="language-css"
@@ -1002,7 +973,7 @@
       </div>
       <button id="toggle-anchor-width">Toggle anchor width</button>
       <p class="note">
-        With polyfill applied: Target and Anchor's right edges line up. Target's
+        With polyfill applied: Target and Anchor’s right edges line up. Target’s
         top edge lines up with the bottom edge of the Anchor.
         <br />
         <br />
@@ -1031,8 +1002,8 @@
         <div id="my-target-name-list-b" class="target">Target B</div>
       </div>
       <p class="note">
-        With polyfill applied: Target A is positioned at Anchor's top left
-        corner. Target B is positioned at Anchor's bottom right corner.
+        With polyfill applied: Target A is positioned at Anchor’s top left
+        corner. Target B is positioned at Anchor’s bottom right corner.
       </p>
       <pre><code class="language-css"
 >#my-anchor-name-list {
@@ -1098,7 +1069,7 @@
         <div id="my-target-pseudo-element" class="target">Target</div>
       </div>
       <p class="note">
-        Target is positioned at the bottom right corner of the Anchor's
+        Target is positioned at the bottom right corner of the Anchor’s
         <code>::before</code> pseudo-element.
       </p>
       <pre><code class="language-css"
@@ -1125,7 +1096,7 @@
         <div id="my-target-media-query" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target and Screen Anchor's right and top edges
+        With polyfill applied: Target and Screen Anchor’s right and top edges
         line up.
       </p>
       <pre><code class="language-css"
@@ -1256,7 +1227,7 @@ CSS inside the anchor-manual.css file:
       </div>
       <p class="note">
         With polyfill applied: Targets are positioned to the right of their
-        corresponding item's arrow.
+        corresponding item’s arrow.
       </p>
       <pre><code class="language-css">#anchor-scope li {
   anchor-scope: --anchor-scope;
@@ -1274,10 +1245,10 @@ CSS inside the anchor-manual.css file:
 }</code></pre>
     </section>
     <section id="sponsor">
-      <h2>Sponsor OddBird's OSS Work</h2>
+      <h2>Sponsor OddBird’s OSS Work</h2>
       <p>
         At OddBird, we love contributing to the languages & tools developers
-        rely on. We're currently working on polyfills for new Popover & Anchor
+        rely on. We’re currently working on polyfills for new Popover & Anchor
         Positioning functionality, as well as CSS specifications for functions,
         mixins, and responsive typography. Help us keep this work sustainable
         and centered on your needs as a developer! We display sponsor logos and
@@ -1293,7 +1264,7 @@ CSS inside the anchor-manual.css file:
         href="https://github.com/sponsors/oddbird"
         target="_blank"
         rel="noopener noreferrer"
-        >Sponsor OddBird's OSS Work</a
+        >Sponsor OddBird’s OSS Work</a
       >
     </section>
     <footer>
