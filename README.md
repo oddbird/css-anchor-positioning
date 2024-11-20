@@ -1,10 +1,17 @@
 # CSS Anchor Positioning Polyfill
 
-[![Build Status](https://github.com/oddbird/css-anchor-positioning/actions/workflows/test.yml/badge.svg)](https://github.com/oddbird/css-anchor-positioning/actions/workflows/test.yml)
-
-[![Netlify Status](https://api.netlify.com/api/v1/badges/61a20096-7925-4775-99a9-b40a010197c0/deploy-status)](https://app.netlify.com/sites/anchor-polyfill/deploys)
+[![Build Status](https://github.com/oddbird/css-anchor-positioning/actions/workflows/test.yml/badge.svg)](https://github.com/oddbird/css-anchor-positioning/actions/workflows/test.yml) [![npm version](https://badge.fury.io/js/@oddbird%2Fcss-anchor-positioning.svg)](https://www.npmjs.com/package/@oddbird/css-anchor-positioning) [![Netlify Status](https://api.netlify.com/api/v1/badges/61a20096-7925-4775-99a9-b40a010197c0/deploy-status)](https://app.netlify.com/sites/anchor-polyfill/deploys)
 
 <!-- [WPT results](https://anchor-position-wpt.netlify.app/) -->
+
+- [Demo](https://anchor-positioning.oddbird.net/)
+- [Draft Spec](https://drafts.csswg.org/css-anchor-position/)
+
+The CSS anchor positioning
+[specification](https://drafts.csswg.org/css-anchor-position/) defines anchor
+positioning, "where a positioned element can size and position itself relative
+to one or more 'anchor elements' elsewhere on the page." This CSS Anchor
+Positioning Polyfill supports and is based on this specification.
 
 ## Browser Support
 
