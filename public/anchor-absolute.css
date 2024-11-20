@@ -4,11 +4,6 @@
   anchor-name: --my-anchor-absolute;
 }
 
-#my-anchor-absolute-one {
-  top: 10px;
-  left: 20px;
-}
-
 #my-anchor-absolute-two {
   top: 100px;
   left: 200px;
