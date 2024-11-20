@@ -32,7 +32,6 @@
     <link rel="stylesheet" href="/anchor-name-list.css" />
     <link rel="stylesheet" href="/anchor-custom-props.css" />
     <link rel="stylesheet" href="/anchor-duplicate-custom-props.css" />
-    <link rel="stylesheet" href="/anchor-implicit.css" />
     <link rel="stylesheet" href="/anchor-update.css" />
     <link rel="stylesheet" href="/anchor-absolute.css" />
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
@@ -419,39 +418,6 @@
     top: anchor(--my-anchor-in-line bottom);
     right: anchor(--my-anchor-in-line right);
   "</code></pre>
-    </section>
-    <section id="implicit-name" class="demo-item">
-      <h2>
-        <a href="#implicit-name" aria-hidden="true">🔗</a>
-        Positioning with <code>anchor()</code> [implicit
-        <code>anchor</code> attribute]
-      </h2>
-      <div style="position: relative" class="demo-elements">
-        <div id="my-implicit-anchor" class="anchor">Anchor</div>
-        <div id="my-implicit-target" class="target" anchor="my-implicit-anchor">
-          Target
-        </div>
-      </div>
-      <p class="note">
-        With polyfill applied: Target is positioned at the top left corner of
-        the Anchor.
-        <br />
-        <br />
-        <strong>Note:</strong> The <code>anchor</code> attribute has not yet
-        been standardized, and currently does not work in non-polyfilled
-        browsers. See more conversation
-        <a href="https://github.com/whatwg/html/pull/9144">here</a>.
-      </p>
-      <pre><code class="language-html"
->&lt;div id="my-implicit-anchor"&gt;Anchor&lt;/div&gt;
-&lt;div id="my-implicit-target" anchor="my-implicit-anchor"&gt;Target&lt;/div&gt;</code>
-
-<code class="language-css"
->#my-implicit-target {
-  position: absolute;
-  right: anchor(implicit left);
-  bottom: anchor(top);
-}</code></pre>
     </section>
     <section id="position-anchor" class="demo-item">
       <h2>

@@ -135,7 +135,6 @@ following features:
 - `position-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
-- anchor functions with `implicit` anchor-element
 - automatic anchor positioning: anchor functions with `inside` or `outside`
   anchor-side
 - `position-visibility` property
@@ -145,6 +144,8 @@ following features:
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - vertical/rtl writing-modes (partial support)
+- implicit anchors or the `position-anchor: auto` keyword (pending resolution of
+  https://github.com/whatwg/html/pull/9144)
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.

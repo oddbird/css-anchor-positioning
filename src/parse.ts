@@ -139,9 +139,7 @@ function parseAnchorFn(
   }
   if (name) {
     if (isIdentifier(name)) {
-      if (name.name === 'implicit') {
-        name = undefined;
-      } else if (name.name.startsWith('--')) {
+      if (name.name.startsWith('--')) {
         // Store anchor name
         anchorName = name.name;
       }
@@ -255,7 +253,6 @@ async function getAnchorEl(
   let anchorName = anchorObj.anchorName;
   const customPropName = anchorObj.customPropName;
   if (targetEl && !anchorName) {
-    const anchorAttr = targetEl.getAttribute('anchor');
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
       'position-anchor',
@@ -265,15 +262,6 @@ async function getAnchorEl(
       anchorName = positionAnchorProperty;
     } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
-    } else if (anchorAttr) {
-      const elementPart = `#${CSS.escape(anchorAttr)}`;
-
-      return await validatedForPositioning(
-        targetEl,
-        null,
-        [{ selector: elementPart, elementPart }],
-        [],
-      );
     }
   }
   const anchorSelectors = anchorName ? anchorNames[anchorName] || [] : [];
