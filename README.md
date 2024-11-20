@@ -120,10 +120,6 @@ manually, by passing a single boolean with `polyfill(true)`.
 
 ## Limitations
 
-This polyfill was implemented against an early version of the spec, and updates
-were paused to allow the syntax to solidify. Now that browsers are working on
-implementation, we are in the process of bringing it up to date.
-
 While this polyfill supports many basic use cases, it doesn't (yet) support the
 following features:
 
@@ -147,7 +143,6 @@ following features:
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
-- anchors or targets in constructed stylesheets (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
 - vertical/rtl writing-modes (partial support)

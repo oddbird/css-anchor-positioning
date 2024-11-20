@@ -138,11 +138,9 @@ function parseAnchorFn(
     name = undefined;
   }
   if (name) {
-    if (isIdentifier(name)) {
-      if (name.name.startsWith('--')) {
-        // Store anchor name
-        anchorName = name.name;
-      }
+    if (isIdentifier(name) && name.name.startsWith('--')) {
+      // Store anchor name
+      anchorName = name.name;
     } else if (isVarFunction(name) && name.children.first) {
       // Store CSS custom prop for anchor name
       customPropName = (name.children.first as csstree.Identifier).name;
