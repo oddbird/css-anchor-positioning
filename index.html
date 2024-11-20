@@ -5,7 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CSS Anchor Positioning Polyfill Demo</title>
-    <link rel="stylesheet" href="https://unpkg.com/open-props" />
     <link
       rel="stylesheet"
       href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
@@ -15,7 +14,15 @@
       crossorigin="anonymous"
       defer
     ></script>
+    <!-- TypeKit Fonts -->
+    <script src="https://use.typekit.net/slx1xnq.js"></script>
+    <script>
+      try {
+        Typekit.load({ async: true });
+      } catch (e) {}
+    </script>
     <link rel="stylesheet" href="/demo.css" />
+
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <link rel="stylesheet" href="/anchor.css" />
@@ -235,7 +242,7 @@
           >WPT results</a
         > -->
         <a
-          href="https://w3c.github.io/csswg-drafts/css-anchor-position/"
+          href="https://drafts.csswg.org/css-anchor-position/"
           target="_blank"
           rel="noopener noreferrer"
           >Draft Spec</a
@@ -250,7 +257,7 @@
       <p>
         The CSS anchor positioning
         <a
-          href="https://w3c.github.io/csswg-drafts/css-anchor-position/"
+          href="https://drafts.csswg.org/css-anchor-position/"
           target="_blank"
           rel="noopener noreferrer"
           >specification</a
@@ -297,7 +304,7 @@
         <li>
           Browse or open issues related to the specification
           <a
-            href="https://github.com/w3c/csswg-drafts/labels/css-anchor-1"
+            href="https://github.com/w3c/csswg-drafts/labels/css-anchor-position-1"
             target="_blank"
             rel="noopener noreferrer"
             >here</a
@@ -826,8 +833,8 @@
         <div id="my-target-math" class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target's left edge is 50px left of the Anchor's
-        right edge). The top edge of the Target is 50px above the bottom edge of
+        With polyfill applied: Target's left edge is 10px left of the Anchor's
+        right edge). The top edge of the Target is 10px below the bottom edge of
         the Anchor.
       </p>
       <pre><code class="language-css"
@@ -837,10 +844,10 @@
 
 #my-target-math {
   --full-math: anchor(--my-anchor-math 100%);
-  --full-minus-math: calc(anchor(--my-anchor-math 100%) - 50px);
+  --full-minus-math: calc(anchor(--my-anchor-math 100%) - 10px);
 
   position: absolute;
-  top: calc(var(--full-math) - 50px);
+  top: calc(var(--full-math) + 10px);
   left: var(--full-minus-math);
 }</code></pre>
     </section>
@@ -1275,12 +1282,6 @@ CSS inside the anchor-manual.css file:
           target="_blank"
           rel="noopener noreferrer"
           >OddBird</a
-        >. Designed using
-        <a
-          href="https://open-props.style/"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Open Props</a
         >.
       </p>
     </footer>

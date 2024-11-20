@@ -72,7 +72,7 @@ test('applies polyfill for `anchor()`', async ({ page }) => {
 
   await applyPolyfill(page);
 
-  await expect(target).toHaveCSS('top', `${parentHeight}px`);
+  await expectWithinOne(target, 'top', parentHeight);
   await expectWithinOne(target, 'right', expected);
 });
 
@@ -88,7 +88,7 @@ test('applies polyfill from inline styles', async ({ page }) => {
 
   await applyPolyfill(page);
 
-  await expect(targetInLine).toHaveCSS('top', `${parentHeight}px`);
+  await expectWithinOne(targetInLine, 'top', parentHeight);
   await expectWithinOne(targetInLine, 'right', expected);
 });
 
@@ -99,7 +99,7 @@ test('updates when sizes change', async ({ page }) => {
   const parentHeight = await getParentHeight(page, targetSelector);
   await applyPolyfill(page);
 
-  await expect(target).toHaveCSS('top', `${parentHeight}px`);
+  await expectWithinOne(target, 'top', parentHeight);
   await expectWithinOne(target, 'right', parentWidth - width);
 
   await page

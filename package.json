@@ -64,7 +64,7 @@
     "eslint:fix": "npm run eslint:check -- --fix",
     "format:css": "npm run lint:css -- --fix",
     "format:js": "run-s prettier:fix eslint:fix tsc tsc:tests",
-    "lint": "run-p format:css format:js",
+    "lint": "run-s format:css format:js",
     "lint:css": "stylelint \"**/*.css\"",
     "lint:js": "run-s prettier:check eslint:check tsc tsc:tests",
     "lint:ci": "run-p lint:css lint:js",

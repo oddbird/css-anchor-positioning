@@ -4,39 +4,52 @@
 }
 
 html {
-  --action: var(--action-light);
-  --action-dark: var(--pink-2);
-  --action-light: hsl(339deg 68% 37%);
-  --anchor-color: var(--yellow-6);
-  --bg: var(--gray-1);
-  --brand: var(--green-9);
+  --brand-blue: lch(38.953% 23.391 229.55deg);
+  --brand-pink: lch(50.161% 77.603 3.8969deg);
+  --brand-pink-light: lch(from var(--brand-pink) calc(l + 8) c h);
+  --brand-pink-dark: lch(from var(--brand-pink) calc(l - 20) c h);
+  --brand-orange: lch(70.149% 72.526 55.336deg);
+  --brand-orange-dark: lch(from var(--brand-orange) calc(l - 20) c h);
+  --gray-1: lch(from var(--brand-blue) calc(l + 53) calc(c - 19) h);
+  --gray-2: lch(from var(--brand-blue) calc(l + 14) calc(c - 19) h);
+  --gray-3: lch(from var(--brand-blue) calc(l + 4) calc(c - 13) h);
+  --gray-4: lch(from var(--brand-blue) calc(l - 13) calc(c - 13) h);
+  --gray-5: lch(from var(--brand-blue) calc(l - 26) calc(c - 13) h);
+  --action: var(--brand-pink-dark);
+  --anchor-color: var(--brand-pink);
+  --bg: white;
+  --border: var(--gray-3);
   --button-border: var(--text);
-  --callout: var(--gray-3);
-  --disabled-bg: var(--gray-6);
-  --disabled-text: var(--gray-2);
-  --grad: var(--lime-0);
-  --target: var(--lime-8);
+  --text: var(--gray-5);
+  --callout: lch(89% 7 229deg);
+  --disabled-bg: var(--gray-3);
+  --disabled-text: white;
+  --target: var(--brand-blue);
   --link-focus: var(--text);
-  --outer-anchored: var(--blue-2);
-  --text: var(--gray-9);
+  --outer-anchored: var(--brand-orange-dark);
   --note-color: var(--target);
-  --page-margin: calc(var(--size-3) + 4vw);
-  --pseudo-element: var(--gray-0);
+  --page-margin: calc(1rem + 4vw);
+  --pseudo-element: var(--action);
+  --font-serif: freight-text-pro, baskerville, palatino, cambria, georgia, serif;
+  --font-sans: freight-sans-pro, 'Helvetica Neue', helvetica, arial, sans-serif;
+  --font-mono: 'Dank Mono', 'Operator Mono', inconsolata, 'Fira Mono',
+    ui-monospace, 'SF Mono', monaco, 'Droid Sans Mono', 'Source Code Pro',
+    'Cascadia Code', menlo, consolas, 'DejaVu Sans Mono', monospace;
 
   background-color: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
+  font-family: var(--font-serif);
+  font-size: calc(1em + 0.25vw);
 }
 
 @media (prefers-color-scheme: dark) {
   html {
-    --action: var(--action-dark);
-    --bg: var(--gray-9);
-    --brand: var(--green-3);
-    --callout: var(--gray-8);
-    --grad: var(--lime-9);
-    --gradient-bg: var(--gradient-16);
-    --text: var(--gray-2);
+    --action: var(--brand-pink-light);
+    --bg: var(--gray-5);
+    --border: var(--gray-2);
+    --callout: var(--gray-4);
+    --button-text: var(--text);
+    --text: white;
   }
 }
 
@@ -52,7 +65,7 @@ body {
 
 @media (width >= 30em) {
   body {
-    --page-margin: calc(var(--size-6) + 4vw);
+    --page-margin: calc(1.75rem + 4vw);
   }
 }
 
@@ -60,11 +73,11 @@ body {
 
 header,
 footer {
-  background: var(--gradient-bg, var(--grad));
   grid-column: full;
 }
 
 header {
+  background-color: var(--bg);
   border-block-end: thin dotted var(--text);
   display: grid;
   grid-column: full;
@@ -82,21 +95,27 @@ header {
   header {
     --header-padding: 1em 0;
 
+    align-items: start;
     display: grid;
     gap: 0.5em;
     grid-template:
-      '. title title .' auto
-      '. nav button .' minmax(2rem, auto)
+      '. title button .' auto
+      '. nav button .' auto
       / var(--page-margin) minmax(min-content, 1fr) minmax(2rem, auto) var(--page-margin);
   }
 
   [data-button] {
-    align-self: center;
     justify-self: end;
+    margin-block-start: 0.25lh;
   }
 }
 
+:where(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-sans);
+}
+
 h1 {
+  font-size: calc(1.75rem + 1vw);
   grid-area: title;
   margin: 0;
 }
@@ -104,8 +123,8 @@ h1 {
 nav {
   display: flex;
   flex-wrap: wrap;
+  gap: 1ch;
   grid-area: nav;
-  padding: 1em 0;
 }
 
 section {
@@ -142,11 +161,12 @@ footer p {
 
 .demo-elements {
   grid-area: elements;
+  font-family: var(--font-sans);
 }
 
-.demo-item .note {
+.note {
   background-color: var(--callout);
-  border-left: 0.5em solid var(--note-color);
+  border-inline-start: 0.5em solid var(--note-color);
   grid-area: note;
   margin: 2em 0 0;
   padding: 1em;
@@ -157,11 +177,7 @@ footer p {
 /* prettier-ignore */
 [href*='://']::after {
   content: ' ↗';
-}
-
-nav a:any-link,
-nav span {
-  padding: 0.25em;
+  font-family: system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,Cantarell,'Noto Sans',sans-serif;
 }
 
 a:any-link {
@@ -189,8 +205,8 @@ a:any-link:focus {
 [data-button]:hover,
 [data-button]:focus,
 [data-button]:active {
-  --button-bg-color: var(--gray-2);
-  --button-text: var(--action-light);
+  --button-bg-color: var(--bg);
+  --button-text: var(--action);
 }
 
 [data-button]:disabled {
@@ -208,6 +224,7 @@ a:any-link:focus {
 /* heading links */
 
 h2 {
+  font-size: calc(1.5rem + 0.5vw);
   position: relative;
 }
 
@@ -240,9 +257,9 @@ h2 [aria-hidden]:active {
 .anchor,
 .target {
   background: var(--element-color);
-  border: thin solid var(--text);
+  border: thin solid var(--border);
   border-radius: var(--radius-1);
-  color: var(--gray-9);
+  color: white;
   font-weight: bold;
   padding: 0.5em;
   white-space: nowrap;
@@ -264,11 +281,25 @@ h2 [aria-hidden]:active {
 
 /* code samples */
 pre {
-  border: thin dotted gray;
+  border: thin dotted var(--border);
   background-color: var(--callout);
   font-family: var(--font-mono);
   grid-area: code;
   overflow-x: auto;
   max-width: 100%;
   padding: 1em;
+}
+
+code {
+  font-size: 90%;
+}
+
+code[class*='language-'],
+pre[class*='language-'] {
+  font-size: 0.9em;
+}
+
+:not(pre) > code[class*='language-'],
+pre[class*='language-'] {
+  background-color: lch(98% 2 269.6deg);
 }
