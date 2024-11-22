@@ -1,4 +1,16 @@
-import * as csstree from 'css-tree';
+import {
+  type Atrule,
+  type Block,
+  type CssNode,
+  type Declaration,
+  type Identifier,
+  type Raw,
+  type Rule,
+  type SelectorList,
+  type Value,
+} from 'css-tree';
+import walk from 'css-tree/walker';
+import {clone, List} from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
 import { getCSSPropertyValue } from './dom.js';
@@ -30,9 +42,8 @@ import {
 } from './utils.js';
 
 // https://github.com/import-js/eslint-plugin-import/issues/3019
-// eslint-disable-next-line import/namespace
-interface AtRuleRaw extends csstree.Atrule {
-  prelude: csstree.Raw | null;
+interface AtRuleRaw extends Atrule {
+  prelude: Raw | null;
 }
 
 // `key` is the `@position-try` block uuid
@@ -148,12 +159,12 @@ interface PositionTryDefPositionArea {
 }
 interface PositionTryDefAtRule {
   type: 'at-rule';
-  atRule: csstree.Identifier['name'];
+  atRule: Identifier['name'];
 }
 interface PositionTryDefAtRuleWithTactic {
   type: 'at-rule-with-try-tactic';
   tactics: PositionTryOptionsTryTactics[];
-  atRule: csstree.Identifier['name'];
+  atRule: Identifier['name'];
 }
 
 type PositionTryObject =
@@ -168,12 +179,12 @@ export function isPositionAreaProp(
   return POSITION_AREA_PROPS.includes(property as PositionAreaProperty);
 }
 
-function isDeclaration(node: csstree.CssNode): node is DeclarationWithValue {
+function isDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
 }
 
 function isPositionTryFallbacksDeclaration(
-  node: csstree.CssNode,
+  node: CssNode,
 ): node is DeclarationWithValue {
   return (
     node.type === 'Declaration' && node.property === 'position-try-fallbacks'
@@ -181,18 +192,16 @@ function isPositionTryFallbacksDeclaration(
 }
 
 function isPositionTryOrderDeclaration(
-  node: csstree.CssNode,
+  node: CssNode,
 ): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-try-order';
 }
 
-function isPositionTryDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
+function isPositionTryDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'position-try';
 }
 
-function isPositionTryAtRule(node: csstree.CssNode): node is AtRuleRaw {
+function isPositionTryAtRule(node: CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'position-try';
 }
 
@@ -365,7 +374,7 @@ function mapPositionArea(
 
 function mapMargin(
   key: string,
-  valueAst: csstree.Value,
+  valueAst: Value,
   tactic: PositionTryOptionsTryTactics,
 ) {
   // TODO: Handle flip-start
@@ -401,10 +410,10 @@ function mapMargin(
 
 // Parses a value into an AST.
 const getValueAST = (property: string, val: string) => {
-  const ast = getAST(`#id{${property}: ${val};}`) as csstree.Block;
-  const astDeclaration = (ast.children.first as csstree.Rule)?.block.children
-    .first as csstree.Declaration;
-  return astDeclaration.value as csstree.Value;
+  const ast = getAST(`#id{${property}: ${val};}`) as Block;
+  const astDeclaration = (ast.children.first as Rule)?.block.children
+    .first as Declaration;
+  return astDeclaration.value as Value;
 };
 
 export function applyTryTacticToBlock(
@@ -425,7 +434,7 @@ export function applyTryTacticToBlock(
 
     // todo: This does not support percentage anchor-side values, nor anchor
     // functions that are passed through custom properties.
-    csstree.walk(valueAst, {
+    walk(valueAst, {
       visit: 'Function',
       enter(node) {
         if (isAnchorFunction(node)) {
@@ -454,7 +463,7 @@ export function applyTryTacticToBlock(
   return declarations;
 }
 
-function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
+function parsePositionTryFallbacks(list: List<CssNode>) {
   const positionOptions = splitCommaList(list);
   const tryObjects: PositionTryObject[] = [];
   positionOptions.forEach((option) => {
@@ -503,24 +512,22 @@ function parsePositionTryFallbacks(list: csstree.List<csstree.CssNode>) {
   return tryObjects;
 }
 
-function getPositionTryFallbacksDeclaration(node: csstree.Declaration) {
+function getPositionTryFallbacksDeclaration(node: Declaration) {
   if (isPositionTryFallbacksDeclaration(node) && node.value.children.first) {
     return parsePositionTryFallbacks(node.value.children);
   }
   return [];
 }
 
-export function getPositionTryDeclaration(node: csstree.Declaration): {
+export function getPositionTryDeclaration(node: Declaration): {
   order?: PositionTryOrder;
   options?: PositionTryObject[];
 } {
   if (isPositionTryDeclaration(node) && node.value.children.first) {
-    const declarationNode = csstree.clone(node) as DeclarationWithValue;
+    const declarationNode = clone(node) as DeclarationWithValue;
     let order: PositionTryOrder | undefined;
     // get potential order
-    const firstName = (
-      declarationNode.value.children.first as csstree.Identifier
-    ).name;
+    const firstName = (declarationNode.value.children.first as Identifier).name;
     if (firstName && isPositionTryOrder(firstName)) {
       order = firstName;
       declarationNode.value.children.shift();
@@ -532,17 +539,16 @@ export function getPositionTryDeclaration(node: csstree.Declaration): {
   return {};
 }
 
-function getPositionTryOrderDeclaration(node: csstree.Declaration) {
+function getPositionTryOrderDeclaration(node: Declaration) {
   if (isPositionTryOrderDeclaration(node) && node.value.children.first) {
     return {
-      order: (node.value.children.first as csstree.Identifier)
-        .name as PositionTryOrder,
+      order: (node.value.children.first as Identifier).name as PositionTryOrder,
     };
   }
   return {};
 }
 
-export function getPositionFallbackValues(node: csstree.Declaration): {
+export function getPositionFallbackValues(node: Declaration): {
   order?: PositionTryOrder;
   options?: PositionTryObject[];
 } {
@@ -559,9 +565,7 @@ export function getPositionFallbackValues(node: csstree.Declaration): {
 }
 
 // https://drafts.csswg.org/css-anchor-position-1/#accepted-position-try-properties
-export function isAcceptedPositionTryProperty(
-  declaration: csstree.Declaration,
-) {
+export function isAcceptedPositionTryProperty(declaration: Declaration) {
   return (
     isInsetProp(declaration.property) ||
     isMarginProp(declaration.property) ||
@@ -571,7 +575,7 @@ export function isAcceptedPositionTryProperty(
   );
 }
 
-export function getPositionTryRules(node: csstree.Atrule) {
+export function getPositionTryRules(node: Atrule) {
   if (
     isPositionTryAtRule(node) &&
     node.prelude?.value &&
@@ -602,7 +606,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
   // First, find all uses of `@position-try`
   for (const styleObj of styleData) {
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, {
+    walk(ast, {
       visit: 'Atrule',
       enter(node) {
         // Parse `@position-try` rules
@@ -623,10 +627,10 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
     let changed = false;
     const fallbacksAdded = new Set();
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, {
+    walk(ast, {
       visit: 'Declaration',
       enter(node) {
-        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const rule = this.rule?.prelude as SelectorList | undefined;
         const selectors = getSelectors(rule);
         if (!selectors.length) return;
 
@@ -694,7 +698,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
                   },
                   block: {
                     type: 'Block',
-                    children: new csstree.List<csstree.CssNode>().fromArray(
+                    children: new List<CssNode>().fromArray(
                       Object.entries(fallbacks[name].declarations).map(
                         ([prop, val]) => ({
                           type: 'Declaration',

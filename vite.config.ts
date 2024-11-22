@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 
 import { resolve } from 'path';
+import { bundleStats } from 'rollup-plugin-bundle-stats';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -38,6 +39,7 @@ export default defineConfig({
         target: 'es6',
         sourcemap: true,
       },
+  plugins: [bundleStats()],
   /**
    * @see https://vitest.dev/config/#configuration
    */

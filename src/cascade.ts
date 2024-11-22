@@ -1,4 +1,5 @@
-import * as csstree from 'css-tree';
+import { type Block, type CssNode, } from 'css-tree';
+import walk from 'css-tree/walker';
 
 import {
   generateCSS,
@@ -34,10 +35,7 @@ export const SHIFTED_PROPERTIES: Record<string, string> = {
  * Shift property declarations for properties that are not yet natively
  * supported into custom properties.
  */
-function shiftUnsupportedProperties(
-  node: csstree.CssNode,
-  block?: csstree.Block,
-) {
+function shiftUnsupportedProperties(node: CssNode, block?: Block) {
   if (isDeclaration(node) && SHIFTED_PROPERTIES[node.property] && block) {
     block.children.appendData({
       ...node,
@@ -56,7 +54,7 @@ export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, {
+    walk(ast, {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
