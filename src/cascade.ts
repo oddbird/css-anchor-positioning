@@ -1,4 +1,4 @@
-import { type Block, type CssNode } from 'css-tree';
+import type { Block, CssNode } from 'css-tree';
 import walk from 'css-tree/walker';
 
 import {

@@ -43,7 +43,6 @@ export default defineConfig({
         },
       },
   plugins: [bundleStats()],
-  
   /**
    * @see https://vitest.dev/config/#configuration
    */

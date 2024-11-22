@@ -1,11 +1,11 @@
-import {
-  type CssNode,
-  type Declaration,
-  type FunctionNode,
-  type Identifier,
-  type List,
-  type Percentage,
-  type SelectorList,
+import type {
+  CssNode,
+  Declaration,
+  FunctionNode,
+  Identifier,
+  List,
+  Percentage,
+  SelectorList,
 } from 'css-tree';
 import walk from 'css-tree/walker';
 import { nanoid } from 'nanoid/non-secure';

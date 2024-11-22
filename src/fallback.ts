@@ -1,13 +1,13 @@
-import {
-  type Atrule,
-  type Block,
-  type CssNode,
-  type Declaration,
-  type Identifier,
-  type Raw,
-  type Rule,
-  type SelectorList,
-  type Value,
+import type {
+  Atrule,
+  Block,
+  CssNode,
+  Declaration,
+  Identifier,
+  Raw,
+  Rule,
+  SelectorList,
+  Value,
 } from 'css-tree';
 import { clone, List } from 'css-tree/utils';
 import walk from 'css-tree/walker';

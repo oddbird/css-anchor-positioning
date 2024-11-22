@@ -1,12 +1,12 @@
-import {
-  type CssNode,
-  type Declaration,
-  type FunctionNode,
-  type Identifier,
-  type List,
-  type Selector as CssTreeSelector,
-  type SelectorList,
-  type Value,
+import type {
+  CssNode,
+  Declaration,
+  FunctionNode,
+  Identifier,
+  List,
+  Selector as CssTreeSelector,
+  SelectorList,
+  Value,
 } from 'css-tree';
 import generate from 'css-tree/generator';
 import parse from 'css-tree/parser';
