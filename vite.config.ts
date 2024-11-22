@@ -38,8 +38,12 @@ export default defineConfig({
         emptyOutDir: !process.env.BUILD_FN,
         target: 'es6',
         sourcemap: true,
+        rollupOptions: {
+          external: [/source-map-js/],
+        },
       },
   plugins: [bundleStats()],
+  
   /**
    * @see https://vitest.dev/config/#configuration
    */
