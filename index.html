@@ -61,7 +61,8 @@
       }
     </style>
     <script type="module">
-      import polyfill from '/src/index-fn.ts';
+      // Todo: Switch back to loading from /src/index-fn.ts
+      import polyfill from '/dist/css-anchor-positioning-fn.js'
 
       const SUPPORTS_ANCHOR_POSITIONING =
         'anchorName' in document.documentElement.style;
