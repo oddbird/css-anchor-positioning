@@ -9,8 +9,8 @@ import {
   type SelectorList,
   type Value,
 } from 'css-tree';
+import { clone, List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
-import {clone, List} from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
 import { getCSSPropertyValue } from './dom.js';

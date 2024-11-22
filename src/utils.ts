@@ -8,9 +8,9 @@ import {
   type SelectorList,
   type Value,
 } from 'css-tree';
-import {clone} from 'css-tree/utils';
-import parse from 'css-tree/parser';
 import generate from 'css-tree/generator';
+import parse from 'css-tree/parser';
+import { clone } from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
 import type { Selector } from './dom.js';
@@ -18,7 +18,7 @@ import type { Selector } from './dom.js';
 export const INSTANCE_UUID = nanoid();
 
 // https://github.com/import-js/eslint-plugin-import/issues/3019
- 
+
 export interface DeclarationWithValue extends Declaration {
   value: Value;
 }
