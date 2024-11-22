@@ -81,7 +81,8 @@
     "@floating-ui/dom": "^1.6.12",
     "@types/css-tree": "^2.3.8",
     "css-tree": "^3.0.0",
-    "nanoid": "^5.0.8"
+    "nanoid": "^5.0.8",
+    "rollup-plugin-bundle-stats": "^4.17.0"
   },
   "devDependencies": {
     "@playwright/test": "1.43.1",
