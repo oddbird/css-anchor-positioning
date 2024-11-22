@@ -1,4 +1,13 @@
-import * as csstree from 'css-tree';
+import type {
+  CssNode,
+  Declaration,
+  FunctionNode,
+  Identifier,
+  List,
+  Percentage,
+  SelectorList,
+} from 'css-tree';
+import walk from 'css-tree/walker';
 import { nanoid } from 'nanoid/non-secure';
 
 import {
@@ -71,44 +80,34 @@ export interface TryBlock {
   declarations: Partial<Record<AcceptedPositionTryProperty, string>>;
 }
 
-function isAnchorNameDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
+function isAnchorNameDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-name';
 }
 
-function isAnchorScopeDeclaration(
-  node: csstree.CssNode,
-): node is DeclarationWithValue {
+function isAnchorScopeDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-scope';
 }
 
-function isAnchorSizeFunction(
-  node: csstree.CssNode | null,
-): node is csstree.FunctionNode {
+function isAnchorSizeFunction(node: CssNode | null): node is FunctionNode {
   return Boolean(
     node && node.type === 'Function' && node.name === 'anchor-size',
   );
 }
 
-function isVarFunction(
-  node: csstree.CssNode | null,
-): node is csstree.FunctionNode {
+function isVarFunction(node: CssNode | null): node is FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'var');
 }
 
-export function isIdentifier(
-  node: csstree.CssNode,
-): node is csstree.Identifier {
+export function isIdentifier(node: CssNode): node is Identifier {
   return Boolean(node.type === 'Identifier' && node.name);
 }
 
-function isPercentage(node: csstree.CssNode): node is csstree.Percentage {
+function isPercentage(node: CssNode): node is Percentage {
   return Boolean(node.type === 'Percentage' && node.value);
 }
 
 function parseAnchorFn(
-  node: csstree.FunctionNode,
+  node: FunctionNode,
   replaceCss?: boolean,
 ): AnchorFunction {
   let anchorName: string | undefined,
@@ -118,7 +117,7 @@ function parseAnchorFn(
     foundComma = false,
     customPropName: string | undefined;
 
-  const args: csstree.CssNode[] = [];
+  const args: CssNode[] = [];
   node.children.toArray().forEach((child) => {
     if (foundComma) {
       fallbackValue = `${fallbackValue}${generateCSS(child)}`;
@@ -131,7 +130,7 @@ function parseAnchorFn(
     args.push(child);
   });
 
-  let [name, sideOrSize]: (csstree.CssNode | undefined)[] = args;
+  let [name, sideOrSize]: (CssNode | undefined)[] = args;
   if (!sideOrSize) {
     // If we only have one argument assume it is the (required) anchor-side/size
     sideOrSize = name;
@@ -143,7 +142,7 @@ function parseAnchorFn(
       anchorName = name.name;
     } else if (isVarFunction(name) && name.children.first) {
       // Store CSS custom prop for anchor name
-      customPropName = (name.children.first as csstree.Identifier).name;
+      customPropName = (name.children.first as Identifier).name;
     }
   }
   if (sideOrSize) {
@@ -187,9 +186,7 @@ function parseAnchorFn(
 }
 
 function getAnchorNames(node: DeclarationWithValue) {
-  return (node.value.children as csstree.List<csstree.Identifier>).map(
-    ({ name }) => name,
-  );
+  return (node.value.children as List<Identifier>).map(({ name }) => name);
 }
 
 let anchorNames: AnchorSelectors = {};
@@ -217,10 +214,7 @@ function resetStores() {
   customPropReplacements = {};
 }
 
-function getAnchorFunctionData(
-  node: csstree.CssNode,
-  declaration: csstree.Declaration | null,
-) {
+function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
   if ((isAnchorFunction(node) || isAnchorSizeFunction(node)) && declaration) {
     if (declaration.property.startsWith('--')) {
       const original = generateCSS(declaration.value);
@@ -287,8 +281,8 @@ export async function parseCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, function (node) {
-      const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+    walk(ast, function (node) {
+      const rule = this.rule?.prelude as SelectorList | undefined;
       const selectors = getSelectors(rule);
 
       // Parse `anchor-name` declaration
@@ -374,10 +368,10 @@ export async function parseCSS(styleData: StyleData[]) {
     for (const styleObj of styleData) {
       let changed = false;
       const ast = getAST(styleObj.css);
-      csstree.walk(ast, {
+      walk(ast, {
         visit: 'Function',
         enter(node) {
-          const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+          const rule = this.rule?.prelude as SelectorList | undefined;
           const declaration = this.declaration;
           const prop = declaration?.property;
           if (
@@ -386,13 +380,11 @@ export async function parseCSS(styleData: StyleData[]) {
             declaration &&
             prop &&
             node.children.first &&
-            customPropsToCheck.has(
-              (node.children.first as csstree.Identifier).name,
-            ) &&
+            customPropsToCheck.has((node.children.first as Identifier).name) &&
             // For now, we only want assignments to other CSS custom properties
             prop.startsWith('--')
           ) {
-            const child = node.children.first as csstree.Identifier;
+            const child = node.children.first as Identifier;
             // Find anchor data assigned to this custom property
             const anchorFns = customPropAssignments[child.name] ?? [];
             // Find anchor data assigned to another custom property referenced
@@ -444,10 +436,10 @@ export async function parseCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css);
-    csstree.walk(ast, {
+    walk(ast, {
       visit: 'Function',
       enter(node) {
-        const rule = this.rule?.prelude as csstree.SelectorList | undefined;
+        const rule = this.rule?.prelude as SelectorList | undefined;
         const declaration = this.declaration;
         const prop = declaration?.property;
 
@@ -460,7 +452,7 @@ export async function parseCSS(styleData: StyleData[]) {
           // Now we only want assignments to inset/sizing properties
           (isInsetProp(prop) || isSizingProp(prop))
         ) {
-          const child = node.children.first as csstree.Identifier;
+          const child = node.children.first as Identifier;
           // Find anchor data assigned to this custom property
           const anchorFns = customPropAssignments[child.name] ?? [];
           // Find anchor data assigned to another custom property referenced
@@ -604,18 +596,16 @@ export async function parseCSS(styleData: StyleData[]) {
     for (const styleObj of styleData) {
       let changed = false;
       const ast = getAST(styleObj.css);
-      csstree.walk(ast, {
+      walk(ast, {
         visit: 'Function',
         enter(node) {
           if (
             isVarFunction(node) &&
-            (node.children.first as csstree.Identifier)?.name?.startsWith(
-              '--',
-            ) &&
+            (node.children.first as Identifier)?.name?.startsWith('--') &&
             this.declaration?.property?.startsWith('--') &&
             this.block
           ) {
-            const child = node.children.first as csstree.Identifier;
+            const child = node.children.first as Identifier;
             const positions = customPropReplacements[child.name];
             if (positions) {
               for (const [propUuid, value] of Object.entries(positions)) {

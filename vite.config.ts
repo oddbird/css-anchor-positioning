@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
 
 import { resolve } from 'path';
+import { bundleStats } from 'rollup-plugin-bundle-stats';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -37,7 +38,18 @@ export default defineConfig({
         emptyOutDir: !process.env.BUILD_FN,
         target: 'es6',
         sourcemap: true,
+        rollupOptions: {
+          external: [/source-map-js/],
+          // This is not needed, but silences a Rollup warning
+          output: {
+            globals: {
+              'source-map-js/lib/source-map-generator.js':
+                'sourceMapGenerator_js',
+            },
+          },
+        },
       },
+  plugins: [bundleStats({ compare: false, silent: true })],
   /**
    * @see https://vitest.dev/config/#configuration
    */
