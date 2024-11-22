@@ -3,6 +3,7 @@ declare module 'css-tree/walker' {
 
   export default walk;
 }
+
 declare module 'css-tree/utils' {
   export { clone, List } from 'css-tree';
 }
@@ -12,6 +13,7 @@ declare module 'css-tree/generator' {
 
   export default generate;
 }
+
 declare module 'css-tree/parser' {
   import { parse } from 'css-tree';
 

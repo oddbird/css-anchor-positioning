@@ -40,9 +40,16 @@ export default defineConfig({
         sourcemap: true,
         rollupOptions: {
           external: [/source-map-js/],
+          // This is not needed, but silences a Rollup warning
+          output: {
+            globals: {
+              'source-map-js/lib/source-map-generator.js':
+                'sourceMapGenerator_js',
+            },
+          },
         },
       },
-  plugins: [bundleStats()],
+  plugins: [bundleStats({ compare: false, silent: true })],
   /**
    * @see https://vitest.dev/config/#configuration
    */

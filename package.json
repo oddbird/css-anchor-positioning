@@ -81,8 +81,7 @@
     "@floating-ui/dom": "^1.6.12",
     "@types/css-tree": "^2.3.8",
     "css-tree": "^3.0.0",
-    "nanoid": "^5.0.8",
-    "rollup-plugin-bundle-stats": "^4.17.0"
+    "nanoid": "^5.0.8"
   },
   "devDependencies": {
     "@playwright/test": "1.43.1",
@@ -106,6 +105,7 @@
     "node-fetch": "^2.6.7",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.3.3",
+    "rollup-plugin-bundle-stats": "^4.17.0",
     "selenium-webdriver": "^4.26.0",
     "stylelint": "^16.10.0",
     "stylelint-config-standard": "^36.0.1",
