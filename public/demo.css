@@ -101,7 +101,9 @@ header {
     grid-template:
       '. title button .' auto
       '. nav button .' auto
-      / var(--page-margin) minmax(min-content, 1fr) minmax(2rem, auto) var(--page-margin);
+      / var(--page-margin) minmax(min-content, 1fr) minmax(2rem, auto) var(
+        --page-margin
+      );
   }
 
   [data-button] {
