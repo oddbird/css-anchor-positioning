@@ -79,7 +79,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.6.12",
-    "@types/css-tree": "^2.3.8",
+    "@types/css-tree": "^2.3.9",
     "css-tree": "^3.0.0",
     "nanoid": "^5.0.8"
   },
@@ -88,8 +88,8 @@
     "@types/async": "^3.2.24",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.27",
-    "@vitest/coverage-istanbul": "^2.1.6",
-    "@vitest/eslint-plugin": "^1.1.13",
+    "@vitest/coverage-istanbul": "^2.1.8",
+    "@vitest/eslint-plugin": "^1.1.14",
     "async": "^3.2.6",
     "browserslist": "^4.24.2",
     "browserstack-local": "^1.5.5",
@@ -111,12 +111,12 @@
     "stylelint-config-standard": "^36.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.16.0",
-    "vite": "^6.0.1",
-    "vitest": "^2.1.3"
+    "typescript-eslint": "^8.17.0",
+    "vite": "^6.0.2",
+    "vitest": "^2.1.8"
   },
-  "resolutions": {
-    "tslib": ">=2"
+  "overrides": {
+    "vite": "^6.0.2"
   },
   "sideEffects": [
     "./src/index.ts",
