@@ -80,8 +80,8 @@
   "dependencies": {
     "@floating-ui/dom": "^1.6.12",
     "@types/css-tree": "^2.3.8",
-    "css-tree": "^3.0.0",
-    "nanoid": "^5.0.8"
+    "css-tree": "^3.0.1",
+    "nanoid": "^5.0.9"
   },
   "devDependencies": {
     "@playwright/test": "1.43.1",
