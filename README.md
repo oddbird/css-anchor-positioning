@@ -15,10 +15,22 @@ Positioning Polyfill supports and is based on this specification.
 
 ## Browser Support
 
-- Firefox 54+
-- Chrome 51+
-- Edge 79+
-- Safari 10+
+- Firefox 54+ (includes Android)
+- Chrome 51 - 124 (includes Android)
+- Edge 79 - 124
+- Safari 10+ (includes iOS)
+
+Anchor positioning was added to Chrome, Chrome Android, and Edge in Chromium
+125, so the polyfill will not be applied to versions after 124. Some aspects of
+anchor positioning were shipped later in Chromium, meaning that they are not
+polyfilled and are not present in those versions.
+
+- `position-try-fallbacks` was added in 128 after being renamed from
+  `position-try-order`. Use both `-fallbacks` and `-order` or the `position-try`
+  shorthand to make sure all versions are covered.
+- `position-area` was added in 129. This is also not yet implemented in the
+  polyfill, so we recommend not using this yet.
+- `anchor-scope` was added in 131.
 
 ## Getting Started
 
