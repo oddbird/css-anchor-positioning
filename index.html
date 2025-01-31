@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <link rel="stylesheet" href="/anchor-media-query.css" />
     <link rel="stylesheet" href="/anchor-scope.css" />
+    <link rel="stylesheet" href="/position-area.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <style>
@@ -938,6 +939,29 @@
 
 #other {
   --center: anchor(--anchor-duplicate-custom-props 100%);
+}</code></pre>
+    </section>
+
+    <section id="position-area" class="demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        Positioning with <code>position-area</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target has the same width as the Anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-size {
+  anchor-name: --my-anchor;
+  width: 5em;
+}
+
+#my-target-size {
+  width: anchor-size(--my-anchor width);
 }</code></pre>
     </section>
     <section id="anchor-size" class="demo-item">

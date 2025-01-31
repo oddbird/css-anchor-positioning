@@ -281,6 +281,29 @@ export const getPixelValue = async ({
   return fallback;
 };
 
+const generateContainingBlockGrid = (el: HTMLElement) => {
+  const containingBlock = el.offsetParent as HTMLElement;
+  if (!containingBlock) {
+    // TODO: handle this case
+    return null;
+  }
+
+  return {
+    block: [containingBlock.offsetTop, el.offsetTop, el.offsetTop + el.offsetHeight, containingBlock.offsetTop + containingBlock.offsetHeight],
+    inline: [containingBlock.offsetLeft, el.offsetLeft, el.offsetLeft + el.offsetWidth, containingBlock.offsetLeft + containingBlock.offsetWidth],
+  }
+}
+
+const getContainingBlockGridSection = (el: HTMLElement, positionArea: string[]) => {
+  const grid = generateContainingBlockGrid(el);
+  if (!grid) {
+    return null;
+  }
+
+
+}
+
+
 async function applyAnchorPositions(
   declarations: AnchorFunctionDeclaration,
   useAnimationFrame = false,
@@ -288,13 +311,31 @@ async function applyAnchorPositions(
   const root = document.documentElement;
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
-    InsetProperty | SizingProperty,
+    InsetProperty | SizingProperty | 'position-area',
     AnchorFunction[],
   ][]) {
     for (const anchorValue of anchorValues) {
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
+        if(property === 'position-area') {
+          autoUpdate(
+            anchor,
+            target,
+            async () => {
+              const rects = await platform.getElementRects({
+                reference: anchor,
+                floating: target,
+                strategy: 'absolute',
+              });
+             const resolved = '10px';
+             // need to set multiple values?
+              root.style.setProperty(anchorValue.uuid, resolved);
+            },
+            { animationFrame: useAnimationFrame },
+          );
+        }
+        else {
         autoUpdate(
           anchor,
           target,
@@ -316,6 +357,7 @@ async function applyAnchorPositions(
           },
           { animationFrame: useAnimationFrame },
         );
+      }
       } else {
         // Use fallback value
         const resolved = await getPixelValue({
@@ -429,7 +471,8 @@ async function applyPositionFallbacks(
 
 async function position(rules: AnchorPositions, useAnimationFrame = false) {
   for (const pos of Object.values(rules)) {
-    // Handle `anchor()` and `anchor-size()` functions...
+    // Handle `anchor()` and `anchor-size()` functions and `position-area`
+    // properties..
     await applyAnchorPositions(pos.declarations ?? {}, useAnimationFrame);
   }
 
