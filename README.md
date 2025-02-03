@@ -165,6 +165,22 @@ following features:
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
 
+### Inline styles
+
+Browsers provide some validation for imperatively setting inline styles.
+`el.style.color = "foo"` and `el.style.foo = "bar"` do not change the inline
+styles of `el`. This is problematic for this polyfill, as we would like to
+support `el.style.anchorName = "--foo"`, but that won't work in browsers that
+don't support the `anchor-name` property.
+
+While `el.setAttribute('style', 'anchor-name: --foo')` or `<div
+style="anchor-name: --foo" />` both work, developers are often using tools that
+generate the DOM. Both React and Vue use methods that remove the unknown inline
+style properties at runtime.
+
+If you are using inline styles to set anchor-related properties and the polyfill
+isn't working, verify that the inline styles are actually showing up in the DOM.
+
 ## Sponsor OddBird's OSS Work
 
 At OddBird, we love contributing to the languages & tools developers rely on.
