@@ -17,6 +17,7 @@ import {
   parseCSS,
   type TryBlock,
 } from './parse.js';
+import { type InsetValue } from './position-area.js';
 import {
   type AnchorSide,
   type AnchorSize,
@@ -281,29 +282,6 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-const generateContainingBlockGrid = (el: HTMLElement) => {
-  const containingBlock = el.offsetParent as HTMLElement;
-  if (!containingBlock) {
-    // TODO: handle this case
-    return null;
-  }
-
-  return {
-    block: [containingBlock.offsetTop, el.offsetTop, el.offsetTop + el.offsetHeight, containingBlock.offsetTop + containingBlock.offsetHeight],
-    inline: [containingBlock.offsetLeft, el.offsetLeft, el.offsetLeft + el.offsetWidth, containingBlock.offsetLeft + containingBlock.offsetWidth],
-  }
-}
-
-const getContainingBlockGridSection = (el: HTMLElement, positionArea: string[]) => {
-  const grid = generateContainingBlockGrid(el);
-  if (!grid) {
-    return null;
-  }
-
-
-}
-
-
 async function applyAnchorPositions(
   declarations: AnchorFunctionDeclaration,
   useAnimationFrame = false,
@@ -318,7 +296,23 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if(property === 'position-area') {
+        if (property === 'position-area') {
+          const getPositionAreaPixelValue = async (
+            inset: InsetValue,
+            targetProperty: GetPixelValueOpts['targetProperty'],
+            anchorRect: GetPixelValueOpts['anchorRect'],
+          ) => {
+            if (inset === 0) return '0px';
+            return await getPixelValue({
+              targetEl: target,
+              targetProperty: targetProperty,
+              anchorRect: anchorRect,
+              anchorSide: inset,
+              anchorSize: anchorValue.anchorSize,
+              fallback: anchorValue.fallbackValue,
+            });
+          };
+
           autoUpdate(
             anchor,
             target,
@@ -328,36 +322,80 @@ async function applyAnchorPositions(
                 floating: target,
                 strategy: 'absolute',
               });
-             const resolved = '10px';
-             // need to set multiple values?
+              const insets = anchorValue!.positionArea!.insets;
+
+              const topInset = await getPositionAreaPixelValue(
+                insets.block[0],
+                'top',
+                rects.reference,
+              );
+              const bottomInset = await getPositionAreaPixelValue(
+                insets.block[1],
+                'bottom',
+                rects.reference,
+              );
+              const leftInset = await getPositionAreaPixelValue(
+                insets.inline[0],
+                'left',
+                rects.reference,
+              );
+              const rightInset = await getPositionAreaPixelValue(
+                insets.inline[1],
+                'right',
+                rects.reference,
+              );
+
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-top`,
+                topInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-left`,
+                leftInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-right`,
+                rightInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-bottom`,
+                bottomInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-justify-self`,
+                anchorValue!.positionArea!.alignments.inline,
+              );
+              root.style.setProperty(
+                `${anchorValue.positionArea.uuid}-align-self`,
+                anchorValue!.positionArea!.alignments.block,
+              );
+              // need to set multiple values?
+            },
+            { animationFrame: useAnimationFrame },
+          );
+        } else {
+          autoUpdate(
+            anchor,
+            target,
+            async () => {
+              const rects = await platform.getElementRects({
+                reference: anchor,
+                floating: target,
+                strategy: 'absolute',
+              });
+              const resolved = await getPixelValue({
+                targetEl: target,
+                targetProperty: property,
+                anchorRect: rects.reference,
+                anchorSide: anchorValue.anchorSide,
+                anchorSize: anchorValue.anchorSize,
+                fallback: anchorValue.fallbackValue,
+              });
               root.style.setProperty(anchorValue.uuid, resolved);
             },
             { animationFrame: useAnimationFrame },
           );
         }
-        else {
-        autoUpdate(
-          anchor,
-          target,
-          async () => {
-            const rects = await platform.getElementRects({
-              reference: anchor,
-              floating: target,
-              strategy: 'absolute',
-            });
-            const resolved = await getPixelValue({
-              targetEl: target,
-              targetProperty: property,
-              anchorRect: rects.reference,
-              anchorSide: anchorValue.anchorSide,
-              anchorSize: anchorValue.anchorSize,
-              fallback: anchorValue.fallbackValue,
-            });
-            root.style.setProperty(anchorValue.uuid, resolved);
-          },
-          { animationFrame: useAnimationFrame },
-        );
-      }
       } else {
         // Use fallback value
         const resolved = await getPixelValue({

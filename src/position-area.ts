@@ -1,4 +1,11 @@
-const POSITION_AREA_SPANS = {
+import { type Block } from 'css-tree';
+import { nanoid } from 'nanoid';
+
+export type PositionAreaGridValue = 0 | 1 | 2 | 3;
+const POSITION_AREA_SPANS: Record<
+  string,
+  [PositionAreaGridValue, PositionAreaGridValue]
+> = {
   left: [0, 1],
   center: [1, 2],
   right: [2, 3],
@@ -186,14 +193,60 @@ function isValidPositionAreaValue(value: [string, string]): boolean {
   return false;
 }
 
+export type InsetValue = 0 | 'top' | 'bottom' | 'left' | 'right';
+
+// This function approximates setting the containing block.
+const getInsets = ({
+  block,
+  inline,
+}: {
+  block: [PositionAreaGridValue, PositionAreaGridValue];
+  inline: [PositionAreaGridValue, PositionAreaGridValue];
+}) => {
+  // Or should these be abstracted to CB_LEFT, CB_RIGHT, etc?
+  const blockValues: InsetValue[] = [0, 'top', 'bottom', 0];
+  const inlineValues: InsetValue[] = [0, 'left', 'right', 0];
+
+  return {
+    block: [blockValues[block[0]], blockValues[block[1]]] as [
+      InsetValue,
+      InsetValue,
+    ],
+    inline: [inlineValues[inline[0]], inlineValues[inline[1]]] as [
+      InsetValue,
+      InsetValue,
+    ],
+  };
+};
+
+function getAxisAlignment([start, end]: [
+  PositionAreaGridValue,
+  PositionAreaGridValue,
+]): 'start' | 'end' | 'center' {
+  if (start === 0 && end === 3) return 'center';
+  if (start === 0) return 'end';
+  if (end === 3) return 'start';
+  return 'center';
+}
+
+interface AxisInfo<T> {
+  block: T;
+  inline: T;
+}
+
+export interface PositionAreaData {
+  values: AxisInfo<string>;
+  grid: AxisInfo<[PositionAreaGridValue, PositionAreaGridValue]>;
+  insets: AxisInfo<[InsetValue, InsetValue]>;
+  alignments: AxisInfo<'start' | 'end' | 'center'>;
+  changed: boolean;
+  uuid: string;
+}
+
 export function parsePositionAreaValue(
   value: string[],
-):
-  | {
-      values: { block: string; inline: string };
-      grid: { block: [number, number]; inline: [number, number] };
-    }
-  | undefined {
+  block: Block,
+): PositionAreaData | undefined {
   if (value.length === 1) {
     if (axisForPositionAreaValue(value[0]) === 'ambiguous') {
       value.push(value[0]);
@@ -203,7 +256,7 @@ export function parsePositionAreaValue(
   }
 
   if (!isValidPositionAreaValue(value as [string, string])) return undefined;
-  const positionAreas = {} as { block: string; inline: string };
+  const positionAreas = {} as AxisInfo<string>;
   switch (axisForPositionAreaValue(value[0])) {
     case 'block':
       positionAreas.block = value[0];
@@ -227,6 +280,37 @@ export function parsePositionAreaValue(
     block: POSITION_AREA_SPANS[positionAreas.block],
     inline: POSITION_AREA_SPANS[positionAreas.inline],
   };
+  const uuid = `--anchor-position-area-${nanoid(12)}`;
 
-  return { values: positionAreas, grid };
+  [
+    'top',
+    'left',
+    'right',
+    'bottom',
+    'inline-size',
+    'block-size',
+    'justify-self',
+    'align-self',
+  ].forEach((prop) => {
+    block.children.appendData({
+      type: 'Declaration',
+      property: prop,
+      value: { type: 'Raw', value: `var(${uuid}-${prop})` },
+      important: false,
+    });
+  });
+
+  const insets = getInsets(grid);
+  const alignments = {
+    block: getAxisAlignment(grid.block),
+    inline: getAxisAlignment(grid.inline),
+  };
+  return {
+    values: positionAreas,
+    grid,
+    changed: true,
+    uuid,
+    insets,
+    alignments,
+  };
 }

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Anchor Positioning Polyfill</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
+    />
+    <script
+      src="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.min.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
+    <!-- TypeKit Fonts -->
+    <script src="https://use.typekit.net/slx1xnq.js"></script>
+    <script>
+      try {
+        Typekit.load({ async: true });
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="/demo.css" />
+    <link rel="stylesheet" href="/position-area-page.css" />
+
+    <script type="module">
+      import polyfill from '/src/index-fn.ts';
+
+      const SUPPORTS_ANCHOR_POSITIONING =
+        'anchorName' in document.documentElement.style;
+
+      const btn = document.getElementById('apply-polyfill');
+
+      if (!SUPPORTS_ANCHOR_POSITIONING) {
+        btn.addEventListener('click', () =>
+          polyfill().then((rules) => {
+            btn.innerText = 'Polyfill Applied';
+            btn.setAttribute('disabled', '');
+            console.log(rules);
+          }),
+        );
+      } else {
+        btn.innerText = 'No Polyfill Needed';
+        btn.setAttribute('disabled', '');
+        console.log(
+          'anchor-positioning is supported in this browser; polyfill skipped.',
+        );
+      }
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
+    <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script
+      defer
+      data-domain="anchor-positioning.oddbird.net"
+      src="https://plausible.io/js/script.hash.outbound-links.js"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1>CSS Anchor Positioning Polyfill</h1>
+      <nav>
+        <span> See also: </span>
+        <a
+          href="https://github.com/web-platform-tests/wpt/tree/master/css/css-anchor-position"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT examples</a
+        >
+        <!-- <a
+          href="https://anchor-position-wpt.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT results</a
+        > -->
+        <a
+          href="https://drafts.csswg.org/css-anchor-position/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Draft Spec</a
+        >
+      </nav>
+      <button id="apply-polyfill" data-button="apply-polyfill" type="button">
+        Apply Polyfill
+      </button>
+    </header>
+    <section>
+      <h2>Anchoring Elements Using CSS</h2>
+      <p>
+        <strong>Note: </strong>We strive to keep the polyfill up-to-date with
+        ongoing changes to the spec, and we welcome
+        <a
+          href="https://github.com/oddbird/css-anchor-positioning"
+          target="_blank"
+          rel="noopener noreferrer"
+          >code contributions</a
+        >
+        and <a href="#sponsor">financial support</a> to make that happen.
+      </p>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>bottom center</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target bottom-center">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>span-left top</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target spanleft-top">Target with longer content</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>center left</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target center-left">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>inline-start block-end</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target inlinestart-blockend">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>start end</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target start-end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>end</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>no space around anchor, end start</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div class="target end-start">Target</div>
+      </div>
+      <div>
+        Block positioning is incorrect. Should be `top: anchor(bottom)`.
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>no space around anchor, span-all left</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div class="target spanall-left">
+          Target with longer content that might line wrap
+        </div>
+      </div>
+      <div>Behaves identical to Chromium.</div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>no space around anchor, span-all top</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div class="target spanall-top">
+          Target with longer content that might line wrap
+        </div>
+      </div>
+      <div>
+        Behaves identical to Chromium. Why does inline span-all behave
+        differently than block span-all?
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>inline styles</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target" style="position-area: end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        <code>One declaration, different containing blocks</code>
+      </h2>
+      <div
+        style="position: relative; border: 1pt dotted var(--border)"
+        class="demo-elements"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target shared-right-bottom">Target</div>
+      </div>
+      <div
+        style="position: relative; border: 1pt dotted var(--border)"
+        class="demo-elements tight"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target shared-right-bottom">Target</div>
+      </div>
+      <p>
+        Anchor inset values are currently shared by all elements matching a
+        declaration. Should be `right bottom`.
+      </p>
+    </section>
+
+    <section id="sponsor">
+      <h2>Sponsor OddBird’s OSS Work</h2>
+      <p>
+        At OddBird, we love contributing to the languages & tools developers
+        rely on. We’re currently working on polyfills for new Popover & Anchor
+        Positioning functionality, as well as CSS specifications for functions,
+        mixins, and responsive typography. Help us keep this work sustainable
+        and centered on your needs as a developer! We display sponsor logos and
+        avatars on our
+        <a
+          href="https://www.oddbird.net/polyfill/#open-source-sponsors"
+          target="_blank"
+          rel="noopener noreferrer"
+          >website</a
+        >.
+      </p>
+      <a
+        href="https://github.com/sponsors/oddbird"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Sponsor OddBird’s OSS Work</a
+      >
+    </section>
+    <footer>
+      <p>
+        Spec proposal by
+        <a
+          href="http://xanthir.com/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Tab Atkins-Bittner</a
+        >. Polyfill and demo by
+        <a
+          href="https://www.oddbird.net/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >OddBird</a
+        >.
+      </p>
+    </footer>
+  </body>
+</html>

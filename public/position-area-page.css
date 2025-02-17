@@ -1,0 +1,68 @@
+.demo-elements {
+  block-size: 12em;
+  place-content: center;
+  place-items: center;
+  display: flex;
+  grid-area: initial;
+  anchor-scope: --position-area-anchor;
+}
+
+.demo-elements.tight {
+  block-size: initial;
+}
+
+.position-area-demo-item {
+  display: grid;
+  gap: 1em;
+}
+
+.position-area-demo-item .anchor {
+  anchor-name: --position-area-anchor;
+  width: min-content;
+}
+
+.position-area-demo-item .target {
+  position: absolute;
+  position-anchor: --position-area-anchor;
+  text-wrap: wrap;
+}
+
+.target.bottom-center {
+  position-area: bottom center;
+}
+
+.target.spanleft-top {
+  position-area: span-left top;
+}
+
+.target.spanall-left {
+  position-area: span-all left;
+}
+
+.target.spanall-top {
+  position-area: span-all top;
+}
+
+.target.center-left {
+  position-area: center left;
+}
+
+.target.inlinestart-blockend {
+  position-area: inline-start block-end;
+}
+
+.target.start-end {
+  position-area: start end;
+}
+
+.target.end-start {
+  position-area: end start;
+}
+
+.target.end {
+  position-area: end;
+}
+
+.target.shared-right-bottom {
+  position-area: right bottom;
+}
