@@ -19,6 +19,7 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
+  applyPositionAreaInlineStyles,
   parsePositionAreaValue,
   type PositionAreaData,
 } from './position-area.js';
@@ -750,12 +751,17 @@ export async function parseCSS(styleData: StyleData[]) {
     // TODO: Add support for position fallback
 
     for (const targetEl of targets) {
+      //  if(targetSel === '.target.shared-right-bottom') debugger;
       // For every target element, find a valid anchor element
+      const positionAreaUUID = `--position-area-${nanoid(12)}`;
       const anchorObj = {
         uuid: `--anchor-${nanoid(12)}`,
-        positionArea: positions.area,
+        positionArea: { ...positions.area, uuid: positionAreaUUID },
         fallbackValue: '',
       } as AnchorFunction;
+
+      // TODO- do these need to be added to inlineStyles as well?
+      applyPositionAreaInlineStyles(targetEl, positionAreaUUID);
 
       const anchorEl = await getAnchorEl(targetEl, anchorObj);
       const uuid = `--anchor-${nanoid(12)}`;

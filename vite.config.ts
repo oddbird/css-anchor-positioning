@@ -10,13 +10,13 @@ export default defineConfig({
   },
   build: process.env.NETLIFY
     ? {
-      rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'index.html'),
-          positionArea: resolve(__dirname, 'position-area.html'),
-        }
+        rollupOptions: {
+          input: {
+            main: resolve(__dirname, 'index.html'),
+            positionArea: resolve(__dirname, 'position-area.html'),
+          },
+        },
       }
-    }
     : {
         lib: process.env.BUILD_WPT
           ? // build that adds a delay variable for WPT test-runner

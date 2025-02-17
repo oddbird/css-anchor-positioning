@@ -295,7 +295,7 @@ export function parsePositionAreaValue(
     block.children.appendData({
       type: 'Declaration',
       property: prop,
-      value: { type: 'Raw', value: `var(${uuid}-${prop})` },
+      value: { type: 'Raw', value: `var(--position-area-${prop})` },
       important: false,
     });
   });
@@ -313,4 +313,26 @@ export function parsePositionAreaValue(
     insets,
     alignments,
   };
+}
+
+export function applyPositionAreaInlineStyles(
+  el: HTMLElement,
+  uuid: string,
+): void {
+  const style = [
+    'top',
+    'left',
+    'right',
+    'bottom',
+    'inline-size',
+    'block-size',
+    'justify-self',
+    'align-self',
+  ].reduce(
+    (acc, prop) => {
+      return acc + `--position-area-${prop}: var(${uuid}-${prop});`;
+    },
+    el.getAttribute('style') || '',
+  );
+  el.setAttribute('style', style);
 }
