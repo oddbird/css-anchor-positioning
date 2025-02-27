@@ -72,7 +72,7 @@ export const POSITION_AREA_X = [
   'span-x-self-start',
   'span-x-self-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_Y = [
   'top',
@@ -89,7 +89,7 @@ export const POSITION_AREA_Y = [
   'span-y-self-start',
   'span-y-self-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_BLOCK = [
   'block-start',
@@ -98,7 +98,7 @@ export const POSITION_AREA_BLOCK = [
   'span-block-start',
   'span-block-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_INLINE = [
   'inline-start',
@@ -107,7 +107,7 @@ export const POSITION_AREA_INLINE = [
   'span-inline-start',
   'span-inline-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_SELF_BLOCK = [
   'self-block-start',
@@ -116,7 +116,7 @@ export const POSITION_AREA_SELF_BLOCK = [
   'span-self-block-start',
   'span-self-block-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_SELF_INLINE = [
   'self-inline-start',
@@ -125,7 +125,7 @@ export const POSITION_AREA_SELF_INLINE = [
   'span-self-inline-start',
   'span-self-inline-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_SHORTHAND = [
   'start',
@@ -134,7 +134,7 @@ export const POSITION_AREA_SHORTHAND = [
   'span-start',
   'span-end',
   'span-all',
-] as const;
+] as string[];
 
 export const POSITION_AREA_SELF_SHORTHAND = [
   'self-start',
@@ -143,7 +143,7 @@ export const POSITION_AREA_SELF_SHORTHAND = [
   'span-self-start',
   'span-self-end',
   'span-all',
-] as const;
+] as string[];
 
 export type PositionAreaX = (typeof POSITION_AREA_X)[number];
 export type PositionAreaY = (typeof POSITION_AREA_Y)[number];
@@ -179,7 +179,7 @@ function isValidPositionAreaPair(
   );
 }
 
-const validPairs = [
+const validPairs: [string[], string[]][] = [
   [POSITION_AREA_X, POSITION_AREA_Y],
   [POSITION_AREA_BLOCK, POSITION_AREA_INLINE],
   [POSITION_AREA_SELF_BLOCK, POSITION_AREA_SELF_INLINE],

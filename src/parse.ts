@@ -72,8 +72,8 @@ export type AnchorFunctionDeclaration = Partial<
 // `value` is an object with all anchor-function declarations on that element
 type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
-interface PositionAreaDeclaration extends AnchorFunction {
-  positionArea?: PositionAreaData;
+export interface PositionAreaDeclaration extends AnchorFunction {
+  positionArea: PositionAreaData;
 }
 type PositionAreaDeclarations = Record<string, PositionAreaDeclaration>;
 
@@ -359,7 +359,7 @@ export async function parseCSS(styleData: StyleData[]) {
         for (const { selector } of selectors) {
           positionAreas[selector] = {
             ...positionAreas[selector],
-            area: positionAreaData,
+            positionArea: positionAreaData,
           };
         }
       }
@@ -756,7 +756,7 @@ export async function parseCSS(styleData: StyleData[]) {
       const positionAreaUUID = `--position-area-${nanoid(12)}`;
       const anchorObj = {
         uuid: `--anchor-${nanoid(12)}`,
-        positionArea: { ...positions.area, uuid: positionAreaUUID },
+        positionArea: { ...positions.positionArea, uuid: positionAreaUUID },
         fallbackValue: '',
       } as AnchorFunction;
 

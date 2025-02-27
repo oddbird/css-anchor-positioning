@@ -15,6 +15,7 @@ import {
   type AnchorFunctionDeclaration,
   type AnchorPositions,
   parseCSS,
+  type PositionAreaDeclaration,
   type TryBlock,
 } from './parse.js';
 import { type InsetValue } from './position-area.js';
@@ -136,7 +137,7 @@ const getMargins = (el: HTMLElement) => {
 
 export interface GetPixelValueOpts {
   targetEl?: HTMLElement;
-  targetProperty: InsetProperty | SizingProperty;
+  targetProperty: InsetProperty | SizingProperty | 'position-area';
   anchorRect?: Rect;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
@@ -290,13 +291,13 @@ async function applyAnchorPositions(
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
     InsetProperty | SizingProperty | 'position-area',
-    AnchorFunction[],
+    (AnchorFunction | PositionAreaDeclaration)[],
   ][]) {
     for (const anchorValue of anchorValues) {
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if (property === 'position-area') {
+        if (property === 'position-area' && 'positionArea' in anchorValue) {
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
             targetProperty: GetPixelValueOpts['targetProperty'],
@@ -369,7 +370,6 @@ async function applyAnchorPositions(
                 `${anchorValue.positionArea.uuid}-align-self`,
                 anchorValue!.positionArea!.alignments.block,
               );
-              // need to set multiple values?
             },
             { animationFrame: useAnimationFrame },
           );
