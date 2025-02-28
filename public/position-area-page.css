@@ -11,6 +11,36 @@
   block-size: initial;
 }
 
+.demo-elements.semi-tight {
+  block-size: 4em;
+  inline-size: 4em;
+}
+
+.demo-elements.shifting,
+.demo-elements.non-centered {
+  border: 1pt dashed var(--brand-blue);
+  position: relative;
+  display: grid;
+  height: 300px;
+  width: 200px;
+  padding: 0.3em;
+  align-content: space-between;
+}
+
+.shifting .target {
+  position-area: left center;
+  block-size: 4em;
+  opacity: 0.5;
+}
+
+.non-centered .target {
+  position-area: left span-all;
+}
+
+.scope {
+  anchor-scope: --position-area-anchor;
+}
+
 .position-area-demo-item {
   display: grid;
   gap: 1em;
@@ -65,4 +95,17 @@
 
 .target.shared-right-bottom {
   position-area: right bottom;
+}
+
+.cascade .target {
+  position-area: right bottom;
+}
+
+#cascade-target {
+  position-area: right top;
+}
+
+.show-wrapper [data-anchor-position-area] {
+  background: repeating-linear-gradient(45deg, #ccc 0 5px, transparent 0 10px);
+  outline: 1pt dotted var(--brand-orange);
 }

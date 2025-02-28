@@ -283,12 +283,7 @@ export function parsePositionAreaValue(
   const uuid = `--anchor-position-area-${nanoid(12)}`;
 
   [
-    'top',
-    'left',
-    'right',
-    'bottom',
-    'inline-size',
-    'block-size',
+    // Insets are applied to a wrapping element
     'justify-self',
     'align-self',
   ].forEach((prop) => {

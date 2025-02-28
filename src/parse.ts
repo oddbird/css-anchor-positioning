@@ -74,6 +74,7 @@ type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
 export interface PositionAreaDeclaration extends AnchorFunction {
   positionArea: PositionAreaData;
+  wrapperEl?: HTMLElement | null;
 }
 type PositionAreaDeclarations = Record<string, PositionAreaDeclaration>;
 
@@ -758,7 +759,17 @@ export async function parseCSS(styleData: StyleData[]) {
         uuid: `--anchor-${nanoid(12)}`,
         positionArea: { ...positions.positionArea, uuid: positionAreaUUID },
         fallbackValue: '',
-      } as AnchorFunction;
+      };
+
+      const wrapperEl = document.createElement('div');
+      wrapperEl.style.display = 'grid';
+      wrapperEl.style.position = 'absolute';
+      wrapperEl.setAttribute('data-anchor-position-area', positionAreaUUID);
+      targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
+      wrapperEl.appendChild(targetEl);
+      ['top', 'left', 'right', 'bottom'].forEach((prop) => {
+        wrapperEl.style.setProperty(prop, `var(${positionAreaUUID}-${prop})`);
+      });
 
       // TODO- do these need to be added to inlineStyles as well?
       applyPositionAreaInlineStyles(targetEl, positionAreaUUID);
@@ -789,7 +800,7 @@ export async function parseCSS(styleData: StyleData[]) {
             ...(validPositions[targetSel]?.declarations?.[
               targetProperty as InsetProperty
             ] ?? []),
-            { ...anchorObj, anchorEl, targetEl, uuid },
+            { ...anchorObj, anchorEl, targetEl, wrapperEl, uuid },
           ],
         },
       };

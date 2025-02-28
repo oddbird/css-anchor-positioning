@@ -297,7 +297,8 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if (property === 'position-area' && 'positionArea' in anchorValue) {
+        if ('positionArea' in anchorValue) {
+          const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
             targetProperty: GetPixelValueOpts['targetProperty'],
@@ -305,7 +306,7 @@ async function applyAnchorPositions(
           ) => {
             if (inset === 0) return '0px';
             return await getPixelValue({
-              targetEl: target,
+              targetEl: wrapper,
               targetProperty: targetProperty,
               anchorRect: anchorRect,
               anchorSide: inset,
@@ -316,14 +317,14 @@ async function applyAnchorPositions(
 
           autoUpdate(
             anchor,
-            target,
+            wrapper,
             async () => {
               const rects = await platform.getElementRects({
                 reference: anchor,
-                floating: target,
+                floating: wrapper,
                 strategy: 'absolute',
               });
-              const insets = anchorValue!.positionArea!.insets;
+              const insets = anchorValue.positionArea.insets;
 
               const topInset = await getPositionAreaPixelValue(
                 insets.block[0],
