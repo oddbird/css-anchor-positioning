@@ -95,18 +95,18 @@ describe('position-area', () => {
     it.each([
       [
         ['top', 'right'],
-        [0, 'ANCHOR_TOP'],
-        ['ANCHOR_RIGHT', 0],
+        [0, 'top'],
+        ['right', 0],
       ],
       [
         ['bottom', 'left'],
-        ['ANCHOR_BOTTOM', 0],
-        [0, 'ANCHOR_LEFT'],
+        ['bottom', 0],
+        [0, 'left'],
       ],
       [
         ['center', 'center'],
-        ['ANCHOR_TOP', 'ANCHOR_BOTTOM'],
-        ['ANCHOR_LEFT', 'ANCHOR_RIGHT'],
+        ['top', 'bottom'],
+        ['left', 'right'],
       ],
     ])('%s', (input, block, inline) => {
       const res = parsePositionAreaValue(input, createBlock())!.insets;
