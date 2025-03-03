@@ -752,7 +752,6 @@ export async function parseCSS(styleData: StyleData[]) {
     // TODO: Add support for position fallback
 
     for (const targetEl of targets) {
-      //  if(targetSel === '.target.shared-right-bottom') debugger;
       // For every target element, find a valid anchor element
       const positionAreaUUID = `--position-area-${nanoid(12)}`;
       const anchorObj = {
