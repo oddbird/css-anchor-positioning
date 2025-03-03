@@ -1,0 +1,9 @@
+#position-area .anchor {
+  anchor-name: --position-area-anchor-a;
+}
+
+#position-area .target {
+  position: absolute;
+  position-area: top right;
+  position-anchor: --position-area-anchor-a;
+}

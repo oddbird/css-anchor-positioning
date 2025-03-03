@@ -16,6 +16,7 @@ import {
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = {
   'position-anchor': `--position-anchor-${INSTANCE_UUID}`,
+  'position-area': `--position-area-${INSTANCE_UUID}`,
   'anchor-scope': `--anchor-scope-${INSTANCE_UUID}`,
   'anchor-name': `--anchor-name-${INSTANCE_UUID}`,
   left: `--left-${INSTANCE_UUID}`,

@@ -1,4 +1,5 @@
 import type {
+  Block,
   CssNode,
   Declaration,
   FunctionNode,
@@ -17,6 +18,11 @@ import {
   type Selector,
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
+import {
+  applyPositionAreaInlineStyles,
+  parsePositionAreaValue,
+  type PositionAreaData,
+} from './position-area.js';
 import {
   type AcceptedPositionTryProperty,
   type AnchorSide,
@@ -56,15 +62,25 @@ export interface AnchorFunction {
 // `key` is the property being declared
 // `value` is the anchor-positioning data for that property
 export type AnchorFunctionDeclaration = Partial<
-  Record<InsetProperty | SizingProperty, AnchorFunction[]>
+  Record<
+    InsetProperty | SizingProperty | 'position-area',
+    (AnchorFunction | PositionAreaDeclaration)[]
+  >
 >;
 
 // `key` is the target element selector
 // `value` is an object with all anchor-function declarations on that element
 type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
+export interface PositionAreaDeclaration extends AnchorFunction {
+  positionArea: PositionAreaData;
+  wrapperEl?: HTMLElement | null;
+}
+type PositionAreaDeclarations = Record<string, PositionAreaDeclaration>;
+
 export interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
+  positionAreas?: PositionAreaDeclaration[];
   fallbacks?: TryBlock[];
   order?: PositionTryOrder;
 }
@@ -86,6 +102,12 @@ function isAnchorNameDeclaration(node: CssNode): node is DeclarationWithValue {
 
 function isAnchorScopeDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-scope';
+}
+
+function isPositionAreaDeclaration(
+  node: CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-area';
 }
 
 function isAnchorSizeFunction(node: CssNode | null): node is FunctionNode {
@@ -238,6 +260,16 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
   return {};
 }
 
+function getPositionAreaData(node: CssNode, block: Block | null) {
+  if (isPositionAreaDeclaration(node) && block) {
+    const areas = (node.value.children as List<Identifier>)
+      .toArray()
+      .map(({ name }) => name);
+    const parsed = parsePositionAreaValue(areas, block);
+    return parsed;
+  }
+}
+
 async function getAnchorEl(
   targetEl: HTMLElement | null,
   anchorObj: AnchorFunction,
@@ -273,6 +305,7 @@ async function getAnchorEl(
 
 export async function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
+  const positionAreas: PositionAreaDeclarations = {};
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -320,7 +353,18 @@ export async function parseCSS(styleData: StyleData[]) {
           };
         }
       }
-      if (updated) {
+
+      const positionAreaData = getPositionAreaData(node, this.block);
+
+      if (positionAreaData) {
+        for (const { selector } of selectors) {
+          positionAreas[selector] = {
+            ...positionAreas[selector],
+            positionArea: positionAreaData,
+          };
+        }
+      }
+      if (updated || positionAreaData?.changed) {
         changed = true;
       }
     });
@@ -696,6 +740,69 @@ export async function parseCSS(styleData: StyleData[]) {
           };
         }
       }
+    }
+  }
+
+  for (const [targetSel, positions] of Object.entries(positionAreas) as [
+    string,
+    PositionAreaDeclaration,
+  ][]) {
+    const targets: NodeListOf<HTMLElement> =
+      document.querySelectorAll(targetSel);
+    // TODO: Add support for position fallback
+
+    for (const targetEl of targets) {
+      // For every target element, find a valid anchor element
+      const positionAreaUUID = `--position-area-${nanoid(12)}`;
+      const anchorObj = {
+        uuid: `--anchor-${nanoid(12)}`,
+        positionArea: { ...positions.positionArea, uuid: positionAreaUUID },
+        fallbackValue: '',
+      };
+
+      const wrapperEl = document.createElement('div');
+      wrapperEl.style.display = 'grid';
+      wrapperEl.style.position = 'absolute';
+      wrapperEl.setAttribute('data-anchor-position-area', positionAreaUUID);
+      targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
+      wrapperEl.appendChild(targetEl);
+      ['top', 'left', 'right', 'bottom'].forEach((prop) => {
+        wrapperEl.style.setProperty(prop, `var(${positionAreaUUID}-${prop})`);
+      });
+
+      // TODO- do these need to be added to inlineStyles as well?
+      applyPositionAreaInlineStyles(targetEl, positionAreaUUID);
+
+      const anchorEl = await getAnchorEl(targetEl, anchorObj);
+      const uuid = `--anchor-${nanoid(12)}`;
+      // Store new mapping, in case inline styles have changed and will
+      // be overwritten -- in which case new mappings will be re-added
+      inlineStyles.set(targetEl, {
+        ...(inlineStyles.get(targetEl) ?? {}),
+        [anchorObj.uuid]: uuid,
+      });
+      // Point original uuid to new uuid
+      targetEl.setAttribute(
+        'style',
+        `${anchorObj.uuid}: var(${uuid}); ${
+          targetEl.getAttribute('style') ?? ''
+        }`,
+      );
+      const targetProperty = 'position-area';
+      // Populate new data for each anchor/target combo
+      validPositions[targetSel] = {
+        ...validPositions[targetSel],
+        positionAreas: [positions],
+        declarations: {
+          ...validPositions[targetSel]?.declarations,
+          [targetProperty]: [
+            ...(validPositions[targetSel]?.declarations?.[
+              targetProperty as InsetProperty
+            ] ?? []),
+            { ...anchorObj, anchorEl, targetEl, wrapperEl, uuid },
+          ],
+        },
+      };
     }
   }
 
