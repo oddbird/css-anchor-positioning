@@ -952,16 +952,19 @@
         <div class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target has the same width as the Anchor.
+        With polyfill applied: Target is positioned to the top right of the
+        Anchor. See <a href="position-area.html">more examples</a> of
+        <code>position-area</code>.
       </p>
       <pre><code class="language-css"
->#my-anchor-size {
-  anchor-name: --my-anchor;
-  width: 5em;
+>#position-area .anchor {
+  anchor-name: --position-area-anchor;
 }
 
-#my-target-size {
-  width: anchor-size(--my-anchor width);
+#position-area .target {
+  position: absolute;
+  position-area: top right;
+  position-anchor: --position-area-anchor;
 }</code></pre>
     </section>
     <section id="anchor-size" class="demo-item">
