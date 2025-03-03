@@ -30,11 +30,13 @@ html {
   --note-color: var(--target);
   --page-margin: calc(1rem + 4vw);
   --pseudo-element: var(--action);
-  --font-serif: freight-text-pro, baskerville, palatino, cambria, georgia, serif;
+  --font-serif:
+    freight-text-pro, baskerville, palatino, cambria, georgia, serif;
   --font-sans: freight-sans-pro, 'Helvetica Neue', helvetica, arial, sans-serif;
-  --font-mono: 'Dank Mono', 'Operator Mono', inconsolata, 'Fira Mono',
-    ui-monospace, 'SF Mono', monaco, 'Droid Sans Mono', 'Source Code Pro',
-    'Cascadia Code', menlo, consolas, 'DejaVu Sans Mono', monospace;
+  --font-mono:
+    'Dank Mono', 'Operator Mono', inconsolata, 'Fira Mono', ui-monospace,
+    'SF Mono', monaco, 'Droid Sans Mono', 'Source Code Pro', 'Cascadia Code',
+    menlo, consolas, 'DejaVu Sans Mono', monospace;
 
   background-color: var(--bg);
   color: var(--text);
