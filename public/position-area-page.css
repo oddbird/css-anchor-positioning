@@ -102,7 +102,7 @@
 }
 
 #cascade-target {
-  position-area: right span-all;
+  position-area: right top;
 }
 
 .show-wrapper [data-anchor-position-area] {
