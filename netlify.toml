@@ -1,3 +1,8 @@
 [build]
   # If the $WPT_ONLY env var is set, only build branches that end with `--wpt-results`
   ignore = "if [[ ! $WPT_ONLY || $BRANCH == *--wpt-results ]]; then exit 1; else exit 0; fi"
+[[headers]]
+  for = "/css-anchor-positioning*" # Only allow for polyfill files
+  [headers.values]
+    access-control-allow-origin = "*"
+    content-type = "text/javascript"
