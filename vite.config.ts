@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  build: process.env.NETLIFY
+  build: process.env.BUILD_DEMO
     ? {
         rollupOptions: {
           input: {
@@ -42,7 +42,7 @@ export default defineConfig({
                 // the proper extensions will be added
                 fileName: 'css-anchor-positioning',
               },
-        emptyOutDir: !process.env.BUILD_FN,
+        emptyOutDir: false,
         target: 'es6',
         sourcemap: true,
         rollupOptions: {

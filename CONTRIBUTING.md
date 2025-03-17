@@ -52,3 +52,16 @@ Unit tests and end-to-end tests are available in the `tests/` folder.
     `npx playwright install --with-deps`
   - Run tests (Chromium only): `npm run test:e2e`
   - Run tests (Chromium, Firefox & Webkit): `npm run test:e2e:ci`
+
+## Previewing Pull Requests
+
+Active pull requests on the polyfill can be tested using the built version
+hosted within the preview environment.
+
+> **IMPORTANT**
+>
+> These previews are ephemeral, and will stop working after the pull request is
+> merged. Do not use this for any purpose other than testing the pull request.
+
+All polyfills are located at the root of the preview environment. For instance, the CommonJS functional version for PR 123 would be available at
+https://deploy-preview-123--anchor-polyfill.netlify.app/css-anchor-positioning-fn.umd.cjs.
