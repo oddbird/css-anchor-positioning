@@ -5,3 +5,4 @@
   for = "/css-anchor-positioning*" # Only allow for polyfill files
   [headers.values]
     access-control-allow-origin = "*"
+    content-type = text/javascript
