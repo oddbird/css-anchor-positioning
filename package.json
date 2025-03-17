@@ -49,10 +49,11 @@
     "package.json"
   ],
   "scripts": {
-    "build": "run-s build:dist build:fn",
+    "build": "run-s build:demo build:dist build:fn",
     "build:dist": "vite build",
     "build:fn": "cross-env BUILD_FN=1 vite build",
     "build:wpt": "cross-env BUILD_WPT=1 vite build",
+    "build:demo": "cross-env BUILD_DEMO=1 vite build",
     "preview": "vite preview",
     "serve": "vite dev",
     "tsc": "tsc --noEmit",
