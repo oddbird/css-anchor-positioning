@@ -189,14 +189,21 @@
     <section class="position-area-demo-item" id="no-block-space">
       <h2>
         <a href="#no-block-space" aria-hidden="true">🔗</a>
-        <code>no block space around anchor, span-all left ✅</code>
+        <code>no block space around anchor, span-all left ❓</code>
       </h2>
       <div style="position: relative" class="demo-elements tight">
         <div class="anchor">Anchor</div>
-        <div class="target spanall-left">
+        <div class="target spanall-left" style="align-self: var(--position-area-align-self) safe">
           Target with longer content that might line wrap
         </div>
       </div>
+      <p>
+        If the target overflows the containing block,
+        and the target should be shifted to the start of the containing block,
+        add an inline style to add <code>safe</code> overflow alignment
+        for the impacted axis.
+      </p>
+      <code>style="align-self: var(--position-area-align-self) safe"</code>
     </section>
 
     <section class="position-area-demo-item" id="no-block-space-top">
