@@ -32,8 +32,8 @@ export const POSITION_AREA_CASCADE_PROPERTY = '--pa-cascade-property';
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
 export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
 
-const HAS_WRAPPER_ATTRIBUTE = 'data-position-area-has-wrapper';
 const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
+const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 
 export type PositionAreaGridValue = 0 | 1 | 2 | 3;
 const POSITION_AREA_SPANS: Record<
@@ -355,16 +355,15 @@ export function wrapperForPositionedElement(
   targetUUID: string,
 ): HTMLElement {
   let wrapperEl: HTMLElement;
-  if (targetEl.hasAttribute(HAS_WRAPPER_ATTRIBUTE)) {
+  if (targetEl.parentElement?.tagName === WRAPPER_ELEMENT) {
     wrapperEl = targetEl.parentElement as HTMLElement;
   } else {
-    wrapperEl = document.createElement('polyfill-position-area');
+    wrapperEl = document.createElement(WRAPPER_ELEMENT);
     wrapperEl.style.display = 'grid';
     wrapperEl.style.position = 'absolute';
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
     });
-    targetEl.setAttribute(HAS_WRAPPER_ATTRIBUTE, '');
     targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
     wrapperEl.appendChild(targetEl);
   }
