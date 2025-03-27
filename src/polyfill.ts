@@ -145,7 +145,7 @@ export interface GetPixelValueOpts {
   anchorRect?: Rect;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
-  fallback: string;
+  fallback?: string | null;
 }
 
 export const getPixelValue = async ({
@@ -154,7 +154,7 @@ export const getPixelValue = async ({
   anchorRect,
   anchorSide,
   anchorSize,
-  fallback,
+  fallback = null,
 }: GetPixelValueOpts) => {
   if (!((anchorSize || anchorSide !== undefined) && targetEl && anchorRect)) {
     return fallback;
@@ -287,6 +287,18 @@ export const getPixelValue = async ({
   return fallback;
 };
 
+const isPositionAreaDeclaration = (
+  value: AnchorFunction | PositionAreaDeclaration,
+): value is PositionAreaDeclaration => {
+  return 'positionArea' in value;
+};
+
+const isAnchorFunction = (
+  value: AnchorFunction | PositionAreaDeclaration,
+): value is AnchorFunction => {
+  return 'uuid' in value;
+};
+
 async function applyAnchorPositions(
   declarations: AnchorFunctionDeclaration,
   useAnimationFrame = false,
@@ -301,7 +313,7 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if ('positionArea' in anchorValue && property === 'position-area') {
+        if (isPositionAreaDeclaration(anchorValue)) {
           const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
@@ -314,8 +326,6 @@ async function applyAnchorPositions(
               targetProperty: targetProperty,
               anchorRect: anchorRect,
               anchorSide: inset,
-              anchorSize: anchorValue.anchorSize,
-              fallback: anchorValue.fallbackValue,
             });
           };
 
@@ -408,7 +418,7 @@ async function applyAnchorPositions(
             { animationFrame: useAnimationFrame },
           );
         }
-      } else {
+      } else if (isAnchorFunction(anchorValue)) {
         // Use fallback value
         const resolved = await getPixelValue({
           targetProperty: property,
