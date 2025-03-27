@@ -193,15 +193,17 @@
       </h2>
       <div style="position: relative" class="demo-elements tight">
         <div class="anchor">Anchor</div>
-        <div class="target spanall-left" style="align-self: var(--position-area-align-self) safe">
+        <div
+          class="target spanall-left"
+          style="align-self: var(--position-area-align-self) safe"
+        >
           Target with longer content that might line wrap
         </div>
       </div>
       <p>
-        If the target overflows the containing block,
-        and the target should be shifted to the start of the containing block,
-        add an inline style to add <code>safe</code> overflow alignment
-        for the impacted axis.
+        If the target overflows the containing block, and the target should be
+        shifted to the start of the containing block, add an inline style to add
+        <code>safe</code> overflow alignment for the impacted axis.
       </p>
       <code>style="align-self: var(--position-area-align-self) safe"</code>
     </section>
@@ -295,15 +297,14 @@
     <section class="position-area-demo-item" id="cascade">
       <h2>
         <a href="#cascade" aria-hidden="true">🔗</a>
-        <code>cascade should be respected ❌</code>
+        <code>cascade should be respected  ✅</code>
       </h2>
       <div class="demo-elements cascade">
-        <div>
-          <div class="anchor">start</div>
-          <div class="target" id="cascade-target">Target</div>
-        </div>
+        <div class="anchor">start</div>
+        <div class="target" id="cascade-target">Target</div>
       </div>
-      <p>Should be <code>right top</code>.</p>
+      <p>Should be <code>right top</code>. Also has <code>right bottom</code>
+      applied, with less specificity.</p>
     </section>
 
     <section id="sponsor">

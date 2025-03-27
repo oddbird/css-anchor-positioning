@@ -105,7 +105,7 @@
   position-area: right top;
 }
 
-.show-wrapper [data-anchor-position-area] {
+.show-wrapper polyfill-position-area {
   background: repeating-linear-gradient(45deg, #ccc 0 5px, transparent 0 10px);
   outline: 1pt dotted var(--brand-orange);
 }

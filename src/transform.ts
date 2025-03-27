@@ -36,10 +36,17 @@ export async function transformCSS(
         const promise = new Promise((res) => {
           link.onload = res;
         });
-        el.insertAdjacentElement('beforebegin', link);
-        // Wait for new stylesheet to be loaded
-        await promise;
-        el.remove();
+        if (el.parentElement) {
+          el.insertAdjacentElement('beforebegin', link);
+          // Wait for new stylesheet to be loaded
+          await promise;
+          el.remove();
+        } else {
+          link.rel = 'stylesheet';
+          document.head.insertAdjacentElement('beforeend', link);
+          // Wait for new stylesheet to be loaded
+          await promise;
+        }
         updatedObject.el = link;
       } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles

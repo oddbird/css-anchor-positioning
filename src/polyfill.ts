@@ -18,7 +18,11 @@ import {
   type PositionAreaDeclaration,
   type TryBlock,
 } from './parse.js';
-import { type InsetValue } from './position-area.js';
+import {
+  type InsetValue,
+  POSITION_AREA_CASCADE_PROPERTY,
+  POSITION_AREA_WRAPPER_ATTRIBUTE,
+} from './position-area.js';
 import {
   type AnchorSide,
   type AnchorSize,
@@ -297,7 +301,7 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if ('positionArea' in anchorValue) {
+        if ('positionArea' in anchorValue && property === 'position-area') {
           const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
@@ -319,6 +323,13 @@ async function applyAnchorPositions(
             anchor,
             wrapper,
             async () => {
+              // Apply the `position-area` value based on the cascade
+              const appliedId = getCSSPropertyValue(
+                target,
+                POSITION_AREA_CASCADE_PROPERTY,
+              );
+              wrapper.setAttribute(POSITION_AREA_WRAPPER_ATTRIBUTE, appliedId);
+
               const rects = await platform.getElementRects({
                 reference: anchor,
                 floating: wrapper,
@@ -348,28 +359,28 @@ async function applyAnchorPositions(
               );
 
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-top`,
+                `${anchorValue.targetUUID}-top`,
                 topInset || null,
               );
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-left`,
+                `${anchorValue.targetUUID}-left`,
                 leftInset || null,
               );
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-right`,
+                `${anchorValue.targetUUID}-right`,
                 rightInset || null,
               );
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-bottom`,
+                `${anchorValue.targetUUID}-bottom`,
                 bottomInset || null,
               );
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-justify-self`,
-                anchorValue!.positionArea!.alignments.inline,
+                `${anchorValue.targetUUID}-justify-self`,
+                anchorValue.positionArea.alignments.inline,
               );
               root.style.setProperty(
-                `${anchorValue.positionArea.uuid}-align-self`,
-                anchorValue!.positionArea!.alignments.block,
+                `${anchorValue.targetUUID}-align-self`,
+                anchorValue.positionArea.alignments.block,
               );
             },
             { animationFrame: useAnimationFrame },

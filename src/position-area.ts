@@ -1,5 +1,39 @@
+// How this works:
+
+// As we walk the AST, we parse each `position-area` declaration, and determine
+// how it would be applied. We store a selectorUUID for each declaration, and
+// add a custom property to the selector's block called `--pa-cascade-property`.
+// When we apply the polyfill, we check the value of `--pa-cascade-property` on
+// the target to determine which declaration should win and apply those rules.
+
+// Because each declaration may apply to multiple targets, and the generated
+// containing block for each target may be different, we create a targetUUID for
+// each element targeted by a selector. This is the UUID that is used to
+// generate the inset and alignment values in polyfill.ts that are applied to
+// the root element.
+
+// The rules are created in a new stylesheet that matches the selectorUUID that
+// won the cascade and the targetUUID. This stylesheet maps the properties set
+// on the root element to `--pa-value-*:`.
+
+// Each target is wrapped with a `polyfill-position-area` element. It sets its
+// inset values from `--pa-value-*` values. The `justify-self` and `align-self`
+// properties are mapped on the element itself.
+
 import { type Block } from 'css-tree';
 import { nanoid } from 'nanoid';
+
+// Set this value on a target as a sibling to a position area declaration. Then
+// check it to determine which position area declaration should win, if there
+// are multiple.
+export const POSITION_AREA_CASCADE_PROPERTY = '--pa-cascade-property';
+
+// Set this as an attribute on a wrapper with the uuid of the winning
+// `POSITION_AREA_CASCADE_PROPERTY` as the value.
+export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
+
+const HAS_WRAPPER_ATTRIBUTE = 'data-position-area-has-wrapper';
+const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
 
 export type PositionAreaGridValue = 0 | 1 | 2 | 3;
 const POSITION_AREA_SPANS: Record<
@@ -240,7 +274,7 @@ export interface PositionAreaData {
   insets: AxisInfo<[InsetValue, InsetValue]>;
   alignments: AxisInfo<'start' | 'end' | 'center'>;
   changed: boolean;
-  uuid: string;
+  selectorUUID: string;
 }
 
 export function parsePositionAreaValue(
@@ -280,7 +314,7 @@ export function parsePositionAreaValue(
     block: POSITION_AREA_SPANS[positionAreas.block],
     inline: POSITION_AREA_SPANS[positionAreas.inline],
   };
-  const uuid = `--anchor-position-area-${nanoid(12)}`;
+  const selectorUUID = `--pa-declaration-${nanoid(12)}`;
 
   [
     // Insets are applied to a wrapping element
@@ -290,9 +324,15 @@ export function parsePositionAreaValue(
     block.children.appendData({
       type: 'Declaration',
       property: prop,
-      value: { type: 'Raw', value: `var(--position-area-${prop})` },
+      value: { type: 'Raw', value: `var(--pa-value-${prop})` },
       important: false,
     });
+  });
+  block.children.appendData({
+    type: 'Declaration',
+    property: POSITION_AREA_CASCADE_PROPERTY,
+    value: { type: 'Raw', value: selectorUUID },
+    important: false,
   });
 
   const insets = getInsets(grid);
@@ -304,30 +344,49 @@ export function parsePositionAreaValue(
     values: positionAreas,
     grid,
     changed: true,
-    uuid,
+    selectorUUID,
     insets,
     alignments,
   };
 }
 
-export function applyPositionAreaInlineStyles(
-  el: HTMLElement,
-  uuid: string,
-): void {
-  const style = [
-    'top',
-    'left',
-    'right',
-    'bottom',
-    'inline-size',
-    'block-size',
-    'justify-self',
-    'align-self',
-  ].reduce(
-    (acc, prop) => {
-      return acc + `--position-area-${prop}: var(${uuid}-${prop});`;
-    },
-    el.getAttribute('style') || '',
+export function wrapperForPositionedElement(
+  targetEl: HTMLElement,
+  targetUUID: string,
+): HTMLElement {
+  let wrapperEl: HTMLElement;
+  if (targetEl.hasAttribute(HAS_WRAPPER_ATTRIBUTE)) {
+    wrapperEl = targetEl.parentElement as HTMLElement;
+  } else {
+    wrapperEl = document.createElement('polyfill-position-area');
+    wrapperEl.style.display = 'grid';
+    wrapperEl.style.position = 'absolute';
+    ['top', 'left', 'right', 'bottom'].forEach((prop) => {
+      wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
+    });
+    targetEl.setAttribute(HAS_WRAPPER_ATTRIBUTE, '');
+    targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
+    wrapperEl.appendChild(targetEl);
+  }
+  // Wrapper can be be reused by multiple declarations, so set all as boolean
+  // attributes instead of values.
+  wrapperEl.setAttribute(
+    `${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}`,
+    '',
   );
-  el.setAttribute('style', style);
+
+  return wrapperEl;
+}
+
+export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
+  return `
+    [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
+      --pa-value-top: var(${targetUUID}-top);
+      --pa-value-left: var(${targetUUID}-left);
+      --pa-value-right: var(${targetUUID}-right);
+      --pa-value-bottom: var(${targetUUID}-bottom);
+      --pa-value-justify-self: var(${targetUUID}-justify-self);
+      --pa-value-align-self: var(${targetUUID}-align-self);
+    }
+  `.replaceAll('\n', '');
 }

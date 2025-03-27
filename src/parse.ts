@@ -19,9 +19,10 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
-  applyPositionAreaInlineStyles,
+  activeWrapperStyles,
   parsePositionAreaValue,
   type PositionAreaData,
+  wrapperForPositionedElement,
 } from './position-area.js';
 import {
   type AcceptedPositionTryProperty,
@@ -72,9 +73,14 @@ export type AnchorFunctionDeclaration = Partial<
 // `value` is an object with all anchor-function declarations on that element
 type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
-export interface PositionAreaDeclaration extends AnchorFunction {
+export interface PositionAreaDeclaration {
   positionArea: PositionAreaData;
   wrapperEl?: HTMLElement | null;
+  targetEl?: HTMLElement | null;
+  anchorEl?: HTMLElement | PseudoElement | null;
+  anchorName?: string;
+  customPropName?: string;
+  targetUUID: string;
 }
 type PositionAreaDeclarations = Record<string, PositionAreaDeclaration>;
 
@@ -272,7 +278,7 @@ function getPositionAreaData(node: CssNode, block: Block | null) {
 
 async function getAnchorEl(
   targetEl: HTMLElement | null,
-  anchorObj: AnchorFunction,
+  anchorObj: AnchorFunction | PositionAreaDeclaration,
 ) {
   let anchorName = anchorObj.anchorName;
   const customPropName = anchorObj.customPropName;
@@ -743,48 +749,42 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
-  for (const [targetSel, positions] of Object.entries(positionAreas) as [
-    string,
-    PositionAreaDeclaration,
-  ][]) {
+  const positionAreaMappingStyleElement: StyleData = {
+    el: document.createElement('link'),
+    changed: false,
+    css: '',
+  };
+  styleData.push(positionAreaMappingStyleElement);
+  for (const [targetSel, positions] of Object.entries(positionAreas)) {
     const targets: NodeListOf<HTMLElement> =
       document.querySelectorAll(targetSel);
-    // TODO: Add support for position fallback
-
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element
-      const positionAreaUUID = `--position-area-${nanoid(12)}`;
+      const targetUUID = `--pa-target-${nanoid(12)}`;
       const anchorObj = {
-        uuid: `--anchor-${nanoid(12)}`,
-        positionArea: { ...positions.positionArea, uuid: positionAreaUUID },
+        targetUUID,
+        positionArea: { ...positions.positionArea },
         fallbackValue: '',
       };
 
-      const wrapperEl = document.createElement('div');
-      wrapperEl.style.display = 'grid';
-      wrapperEl.style.position = 'absolute';
-      wrapperEl.setAttribute('data-anchor-position-area', positionAreaUUID);
-      targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
-      wrapperEl.appendChild(targetEl);
-      ['top', 'left', 'right', 'bottom'].forEach((prop) => {
-        wrapperEl.style.setProperty(prop, `var(${positionAreaUUID}-${prop})`);
-      });
-
-      // TODO- do these need to be added to inlineStyles as well?
-      applyPositionAreaInlineStyles(targetEl, positionAreaUUID);
-
+      const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
+      positionAreaMappingStyleElement.css += activeWrapperStyles(
+        targetUUID,
+        positions.positionArea.selectorUUID,
+      );
+      positionAreaMappingStyleElement.changed = true;
       const anchorEl = await getAnchorEl(targetEl, anchorObj);
       const uuid = `--anchor-${nanoid(12)}`;
       // Store new mapping, in case inline styles have changed and will
       // be overwritten -- in which case new mappings will be re-added
       inlineStyles.set(targetEl, {
         ...(inlineStyles.get(targetEl) ?? {}),
-        [anchorObj.uuid]: uuid,
+        [anchorObj.targetUUID]: targetUUID,
       });
       // Point original uuid to new uuid
       targetEl.setAttribute(
         'style',
-        `${anchorObj.uuid}: var(${uuid}); ${
+        `${anchorObj.targetUUID}: var(${uuid}); ${
           targetEl.getAttribute('style') ?? ''
         }`,
       );
@@ -796,9 +796,8 @@ export async function parseCSS(styleData: StyleData[]) {
         declarations: {
           ...validPositions[targetSel]?.declarations,
           [targetProperty]: [
-            ...(validPositions[targetSel]?.declarations?.[
-              targetProperty as InsetProperty
-            ] ?? []),
+            ...(validPositions[targetSel]?.declarations?.[targetProperty] ??
+              []),
             { ...anchorObj, anchorEl, targetEl, wrapperEl, uuid },
           ],
         },
