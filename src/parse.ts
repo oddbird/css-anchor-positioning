@@ -78,15 +78,15 @@ export interface PositionAreaDeclaration {
   wrapperEl?: HTMLElement | null;
   targetEl?: HTMLElement | null;
   anchorEl?: HTMLElement | PseudoElement | null;
-  anchorName?: string;
-  customPropName?: string;
   targetUUID: string;
 }
-type PositionAreaDeclarations = Record<string, PositionAreaDeclaration>;
+
+// `key` is the target element selector
+// `value` is the position-area data for that property
+type PositionAreaDeclarations = Record<string, PositionAreaData[]>;
 
 export interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
-  positionAreas?: PositionAreaDeclaration[];
   fallbacks?: TryBlock[];
   order?: PositionTryOrder;
 }
@@ -278,10 +278,10 @@ function getPositionAreaData(node: CssNode, block: Block | null) {
 
 async function getAnchorEl(
   targetEl: HTMLElement | null,
-  anchorObj: AnchorFunction | PositionAreaDeclaration,
+  anchorObj?: AnchorFunction,
 ) {
-  let anchorName = anchorObj.anchorName;
-  const customPropName = anchorObj.customPropName;
+  let anchorName = anchorObj?.anchorName;
+  const customPropName = anchorObj?.customPropName;
   if (targetEl && !anchorName) {
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
@@ -364,10 +364,10 @@ export async function parseCSS(styleData: StyleData[]) {
 
       if (positionAreaData) {
         for (const { selector } of selectors) {
-          positionAreas[selector] = {
-            ...positionAreas[selector],
-            positionArea: positionAreaData,
-          };
+          positionAreas[selector] = [
+            ...(positionAreas[selector] ?? []),
+            positionAreaData,
+          ];
         }
       }
       if (updated || positionAreaData?.changed) {
@@ -760,48 +760,34 @@ export async function parseCSS(styleData: StyleData[]) {
       document.querySelectorAll(targetSel);
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element
-      const targetUUID = `--pa-target-${nanoid(12)}`;
-      const anchorObj = {
-        targetUUID,
-        positionArea: { ...positions.positionArea },
-        fallbackValue: '',
-      };
-
-      const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
-      positionAreaMappingStyleElement.css += activeWrapperStyles(
-        targetUUID,
-        positions.positionArea.selectorUUID,
-      );
-      positionAreaMappingStyleElement.changed = true;
-      const anchorEl = await getAnchorEl(targetEl, anchorObj);
-      const uuid = `--anchor-${nanoid(12)}`;
-      // Store new mapping, in case inline styles have changed and will
-      // be overwritten -- in which case new mappings will be re-added
-      inlineStyles.set(targetEl, {
-        ...(inlineStyles.get(targetEl) ?? {}),
-        [anchorObj.targetUUID]: targetUUID,
-      });
-      // Point original uuid to new uuid
-      targetEl.setAttribute(
-        'style',
-        `${anchorObj.targetUUID}: var(${uuid}); ${
-          targetEl.getAttribute('style') ?? ''
-        }`,
-      );
-      const targetProperty = 'position-area';
-      // Populate new data for each anchor/target combo
-      validPositions[targetSel] = {
-        ...validPositions[targetSel],
-        positionAreas: [positions],
-        declarations: {
-          ...validPositions[targetSel]?.declarations,
-          [targetProperty]: [
-            ...(validPositions[targetSel]?.declarations?.[targetProperty] ??
-              []),
-            { ...anchorObj, anchorEl, targetEl, wrapperEl, uuid },
-          ],
-        },
-      };
+      const anchorEl = await getAnchorEl(targetEl);
+      for (const positionData of positions) {
+        const targetUUID = `--pa-target-${nanoid(12)}`;
+        const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
+        positionAreaMappingStyleElement.css += activeWrapperStyles(
+          targetUUID,
+          positionData.selectorUUID,
+        );
+        positionAreaMappingStyleElement.changed = true;
+        // Populate new data for each anchor/target combo
+        validPositions[targetSel] = {
+          ...validPositions[targetSel],
+          declarations: {
+            ...validPositions[targetSel]?.declarations,
+            'position-area': [
+              ...(validPositions[targetSel]?.declarations?.['position-area'] ??
+                []),
+              {
+                targetUUID,
+                positionArea: positionData,
+                anchorEl,
+                targetEl,
+                wrapperEl,
+              } as PositionAreaDeclaration,
+            ],
+          },
+        };
+      }
     }
   }
 
