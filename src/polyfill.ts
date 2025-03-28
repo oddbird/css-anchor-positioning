@@ -594,7 +594,7 @@ export async function polyfill(
   let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
 
   // pre parse CSS styles that we need to cascade
-  const cascadeCausedChanges = await cascadeCSS(styleData);
+  const cascadeCausedChanges = cascadeCSS(styleData);
   if (cascadeCausedChanges) {
     styleData = await transformCSS(styleData);
   }
