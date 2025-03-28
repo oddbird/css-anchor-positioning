@@ -15,8 +15,14 @@ import {
   type AnchorFunctionDeclaration,
   type AnchorPositions,
   parseCSS,
+  type PositionAreaDeclaration,
   type TryBlock,
 } from './parse.js';
+import {
+  type InsetValue,
+  POSITION_AREA_CASCADE_PROPERTY,
+  POSITION_AREA_WRAPPER_ATTRIBUTE,
+} from './position-area.js';
 import {
   type AnchorSide,
   type AnchorSize,
@@ -135,11 +141,11 @@ const getMargins = (el: HTMLElement) => {
 
 export interface GetPixelValueOpts {
   targetEl?: HTMLElement;
-  targetProperty: InsetProperty | SizingProperty;
+  targetProperty: InsetProperty | SizingProperty | 'position-area';
   anchorRect?: Rect;
   anchorSide?: AnchorSide;
   anchorSize?: AnchorSize;
-  fallback: string;
+  fallback?: string | null;
 }
 
 export const getPixelValue = async ({
@@ -148,7 +154,7 @@ export const getPixelValue = async ({
   anchorRect,
   anchorSide,
   anchorSize,
-  fallback,
+  fallback = null,
 }: GetPixelValueOpts) => {
   if (!((anchorSize || anchorSide !== undefined) && targetEl && anchorRect)) {
     return fallback;
@@ -281,6 +287,18 @@ export const getPixelValue = async ({
   return fallback;
 };
 
+const isPositionAreaDeclaration = (
+  value: AnchorFunction | PositionAreaDeclaration,
+): value is PositionAreaDeclaration => {
+  return 'positionArea' in value;
+};
+
+const isAnchorFunction = (
+  value: AnchorFunction | PositionAreaDeclaration,
+): value is AnchorFunction => {
+  return 'uuid' in value;
+};
+
 async function applyAnchorPositions(
   declarations: AnchorFunctionDeclaration,
   useAnimationFrame = false,
@@ -288,35 +306,119 @@ async function applyAnchorPositions(
   const root = document.documentElement;
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
-    InsetProperty | SizingProperty,
-    AnchorFunction[],
+    InsetProperty | SizingProperty | 'position-area',
+    (AnchorFunction | PositionAreaDeclaration)[],
   ][]) {
     for (const anchorValue of anchorValues) {
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        autoUpdate(
-          anchor,
-          target,
-          async () => {
-            const rects = await platform.getElementRects({
-              reference: anchor,
-              floating: target,
-              strategy: 'absolute',
+        if (isPositionAreaDeclaration(anchorValue)) {
+          const wrapper = anchorValue.wrapperEl!;
+          const getPositionAreaPixelValue = async (
+            inset: InsetValue,
+            targetProperty: GetPixelValueOpts['targetProperty'],
+            anchorRect: GetPixelValueOpts['anchorRect'],
+          ) => {
+            if (inset === 0) return '0px';
+            return await getPixelValue({
+              targetEl: wrapper,
+              targetProperty: targetProperty,
+              anchorRect: anchorRect,
+              anchorSide: inset,
             });
-            const resolved = await getPixelValue({
-              targetEl: target,
-              targetProperty: property,
-              anchorRect: rects.reference,
-              anchorSide: anchorValue.anchorSide,
-              anchorSize: anchorValue.anchorSize,
-              fallback: anchorValue.fallbackValue,
-            });
-            root.style.setProperty(anchorValue.uuid, resolved);
-          },
-          { animationFrame: useAnimationFrame },
-        );
-      } else {
+          };
+
+          autoUpdate(
+            anchor,
+            wrapper,
+            async () => {
+              // Apply the `position-area` value based on the cascade
+              const appliedId = getCSSPropertyValue(
+                target,
+                POSITION_AREA_CASCADE_PROPERTY,
+              );
+              wrapper.setAttribute(POSITION_AREA_WRAPPER_ATTRIBUTE, appliedId);
+
+              const rects = await platform.getElementRects({
+                reference: anchor,
+                floating: wrapper,
+                strategy: 'absolute',
+              });
+              const insets = anchorValue.positionArea.insets;
+
+              const topInset = await getPositionAreaPixelValue(
+                insets.block[0],
+                'top',
+                rects.reference,
+              );
+              const bottomInset = await getPositionAreaPixelValue(
+                insets.block[1],
+                'bottom',
+                rects.reference,
+              );
+              const leftInset = await getPositionAreaPixelValue(
+                insets.inline[0],
+                'left',
+                rects.reference,
+              );
+              const rightInset = await getPositionAreaPixelValue(
+                insets.inline[1],
+                'right',
+                rects.reference,
+              );
+
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-top`,
+                topInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-left`,
+                leftInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-right`,
+                rightInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-bottom`,
+                bottomInset || null,
+              );
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-justify-self`,
+                anchorValue.positionArea.alignments.inline,
+              );
+              root.style.setProperty(
+                `${anchorValue.targetUUID}-align-self`,
+                anchorValue.positionArea.alignments.block,
+              );
+            },
+            { animationFrame: useAnimationFrame },
+          );
+        } else {
+          autoUpdate(
+            anchor,
+            target,
+            async () => {
+              const rects = await platform.getElementRects({
+                reference: anchor,
+                floating: target,
+                strategy: 'absolute',
+              });
+              const resolved = await getPixelValue({
+                targetEl: target,
+                targetProperty: property,
+                anchorRect: rects.reference,
+                anchorSide: anchorValue.anchorSide,
+                anchorSize: anchorValue.anchorSize,
+                fallback: anchorValue.fallbackValue,
+              });
+              root.style.setProperty(anchorValue.uuid, resolved);
+            },
+            { animationFrame: useAnimationFrame },
+          );
+        }
+      } else if (isAnchorFunction(anchorValue)) {
         // Use fallback value
         const resolved = await getPixelValue({
           targetProperty: property,
@@ -429,7 +531,8 @@ async function applyPositionFallbacks(
 
 async function position(rules: AnchorPositions, useAnimationFrame = false) {
   for (const pos of Object.values(rules)) {
-    // Handle `anchor()` and `anchor-size()` functions...
+    // Handle `anchor()` and `anchor-size()` functions and `position-area`
+    // properties..
     await applyAnchorPositions(pos.declarations ?? {}, useAnimationFrame);
   }
 
@@ -491,7 +594,7 @@ export async function polyfill(
   let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
 
   // pre parse CSS styles that we need to cascade
-  const cascadeCausedChanges = await cascadeCSS(styleData);
+  const cascadeCausedChanges = cascadeCSS(styleData);
   if (cascadeCausedChanges) {
     styleData = await transformCSS(styleData);
   }

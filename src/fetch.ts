@@ -58,6 +58,7 @@ async function fetchLinkedStylesheets(
 }
 
 const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
+const ELEMENTS_WITH_INLINE_POSITION_AREA = '[style*="position-area"]';
 // Searches for all elements with inline style attributes that include `anchor`.
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
@@ -67,10 +68,16 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
     ? elements.filter(
         (el) =>
           el instanceof HTMLElement &&
-          el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+          (el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY) ||
+            el.matches(ELEMENTS_WITH_INLINE_POSITION_AREA)),
       )
     : Array.from(
-        document.querySelectorAll(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY),
+        document.querySelectorAll(
+          [
+            ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY,
+            ELEMENTS_WITH_INLINE_POSITION_AREA,
+          ].join(','),
+        ),
       );
   const inlineStyles: Partial<StyleData>[] = [];
 
