@@ -1,8 +1,10 @@
 import type { Rule, StyleSheet } from 'css-tree';
 
 import {
+  activeWrapperStyles,
   axisForPositionAreaValue,
   parsePositionAreaValue,
+  wrapperForPositionedElement,
 } from '../../src/position-area.js';
 import { getAST } from '../../src/utils.js';
 
@@ -124,6 +126,44 @@ describe('position-area', () => {
       const res = parsePositionAreaValue(input, createBlock())!.alignments;
       expect(res.block).toEqual(block);
       expect(res.inline).toEqual(inline);
+    });
+  });
+
+  describe('wrapperForPositionedElement', () => {
+    let element: HTMLElement;
+    beforeEach(() => {
+      element = document.createElement('div');
+    });
+    it('creates a wrapper', () => {
+      const wrapper = wrapperForPositionedElement(element, 'uuid');
+      expect(wrapper.tagName).toBe('POLYFILL-POSITION-AREA');
+      const style = getComputedStyle(wrapper);
+      expect(style.position).toBe('absolute');
+      expect(style.display).toBe('grid');
+      expect(style.top).toBe(`var(--pa-value-top)`);
+      expect(style.bottom).toBe(`var(--pa-value-bottom)`);
+      expect(style.left).toBe(`var(--pa-value-left)`);
+      expect(style.right).toBe(`var(--pa-value-right)`);
+      expect(wrapper.getAttribute('data-pa-wrapper-for-uuid')).toBeDefined();
+    });
+    it('does not rewrap an element', () => {
+      const wrapper = wrapperForPositionedElement(element, 'uuid1');
+      const secondWrapper = wrapperForPositionedElement(element, 'uuid2');
+      expect(
+        secondWrapper.getAttribute('data-pa-wrapper-for-uuid1'),
+      ).toBeDefined();
+      expect(
+        secondWrapper.getAttribute('data-pa-wrapper-for-uuid2'),
+      ).toBeDefined();
+      expect(wrapper).toBe(secondWrapper);
+    });
+  });
+
+  describe('activeWrapperStyles', () => {
+    it('returns the active styles', () => {
+      expect(
+        activeWrapperStyles('targetUUID', 'selectorUUID'),
+      ).toMatchSnapshot();
     });
   });
 });

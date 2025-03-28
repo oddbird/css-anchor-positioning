@@ -53,6 +53,13 @@
         .addEventListener('click', () => {
           document.body.classList.toggle('show-wrapper');
         });
+
+      document
+        .getElementById('switch-cascade')
+        .addEventListener('click', () => {
+          const target = document.getElementById('cascade');
+          target.classList.toggle('cascade-override');
+        });
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
@@ -240,6 +247,7 @@
       <div
         style="position: relative; border: 1pt dotted var(--border)"
         class="demo-elements"
+        data-testid="container1"
       >
         <div class="anchor">Anchor</div>
         <div class="target shared-right-bottom">Target</div>
@@ -247,6 +255,7 @@
       <div
         style="position: relative; border: 1pt dotted var(--border)"
         class="demo-elements semi-tight"
+        data-testid="container2"
       >
         <div class="anchor">Anchor</div>
         <div class="target shared-right-bottom">Target</div>
@@ -270,6 +279,7 @@
       <p>
         Should be <code>right top</code>. Also has
         <code>right bottom</code> applied, with less specificity.
+        <button type="button" id="switch-cascade">Switch Cascade</button>
       </p>
     </section>
 
