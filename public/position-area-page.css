@@ -97,12 +97,16 @@
   position-area: right bottom;
 }
 
-.cascade .target {
-  position-area: right bottom;
+#cascade{
+  position: relative;
 }
 
 #cascade-target {
   position-area: right top;
+}
+
+.cascade .target, .cascade-override #cascade-target {
+  position-area: right bottom;
 }
 
 .show-wrapper polyfill-position-area {

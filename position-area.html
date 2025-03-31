@@ -53,6 +53,11 @@
         .addEventListener('click', () => {
           document.body.classList.toggle('show-wrapper');
         });
+      document
+        .getElementById('switch-cascade')
+        .addEventListener('click', () => {
+          document.body.classList.toggle('cascade-override');
+        });
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
@@ -65,7 +70,7 @@
   </head>
   <body>
     <header>
-      <h1>CSS Anchor Positioning Polyfill</h1>
+      <h1><a href="/">CSS Anchor Positioning Polyfill</a></h1>
       <nav>
         <span> See also: </span>
         <a
@@ -95,7 +100,23 @@
       </button>
     </header>
     <section>
-      <h2>Anchoring Elements Using CSS</h2>
+      <h2>Placing elements with <code>position-area</code></h2>
+      <p>
+        The <code>position-area</code> property places an element in relation to
+        its anchor, using 1 or 2 keywords to define the position on each axis.
+      </p>
+      <p>
+        In browsers that support <code>position-area</code>, this creates a new
+        containing block for the positioned element based on the position of the
+        anchor. The polyfill achieves this by wrapping the positioned element in
+        a <code>&lt;POLYFILL-POSITION-AREA&gt;</code> element. Be aware that
+        this may impact selectors that target the positioned element using
+        direct child or sibling selectors.
+      </p>
+      <p>
+        This approach also causes some differences with content that is shifted
+        to stay within its containing block in supporting browsers.
+      </p>
       <p>
         <strong>Note: </strong>We strive to keep the polyfill up-to-date with
         ongoing changes to the spec, and we welcome
@@ -186,28 +207,6 @@
       </div>
     </section>
 
-    <section class="position-area-demo-item" id="no-block-space">
-      <h2>
-        <a href="#no-block-space" aria-hidden="true">🔗</a>
-        <code>no block space around anchor, span-all left ❓</code>
-      </h2>
-      <div style="position: relative" class="demo-elements tight">
-        <div class="anchor">Anchor</div>
-        <div
-          class="target spanall-left"
-          style="align-self: var(--position-area-align-self) safe"
-        >
-          Target with longer content that might line wrap
-        </div>
-      </div>
-      <p>
-        If the target overflows the containing block, and the target should be
-        shifted to the start of the containing block, add an inline style to add
-        <code>safe</code> overflow alignment for the impacted axis.
-      </p>
-      <code>style="align-self: var(--position-area-align-self) safe"</code>
-    </section>
-
     <section class="position-area-demo-item" id="no-block-space-top">
       <h2>
         <a href="#no-block-space-top" aria-hidden="true">🔗</a>
@@ -271,9 +270,37 @@
       </div>
       <p>
         Should be <code>right top</code>. Also has
-        <code>right bottom</code> applied, with less specificity.
+        <code>right bottom</code> applied, with less specificity. When the
+        cascaded value changes, the positioned element will only update to
+        reflect the changes the next time the polyfill recalulates the
+        positions, for instance, on scroll.
         <button type="button" id="switch-cascade">Switch Cascade</button>
       </p>
+    </section>
+
+    <section class="position-area-demo-item" id="no-block-space">
+      <h2>
+        <a href="#no-block-space" aria-hidden="true">🔗</a>
+        <code>no block space around anchor, span-all left ❓</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target spanall-left"
+          style="align-self: var(--position-area-align-self) safe"
+        >
+          Target with longer content that might line wrap
+        </div>
+      </div>
+      <p>
+        If the target overflows the containing block, and the target is shifted
+        to the start of the containing block in browsers that support CSS anchor
+        positioning, you can approximate the same behavior by adding an inline
+        style to add <code>safe</code> overflow alignment for the impacted axis.
+        There is not a similar solution for content that supporting browsers
+        shift to the end of the containing block.
+      </p>
+      <code>style="align-self: var(--position-area-align-self) safe"</code>
     </section>
 
     <section class="position-area-demo-item" id="shifting">
