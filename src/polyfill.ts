@@ -287,7 +287,8 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-const isPositionAreaDeclaration = (
+// Use `isPostionAreaDeclaration` instead for type narrowing AST nodes.
+const isPositionAreaDeclarationObject = (
   value: AnchorFunction | PositionAreaDeclaration,
 ): value is PositionAreaDeclaration => {
   return 'positionArea' in value;
@@ -313,7 +314,7 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if (isPositionAreaDeclaration(anchorValue)) {
+        if (isPositionAreaDeclarationObject(anchorValue)) {
           const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
@@ -333,7 +334,10 @@ async function applyAnchorPositions(
             anchor,
             wrapper,
             async () => {
-              // Apply the `position-area` value based on the cascade
+              // Check which `position-area` declaration would win based on the
+              // cascade, and apply an attribute on the wrapper. This activates
+              // the generated CSS styles that map the inset and alignment
+              // values to their respective properties.
               const appliedId = getCSSPropertyValue(
                 target,
                 POSITION_AREA_CASCADE_PROPERTY,

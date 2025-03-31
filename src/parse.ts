@@ -1,5 +1,4 @@
 import type {
-  Block,
   CssNode,
   Declaration,
   FunctionNode,
@@ -20,7 +19,7 @@ import {
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
   activeWrapperStyles,
-  parsePositionAreaValue,
+  getPositionAreaData,
   type PositionAreaData,
   wrapperForPositionedElement,
 } from './position-area.js';
@@ -108,12 +107,6 @@ function isAnchorNameDeclaration(node: CssNode): node is DeclarationWithValue {
 
 function isAnchorScopeDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration' && node.property === 'anchor-scope';
-}
-
-function isPositionAreaDeclaration(
-  node: CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-area';
 }
 
 function isAnchorSizeFunction(node: CssNode | null): node is FunctionNode {
@@ -264,16 +257,6 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
     }
   }
   return {};
-}
-
-function getPositionAreaData(node: CssNode, block: Block | null) {
-  if (isPositionAreaDeclaration(node) && block) {
-    const areas = (node.value.children as List<Identifier>)
-      .toArray()
-      .map(({ name }) => name);
-    const parsed = parsePositionAreaValue(areas, block);
-    return parsed;
-  }
 }
 
 async function getAnchorEl(
@@ -757,12 +740,22 @@ export async function parseCSS(styleData: StyleData[]) {
     css: '',
   };
   styleData.push(positionAreaMappingStyleElement);
+
+  // We loop through each selector that has been used to apply a position-area
+  // declaration, and find all elements that match the selector. The same
+  // selector may be used twice for some reason, for instance:
+  //
+  // .foo { position-area: start}
+  // .foo { position-area: end}
+
   for (const [targetSel, positions] of Object.entries(positionAreas)) {
     const targets: NodeListOf<HTMLElement> =
       document.querySelectorAll(targetSel);
     for (const targetEl of targets) {
-      // For every target element, find a valid anchor element
+      // For every target element, find a valid anchor element.
       const anchorEl = await getAnchorEl(targetEl);
+      // For every position-area declaration with this selector, create a new
+      // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {
         const targetUUID = `--pa-target-${nanoid(12)}`;
         const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);

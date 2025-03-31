@@ -20,8 +20,11 @@
 // inset values from `--pa-value-*` values. The `justify-self` and `align-self`
 // properties are mapped on the element itself.
 
-import { type Block } from 'css-tree';
+import { type Block, type CssNode, type Identifier } from 'css-tree';
+import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
+
+import { type DeclarationWithValue } from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
 // check it to determine which position area declaration should win, if there
@@ -35,7 +38,7 @@ export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
 const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 
-export type PositionAreaGridValue = 0 | 1 | 2 | 3;
+type PositionAreaGridValue = 0 | 1 | 2 | 3;
 const POSITION_AREA_SPANS: Record<
   string,
   [PositionAreaGridValue, PositionAreaGridValue]
@@ -91,7 +94,7 @@ const POSITION_AREA_SPANS: Record<
   'span-self-start': [0, 2],
   'span-self-end': [1, 3],
 };
-export const POSITION_AREA_X = [
+const POSITION_AREA_X = [
   'left',
   'center',
   'right',
@@ -108,7 +111,7 @@ export const POSITION_AREA_X = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_Y = [
+const POSITION_AREA_Y = [
   'top',
   'center',
   'bottom',
@@ -125,7 +128,7 @@ export const POSITION_AREA_Y = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_BLOCK = [
+const POSITION_AREA_BLOCK = [
   'block-start',
   'center',
   'block-end',
@@ -134,7 +137,7 @@ export const POSITION_AREA_BLOCK = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_INLINE = [
+const POSITION_AREA_INLINE = [
   'inline-start',
   'center',
   'inline-end',
@@ -143,7 +146,7 @@ export const POSITION_AREA_INLINE = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_SELF_BLOCK = [
+const POSITION_AREA_SELF_BLOCK = [
   'self-block-start',
   'center',
   'self-block-end',
@@ -152,7 +155,7 @@ export const POSITION_AREA_SELF_BLOCK = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_SELF_INLINE = [
+const POSITION_AREA_SELF_INLINE = [
   'self-inline-start',
   'center',
   'self-inline-end',
@@ -161,7 +164,7 @@ export const POSITION_AREA_SELF_INLINE = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_SHORTHAND = [
+const POSITION_AREA_SHORTHAND = [
   'start',
   'center',
   'end',
@@ -170,7 +173,7 @@ export const POSITION_AREA_SHORTHAND = [
   'span-all',
 ] as string[];
 
-export const POSITION_AREA_SELF_SHORTHAND = [
+const POSITION_AREA_SELF_SHORTHAND = [
   'self-start',
   'center',
   'self-end',
@@ -277,10 +280,16 @@ export interface PositionAreaData {
   selectorUUID: string;
 }
 
-export function parsePositionAreaValue(
-  value: string[],
-  block: Block,
-): PositionAreaData | undefined {
+function isPositionAreaDeclaration(
+  node: CssNode,
+): node is DeclarationWithValue {
+  return node.type === 'Declaration' && node.property === 'position-area';
+}
+
+function parsePositionAreaValue(node: DeclarationWithValue) {
+  const value = (node.value.children as List<Identifier>)
+    .toArray()
+    .map(({ name }) => name);
   if (value.length === 1) {
     if (axisForPositionAreaValue(value[0]) === 'ambiguous') {
       value.push(value[0]);
@@ -288,8 +297,19 @@ export function parsePositionAreaValue(
       value.push('span-all');
     }
   }
+  return value as [string, string];
+}
 
-  if (!isValidPositionAreaValue(value as [string, string])) return undefined;
+export function getPositionAreaData(
+  node: CssNode,
+  block: Block | null,
+): PositionAreaData | undefined {
+  if (!(isPositionAreaDeclaration(node) && block)) return undefined;
+
+  const value = parsePositionAreaValue(node);
+  // If it's not a value value, we can ignore it.
+  if (!isValidPositionAreaValue(value)) return undefined;
+
   const positionAreas = {} as AxisInfo<string>;
   switch (axisForPositionAreaValue(value[0])) {
     case 'block':
