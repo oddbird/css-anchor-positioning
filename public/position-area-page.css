@@ -97,7 +97,7 @@
   position-area: right bottom;
 }
 
-#cascade{
+#cascade {
   position: relative;
 }
 
@@ -105,7 +105,8 @@
   position-area: right top;
 }
 
-.cascade .target, .cascade-override #cascade-target {
+.cascade .target,
+.cascade-override #cascade-target {
   position-area: right bottom;
 }
 
