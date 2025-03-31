@@ -38,6 +38,9 @@
             btn.innerText = 'Polyfill Applied';
             btn.setAttribute('disabled', '');
             console.log(rules);
+            const toggleWrapper = document.getElementById('toggle-wrapper');
+            toggleWrapper.removeAttribute('disabled');
+            toggleWrapper.innerText = 'Toggle Wrapper Visibility';
           }),
         );
       } else {
@@ -91,9 +94,6 @@
           rel="noopener noreferrer"
           >Draft Spec</a
         >
-        <button id="toggle-wrapper" type="button">
-          Toggle Wrapper Visibility
-        </button>
       </nav>
       <button id="apply-polyfill" data-button="apply-polyfill" type="button">
         Apply Polyfill
@@ -110,9 +110,12 @@
         containing block for the positioned element based on the position of the
         anchor. The polyfill achieves this by wrapping the positioned element in
         a <code>&lt;POLYFILL-POSITION-AREA&gt;</code> element. Be aware that
-        this may impact selectors that target the positioned element using
+        this may impact selectors that target  the positioned element using
         direct child or sibling selectors.
       </p>
+      <button id="toggle-wrapper" type="button" disabled>
+        Apply polyfill to enable wrapper visibility
+      </button> 
       <p>
         This approach also causes some differences with content that is shifted
         to stay within its containing block in supporting browsers.
