@@ -13,7 +13,7 @@ export async function transformCSS(
   cleanup = false,
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const { el, css, changed } of styleData) {
+  for (const { el, css, changed, created = false } of styleData) {
     const updatedObject: StyleData = { el, css, changed: false };
     if (changed) {
       if (el.tagName.toLowerCase() === 'style') {
@@ -36,12 +36,14 @@ export async function transformCSS(
         const promise = new Promise((res) => {
           link.onload = res;
         });
-        if (el.parentElement) {
+        if (!created) {
+          // This is an existing stylesheet, so we replace it.
           el.insertAdjacentElement('beforebegin', link);
           // Wait for new stylesheet to be loaded
           await promise;
           el.remove();
         } else {
+          // This is a new stylesheet, so we append it.
           link.rel = 'stylesheet';
           document.head.insertAdjacentElement('beforeend', link);
           // Wait for new stylesheet to be loaded

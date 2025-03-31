@@ -749,9 +749,11 @@ export async function parseCSS(styleData: StyleData[]) {
     }
   }
 
+  // Create a new stylesheet for the position-area mapping styles
   const positionAreaMappingStyleElement: StyleData = {
     el: document.createElement('link'),
     changed: false,
+    created: true,
     css: '',
   };
   styleData.push(positionAreaMappingStyleElement);
