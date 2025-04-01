@@ -19,6 +19,7 @@ import {
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
   activeWrapperStyles,
+  cascadedWrapperStyles,
   getPositionAreaData,
   type PositionAreaData,
   wrapperForPositionedElement,
@@ -759,9 +760,9 @@ export async function parseCSS(styleData: StyleData[]) {
       for (const positionData of positions) {
         const targetUUID = `--pa-target-${nanoid(12)}`;
         const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
-        positionAreaMappingStyleElement.css += activeWrapperStyles(
+        positionAreaMappingStyleElement.css += cascadedWrapperStyles(
+          targetSel,
           targetUUID,
-          positionData.selectorUUID,
         );
         positionAreaMappingStyleElement.changed = true;
         // Populate new data for each anchor/target combo
