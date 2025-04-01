@@ -410,7 +410,7 @@ export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
   `.replaceAll('\n', '');
 }
 
-export function cascadedWrapperStyles(selector: string, targetUUID: string){
+export function cascadedWrapperStyles(selector: string, targetUUID: string) {
   return `
   :where([${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}]):not(${selector}){
     --pa-value-top: var(${targetUUID}-top);
@@ -419,5 +419,5 @@ export function cascadedWrapperStyles(selector: string, targetUUID: string){
     --pa-value-bottom: var(${targetUUID}-bottom);
     --pa-value-justify-self: var(${targetUUID}-justify-self);
     --pa-value-align-self: var(${targetUUID}-align-self);
-}`
+}`;
 }

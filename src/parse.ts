@@ -18,7 +18,7 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
-  activeWrapperStyles,
+  // activeWrapperStyles,
   cascadedWrapperStyles,
   getPositionAreaData,
   type PositionAreaData,
