@@ -24,6 +24,7 @@ import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
 
+import { type PseudoElement } from './dom.js';
 import { type DeclarationWithValue } from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
@@ -39,60 +40,67 @@ const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
+enum WritingMode {
+  Logical = 'Logical',
+  LogicalSelf = 'LogicalSelf',
+  Physical = 'Physical',
+  PhysicalSelf = 'PhysicalSelf',
+  Irrelevant = 'Irrelevant',
+}
 const POSITION_AREA_SPANS: Record<
   string,
-  [PositionAreaGridValue, PositionAreaGridValue]
+  [PositionAreaGridValue, PositionAreaGridValue, WritingMode]
 > = {
-  left: [0, 1],
-  center: [1, 2],
-  right: [2, 3],
-  'span-left': [0, 2],
-  'span-right': [1, 3],
-  'x-start': [0, 1],
-  'x-end': [2, 3],
-  'span-x-start': [0, 2],
-  'span-x-end': [1, 3],
-  'x-self-start': [0, 1],
-  'x-self-end': [2, 3],
-  'span-x-self-start': [0, 2],
-  'span-x-self-end': [1, 3],
-  'span-all': [0, 3],
-  top: [0, 1],
-  bottom: [2, 3],
-  'span-top': [0, 2],
-  'span-bottom': [1, 3],
-  'y-start': [0, 1],
-  'y-end': [2, 3],
-  'span-y-start': [0, 2],
-  'span-y-end': [1, 3],
-  'y-self-start': [0, 1],
-  'y-self-end': [2, 3],
-  'span-y-self-start': [0, 2],
-  'span-y-self-end': [1, 3],
-  'block-start': [0, 1],
-  'block-end': [2, 3],
-  'span-block-start': [0, 2],
-  'span-block-end': [1, 3],
-  'inline-start': [0, 1],
-  'inline-end': [2, 3],
-  'span-inline-start': [0, 2],
-  'span-inline-end': [1, 3],
-  'self-block-start': [0, 1],
-  'self-block-end': [2, 3],
-  'span-self-block-start': [0, 2],
-  'span-self-block-end': [1, 3],
-  'self-inline-start': [0, 1],
-  'self-inline-end': [2, 3],
-  'span-self-inline-start': [0, 2],
-  'span-self-inline-end': [1, 3],
-  start: [0, 1],
-  end: [2, 3],
-  'span-start': [0, 2],
-  'span-end': [1, 3],
-  'self-start': [0, 1],
-  'self-end': [2, 3],
-  'span-self-start': [0, 2],
-  'span-self-end': [1, 3],
+  left: [0, 1, WritingMode.Irrelevant],
+  center: [1, 2, WritingMode.Irrelevant],
+  right: [2, 3, WritingMode.Irrelevant],
+  'span-left': [0, 2, WritingMode.Irrelevant],
+  'span-right': [1, 3, WritingMode.Irrelevant],
+  'x-start': [0, 1, WritingMode.Physical],
+  'x-end': [2, 3, WritingMode.Physical],
+  'span-x-start': [0, 2, WritingMode.Physical],
+  'span-x-end': [1, 3, WritingMode.Physical],
+  'x-self-start': [0, 1, WritingMode.PhysicalSelf],
+  'x-self-end': [2, 3, WritingMode.PhysicalSelf],
+  'span-x-self-start': [0, 2, WritingMode.PhysicalSelf],
+  'span-x-self-end': [1, 3, WritingMode.PhysicalSelf],
+  'span-all': [0, 3, WritingMode.Irrelevant],
+  top: [0, 1, WritingMode.Irrelevant],
+  bottom: [2, 3, WritingMode.Irrelevant],
+  'span-top': [0, 2, WritingMode.Irrelevant],
+  'span-bottom': [1, 3, WritingMode.Irrelevant],
+  'y-start': [0, 1, WritingMode.Physical],
+  'y-end': [2, 3, WritingMode.Physical],
+  'span-y-start': [0, 2, WritingMode.Physical],
+  'span-y-end': [1, 3, WritingMode.Physical],
+  'y-self-start': [0, 1, WritingMode.PhysicalSelf],
+  'y-self-end': [2, 3, WritingMode.PhysicalSelf],
+  'span-y-self-start': [0, 2, WritingMode.PhysicalSelf],
+  'span-y-self-end': [1, 3, WritingMode.PhysicalSelf],
+  'block-start': [0, 1, WritingMode.Logical],
+  'block-end': [2, 3, WritingMode.Logical],
+  'span-block-start': [0, 2, WritingMode.Logical],
+  'span-block-end': [1, 3, WritingMode.Logical],
+  'inline-start': [0, 1, WritingMode.Logical],
+  'inline-end': [2, 3, WritingMode.Logical],
+  'span-inline-start': [0, 2, WritingMode.Logical],
+  'span-inline-end': [1, 3, WritingMode.Logical],
+  'self-block-start': [0, 1, WritingMode.LogicalSelf],
+  'self-block-end': [2, 3, WritingMode.LogicalSelf],
+  'span-self-block-start': [0, 2, WritingMode.LogicalSelf],
+  'span-self-block-end': [1, 3, WritingMode.LogicalSelf],
+  'self-inline-start': [0, 1, WritingMode.LogicalSelf],
+  'self-inline-end': [2, 3, WritingMode.LogicalSelf],
+  'span-self-inline-start': [0, 2, WritingMode.LogicalSelf],
+  'span-self-inline-end': [1, 3, WritingMode.LogicalSelf],
+  start: [0, 1, WritingMode.Logical],
+  end: [2, 3, WritingMode.Logical],
+  'span-start': [0, 2, WritingMode.Logical],
+  'span-end': [1, 3, WritingMode.Logical],
+  'self-start': [0, 1, WritingMode.LogicalSelf],
+  'self-end': [2, 3, WritingMode.LogicalSelf],
+  'span-self-start': [0, 2, WritingMode.LogicalSelf],
+  'span-self-end': [1, 3, WritingMode.LogicalSelf],
 };
 const POSITION_AREA_X = [
   'left',
@@ -237,8 +245,8 @@ const getInsets = ({
   block,
   inline,
 }: {
-  block: [PositionAreaGridValue, PositionAreaGridValue];
-  inline: [PositionAreaGridValue, PositionAreaGridValue];
+  block: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
+  inline: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
 }) => {
   // Or should these be abstracted to CB_LEFT, CB_RIGHT, etc?
   const blockValues: InsetValue[] = [0, 'top', 'bottom', 0];
@@ -259,6 +267,7 @@ const getInsets = ({
 function getAxisAlignment([start, end]: [
   PositionAreaGridValue,
   PositionAreaGridValue,
+  WritingMode,
 ]): 'start' | 'end' | 'center' {
   if (start === 0 && end === 3) return 'center';
   if (start === 0) return 'end';
@@ -271,6 +280,12 @@ interface AxisInfo<T> {
   inline: T;
 }
 
+export interface PositionAreaDeclaration {
+  values: AxisInfo<string>;
+  grid: AxisInfo<[PositionAreaGridValue, PositionAreaGridValue, WritingMode]>;
+  selectorUUID: string;
+}
+
 export interface PositionAreaData {
   values: AxisInfo<string>;
   grid: AxisInfo<[PositionAreaGridValue, PositionAreaGridValue]>;
@@ -278,6 +293,19 @@ export interface PositionAreaData {
   alignments: AxisInfo<'start' | 'end' | 'center'>;
   changed: boolean;
   selectorUUID: string;
+}
+
+// Once we have a target, we can determine values based on the writing mode.
+export interface PositionAreaTargetData {
+  values: AxisInfo<string>;
+  grid: AxisInfo<[PositionAreaGridValue, PositionAreaGridValue, WritingMode]>;
+  insets: AxisInfo<[InsetValue, InsetValue]>;
+  alignments: AxisInfo<'start' | 'end' | 'center'>;
+  selectorUUID: string;
+  targetUUID: string;
+  anchorEl: HTMLElement | PseudoElement | null;
+  wrapperEl: HTMLElement;
+  targetEl: HTMLElement;
 }
 
 function isPositionAreaDeclaration(
@@ -300,11 +328,10 @@ function parsePositionAreaValue(node: DeclarationWithValue) {
   return value as [string, string];
 }
 
-export function getPositionAreaData(
+export function getPositionAreaDeclaration(
   node: CssNode,
-  block: Block | null,
-): PositionAreaData | undefined {
-  if (!(isPositionAreaDeclaration(node) && block)) return undefined;
+): PositionAreaDeclaration | undefined {
+  if (!isPositionAreaDeclaration(node)) return undefined;
 
   const value = parsePositionAreaValue(node);
   // If it's not a value value, we can ignore it.
@@ -334,8 +361,20 @@ export function getPositionAreaData(
     block: POSITION_AREA_SPANS[positionAreas.block],
     inline: POSITION_AREA_SPANS[positionAreas.inline],
   };
+
   const selectorUUID = `--pa-declaration-${nanoid(12)}`;
 
+  return {
+    values: positionAreas,
+    grid,
+    selectorUUID,
+  };
+}
+
+export function addPositionAreaDeclarationBlockStyles(
+  declaration: PositionAreaDeclaration,
+  block: Block,
+) {
   [
     // Insets are applied to a wrapping element
     'justify-self',
@@ -351,23 +390,9 @@ export function getPositionAreaData(
   block.children.appendData({
     type: 'Declaration',
     property: POSITION_AREA_CASCADE_PROPERTY,
-    value: { type: 'Raw', value: selectorUUID },
+    value: { type: 'Raw', value: declaration.selectorUUID },
     important: false,
   });
-
-  const insets = getInsets(grid);
-  const alignments = {
-    block: getAxisAlignment(grid.block),
-    inline: getAxisAlignment(grid.inline),
-  };
-  return {
-    values: positionAreas,
-    grid,
-    changed: true,
-    selectorUUID,
-    insets,
-    alignments,
-  };
 }
 
 export function wrapperForPositionedElement(
@@ -395,6 +420,31 @@ export function wrapperForPositionedElement(
   );
 
   return wrapperEl;
+}
+
+export function dataForPositionAreaTarget(
+  targetEl: HTMLElement,
+  positionAreaData: PositionAreaDeclaration,
+  anchorEl: HTMLElement | PseudoElement | null,
+): PositionAreaTargetData {
+  const targetUUID = `--pa-target-${nanoid(12)}`;
+  const insets = getInsets(positionAreaData.grid);
+  const alignments = {
+    block: getAxisAlignment(positionAreaData.grid.block),
+    inline: getAxisAlignment(positionAreaData.grid.inline),
+  };
+
+  return {
+    insets,
+    alignments,
+    targetUUID,
+    targetEl,
+    anchorEl,
+    wrapperEl: wrapperForPositionedElement(targetEl, targetUUID),
+    values: positionAreaData.values,
+    grid: positionAreaData.grid,
+    selectorUUID: positionAreaData.selectorUUID,
+  };
 }
 
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {

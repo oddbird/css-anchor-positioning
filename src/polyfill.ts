@@ -15,13 +15,13 @@ import {
   type AnchorFunctionDeclaration,
   type AnchorPositions,
   parseCSS,
-  type PositionAreaDeclaration,
   type TryBlock,
 } from './parse.js';
 import {
   type InsetValue,
   POSITION_AREA_CASCADE_PROPERTY,
   POSITION_AREA_WRAPPER_ATTRIBUTE,
+  type PositionAreaTargetData,
 } from './position-area.js';
 import {
   type AnchorSide,
@@ -288,14 +288,14 @@ export const getPixelValue = async ({
 };
 
 // Use `isPostionAreaDeclaration` instead for type narrowing AST nodes.
-const isPositionAreaDeclarationObject = (
-  value: AnchorFunction | PositionAreaDeclaration,
-): value is PositionAreaDeclaration => {
-  return 'positionArea' in value;
+const isPositionAreaTarget = (
+  value: AnchorFunction | PositionAreaTargetData,
+): value is PositionAreaTargetData => {
+  return 'wrapperEl' in value;
 };
 
 const isAnchorFunction = (
-  value: AnchorFunction | PositionAreaDeclaration,
+  value: AnchorFunction | PositionAreaTargetData,
 ): value is AnchorFunction => {
   return 'uuid' in value;
 };
@@ -308,13 +308,13 @@ async function applyAnchorPositions(
 
   for (const [property, anchorValues] of Object.entries(declarations) as [
     InsetProperty | SizingProperty | 'position-area',
-    (AnchorFunction | PositionAreaDeclaration)[],
+    (AnchorFunction | PositionAreaTargetData)[],
   ][]) {
     for (const anchorValue of anchorValues) {
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
-        if (isPositionAreaDeclarationObject(anchorValue)) {
+        if (isPositionAreaTarget(anchorValue)) {
           const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
@@ -349,7 +349,7 @@ async function applyAnchorPositions(
                 floating: wrapper,
                 strategy: 'absolute',
               });
-              const insets = anchorValue.positionArea.insets;
+              const insets = anchorValue.insets;
 
               const topInset = await getPositionAreaPixelValue(
                 insets.block[0],
@@ -390,11 +390,11 @@ async function applyAnchorPositions(
               );
               root.style.setProperty(
                 `${anchorValue.targetUUID}-justify-self`,
-                anchorValue.positionArea.alignments.inline,
+                anchorValue.alignments.inline,
               );
               root.style.setProperty(
                 `${anchorValue.targetUUID}-align-self`,
-                anchorValue.positionArea.alignments.block,
+                anchorValue.alignments.block,
               );
             },
             { animationFrame: useAnimationFrame },

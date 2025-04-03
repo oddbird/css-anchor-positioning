@@ -19,9 +19,11 @@ import {
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
   activeWrapperStyles,
-  getPositionAreaData,
-  type PositionAreaData,
-  wrapperForPositionedElement,
+  addPositionAreaDeclarationBlockStyles,
+  dataForPositionAreaTarget,
+  getPositionAreaDeclaration,
+  type PositionAreaDeclaration,
+  type PositionAreaTargetData,
 } from './position-area.js';
 import {
   type AcceptedPositionTryProperty,
@@ -64,7 +66,7 @@ export interface AnchorFunction {
 export type AnchorFunctionDeclaration = Partial<
   Record<
     InsetProperty | SizingProperty | 'position-area',
-    (AnchorFunction | PositionAreaDeclaration)[]
+    (AnchorFunction | PositionAreaTargetData)[]
   >
 >;
 
@@ -72,17 +74,9 @@ export type AnchorFunctionDeclaration = Partial<
 // `value` is an object with all anchor-function declarations on that element
 type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
 
-export interface PositionAreaDeclaration {
-  positionArea: PositionAreaData;
-  wrapperEl?: HTMLElement | null;
-  targetEl?: HTMLElement | null;
-  anchorEl?: HTMLElement | PseudoElement | null;
-  targetUUID: string;
-}
-
 // `key` is the target element selector
 // `value` is the position-area data for that property
-type PositionAreaDeclarations = Record<string, PositionAreaData[]>;
+type PositionAreaDeclarations = Record<string, PositionAreaDeclaration[]>;
 
 export interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
@@ -343,17 +337,23 @@ export async function parseCSS(styleData: StyleData[]) {
         }
       }
 
-      const positionAreaData = getPositionAreaData(node, this.block);
+      // const positionAreaData = getPositionAreaData(node, this.block);
+      const positionAreaDeclaration = getPositionAreaDeclaration(node);
 
-      if (positionAreaData) {
+      if (positionAreaDeclaration) {
+        if (this.block)
+          addPositionAreaDeclarationBlockStyles(
+            positionAreaDeclaration,
+            this.block,
+          );
         for (const { selector } of selectors) {
           positionAreas[selector] = [
             ...(positionAreas[selector] ?? []),
-            positionAreaData,
+            positionAreaDeclaration,
           ];
         }
       }
-      if (updated || positionAreaData?.changed) {
+      if (updated || positionAreaDeclaration) {
         changed = true;
       }
     });
@@ -757,10 +757,13 @@ export async function parseCSS(styleData: StyleData[]) {
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {
-        const targetUUID = `--pa-target-${nanoid(12)}`;
-        const wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
+        const targetData = dataForPositionAreaTarget(
+          targetEl,
+          positionData,
+          anchorEl,
+        );
         positionAreaMappingStyleElement.css += activeWrapperStyles(
-          targetUUID,
+          targetData.targetUUID,
           positionData.selectorUUID,
         );
         positionAreaMappingStyleElement.changed = true;
@@ -772,13 +775,7 @@ export async function parseCSS(styleData: StyleData[]) {
             'position-area': [
               ...(validPositions[targetSel]?.declarations?.['position-area'] ??
                 []),
-              {
-                targetUUID,
-                positionArea: positionData,
-                anchorEl,
-                targetEl,
-                wrapperEl,
-              } as PositionAreaDeclaration,
+              targetData,
             ],
           },
         };

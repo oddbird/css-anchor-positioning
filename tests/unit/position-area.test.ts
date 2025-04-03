@@ -3,18 +3,20 @@ import type { Rule, StyleSheet } from 'css-tree';
 import {
   activeWrapperStyles,
   axisForPositionAreaValue,
-  getPositionAreaData,
+  dataForPositionAreaTarget,
+  getPositionAreaDeclaration,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
 import { getAST } from '../../src/utils.js';
 
-const createBlock = (input = 'a{b:c}') => {
-  const css = getAST(input) as StyleSheet;
-  return (css.children.first! as Rule).block;
-};
 const createPositionAreaNode = (input: string[]) => {
   const css = getAST(`a{position-area:${input.join(' ')}}`) as StyleSheet;
   return (css.children.first! as Rule).block.children.first!;
+};
+
+const createEl = () => {
+  const el = document.createElement('div');
+  return el;
 };
 
 describe('position-area', () => {
@@ -51,8 +53,7 @@ describe('position-area', () => {
       [['x-start', 'y-end'], { block: 'y-end', inline: 'x-start' }],
     ])('%s parses', (input, expected) => {
       expect(
-        getPositionAreaData(createPositionAreaNode(input), createBlock())
-          ?.values,
+        getPositionAreaDeclaration(createPositionAreaNode(input))?.values,
       ).toMatchObject(expected);
     });
 
@@ -63,17 +64,25 @@ describe('position-area', () => {
       [['span-all', 'y-end'], { block: 'y-end', inline: 'span-all' }],
     ])('%s parses values', (input, expected) => {
       expect(
-        getPositionAreaData(createPositionAreaNode(input), createBlock())
-          ?.values,
+        getPositionAreaDeclaration(createPositionAreaNode(input))?.values,
       ).toMatchObject(expected);
     });
     it.each([
-      [['left', 'center'], { block: [1, 2], inline: [0, 1] }],
-      [['center', 'left'], { block: [1, 2], inline: [0, 1] }],
-      [['span-all', 'y-end'], { block: [2, 3], inline: [0, 3] }],
+      [
+        ['left', 'center'],
+        { block: [1, 2, 'Irrelevant'], inline: [0, 1, 'Irrelevant'] },
+      ],
+      [
+        ['center', 'left'],
+        { block: [1, 2, 'Irrelevant'], inline: [0, 1, 'Irrelevant'] },
+      ],
+      [
+        ['span-all', 'y-end'],
+        { block: [2, 3, 'Physical'], inline: [0, 3, 'Irrelevant'] },
+      ],
     ])('%s parses grid', (input, expected) => {
       expect(
-        getPositionAreaData(createPositionAreaNode(input), createBlock())?.grid,
+        getPositionAreaDeclaration(createPositionAreaNode(input))?.grid,
       ).toMatchObject(expected);
     });
 
@@ -86,8 +95,7 @@ describe('position-area', () => {
       [['span-end'], { block: 'span-end', inline: 'span-end' }],
     ])('%s parses', (input, expected) => {
       expect(
-        getPositionAreaData(createPositionAreaNode(input), createBlock())
-          ?.values,
+        getPositionAreaDeclaration(createPositionAreaNode(input))?.values,
       ).toMatchObject(expected);
     });
 
@@ -96,7 +104,7 @@ describe('position-area', () => {
       '%s is undefined',
       (input) => {
         expect(
-          getPositionAreaData(createPositionAreaNode(input), createBlock()),
+          getPositionAreaDeclaration(createPositionAreaNode(input)),
         ).toEqual(undefined);
       },
     );
@@ -120,9 +128,10 @@ describe('position-area', () => {
         ['left', 'right'],
       ],
     ])('%s', (input, block, inline) => {
-      const res = getPositionAreaData(
-        createPositionAreaNode(input),
-        createBlock(),
+      const res = dataForPositionAreaTarget(
+        createEl(),
+        getPositionAreaDeclaration(createPositionAreaNode(input))!,
+        null,
       )!.insets;
       expect(res.block).toEqual(block);
       expect(res.inline).toEqual(inline);
@@ -135,9 +144,10 @@ describe('position-area', () => {
       [['bottom', 'left'], 'start', 'end'],
       [['center', 'center'], 'center', 'center'],
     ])('%s', (input, block, inline) => {
-      const res = getPositionAreaData(
-        createPositionAreaNode(input),
-        createBlock(),
+      const res = dataForPositionAreaTarget(
+        createEl(),
+        getPositionAreaDeclaration(createPositionAreaNode(input))!,
+        null,
       )!.alignments;
       expect(res.block).toEqual(block);
       expect(res.inline).toEqual(inline);
