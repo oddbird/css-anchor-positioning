@@ -124,3 +124,57 @@ test('respects cascade`', async ({ page }) => {
     0,
   );
 });
+test('applies logical properties based on writing mode`', async ({ page }) => {
+  await applyPolyfill(page);
+  const section = page.getByTestId('vertical-rl-rtl')
+  const anchor = section.locator('.anchor');
+  const anchorBox = await anchor.boundingBox();
+
+  const targetWrapper = section.locator('POLYFILL-POSITION-AREA');
+  const targetWrapperBox = await targetWrapper.boundingBox();
+  const target = targetWrapper.locator('.target');
+  expect(target).toHaveText('vertical-rl rtl');
+
+  await expect(target).toHaveCSS('justify-self', 'start');
+  await expect(target).toHaveCSS('align-self', 'start');
+  await expectWithinOne(targetWrapper, 'top', 0);
+  await expectWithinOne(targetWrapper, 'left', 0);
+
+  // Right side should be aligned with anchor left
+  expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
+    anchorBox!.x,
+    0,
+  );
+  // Target bottom should be aligned with anchor top
+  expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
+    anchorBox!.y,
+    0,
+  );
+});
+test('applies logical self properties based on writing mode`', async ({ page }) => {
+  await applyPolyfill(page);
+  const section = page.getByTestId('self-vertical-lr-rtl')
+  const anchor = section.locator('.anchor');
+  const anchorBox = await anchor.boundingBox();
+
+  const targetWrapper = section.locator('POLYFILL-POSITION-AREA');
+  const targetWrapperBox = await targetWrapper.boundingBox();
+  const target = targetWrapper.locator('.target');
+  expect(target).toHaveText('vertical-lr rtl');
+
+  await expect(target).toHaveCSS('justify-self', 'start');
+  await expect(target).toHaveCSS('align-self', 'end');
+  await expectWithinOne(targetWrapper, 'top', 0);
+  await expectWithinOne(targetWrapper, 'right', 0);
+
+  // Left side should be aligned with anchor right
+  expect(targetWrapperBox!.x ).toBeCloseTo(
+    anchorBox!.x + anchorBox!.width,
+    0,
+  );
+  // Target bottom should be aligned with anchor top
+  expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
+    anchorBox!.y,
+    0,
+  );
+});
