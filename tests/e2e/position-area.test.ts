@@ -126,7 +126,7 @@ test('respects cascade`', async ({ page }) => {
 });
 test('applies logical properties based on writing mode`', async ({ page }) => {
   await applyPolyfill(page);
-  const section = page.getByTestId('vertical-rl-rtl')
+  const section = page.getByTestId('vertical-rl-rtl');
   const anchor = section.locator('.anchor');
   const anchorBox = await anchor.boundingBox();
 
@@ -151,9 +151,11 @@ test('applies logical properties based on writing mode`', async ({ page }) => {
     0,
   );
 });
-test('applies logical self properties based on writing mode`', async ({ page }) => {
+test('applies logical self properties based on writing mode`', async ({
+  page,
+}) => {
   await applyPolyfill(page);
-  const section = page.getByTestId('self-vertical-lr-rtl')
+  const section = page.getByTestId('self-vertical-lr-rtl');
   const anchor = section.locator('.anchor');
   const anchorBox = await anchor.boundingBox();
 
@@ -168,10 +170,7 @@ test('applies logical self properties based on writing mode`', async ({ page }) 
   await expectWithinOne(targetWrapper, 'right', 0);
 
   // Left side should be aligned with anchor right
-  expect(targetWrapperBox!.x ).toBeCloseTo(
-    anchorBox!.x + anchorBox!.width,
-    0,
-  );
+  expect(targetWrapperBox!.x).toBeCloseTo(anchorBox!.x + anchorBox!.width, 0);
   // Target bottom should be aligned with anchor top
   expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
     anchorBox!.y,
