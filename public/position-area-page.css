@@ -1,5 +1,5 @@
 .demo-elements {
-  block-size: 12em;
+  height: 12em;
   place-content: center;
   place-items: center;
   display: flex;
@@ -91,6 +91,19 @@
 
 .target.end {
   position-area: end;
+}
+
+#writing-mode .demo-elements,
+#writing-mode-self .demo-elements {
+  position: relative;
+}
+
+.target.logical-end {
+  position-area: end;
+}
+
+.target.logical-self-end {
+  position-area: self-block-end self-inline-end;
 }
 
 .target.shared-right-bottom {

@@ -757,7 +757,7 @@ export async function parseCSS(styleData: StyleData[]) {
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {
-        const targetData = dataForPositionAreaTarget(
+        const targetData = await dataForPositionAreaTarget(
           targetEl,
           positionData,
           anchorEl,

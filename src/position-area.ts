@@ -24,7 +24,7 @@ import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
 
-import { type PseudoElement } from './dom.js';
+import { getOffsetParent, type PseudoElement } from './dom.js';
 import { type DeclarationWithValue } from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
@@ -240,13 +240,95 @@ function isValidPositionAreaValue(value: [string, string]): boolean {
 
 export type InsetValue = 0 | 'top' | 'bottom' | 'left' | 'right';
 
+const getDirectionalStyles = (el: HTMLElement) => {
+  const styles = getComputedStyle(el);
+  return {
+    writingMode: styles.writingMode,
+    direction: styles.direction,
+  };
+};
+
+const getWritingMode = async (el: HTMLElement, type: WritingMode) => {
+  const offsetParent = await getOffsetParent(el);
+  switch (type) {
+    case WritingMode.Logical:
+      return getDirectionalStyles(offsetParent);
+    case WritingMode.LogicalSelf:
+      return getDirectionalStyles(el);
+    case WritingMode.Physical:
+      return getDirectionalStyles(offsetParent);
+    case WritingMode.PhysicalSelf:
+      return getDirectionalStyles(el);
+    default:
+      return null;
+  }
+};
+
+const flipValues = (
+  values: [PositionAreaGridValue, PositionAreaGridValue],
+): [PositionAreaGridValue, PositionAreaGridValue] => {
+  return values.reverse().map((value) => 3 - value) as [
+    PositionAreaGridValue,
+    PositionAreaGridValue,
+  ];
+};
+
+// Validation ensures that there is only one non-Irrelevant writing mode
+const getRelevantWritingMode = (block: WritingMode, inline: WritingMode) => {
+  return block === WritingMode.Irrelevant ? inline : block;
+};
+
+const getWritingModeModifiedGrid = async (
+  {
+    block,
+    inline,
+  }: {
+    block: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
+    inline: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
+  },
+  targetElement: HTMLElement,
+) => {
+  const relevantWritingMode = getRelevantWritingMode(block[2], inline[2]);
+
+  const writingMode = await getWritingMode(targetElement, relevantWritingMode);
+
+  const grid = {
+    block: [block[0], block[1]],
+    inline: [inline[0], inline[1]],
+  } as AxisInfo<[PositionAreaGridValue, PositionAreaGridValue]>;
+
+  if (writingMode) {
+    if (writingMode.direction === 'rtl') {
+      grid.inline = flipValues(grid.inline);
+    }
+    if (writingMode.writingMode.startsWith('vertical')) {
+      const temp = grid.block;
+      grid.block = grid.inline;
+      grid.inline = temp;
+    }
+    if (writingMode.writingMode.startsWith('sideways')) {
+      const temp = grid.block;
+      grid.block = grid.inline;
+      grid.inline = temp;
+      if (writingMode.writingMode.endsWith('lr')) {
+        grid.block = flipValues(grid.block);
+      }
+    }
+    if (writingMode.writingMode.endsWith('rl')) {
+      grid.inline = flipValues(grid.inline);
+    }
+  }
+
+  return grid;
+};
+
 // This function approximates setting the containing block.
-const getInsets = ({
+const getInsets = async ({
   block,
   inline,
 }: {
-  block: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
-  inline: [PositionAreaGridValue, PositionAreaGridValue, WritingMode];
+  block: [PositionAreaGridValue, PositionAreaGridValue];
+  inline: [PositionAreaGridValue, PositionAreaGridValue];
 }) => {
   // Or should these be abstracted to CB_LEFT, CB_RIGHT, etc?
   const blockValues: InsetValue[] = [0, 'top', 'bottom', 0];
@@ -267,7 +349,6 @@ const getInsets = ({
 function getAxisAlignment([start, end]: [
   PositionAreaGridValue,
   PositionAreaGridValue,
-  WritingMode,
 ]): 'start' | 'end' | 'center' {
   if (start === 0 && end === 3) return 'center';
   if (start === 0) return 'end';
@@ -422,16 +503,34 @@ export function wrapperForPositionedElement(
   return wrapperEl;
 }
 
-export function dataForPositionAreaTarget(
+export async function dataForPositionAreaTarget(
   targetEl: HTMLElement,
   positionAreaData: PositionAreaDeclaration,
   anchorEl: HTMLElement | PseudoElement | null,
-): PositionAreaTargetData {
+): Promise<PositionAreaTargetData> {
   const targetUUID = `--pa-target-${nanoid(12)}`;
-  const insets = getInsets(positionAreaData.grid);
+  const writingModeModifiedGrid = await getWritingModeModifiedGrid(
+    positionAreaData.grid,
+    targetEl,
+  );
+  const insets = await getInsets(writingModeModifiedGrid);
+
+  const relevantWritingMode = getRelevantWritingMode(
+    positionAreaData.grid.block[2],
+    positionAreaData.grid.inline[2],
+  );
+  const alignmentGrid = [
+    WritingMode.LogicalSelf,
+    WritingMode.PhysicalSelf,
+  ].includes(relevantWritingMode)
+    ? writingModeModifiedGrid
+    : positionAreaData.grid;
   const alignments = {
-    block: getAxisAlignment(positionAreaData.grid.block),
-    inline: getAxisAlignment(positionAreaData.grid.inline),
+    block: getAxisAlignment([alignmentGrid.block[0], alignmentGrid.block[1]]),
+    inline: getAxisAlignment([
+      alignmentGrid.inline[0],
+      alignmentGrid.inline[1],
+    ]),
   };
 
   return {

@@ -127,14 +127,15 @@ describe('position-area', () => {
         ['top', 'bottom'],
         ['left', 'right'],
       ],
-    ])('%s', (input, block, inline) => {
-      const res = dataForPositionAreaTarget(
+    ])('%s', async (input, block, inline) => {
+      const res = await dataForPositionAreaTarget(
         createEl(),
         getPositionAreaDeclaration(createPositionAreaNode(input))!,
         null,
-      )!.insets;
-      expect(res.block).toEqual(block);
-      expect(res.inline).toEqual(inline);
+      );
+      const insets = res!.insets;
+      expect(insets.block).toEqual(block);
+      expect(insets.inline).toEqual(inline);
     });
   });
 
@@ -143,14 +144,15 @@ describe('position-area', () => {
       [['top', 'right'], 'end', 'start'],
       [['bottom', 'left'], 'start', 'end'],
       [['center', 'center'], 'center', 'center'],
-    ])('%s', (input, block, inline) => {
-      const res = dataForPositionAreaTarget(
+    ])('%s', async (input, block, inline) => {
+      const res = await dataForPositionAreaTarget(
         createEl(),
         getPositionAreaDeclaration(createPositionAreaNode(input))!,
         null,
-      )!.alignments;
-      expect(res.block).toEqual(block);
-      expect(res.inline).toEqual(inline);
+      );
+      const alignments = res!.alignments;
+      expect(alignments.block).toEqual(block);
+      expect(alignments.inline).toEqual(inline);
     });
   });
 

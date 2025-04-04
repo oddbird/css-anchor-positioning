@@ -8,7 +8,7 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
-import { getCSSPropertyValue } from './dom.js';
+import { getCSSPropertyValue, getOffsetParent } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
   type AnchorFunction,
@@ -34,16 +34,6 @@ import {
 import { transformCSS } from './transform.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
-
-const getOffsetParent = async (el: HTMLElement) => {
-  let offsetParent = await platform.getOffsetParent?.(el);
-  if (!(await platform.isElement?.(offsetParent))) {
-    offsetParent =
-      (await platform.getDocumentElement?.(el)) ||
-      window.document.documentElement;
-  }
-  return offsetParent as HTMLElement;
-};
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
