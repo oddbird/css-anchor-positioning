@@ -92,6 +92,14 @@ export const ACCEPTED_POSITION_TRY_PROPERTIES = [
 export type AcceptedPositionTryProperty =
   (typeof ACCEPTED_POSITION_TRY_PROPERTIES)[number];
 
+export function isAcceptedPositionTryProp(
+  property: string,
+): property is AcceptedPositionTryProperty {
+  return ACCEPTED_POSITION_TRY_PROPERTIES.includes(
+    property as AcceptedPositionTryProperty,
+  );
+}
+
 // Anchor Side properties
 export const ANCHOR_SIDES = [
   'top',
