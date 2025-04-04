@@ -147,7 +147,6 @@ following features:
 - Polyfill allows anchoring in scroll more permissively than the spec allows,
   for instance without a default `position-anchor`.
 - `anchor-scope` property on pseudo-elements
-- `position-area` property
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
 - automatic anchor positioning: anchor functions with `inside` or `outside`
@@ -158,9 +157,10 @@ following features:
 - anchors or targets in constructed stylesheets (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
-- vertical/rtl writing-modes (partial support)
+- vertical/rtl writing-modes (partial support, including in `position-area`)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
   https://github.com/whatwg/html/pull/9144)
+- `position-area` is polyfilled by adding a wrapping element. This will break selectors that rely on a direct relationship with the target, for instance `~ target`, `+ target`, `> target` or uses `:nth` selctors.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
