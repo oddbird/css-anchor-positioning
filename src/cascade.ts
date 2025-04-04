@@ -29,6 +29,7 @@ export const SHIFTED_PROPERTIES: Record<string, string> = {
   'inset-block': `--inset-block-${INSTANCE_UUID}`,
   'inset-inline': `--inset-inline-${INSTANCE_UUID}`,
   inset: `--inset-${INSTANCE_UUID}`,
+  margin: `--margin-${INSTANCE_UUID}`,
 };
 
 /**

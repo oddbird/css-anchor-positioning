@@ -22,6 +22,7 @@ import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
+  isAcceptedPositionTryProp,
   isAnchorSide,
   isAnchorSize,
   isInsetProp,
@@ -53,10 +54,13 @@ export interface AnchorFunction {
   uuid: string;
 }
 
-// `key` is the property being declared
-// `value` is the anchor-positioning data for that property
+// `key` is the property being declared `value` is the anchor-positioning data
+// for that property While AcceptedPositionTryProperty is a superset of the
+// properties that are actually useful, anchor-size technically can be applied
+// to any accepted position-try property, including the nonsensical
+// `place-self`.
 export type AnchorFunctionDeclaration = Partial<
-  Record<InsetProperty | SizingProperty, AnchorFunction[]>
+  Record<AcceptedPositionTryProperty, AnchorFunction[]>
 >;
 
 // `key` is the target element selector
@@ -228,8 +232,9 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
       return { changed: true };
     }
     if (
-      isInsetProp(declaration.property) ||
-      isSizingProp(declaration.property)
+      (isAnchorFunction(node) && isInsetProp(declaration.property)) ||
+      (isAnchorSizeFunction(node) &&
+        isAcceptedPositionTryProp(declaration.property))
     ) {
       const data = parseAnchorFn(node, true);
       return { prop: declaration.property, data, changed: true };

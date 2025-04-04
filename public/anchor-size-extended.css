@@ -1,0 +1,12 @@
+#my-anchor-anchor-size-extended {
+  anchor-name: --my-anchor-size-extended;
+  resize: both;
+  overflow: hidden;
+}
+
+#my-target-anchor-size-extended {
+  position: absolute;
+  position-anchor: --my-anchor-size-extended;
+  right: anchor-size(width);
+  margin: anchor-size(height);
+}
