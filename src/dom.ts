@@ -1,4 +1,4 @@
-import { type VirtualElement } from '@floating-ui/dom';
+import { platform, type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
@@ -245,3 +245,13 @@ export function hasAnchorScope(
     computedAnchorScope === AnchorScopeValue.All
   );
 }
+
+export const getOffsetParent = async (el: HTMLElement) => {
+  let offsetParent = await platform.getOffsetParent?.(el);
+  if (!(await platform.isElement?.(offsetParent))) {
+    offsetParent =
+      (await platform.getDocumentElement?.(el)) ||
+      window.document.documentElement;
+  }
+  return offsetParent as HTMLElement;
+};

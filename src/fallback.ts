@@ -21,6 +21,10 @@ import {
   type TryBlock,
 } from './parse.js';
 import {
+  isPositionAreaProp,
+  type PositionAreaProperty,
+} from './position-area.js';
+import {
   ACCEPTED_POSITION_TRY_PROPERTIES,
   type AcceptedPositionTryProperty,
   type AnchorSideKeyword,
@@ -58,61 +62,6 @@ type Fallbacks = Record<
   // `value` is a block of `@position-try` declarations
   TryBlock
 >;
-
-const POSITION_AREA_PROPS = [
-  'left',
-  'center',
-  'right',
-  'span-left',
-  'span-right',
-  'x-start',
-  'x-end',
-  'span-x-start',
-  'span-x-end',
-  'x-self-start',
-  'x-self-end',
-  'span-x-self-start',
-  'span-x-self-end',
-  'span-all',
-  'top',
-  'bottom',
-  'span-top',
-  'span-bottom',
-  'y-start',
-  'y-end',
-  'span-y-start',
-  'span-y-end',
-  'y-self-start',
-  'y-self-end',
-  'span-y-self-start',
-  'span-y-self-end',
-  'block-start',
-  'block-end',
-  'span-block-start',
-  'span-block-end',
-  'inline-start',
-  'inline-end',
-  'span-inline-start',
-  'span-inline-end',
-  'self-block-start',
-  'self-block-end',
-  'span-self-block-start',
-  'span-self-block-end',
-  'self-inline-start',
-  'self-inline-end',
-  'span-self-inline-start',
-  'span-self-inline-end',
-  'start',
-  'end',
-  'span-start',
-  'span-end',
-  'self-start',
-  'self-end',
-  'span-self-start',
-  'span-self-end',
-] as const;
-
-type PositionAreaProperty = (typeof POSITION_AREA_PROPS)[number];
 
 type PositionAreaPropertyChunks =
   | 'left'
@@ -172,12 +121,6 @@ type PositionTryObject =
   | PositionTryDefPositionArea
   | PositionTryDefAtRule
   | PositionTryDefAtRuleWithTactic;
-
-export function isPositionAreaProp(
-  property: string | PositionAreaProperty,
-): property is PositionAreaProperty {
-  return POSITION_AREA_PROPS.includes(property as PositionAreaProperty);
-}
 
 function isDeclaration(node: CssNode): node is DeclarationWithValue {
   return node.type === 'Declaration';
