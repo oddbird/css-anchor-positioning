@@ -40,6 +40,7 @@ const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
+
 enum WritingMode {
   Logical = 'Logical',
   LogicalSelf = 'LogicalSelf',
@@ -47,8 +48,69 @@ enum WritingMode {
   PhysicalSelf = 'PhysicalSelf',
   Irrelevant = 'Irrelevant',
 }
+
+export const POSITION_AREA_PROPS = [
+  'left',
+  'center',
+  'right',
+  'span-left',
+  'span-right',
+  'x-start',
+  'x-end',
+  'span-x-start',
+  'span-x-end',
+  'x-self-start',
+  'x-self-end',
+  'span-x-self-start',
+  'span-x-self-end',
+  'span-all',
+  'top',
+  'bottom',
+  'span-top',
+  'span-bottom',
+  'y-start',
+  'y-end',
+  'span-y-start',
+  'span-y-end',
+  'y-self-start',
+  'y-self-end',
+  'span-y-self-start',
+  'span-y-self-end',
+  'block-start',
+  'block-end',
+  'span-block-start',
+  'span-block-end',
+  'inline-start',
+  'inline-end',
+  'span-inline-start',
+  'span-inline-end',
+  'self-block-start',
+  'self-block-end',
+  'span-self-block-start',
+  'span-self-block-end',
+  'self-inline-start',
+  'self-inline-end',
+  'span-self-inline-start',
+  'span-self-inline-end',
+  'start',
+  'end',
+  'span-start',
+  'span-end',
+  'self-start',
+  'self-end',
+  'span-self-start',
+  'span-self-end',
+] as const;
+
+export type PositionAreaProperty = (typeof POSITION_AREA_PROPS)[number];
+
+export function isPositionAreaProp(
+  property: string | PositionAreaProperty,
+): property is PositionAreaProperty {
+  return POSITION_AREA_PROPS.includes(property as PositionAreaProperty);
+}
 const POSITION_AREA_SPANS: Record<
-  string,
+  PositionAreaProperty,
   [PositionAreaGridValue, PositionAreaGridValue, WritingMode]
 > = {
   left: [0, 1, WritingMode.Irrelevant],
@@ -117,7 +179,7 @@ const POSITION_AREA_X = [
   'span-x-self-start',
   'span-x-self-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_Y = [
   'top',
@@ -134,7 +196,7 @@ const POSITION_AREA_Y = [
   'span-y-self-start',
   'span-y-self-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_BLOCK = [
   'block-start',
@@ -143,7 +205,7 @@ const POSITION_AREA_BLOCK = [
   'span-block-start',
   'span-block-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_INLINE = [
   'inline-start',
@@ -152,7 +214,7 @@ const POSITION_AREA_INLINE = [
   'span-inline-start',
   'span-inline-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_SELF_BLOCK = [
   'self-block-start',
@@ -161,7 +223,7 @@ const POSITION_AREA_SELF_BLOCK = [
   'span-self-block-start',
   'span-self-block-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_SELF_INLINE = [
   'self-inline-start',
@@ -170,7 +232,7 @@ const POSITION_AREA_SELF_INLINE = [
   'span-self-inline-start',
   'span-self-inline-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_SHORTHAND = [
   'start',
@@ -179,7 +241,7 @@ const POSITION_AREA_SHORTHAND = [
   'span-start',
   'span-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 const POSITION_AREA_SELF_SHORTHAND = [
   'self-start',
@@ -188,7 +250,7 @@ const POSITION_AREA_SELF_SHORTHAND = [
   'span-self-start',
   'span-self-end',
   'span-all',
-] as string[];
+] as PositionAreaProperty[];
 
 export type PositionAreaX = (typeof POSITION_AREA_X)[number];
 export type PositionAreaY = (typeof POSITION_AREA_Y)[number];
@@ -406,7 +468,7 @@ function parsePositionAreaValue(node: DeclarationWithValue) {
       value.push('span-all');
     }
   }
-  return value as [string, string];
+  return value as [PositionAreaProperty, PositionAreaProperty];
 }
 
 export function getPositionAreaDeclaration(
@@ -418,7 +480,7 @@ export function getPositionAreaDeclaration(
   // If it's not a value value, we can ignore it.
   if (!isValidPositionAreaValue(value)) return undefined;
 
-  const positionAreas = {} as AxisInfo<string>;
+  const positionAreas = {} as AxisInfo<PositionAreaProperty>;
   switch (axisForPositionAreaValue(value[0])) {
     case 'block':
       positionAreas.block = value[0];
