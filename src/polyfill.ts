@@ -205,6 +205,9 @@ export const getPixelValue = async ({
     ) {
       return fallback;
     }
+    // Since the polyfill does not support anchor functions on inset properties,
+    // they are omitted here.
+    const startwardProperties = ['top', 'left'];
 
     switch (anchorSide) {
       case 'left':
@@ -221,6 +224,12 @@ export const getPixelValue = async ({
         break;
       case 'center':
         percentage = 50;
+        break;
+      case 'inside':
+        percentage = startwardProperties.includes(targetProperty) ? 0 : 100;
+        break;
+      case 'outside':
+        percentage = startwardProperties.includes(targetProperty) ? 100 : 0;
         break;
       default:
         // Logical keywords require checking the writing direction
