@@ -21,8 +21,8 @@ import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
+  isAcceptedAnchorSizeProp,
   isInsetProp,
-  isSizingProp,
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
@@ -154,9 +154,7 @@ export const getPixelValue = async ({
     return fallback;
   }
   if (anchorSize) {
-    // anchor-size() can only be assigned to sizing properties:
-    // https://drafts.csswg.org/css-anchor-1/#queries
-    if (!isSizingProp(targetProperty)) {
+    if (!isAcceptedAnchorSizeProp(targetProperty)) {
       return fallback;
     }
     // Calculate value for `anchor-size()` fn...

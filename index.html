@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="/position-anchor.css" />
     <link rel="stylesheet" href="/anchor-scroll.css" />
     <link rel="stylesheet" href="/anchor-size.css" />
+    <link rel="stylesheet" href="/anchor-size-extended.css" />
     <link rel="stylesheet" href="/anchor-math.css" />
     <link rel="stylesheet" href="/anchor-name-custom-prop.css" />
     <link rel="stylesheet" href="/anchor-name-list.css" />
@@ -960,6 +961,37 @@
 
 #my-target-size {
   width: anchor-size(--my-anchor width);
+}</code></pre>
+    </section>
+    <section
+      id="anchor-size-extended"
+      class="demo-item"
+      style="position: relative"
+    >
+      <h2>
+        <a href="#anchor-size-extended" aria-hidden="true">🔗</a>
+        <code>anchor-size()</code> on margin and inset
+      </h2>
+      <div class="demo-elements">
+        <div id="my-anchor-anchor-size-extended" class="anchor">Anchor</div>
+        <div id="my-target-anchor-size-extended" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target's <code>margin</code> is the height of the
+        anchor, and its <code>right</code> inset is the width of the anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-anchor-size-extended {
+  anchor-name: --my-anchor-size-extended;
+  resize: both;
+  overflow: hidden;
+}
+
+#my-target-anchor-size-extended {
+  position: absolute;
+  position-anchor: --my-anchor-size-extended;
+  right: anchor-size(width);
+  margin: anchor-size(height);
 }</code></pre>
     </section>
     <section id="anchor-update" class="demo-item">
