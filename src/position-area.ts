@@ -314,11 +314,9 @@ const getWritingMode = async (el: HTMLElement, type: WritingMode) => {
   const offsetParent = await getOffsetParent(el);
   switch (type) {
     case WritingMode.Logical:
-      return getDirectionalStyles(offsetParent);
-    case WritingMode.LogicalSelf:
-      return getDirectionalStyles(el);
     case WritingMode.Physical:
       return getDirectionalStyles(offsetParent);
+    case WritingMode.LogicalSelf:
     case WritingMode.PhysicalSelf:
       return getDirectionalStyles(el);
     default:
@@ -385,7 +383,7 @@ const getWritingModeModifiedGrid = async (
 };
 
 // This function approximates setting the containing block.
-const getInsets = async ({
+const getInsets = ({
   block,
   inline,
 }: {
@@ -477,7 +475,7 @@ export function getPositionAreaDeclaration(
   if (!isPositionAreaDeclaration(node)) return undefined;
 
   const value = parsePositionAreaValue(node);
-  // If it's not a value value, we can ignore it.
+  // If it's not a valid value, we can ignore it.
   if (!isValidPositionAreaValue(value)) return undefined;
 
   const positionAreas = {} as AxisInfo<PositionAreaProperty>;
@@ -549,6 +547,13 @@ export function wrapperForPositionedElement(
     wrapperEl = document.createElement(WRAPPER_ELEMENT);
     wrapperEl.style.display = 'grid';
     wrapperEl.style.position = 'absolute';
+
+    // The wrapper should not receive pointer events, but the target's initial
+    // `pointer-events` value should be preserved.
+    const originalPointerEvents = getComputedStyle(targetEl).pointerEvents;
+    wrapperEl.style.pointerEvents = 'none';
+    targetEl.style.pointerEvents = originalPointerEvents;
+
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
     });
@@ -575,7 +580,7 @@ export async function dataForPositionAreaTarget(
     positionAreaData.grid,
     targetEl,
   );
-  const insets = await getInsets(writingModeModifiedGrid);
+  const insets = getInsets(writingModeModifiedGrid);
 
   const relevantWritingMode = getRelevantWritingMode(
     positionAreaData.grid.block[2],

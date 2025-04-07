@@ -337,20 +337,20 @@ export async function parseCSS(styleData: StyleData[]) {
         }
       }
 
-      // const positionAreaData = getPositionAreaData(node, this.block);
-      const positionAreaDeclaration = getPositionAreaDeclaration(node);
-
-      if (positionAreaDeclaration) {
-        if (this.block)
+      let positionAreaDeclaration: PositionAreaDeclaration | undefined;
+      if (this.block) {
+        positionAreaDeclaration = getPositionAreaDeclaration(node);
+        if (positionAreaDeclaration) {
           addPositionAreaDeclarationBlockStyles(
             positionAreaDeclaration,
             this.block,
           );
-        for (const { selector } of selectors) {
-          positionAreas[selector] = [
-            ...(positionAreas[selector] ?? []),
-            positionAreaDeclaration,
-          ];
+          for (const { selector } of selectors) {
+            positionAreas[selector] = [
+              ...(positionAreas[selector] ?? []),
+              positionAreaDeclaration,
+            ];
+          }
         }
       }
       if (updated || positionAreaDeclaration) {
@@ -743,10 +743,10 @@ export async function parseCSS(styleData: StyleData[]) {
 
   // We loop through each selector that has been used to apply a position-area
   // declaration, and find all elements that match the selector. The same
-  // selector may be used twice for some reason, for instance:
+  // selector may be used twice, for instance:
   //
-  // .foo { position-area: start}
-  // .foo { position-area: end}
+  // .foo { position-area: start }
+  // .foo { position-area: end }
 
   for (const [targetSel, positions] of Object.entries(positionAreas)) {
     const targets: NodeListOf<HTMLElement> =

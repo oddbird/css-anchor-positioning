@@ -154,13 +154,15 @@ following features:
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom
-- anchors or targets in constructed stylesheets (https://github.com/oddbird/css-anchor-positioning/issues/228)
+- anchors or targets in constructed stylesheets
+  (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand
   property
-- vertical/rtl writing-modes (partial support, including in `position-area`)
+- vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
-  https://github.com/whatwg/html/pull/9144)
-- `position-area` is polyfilled by adding a wrapping element. This will break selectors that rely on a direct relationship with the target, for instance `~ target`, `+ target`, `> target` or uses `:nth` selctors.
+- `position-area` is polyfilled by adding a wrapping element around the target.
+  This will break selectors that rely on a direct relationship with the target,
+  for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
