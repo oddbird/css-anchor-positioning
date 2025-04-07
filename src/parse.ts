@@ -54,11 +54,11 @@ export interface AnchorFunction {
   uuid: string;
 }
 
-// `key` is the property being declared `value` is the anchor-positioning data
-// for that property While AcceptedPositionTryProperty is a superset of the
-// properties that are actually useful, anchor-size technically can be applied
-// to any accepted position-try property, including the nonsensical
-// `place-self`.
+// - `key` is the property being declared
+// - `value` is the anchor-positioning data for that property
+// While AcceptedPositionTryProperty is a superset of the properties that are
+// actually useful, anchor-size technically can be applied to any accepted
+// position-try property, including the nonsensical `place-self`.
 export type AnchorFunctionDeclaration = Partial<
   Record<AcceptedPositionTryProperty, AnchorFunction[]>
 >;

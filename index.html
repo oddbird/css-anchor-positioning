@@ -963,6 +963,37 @@
   width: anchor-size(--my-anchor width);
 }</code></pre>
     </section>
+    <section
+      id="anchor-size-extended"
+      class="demo-item"
+      style="position: relative"
+    >
+      <h2>
+        <a href="#anchor-size-extended" aria-hidden="true">🔗</a>
+        <code>anchor-size()</code> on margin and inset
+      </h2>
+      <div class="demo-elements">
+        <div id="my-anchor-anchor-size-extended" class="anchor">Anchor</div>
+        <div id="my-target-anchor-size-extended" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target's <code>margin</code> is the height of the
+        anchor, and its <code>right</code> inset is the width of the anchor.
+      </p>
+      <pre><code class="language-css"
+>#my-anchor-anchor-size-extended {
+  anchor-name: --my-anchor-size-extended;
+  resize: both;
+  overflow: hidden;
+}
+
+#my-target-anchor-size-extended {
+  position: absolute;
+  position-anchor: --my-anchor-size-extended;
+  right: anchor-size(width);
+  margin: anchor-size(height);
+}</code></pre>
+    </section>
     <section id="anchor-update" class="demo-item">
       <h2>
         <a href="#anchor-update" aria-hidden="true">🔗</a>
@@ -1243,37 +1274,6 @@ CSS inside the anchor-manual.css file:
   position-anchor: --anchor-scope;
   left: anchor(right);
   top: anchor(center);
-}</code></pre>
-    </section>
-    <section
-      id="anchor-size-extended"
-      class="demo-item"
-      style="position: relative"
-    >
-      <h2>
-        <a href="#anchor-size-extended" aria-hidden="true">🔗</a>
-        <code>anchor-size()</code> on margin and inset
-      </h2>
-      <div class="demo-elements">
-        <div id="my-anchor-anchor-size-extended" class="anchor">Anchor</div>
-        <div id="my-target-anchor-size-extended" class="target">Target</div>
-      </div>
-      <p class="note">
-        With polyfill applied: Target's <code>margin</code> is the height of the
-        anchor, and its <code>right</code> inset is the width of the anchor.
-      </p>
-      <pre><code class="language-css"
->#my-anchor-anchor-size-extended{
-  anchor-name: --my-anchor-size-extended;
-  resize: both;
-  overflow: hidden;
-}
-
-#my-target-anchor-size-extended{
-  position: absolute;
-  position-anchor: --my-anchor-size-extended;
-  right: anchor-size(width);
-  margin: anchor-size(height);
 }</code></pre>
     </section>
     <section id="sponsor">
