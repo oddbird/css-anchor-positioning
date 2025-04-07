@@ -204,14 +204,10 @@ export const getPixelValue = async ({
 
     switch (anchorSide) {
       case 'left':
-        percentage = 0;
-        break;
-      case 'right':
-        percentage = 100;
-        break;
       case 'top':
         percentage = 0;
         break;
+      case 'right':
       case 'bottom':
         percentage = 100;
         break;
