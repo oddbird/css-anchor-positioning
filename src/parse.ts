@@ -26,10 +26,12 @@ import {
   type PositionAreaTargetData,
 } from './position-area.js';
 import {
+  type AcceptedAnchorSizeProperty,
   type AcceptedPositionTryProperty,
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
+  isAcceptedAnchorSizeProp,
   isAnchorSide,
   isAnchorSize,
   isInsetProp,
@@ -61,11 +63,13 @@ export interface AnchorFunction {
   uuid: string;
 }
 
-// `key` is the property being declared
-// `value` is the anchor-positioning data for that property
+// - `key` is the property being declared
+// - `value` is the anchor-positioning data for that property
+// The valid properties for `anchor()` is a subset of the properties that are
+// valid for `anchor-size()`, so functional validation should be used as well.
 export type AnchorFunctionDeclaration = Partial<
   Record<
-    InsetProperty | SizingProperty | 'position-area',
+    AcceptedAnchorSizeProperty | 'position-area',
     (AnchorFunction | PositionAreaTargetData)[]
   >
 >;
@@ -243,8 +247,9 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
       return { changed: true };
     }
     if (
-      isInsetProp(declaration.property) ||
-      isSizingProp(declaration.property)
+      (isAnchorFunction(node) && isInsetProp(declaration.property)) ||
+      (isAnchorSizeFunction(node) &&
+        isAcceptedAnchorSizeProp(declaration.property))
     ) {
       const data = parseAnchorFn(node, true);
       return { prop: declaration.property, data, changed: true };

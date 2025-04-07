@@ -56,6 +56,24 @@ test('applies polyfill for `anchor()`', async ({ page }) => {
   await expectWithinOne(target, 'right', expected);
 });
 
+test('applies polyfill for inside and outside keywords', async ({ page }) => {
+  const inoutAnchorSelector = '#inside-outside .anchor';
+  const inoutTargetSelector = '#inside-outside .target';
+  const target = page.locator(inoutTargetSelector);
+  const height = await getParentHeight(page, inoutAnchorSelector);
+  const parentWidth = await getParentWidth(page, inoutTargetSelector);
+  const parentHeight = await getParentHeight(page, inoutTargetSelector);
+  const expected = parentHeight - height;
+
+  await expectWithinOne(target, 'left', 0);
+  await expectWithinOne(target, 'bottom', expected, true);
+
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'left', parentWidth);
+  await expectWithinOne(target, 'bottom', expected);
+});
+
 test('applies polyfill from inline styles', async ({ page }) => {
   const targetInLine = page.locator('#my-target-inline');
   const width = await getElementWidth(page, anchorSelector);

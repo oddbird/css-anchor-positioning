@@ -27,8 +27,8 @@ import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
+  isAcceptedAnchorSizeProp,
   isInsetProp,
-  isSizingProp,
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
@@ -150,9 +150,7 @@ export const getPixelValue = async ({
     return fallback;
   }
   if (anchorSize) {
-    // anchor-size() can only be assigned to sizing properties:
-    // https://drafts.csswg.org/css-anchor-1/#queries
-    if (!isSizingProp(targetProperty)) {
+    if (!isAcceptedAnchorSizeProp(targetProperty)) {
       return fallback;
     }
     // Calculate value for `anchor-size()` fn...
@@ -201,6 +199,9 @@ export const getPixelValue = async ({
     ) {
       return fallback;
     }
+    // Since the polyfill does not yet support anchor functions on `inset-*`
+    // properties, they are omitted here.
+    const startwardProperties = ['top', 'left'];
 
     switch (anchorSide) {
       case 'left':
@@ -213,6 +214,12 @@ export const getPixelValue = async ({
         break;
       case 'center':
         percentage = 50;
+        break;
+      case 'inside':
+        percentage = startwardProperties.includes(targetProperty) ? 0 : 100;
+        break;
+      case 'outside':
+        percentage = startwardProperties.includes(targetProperty) ? 100 : 0;
         break;
       default:
         // Logical keywords require checking the writing direction

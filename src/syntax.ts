@@ -92,6 +92,32 @@ export const ACCEPTED_POSITION_TRY_PROPERTIES = [
 export type AcceptedPositionTryProperty =
   (typeof ACCEPTED_POSITION_TRY_PROPERTIES)[number];
 
+export function isAcceptedPositionTryProp(
+  property: string,
+): property is AcceptedPositionTryProperty {
+  return ACCEPTED_POSITION_TRY_PROPERTIES.includes(
+    property as AcceptedPositionTryProperty,
+  );
+}
+
+// Accepted anchor-size() properties
+export const ACCEPTED_ANCHOR_SIZE_PROPERTIES = [
+  ...SIZING_PROPS,
+  ...INSET_PROPS,
+  ...MARGIN_PROPERTIES,
+] as const;
+
+export type AcceptedAnchorSizeProperty =
+  (typeof ACCEPTED_ANCHOR_SIZE_PROPERTIES)[number];
+
+export function isAcceptedAnchorSizeProp(
+  property: string,
+): property is AcceptedAnchorSizeProperty {
+  return ACCEPTED_ANCHOR_SIZE_PROPERTIES.includes(
+    property as AcceptedAnchorSizeProperty,
+  );
+}
+
 // Anchor Side properties
 export const ANCHOR_SIDES = [
   'top',
@@ -103,6 +129,8 @@ export const ANCHOR_SIDES = [
   'self-start',
   'self-end',
   'center',
+  'inside',
+  'outside',
 ];
 export type AnchorSideKeyword = (typeof ANCHOR_SIDES)[number];
 

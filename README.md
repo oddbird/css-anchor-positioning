@@ -149,8 +149,6 @@ following features:
 - `anchor-scope` property on pseudo-elements
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
-- automatic anchor positioning: anchor functions with `inside` or `outside`
-  anchor-side
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors or targets in the shadow-dom

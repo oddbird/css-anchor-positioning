@@ -1,0 +1,11 @@
+#inside-outside .anchor {
+  anchor-name: --inside-outside;
+}
+
+#inside-outside .target {
+  position: absolute;
+  position-anchor: --inside-outside;
+  left: anchor(outside);
+  bottom: anchor(inside);
+  padding: 1.5em;
+}
