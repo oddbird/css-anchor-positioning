@@ -21,7 +21,7 @@ import {
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
-  isAcceptedPositionTryProp,
+  isAcceptedAnchorSizeProp,
   isInsetProp,
   type SizingProperty,
 } from './syntax.js';
@@ -154,10 +154,7 @@ export const getPixelValue = async ({
     return fallback;
   }
   if (anchorSize) {
-    // anchor-size() is defined as usable on any prop that is acceptable in an
-    // @position-try block. Practically, only inset, margin and sizing are
-    // usable. https://drafts.csswg.org/css-anchor-position-1/#sizing
-    if (!isAcceptedPositionTryProp(targetProperty)) {
+    if (!isAcceptedAnchorSizeProp(targetProperty)) {
       return fallback;
     }
     // Calculate value for `anchor-size()` fn...

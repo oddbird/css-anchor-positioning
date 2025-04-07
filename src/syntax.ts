@@ -100,6 +100,24 @@ export function isAcceptedPositionTryProp(
   );
 }
 
+// Accepted anchor-size() properties
+export const ACCEPTED_ANCHOR_SIZE_PROPERTIES = [
+  ...SIZING_PROPS,
+  ...INSET_PROPS,
+  ...MARGIN_PROPERTIES,
+] as const;
+
+export type AcceptedAnchorSizeProperty =
+  (typeof ACCEPTED_ANCHOR_SIZE_PROPERTIES)[number];
+
+export function isAcceptedAnchorSizeProp(
+  property: string,
+): property is AcceptedAnchorSizeProperty {
+  return ACCEPTED_ANCHOR_SIZE_PROPERTIES.includes(
+    property as AcceptedAnchorSizeProperty,
+  );
+}
+
 // Anchor Side properties
 export const ANCHOR_SIDES = [
   'top',

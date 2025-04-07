@@ -18,11 +18,12 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
+  type AcceptedAnchorSizeProperty,
   type AcceptedPositionTryProperty,
   type AnchorSide,
   type AnchorSize,
   type InsetProperty,
-  isAcceptedPositionTryProp,
+  isAcceptedAnchorSizeProp,
   isAnchorSide,
   isAnchorSize,
   isInsetProp,
@@ -56,11 +57,10 @@ export interface AnchorFunction {
 
 // - `key` is the property being declared
 // - `value` is the anchor-positioning data for that property
-// While AcceptedPositionTryProperty is a superset of the properties that are
-// actually useful, anchor-size technically can be applied to any accepted
-// position-try property, including the nonsensical `place-self`.
+// The valid properties for `anchor()` is a subset of the properties that are
+// valid for `anchor-size()`, so functional validation should be used as well.
 export type AnchorFunctionDeclaration = Partial<
-  Record<AcceptedPositionTryProperty, AnchorFunction[]>
+  Record<AcceptedAnchorSizeProperty, AnchorFunction[]>
 >;
 
 // `key` is the target element selector
@@ -234,7 +234,7 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
     if (
       (isAnchorFunction(node) && isInsetProp(declaration.property)) ||
       (isAnchorSizeFunction(node) &&
-        isAcceptedPositionTryProp(declaration.property))
+        isAcceptedAnchorSizeProp(declaration.property))
     ) {
       const data = parseAnchorFn(node, true);
       return { prop: declaration.property, data, changed: true };
