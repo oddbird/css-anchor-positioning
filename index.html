@@ -535,22 +535,22 @@
     <section id="inside-outside" class="demo-item">
       <h2>
         <a href="#inside-outside" aria-hidden="true">🔗</a>
-        inside and outside
+        Positioning using <code>inside</code> and <code>outside</code> values
       </h2>
       <div style="position: relative" class="demo-elements">
         <div class="anchor">Anchor</div>
         <div class="target">Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Target is with the bottom edge inside the anchor,
-        and the left edge outside the anchor.
+        With polyfill applied: Target’s bottom edge is aligned with Anchor’s
+        bottom edge, and Target’s left edge is aligned with Anchor’s right edge.
       </p>
       <pre><code class="language-css"
->#inside-outside .anchor{
+>#inside-outside .anchor {
   anchor-name: --inside-outside;
 }
 
-#inside-outside .target{
+#inside-outside .target {
   position: absolute;
   position-anchor: --inside-outside;
   left: anchor(outside);

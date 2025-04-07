@@ -205,8 +205,8 @@ export const getPixelValue = async ({
     ) {
       return fallback;
     }
-    // Since the polyfill does not support anchor functions on inset properties,
-    // they are omitted here.
+    // Since the polyfill does not yet support anchor functions on `inset-*`
+    // properties, they are omitted here.
     const startwardProperties = ['top', 'left'];
 
     switch (anchorSide) {
