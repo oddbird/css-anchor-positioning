@@ -129,6 +129,8 @@ export const ANCHOR_SIDES = [
   'self-start',
   'self-end',
   'center',
+  'inside',
+  'outside',
 ];
 export type AnchorSideKeyword = (typeof ANCHOR_SIDES)[number];
 

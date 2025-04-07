@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <link rel="stylesheet" href="/anchor-media-query.css" />
     <link rel="stylesheet" href="/anchor-scope.css" />
+    <link rel="stylesheet" href="/anchor-inside-outside.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <style>
@@ -530,6 +531,31 @@
   position: absolute;
   right: anchor(var(--anchor-var) left);
   bottom: anchor(var(--anchor-var) top);
+}</code></pre>
+    </section>
+    <section id="inside-outside" class="demo-item">
+      <h2>
+        <a href="#inside-outside" aria-hidden="true">🔗</a>
+        Positioning using <code>inside</code> and <code>outside</code> values
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target’s bottom edge is aligned with Anchor’s
+        bottom edge, and Target’s left edge is aligned with Anchor’s right edge.
+      </p>
+      <pre><code class="language-css"
+>#inside-outside .anchor {
+  anchor-name: --inside-outside;
+}
+
+#inside-outside .target {
+  position: absolute;
+  position-anchor: --inside-outside;
+  left: anchor(outside);
+  bottom: anchor(inside);
 }</code></pre>
     </section>
     <section id="position-try-tactics" class="demo-item">
