@@ -243,7 +243,7 @@ export function applyTryTacticsToAtRule(
 
 type InsetRules = Partial<Record<AcceptedPositionTryProperty, string>>;
 
-export function getExistingInsetRules(el: HTMLElement) {
+function getExistingInsetRules(el: HTMLElement) {
   const rules: InsetRules = {};
   ACCEPTED_POSITION_TRY_PROPERTIES.forEach((prop) => {
     const propVal = getCSSPropertyValue(
