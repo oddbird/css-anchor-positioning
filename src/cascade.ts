@@ -1,6 +1,7 @@
 import type { Block, CssNode } from 'css-tree';
 import walk from 'css-tree/walker';
 
+import { ACCEPTED_POSITION_TRY_PROPERTIES } from './syntax.js';
 import {
   generateCSS,
   getAST,
@@ -12,24 +13,20 @@ import {
 /**
  * Map of CSS property to CSS custom property that the property's value is
  * shifted into. This is used to subject properties that are not yet natively
- * supported to the CSS cascade and inheritance rules.
+ * supported to the CSS cascade and inheritance rules. It is also used by the
+ * fallback algorithm to find initial, non-computed values.
  */
-export const SHIFTED_PROPERTIES: Record<string, string> = {
-  'position-anchor': `--position-anchor-${INSTANCE_UUID}`,
-  'anchor-scope': `--anchor-scope-${INSTANCE_UUID}`,
-  'anchor-name': `--anchor-name-${INSTANCE_UUID}`,
-  left: `--left-${INSTANCE_UUID}`,
-  right: `--right-${INSTANCE_UUID}`,
-  top: `--top-${INSTANCE_UUID}`,
-  bottom: `--bottom-${INSTANCE_UUID}`,
-  'inset-block-start': `--inset-block-start-${INSTANCE_UUID}`,
-  'inset-block-end': `--inset-block-end-${INSTANCE_UUID}`,
-  'inset-inline-start': `--inset-inline-start-${INSTANCE_UUID}`,
-  'inset-inline-end': `--inset-inline-end-${INSTANCE_UUID}`,
-  'inset-block': `--inset-block-${INSTANCE_UUID}`,
-  'inset-inline': `--inset-inline-${INSTANCE_UUID}`,
-  inset: `--inset-${INSTANCE_UUID}`,
-};
+export const SHIFTED_PROPERTIES: Record<string, string> = [
+  ...ACCEPTED_POSITION_TRY_PROPERTIES,
+  'anchor-scope',
+  'anchor-name',
+].reduce(
+  (acc, prop) => {
+    acc[prop] = `--${prop}-${INSTANCE_UUID}`;
+    return acc;
+  },
+  {} as Record<string, string>,
+);
 
 /**
  * Shift property declarations for properties that are not yet natively

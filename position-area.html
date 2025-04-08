@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSS Anchor Positioning Polyfill</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/prismjs@v1.x/themes/prism.css"
+    />
+    <script
+      src="https://unpkg.com/@oddbird/popover-polyfill@latest/dist/popover.min.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
+    <!-- TypeKit Fonts -->
+    <script src="https://use.typekit.net/slx1xnq.js"></script>
+    <script>
+      try {
+        Typekit.load({ async: true });
+      } catch (e) {}
+    </script>
+    <link rel="stylesheet" href="/demo.css" />
+    <link rel="stylesheet" href="/position-area-page.css" />
+
+    <script type="module">
+      import polyfill from '/src/index-fn.ts';
+
+      const SUPPORTS_ANCHOR_POSITIONING =
+        'anchorName' in document.documentElement.style;
+
+      const btn = document.getElementById('apply-polyfill');
+
+      if (!SUPPORTS_ANCHOR_POSITIONING) {
+        btn.addEventListener('click', () =>
+          polyfill().then((rules) => {
+            btn.innerText = 'Polyfill Applied';
+            btn.setAttribute('disabled', '');
+            console.log(rules);
+            const toggleWrapper = document.getElementById('toggle-wrapper');
+            toggleWrapper.removeAttribute('disabled');
+            toggleWrapper.innerText = 'Toggle Wrapper Visibility';
+          }),
+        );
+      } else {
+        btn.innerText = 'No Polyfill Needed';
+        btn.setAttribute('disabled', '');
+        console.log(
+          'anchor-positioning is supported in this browser; polyfill skipped.',
+        );
+      }
+
+      document
+        .getElementById('toggle-wrapper')
+        .addEventListener('click', () => {
+          document.body.classList.toggle('show-wrapper');
+        });
+      document
+        .getElementById('switch-cascade')
+        .addEventListener('click', () => {
+          document.body.classList.toggle('cascade-override');
+        });
+    </script>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
+    <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script
+      defer
+      data-domain="anchor-positioning.oddbird.net"
+      src="https://plausible.io/js/script.hash.outbound-links.js"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">CSS Anchor Positioning Polyfill</a></h1>
+      <nav>
+        <span> See also: </span>
+        <a
+          href="https://github.com/web-platform-tests/wpt/tree/master/css/css-anchor-position"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT examples</a
+        >
+        <!-- <a
+          href="https://anchor-position-wpt.netlify.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >WPT results</a
+        > -->
+        <a
+          href="https://drafts.csswg.org/css-anchor-position/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Draft Spec</a
+        >
+      </nav>
+      <button id="apply-polyfill" data-button="apply-polyfill" type="button">
+        Apply Polyfill
+      </button>
+    </header>
+    <section>
+      <h2>Placing elements with <code>position-area</code></h2>
+      <p>
+        The <code>position-area</code> property places an element in relation to
+        its anchor, using 1 or 2 keywords to define the position on each axis.
+      </p>
+      <p>
+        In browsers that support <code>position-area</code>, this creates a new
+        containing block for the positioned element based on the position of the
+        anchor. The polyfill achieves this by wrapping the positioned element in
+        a <code>&lt;POLYFILL-POSITION-AREA&gt;</code> element. Be aware that
+        this may impact selectors that target the positioned element using
+        direct child or sibling selectors.
+      </p>
+      <button id="toggle-wrapper" type="button" disabled>
+        Apply polyfill to enable wrapper visibility
+      </button>
+      <p>
+        This approach also causes some differences with content that is shifted
+        to stay within its containing block in supporting browsers.
+      </p>
+      <p>
+        <strong>Note: </strong>We strive to keep the polyfill up-to-date with
+        ongoing changes to the spec, and we welcome
+        <a
+          href="https://github.com/oddbird/css-anchor-positioning"
+          target="_blank"
+          rel="noopener noreferrer"
+          >code contributions</a
+        >
+        and <a href="#sponsor">financial support</a> to make that happen.
+      </p>
+    </section>
+
+    <section class="position-area-demo-item" id="bottom-center">
+      <h2>
+        <a href="#bottom-center" aria-hidden="true">🔗</a>
+        <code>bottom center ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target bottom-center">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="spanleft-top">
+      <h2>
+        <a href="#spanleft-top" aria-hidden="true">🔗</a>
+        <code>span-left top ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target spanleft-top">Target with longer content</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="center-left">
+      <h2>
+        <a href="#center-left" aria-hidden="true">🔗</a>
+        <code>center left ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target center-left">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="inlinestart-blockend">
+      <h2>
+        <a href="#inlinestart-blockend" aria-hidden="true">🔗</a>
+        <code>inline-start block-end ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target inlinestart-blockend">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="start-end">
+      <h2>
+        <a href="#start-end" aria-hidden="true">🔗</a>
+        <code>start end ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target start-end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="end">
+      <h2>
+        <a href="#end" aria-hidden="true">🔗</a>
+        <code>end ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="no-space">
+      <h2>
+        <a href="#no-space" aria-hidden="true">🔗</a>
+        <code>no space around anchor, end start ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div class="target end-start">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="no-block-space-top">
+      <h2>
+        <a href="#no-block-space-top" aria-hidden="true">🔗</a>
+        <code>no block space around anchor, span-all top ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div class="target spanall-top">
+          Target with longer content that might line wrap
+        </div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="inline-styles">
+      <h2>
+        <a href="#inline-styles" aria-hidden="true">🔗</a>
+        <code>inline styles ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target" style="position-area: end">Target</div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="different-containers">
+      <h2>
+        <a href="#different-containers" aria-hidden="true">🔗</a>
+        <code>One declaration, different containing blocks ✅</code>
+      </h2>
+      <div
+        style="position: relative; border: 1pt dotted var(--border)"
+        class="demo-elements"
+        data-testid="container1"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target shared-right-bottom">Target</div>
+      </div>
+      <div
+        style="position: relative; border: 1pt dotted var(--border)"
+        class="demo-elements semi-tight"
+        data-testid="container2"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target shared-right-bottom">Target</div>
+      </div>
+      <p>
+        Anchor inset values need to be different for each element matching a
+        declaration, as their values depend on their containing blocks. Should
+        be `right bottom`.
+      </p>
+    </section>
+
+    <section class="position-area-demo-item" id="cascade">
+      <h2>
+        <a href="#cascade" aria-hidden="true">🔗</a>
+        <code>cascade should be respected ✅</code>
+      </h2>
+      <div class="demo-elements cascade">
+        <div class="anchor">Anchor</div>
+        <div class="target" id="cascade-target">Target</div>
+      </div>
+      <p>
+        Should be <code>right top</code>. Also has
+        <code>right bottom</code> applied, with less specificity. When the
+        cascaded value changes, the positioned element will only update to
+        reflect the changes the next time the polyfill recalculates the
+        positions, for instance, on scroll.
+        <button type="button" id="switch-cascade">Switch Cascade</button>
+      </p>
+    </section>
+
+    <section class="position-area-demo-item" id="writing-mode">
+      <h2>
+        <a href="#writing-mode" aria-hidden="true">🔗</a>
+        Logical properties and writing mode support
+      </h2>
+      <div
+        class="demo-elements"
+        style="writing-mode: vertical-rl; direction: rtl"
+        data-testid="vertical-rl-rtl"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">vertical-rl rtl</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: vertical-rl; direction: ltr"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">vertical-rl ltr</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: vertical-lr; direction: rtl"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">vertical-lr rtl</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: vertical-lr; direction: ltr"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">vertical-lr ltr</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: sideways-rl; direction: rtl"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">sideways-rl rtl</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: sideways-rl; direction: ltr"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">sideways-rl ltr</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: sideways-lr; direction: rtl"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">sideways-lr rtl</div>
+      </div>
+      <div
+        class="demo-elements"
+        style="writing-mode: sideways-lr; direction: ltr"
+      >
+        <div class="anchor">Anchor</div>
+        <div class="target logical-end">sideways-lr ltr</div>
+      </div>
+    </section>
+    <section class="position-area-demo-item" id="writing-mode-self">
+      <h2>
+        <a href="#writing-mode-self" aria-hidden="true">🔗</a>
+        Logical properties and writing mode support for <code>self</code>
+      </h2>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: vertical-rl; direction: rtl"
+        >
+          vertical-rl rtl
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: vertical-rl; direction: ltr"
+        >
+          vertical-rl ltr
+        </div>
+      </div>
+      <div class="demo-elements" data-testid="self-vertical-lr-rtl">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: vertical-lr; direction: rtl"
+        >
+          vertical-lr rtl
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: vertical-lr; direction: ltr"
+        >
+          vertical-lr ltr
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: sideways-rl; direction: rtl"
+        >
+          sideways-rl rtl
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: sideways-rl; direction: ltr"
+        >
+          sideways-rl ltr
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: sideways-lr; direction: rtl"
+        >
+          sideways-lr rtl
+        </div>
+      </div>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target logical-self-end"
+          style="writing-mode: sideways-lr; direction: ltr"
+        >
+          sideways-lr ltr
+        </div>
+      </div>
+    </section>
+
+    <section class="position-area-demo-item" id="no-block-space">
+      <h2>
+        <a href="#no-block-space" aria-hidden="true">🔗</a>
+        <code>no block space around anchor, span-all left ❓</code>
+      </h2>
+      <div style="position: relative" class="demo-elements tight">
+        <div class="anchor">Anchor</div>
+        <div
+          class="target spanall-left"
+          style="align-self: var(--position-area-align-self) safe"
+        >
+          Target with longer content that might line wrap
+        </div>
+      </div>
+      <p>
+        If the target overflows the containing block, and the target is shifted
+        to the start of the containing block in browsers that support CSS anchor
+        positioning, you can approximate the same behavior by adding an inline
+        style to add <code>safe</code> overflow alignment for the impacted axis.
+        There is not a similar solution for content that supporting browsers
+        shift to the end of the containing block.
+      </p>
+      <code>style="align-self: var(--position-area-align-self) safe"</code>
+    </section>
+
+    <section class="position-area-demo-item" id="shifting">
+      <h2>
+        <a href="#shifting" aria-hidden="true">🔗</a>
+        <code>Shifting content to stay inside containing block ❌</code>
+      </h2>
+      <div class="demo-elements shifting">
+        <div class="scope" style="align-self: start">
+          <div class="anchor">start</div>
+          <div class="target">Target</div>
+        </div>
+        <div class="scope" style="align-self: center">
+          <div class="anchor">center</div>
+          <div class="target">Target</div>
+        </div>
+        <div class="scope" style="align-self: end">
+          <div class="anchor">end</div>
+          <div class="target">Target</div>
+        </div>
+      </div>
+      <p>Targets should get shifted to stay within the containing block.</p>
+    </section>
+
+    <section class="position-area-demo-item" id="span-all-non-centered">
+      <h2>
+        <a href="#span-all-non-centered" aria-hidden="true">🔗</a>
+        <code>span-all positioned correctly on non-centered anchors ❌</code>
+      </h2>
+      <div class="demo-elements non-centered">
+        <div style="align-self: start">
+          <div class="anchor">start</div>
+          <div class="target">Target</div>
+        </div>
+      </div>
+      <p>Should be positioned on anchor-center, not center.</p>
+    </section>
+
+    <section id="sponsor">
+      <h2>Sponsor OddBird’s OSS Work</h2>
+      <p>
+        At OddBird, we love contributing to the languages & tools developers
+        rely on. We’re currently working on polyfills for new Popover & Anchor
+        Positioning functionality, as well as CSS specifications for functions,
+        mixins, and responsive typography. Help us keep this work sustainable
+        and centered on your needs as a developer! We display sponsor logos and
+        avatars on our
+        <a
+          href="https://www.oddbird.net/polyfill/#open-source-sponsors"
+          target="_blank"
+          rel="noopener noreferrer"
+          >website</a
+        >.
+      </p>
+      <a
+        href="https://github.com/sponsors/oddbird"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Sponsor OddBird’s OSS Work</a
+      >
+    </section>
+    <footer>
+      <p>
+        Spec proposal by
+        <a
+          href="http://xanthir.com/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Tab Atkins-Bittner</a
+        >. Polyfill and demo by
+        <a
+          href="https://www.oddbird.net/"
+          target="_blank"
+          rel="noopener noreferrer"
+          >OddBird</a
+        >.
+      </p>
+    </footer>
+  </body>
+</html>

@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="/anchor-pseudo-element.css" />
     <link rel="stylesheet" href="/anchor-media-query.css" />
     <link rel="stylesheet" href="/anchor-scope.css" />
+    <link rel="stylesheet" href="/position-area.css" />
     <link rel="stylesheet" href="/anchor-inside-outside.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
@@ -229,7 +230,7 @@
   </head>
   <body>
     <header>
-      <h1>CSS Anchor Positioning Polyfill</h1>
+      <h1><a href="/">CSS Anchor Positioning Polyfill</a></h1>
       <nav>
         <span> See also: </span>
         <a
@@ -965,6 +966,31 @@
 
 #other {
   --center: anchor(--anchor-duplicate-custom-props 100%);
+}</code></pre>
+    </section>
+    <section id="position-area" class="demo-item">
+      <h2>
+        <a href="#position-area" aria-hidden="true">🔗</a>
+        Positioning with <code>position-area</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned to the top right of the
+        Anchor. See <a href="position-area.html">more examples</a> of
+        <code>position-area</code>.
+      </p>
+      <pre><code class="language-css"
+>#position-area .anchor {
+  anchor-name: --position-area-anchor;
+}
+
+#position-area .target {
+  position: absolute;
+  position-area: top right;
+  position-anchor: --position-area-anchor;
 }</code></pre>
     </section>
     <section id="anchor-size" class="demo-item">

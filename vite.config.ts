@@ -9,7 +9,14 @@ export default defineConfig({
     port: 3000,
   },
   build: process.env.BUILD_DEMO
-    ? {}
+    ? {
+        rollupOptions: {
+          input: {
+            main: resolve(__dirname, 'index.html'),
+            positionArea: resolve(__dirname, 'position-area.html'),
+          },
+        },
+      }
     : {
         lib: process.env.BUILD_WPT
           ? // build that adds a delay variable for WPT test-runner

@@ -18,6 +18,14 @@ import {
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
 import {
+  activeWrapperStyles,
+  addPositionAreaDeclarationBlockStyles,
+  dataForPositionAreaTarget,
+  getPositionAreaDeclaration,
+  type PositionAreaDeclaration,
+  type PositionAreaTargetData,
+} from './position-area.js';
+import {
   type AcceptedAnchorSizeProperty,
   type AcceptedPositionTryProperty,
   type AnchorSide,
@@ -60,12 +68,19 @@ export interface AnchorFunction {
 // The valid properties for `anchor()` is a subset of the properties that are
 // valid for `anchor-size()`, so functional validation should be used as well.
 export type AnchorFunctionDeclaration = Partial<
-  Record<AcceptedAnchorSizeProperty, AnchorFunction[]>
+  Record<
+    AcceptedAnchorSizeProperty | 'position-area',
+    (AnchorFunction | PositionAreaTargetData)[]
+  >
 >;
 
 // `key` is the target element selector
 // `value` is an object with all anchor-function declarations on that element
 type AnchorFunctionDeclarations = Record<string, AnchorFunctionDeclaration>;
+
+// `key` is the target element selector
+// `value` is the position-area data for that property
+type PositionAreaDeclarations = Record<string, PositionAreaDeclaration[]>;
 
 export interface AnchorPosition {
   declarations?: AnchorFunctionDeclaration;
@@ -245,10 +260,10 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
 
 async function getAnchorEl(
   targetEl: HTMLElement | null,
-  anchorObj: AnchorFunction,
+  anchorObj?: AnchorFunction,
 ) {
-  let anchorName = anchorObj.anchorName;
-  const customPropName = anchorObj.customPropName;
+  let anchorName = anchorObj?.anchorName;
+  const customPropName = anchorObj?.customPropName;
   if (targetEl && !anchorName) {
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
@@ -278,6 +293,7 @@ async function getAnchorEl(
 
 export async function parseCSS(styleData: StyleData[]) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
+  const positionAreas: PositionAreaDeclarations = {};
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -325,7 +341,24 @@ export async function parseCSS(styleData: StyleData[]) {
           };
         }
       }
-      if (updated) {
+
+      let positionAreaDeclaration: PositionAreaDeclaration | undefined;
+      if (this.block) {
+        positionAreaDeclaration = getPositionAreaDeclaration(node);
+        if (positionAreaDeclaration) {
+          addPositionAreaDeclarationBlockStyles(
+            positionAreaDeclaration,
+            this.block,
+          );
+          for (const { selector } of selectors) {
+            positionAreas[selector] = [
+              ...(positionAreas[selector] ?? []),
+              positionAreaDeclaration,
+            ];
+          }
+        }
+      }
+      if (updated || positionAreaDeclaration) {
         changed = true;
       }
     });
@@ -700,6 +733,57 @@ export async function parseCSS(styleData: StyleData[]) {
             },
           };
         }
+      }
+    }
+  }
+
+  // Create a new stylesheet for the position-area mapping styles
+  const positionAreaMappingStyleElement: StyleData = {
+    el: document.createElement('link'),
+    changed: false,
+    created: true,
+    css: '',
+  };
+  styleData.push(positionAreaMappingStyleElement);
+
+  // We loop through each selector that has been used to apply a position-area
+  // declaration, and find all elements that match the selector. The same
+  // selector may be used twice, for instance:
+  //
+  // .foo { position-area: start }
+  // .foo { position-area: end }
+
+  for (const [targetSel, positions] of Object.entries(positionAreas)) {
+    const targets: NodeListOf<HTMLElement> =
+      document.querySelectorAll(targetSel);
+    for (const targetEl of targets) {
+      // For every target element, find a valid anchor element.
+      const anchorEl = await getAnchorEl(targetEl);
+      // For every position-area declaration with this selector, create a new
+      // UUID, and make sure the target has a wrapper.
+      for (const positionData of positions) {
+        const targetData = await dataForPositionAreaTarget(
+          targetEl,
+          positionData,
+          anchorEl,
+        );
+        positionAreaMappingStyleElement.css += activeWrapperStyles(
+          targetData.targetUUID,
+          positionData.selectorUUID,
+        );
+        positionAreaMappingStyleElement.changed = true;
+        // Populate new data for each anchor/target combo
+        validPositions[targetSel] = {
+          ...validPositions[targetSel],
+          declarations: {
+            ...validPositions[targetSel]?.declarations,
+            'position-area': [
+              ...(validPositions[targetSel]?.declarations?.['position-area'] ??
+                []),
+              targetData,
+            ],
+          },
+        };
       }
     }
   }

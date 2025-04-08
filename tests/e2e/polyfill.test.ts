@@ -1,4 +1,6 @@
-import { expect, type Locator, type Page, test } from '@playwright/test';
+import { expect, type Page, test } from '@playwright/test';
+
+import { expectWithinOne } from './utils.js';
 
 test.beforeEach(async ({ page }) => {
   // Listen for all console logs
@@ -36,28 +38,6 @@ async function getParentHeight(page: Page, sel: string) {
     .locator(sel)
     .first()
     .evaluate((node: HTMLElement) => node.offsetParent?.clientHeight ?? 0);
-}
-
-async function expectWithinOne(
-  locator: Locator,
-  attr: string,
-  expected: number,
-  not?: boolean,
-) {
-  const getValue = async () => {
-    const actual = await locator.evaluate(
-      (node: HTMLElement, attribute: string) =>
-        window.getComputedStyle(node).getPropertyValue(attribute),
-      attr,
-    );
-    return Number(actual.slice(0, -2));
-  };
-  if (not) {
-    return expect
-      .poll(getValue, { timeout: 10 * 1000 })
-      .not.toBeCloseTo(expected, 0);
-  }
-  return expect.poll(getValue, { timeout: 10 * 1000 }).toBeCloseTo(expected, 0);
 }
 
 test('applies polyfill for `anchor()`', async ({ page }) => {

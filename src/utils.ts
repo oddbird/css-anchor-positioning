@@ -55,6 +55,7 @@ export interface StyleData {
   css: string;
   url?: URL;
   changed?: boolean;
+  created?: boolean; // Whether the element is created by the polyfill
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;

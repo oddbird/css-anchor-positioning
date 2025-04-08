@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`position-area > activeWrapperStyles > returns the active styles 1`] = `"    [data-anchor-position-wrapper="selectorUUID"][data-pa-wrapper-for-targetUUID] {      --pa-value-top: var(targetUUID-top);      --pa-value-left: var(targetUUID-left);      --pa-value-right: var(targetUUID-right);      --pa-value-bottom: var(targetUUID-bottom);      --pa-value-justify-self: var(targetUUID-justify-self);      --pa-value-align-self: var(targetUUID-align-self);    }  "`;
