@@ -28,8 +28,7 @@ polyfilled and are not present in those versions.
 - `position-try-fallbacks` was added in 128 after being renamed from
   `position-try-order`. Use both `-fallbacks` and `-order` or the `position-try`
   shorthand to make sure all versions are covered.
-- `position-area` was added in 129. This is also not yet implemented in the
-  polyfill, so we recommend not using this yet.
+- `position-area` was added in 129.
 - `anchor-scope` was added in 131.
 
 ## Getting Started
