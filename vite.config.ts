@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 
+import replace from '@rollup/plugin-replace';
 import { resolve } from 'path';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
 import { defineConfig } from 'vite';
@@ -46,14 +47,17 @@ export default defineConfig({
         target: 'es6',
         sourcemap: true,
         rollupOptions: {
-          external: [/source-map-js/],
-          // This is not needed, but silences a Rollup warning
-          output: {
-            globals: {
-              'source-map-js/lib/source-map-generator.js':
-                'sourceMapGenerator_js',
-            },
-          },
+          plugins: [
+            // Remove unused source-map-js module to minimize build size
+            replace({
+              values: {
+                "import { SourceMapGenerator } from 'source-map-js/lib/source-map-generator.js';":
+                  '',
+              },
+              delimiters: ['', ''],
+              preventAssignment: true,
+            }),
+          ],
         },
       },
   plugins: [bundleStats({ compare: false, silent: true })],

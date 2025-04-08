@@ -87,6 +87,7 @@
   "devDependencies": {
     "@eslint/js": "^9.24.0",
     "@playwright/test": "1.43.1",
+    "@rollup/plugin-replace": "^6.0.2",
     "@types/async": "^3.2.24",
     "@types/node": "*",
     "@types/selenium-webdriver": "^4.1.28",
