@@ -162,7 +162,7 @@ following features:
   which adds a few differences:
   - This breaks selectors that rely on a direct relationship with the target,
     for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
-  - Overflow alignment is not applied for a target that overflow its
+  - Overflow alignment is not applied for a target that overflows its
     inset-modified containing block but would still fit within its original
     containing block. In other words, a polyfilled target may be placed in a
     `position-area` grid section outside its containing block, where the
