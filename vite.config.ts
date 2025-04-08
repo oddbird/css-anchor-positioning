@@ -49,6 +49,7 @@ export default defineConfig({
         rollupOptions: {
           plugins: [
             // Remove unused source-map-js module to minimize build size
+            // @ts-expect-error https://github.com/rollup/plugins/issues/1541
             replace({
               values: {
                 "import { SourceMapGenerator } from 'source-map-js/lib/source-map-generator.js';":
