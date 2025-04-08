@@ -59,9 +59,11 @@
 
 .target.bottom-center {
   position-area: bottom center;
+  padding-left: 50%;
 }
 
 .target.spanleft-top {
+  padding-right: 50%;
   position-area: span-left top;
 }
 

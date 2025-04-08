@@ -158,9 +158,15 @@ following features:
   property
 - vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
-- `position-area` is polyfilled by adding a wrapping element around the target.
-  This will break selectors that rely on a direct relationship with the target,
-  for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+- `position-area` is polyfilled by adding a wrapping element around the target,
+  which adds a few differences:
+  - This breaks selectors that rely on a direct relationship with the target,
+    for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+  - Overflow alignment is not applied for a target that overflow its
+    inset-modified containing block but would still fit within its original
+    containing block. In other words, a polyfilled target may be placed in a
+    `position-area` grid section outside its containing block, where the
+    implementation would move the target inside the containing block.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
