@@ -110,6 +110,7 @@ test('updates when sizes change', async ({ page }) => {
 test('applies polyfill for `@position-fallback`', async ({ page }) => {
   const targetSel = '#my-target-fallback';
   const target = page.locator(targetSel);
+  await target.scrollIntoViewIfNeeded();
 
   await expect(target).toHaveCSS('left', '0px');
 
@@ -124,6 +125,7 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   });
 
   await expect(target).toHaveCSS('width', '100px');
+  await expect(target).toHaveCSS('height', '100px');
 });
 
 test('applies manual polyfill', async ({ page }) => {

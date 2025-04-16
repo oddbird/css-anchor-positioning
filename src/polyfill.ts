@@ -441,12 +441,13 @@ async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
       y: target.offsetTop,
       platform: platformWithCache,
       rects,
-      elements: { floating: target },
+      elements: {
+        floating: target,
+        reference: offsetParent,
+      },
       strategy: 'absolute',
     } as unknown as MiddlewareState,
     {
-      boundary: offsetParent,
-      rootBoundary: 'document',
       padding: getMargins(target),
     },
   );
