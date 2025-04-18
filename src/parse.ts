@@ -44,8 +44,8 @@ import {
   getAST,
   getSelectors,
   isAnchorFunction,
-  makeDeclarationValueUrlAbsolute,
-  makeImportUrlAbsolute,
+  // makeDeclarationValueUrlAbsolute,
+  // makeImportUrlAbsolute,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
