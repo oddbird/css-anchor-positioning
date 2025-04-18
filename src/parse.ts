@@ -44,6 +44,8 @@ import {
   getAST,
   getSelectors,
   isAnchorFunction,
+  // makeDeclarationValueUrlAbsolute,
+  // makeImportUrlAbsolute,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -681,6 +683,31 @@ export async function parseCSS(styleData: StyleData[]) {
       }
     }
   }
+
+  // for (const styleObj of styleData) {
+  //   if (styleObj.changed) {
+  //     let changed = false;
+  //     const ast = getAST(styleObj.css);
+  //     // @import rules need to be reparsed, as atrule preludes are not parsed
+  //     // by default
+  //     walk(ast, {
+  //       visit: 'Atrule',
+  //       enter(node) {
+  //         changed = makeImportUrlAbsolute(node);
+  //       },
+  //     });
+  //     walk(ast, {
+  //       visit: 'Declaration',
+  //       enter(node) {
+  //         changed = makeDeclarationValueUrlAbsolute(node) || changed;
+  //       },
+  //     });
+  //     if (changed) {
+  //       // Update CSS
+  //       styleObj.css = generateCSS(ast);
+  //     }
+  //   }
+  // }
 
   // Store inline style custom property mappings for each target element
   const inlineStyles = new Map<HTMLElement, Record<string, string>>();
