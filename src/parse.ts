@@ -44,6 +44,7 @@ import {
   getAST,
   getSelectors,
   isAnchorFunction,
+  makeImportUrlAbsolute,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -678,6 +679,23 @@ export async function parseCSS(styleData: StyleData[]) {
         // Update CSS
         styleObj.css = generateCSS(ast);
         styleObj.changed = true;
+      }
+    }
+  }
+
+  for (const styleObj of styleData) {
+    if (styleObj.changed) {
+      let changed = false;
+      const ast = getAST(styleObj.css);
+      walk(ast, {
+        visit: 'Atrule',
+        enter(node) {
+          changed = makeImportUrlAbsolute(node);
+        },
+      });
+      if (changed) {
+        // Update CSS
+        styleObj.css = generateCSS(ast);
       }
     }
   }

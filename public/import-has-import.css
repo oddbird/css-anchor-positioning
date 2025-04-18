@@ -1,0 +1,17 @@
+@import url('./import-is-imported-url.css') supports(display: grid) screen and
+  (min-width: 400px);
+/* stylelint-disable-next-line import-notation */
+@import './import-is-imported-string.css';
+
+#imports .anchor {
+  anchor-name: --import-anchor;
+}
+
+#imports .target {
+  position: absolute;
+  position-anchor: --import-anchor;
+}
+
+#imports #target-1 {
+  position-area: end;
+}

@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="/anchor-scope.css" />
     <link rel="stylesheet" href="/position-area.css" />
     <link rel="stylesheet" href="/anchor-inside-outside.css" />
+    <link rel="stylesheet" href="/import-has-import.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <style>
@@ -1328,6 +1329,47 @@ CSS inside the anchor-manual.css file:
   top: anchor(center);
 }</code></pre>
     </section>
+
+    <section id="imports" class="demo-item">
+      <h2>
+        <a href="#imports" aria-hidden="true">🔗</a>
+        Works with CSS @imports
+      </h2>
+      <div class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target" id="target-1">Target One</div>
+        <div class="target" id="target-2">Target Two</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target and Anchor text is orange (from styles
+        defined in an imported stylesheet). Target One is positioned at the
+        bottom right corner of the Anchor.<br />
+
+        <strong>Note:</strong> Target Two has <code>position-area</code> defined
+        in an imported stylesheet, which is not parsed by the polyfill, so it is
+        not positioned correctly. It should be positioned at the bottom left
+        corner.
+      </p>
+      <pre><code class="language-css">@import url('./import-is-imported-url.css') supports(display: grid) screen and (min-width: 400px);
+@import './import-is-imported-string.css';
+
+/* ./import-is-imported-url.css */
+#imports #target-1{
+  color: var(--brand-orange);
+}
+
+#imports #target-2{
+  position-area: block-end inline-start;
+  color: var(--brand-orange);
+}
+
+/* ./import-is-imported-string.css */
+#imports .anchor{
+  color: var(--brand-orange);
+}
+      </code></pre>
+    </section>
+
     <section id="sponsor">
       <h2>Sponsor OddBird’s OSS Work</h2>
       <p>

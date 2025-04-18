@@ -1,4 +1,5 @@
 import type {
+  Atrule,
   CssNode,
   Declaration,
   FunctionNode,
@@ -7,6 +8,8 @@ import type {
   Selector as CssTreeSelector,
   SelectorList,
   Value,
+  AtrulePrelude,
+  StyleSheet,
 } from 'css-tree';
 import generate from 'css-tree/generator';
 import parse from 'css-tree/parser';
@@ -27,9 +30,9 @@ export function isAnchorFunction(node: CssNode | null): node is FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
-export function getAST(cssText: string) {
+export function getAST(cssText: string, parseAtrulePrelude = false) {
   return parse(cssText, {
-    parseAtrulePrelude: false,
+    parseAtrulePrelude: parseAtrulePrelude,
     parseCustomProperty: true,
   });
 }
@@ -48,6 +51,25 @@ export function isDeclaration(node: CssNode): node is DeclarationWithValue {
 
 export function getDeclarationValue(node: DeclarationWithValue) {
   return (node.value.children.first as Identifier).name;
+}
+
+function isImportRule(node: CssNode): node is Atrule {
+  return node.type === 'Atrule' && node.name === 'import';
+}
+
+export function makeImportUrlAbsolute(node: CssNode): boolean {
+  if (!isImportRule(node)) return false;
+  const reparsedNode = (getAST(generateCSS(node), true) as StyleSheet).children.first;
+  if (!reparsedNode || !isImportRule(reparsedNode)) return false;
+  if (reparsedNode.prelude?.type !== 'AtrulePrelude') return false;
+
+  // URL is always the first child of the prelude
+  const url = reparsedNode.prelude.children.first;
+  if (!url) return false;
+  if (url.type !== 'Url' && url.type !== 'String') return false;
+  url.value = new URL(url.value, document.baseURI).href;
+  node.prelude = reparsedNode.prelude;
+  return true;
 }
 
 export interface StyleData {
