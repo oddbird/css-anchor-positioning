@@ -21,35 +21,27 @@ export async function transformCSS(
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
         // Create new link
-        const blob = new Blob([css], { type: 'text/css' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('link');
+        const styleEl = document.createElement('style');
+        styleEl.textContent = css;
         for (const name of el.getAttributeNames()) {
           if (!name.startsWith('on') && !excludeAttributes.includes(name)) {
             const attr = el.getAttribute(name);
             if (attr !== null) {
-              link.setAttribute(name, attr);
+              styleEl.setAttribute(name, attr);
             }
           }
         }
-        link.setAttribute('href', url);
-        const promise = new Promise((res) => {
-          link.onload = res;
-        });
         if (!created) {
           // This is an existing stylesheet, so we replace it.
-          el.insertAdjacentElement('beforebegin', link);
+          el.insertAdjacentElement('beforebegin', styleEl);
           // Wait for new stylesheet to be loaded
-          await promise;
           el.remove();
         } else {
           // This is a new stylesheet, so we append it.
-          link.rel = 'stylesheet';
-          document.head.insertAdjacentElement('beforeend', link);
+          document.head.insertAdjacentElement('beforeend', styleEl);
           // Wait for new stylesheet to be loaded
-          await promise;
         }
-        updatedObject.el = link;
+        updatedObject.el = styleEl;
       } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
