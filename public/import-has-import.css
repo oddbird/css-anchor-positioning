@@ -7,6 +7,10 @@
   anchor-name: --import-anchor;
 }
 
+#imports .anchor::after {
+  content: url('./mail.svg');
+}
+
 #imports .target {
   position: absolute;
   position-anchor: --import-anchor;

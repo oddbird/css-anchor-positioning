@@ -6,3 +6,7 @@
   position-area: block-end inline-start;
   color: var(--brand-orange);
 }
+
+#imports .anchor::before {
+  content: url('./mail.svg');
+}

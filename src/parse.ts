@@ -44,6 +44,7 @@ import {
   getAST,
   getSelectors,
   isAnchorFunction,
+  makeDeclarationValueUrlAbsolute,
   makeImportUrlAbsolute,
   type StyleData,
 } from './utils.js';
@@ -691,6 +692,12 @@ export async function parseCSS(styleData: StyleData[]) {
         visit: 'Atrule',
         enter(node) {
           changed = makeImportUrlAbsolute(node);
+        },
+      });
+      walk(ast, {
+        visit: 'Declaration',
+        enter(node) {
+          changed = makeDeclarationValueUrlAbsolute(node) || changed;
         },
       });
       if (changed) {

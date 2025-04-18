@@ -1343,7 +1343,8 @@ CSS inside the anchor-manual.css file:
       <p class="note">
         With polyfill applied: Target and Anchor text is orange (from styles
         defined in an imported stylesheet). Target One is positioned at the
-        bottom right corner of the Anchor.<br />
+        bottom right corner of the Anchor. The Anchor has an envelope icon on
+        both sides of the text.<br />
 
         <strong>Note:</strong> Target Two has <code>position-area</code> defined
         in an imported stylesheet, which is not parsed by the polyfill, so it is
@@ -1352,6 +1353,10 @@ CSS inside the anchor-manual.css file:
       </p>
       <pre><code class="language-css">@import url('./import-is-imported-url.css') supports(display: grid) screen and (min-width: 400px);
 @import './import-is-imported-string.css';
+
+#imports .anchor::after {
+  content: url('./mail.svg');
+}
 
 /* ./import-is-imported-url.css */
 #imports #target-1{

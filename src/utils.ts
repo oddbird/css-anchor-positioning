@@ -1,15 +1,14 @@
-import type {
-  Atrule,
-  CssNode,
-  Declaration,
-  FunctionNode,
-  Identifier,
+import {
+  type Atrule,
+  type CssNode,
+  type Declaration,
+  type FunctionNode,
+  type Identifier,
   List,
-  Selector as CssTreeSelector,
-  SelectorList,
-  Value,
-  AtrulePrelude,
-  StyleSheet,
+  type Selector as CssTreeSelector,
+  type SelectorList,
+  type StyleSheet,
+  type Value,
 } from 'css-tree';
 import generate from 'css-tree/generator';
 import parse from 'css-tree/parser';
@@ -59,7 +58,10 @@ function isImportRule(node: CssNode): node is Atrule {
 
 export function makeImportUrlAbsolute(node: CssNode): boolean {
   if (!isImportRule(node)) return false;
-  const reparsedNode = (getAST(generateCSS(node), true) as StyleSheet).children.first;
+  // AtRulePreludes are not parsed by default, so we need to reparse the node
+  // to get the URL.
+  const reparsedNode = (getAST(generateCSS(node), true) as StyleSheet).children
+    .first;
   if (!reparsedNode || !isImportRule(reparsedNode)) return false;
   if (reparsedNode.prelude?.type !== 'AtrulePrelude') return false;
 
@@ -70,6 +72,23 @@ export function makeImportUrlAbsolute(node: CssNode): boolean {
   url.value = new URL(url.value, document.baseURI).href;
   node.prelude = reparsedNode.prelude;
   return true;
+}
+
+export function makeDeclarationValueUrlAbsolute(node: CssNode): boolean {
+  if (!isDeclaration(node)) return false;
+
+  if (node.value.type !== 'Value') return false;
+  let changed = false;
+
+  const mapped = node.value.children.toArray().map((child) => {
+    if (!child) return child;
+    if (child.type !== 'Url') return child;
+    child.value = new URL(child.value, document.baseURI).href;
+    changed = true;
+    return child;
+  });
+  node.value.children = new List<CssNode>().fromArray(mapped);
+  return changed;
 }
 
 export interface StyleData {
