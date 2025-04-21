@@ -21,7 +21,7 @@ const excludeAttributes = [
   'type',
 ];
 
-export async function transformCSS(
+export function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
   cleanup = false,

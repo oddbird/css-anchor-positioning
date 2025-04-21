@@ -1,7 +1,7 @@
 import { transformCSS } from '../../src/transform.js';
 
 describe('transformCSS', () => {
-  it('parses and removes new anchor positioning CSS after transformation to JS', async () => {
+  it('parses and removes new anchor positioning CSS after transformation to JS', () => {
     document.head.innerHTML = `
       <link type="text/css" href="/sample.css" data-link="true" crossorigin="anonymous" />
       <style>
@@ -32,7 +32,7 @@ describe('transformCSS', () => {
     ];
     const inlineStyles = new Map();
     inlineStyles.set(div, { '--foo': '--bar' });
-    await transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles, true);
 
     expect(link.isConnected).toBe(false);
     const newLink = document.querySelector(
@@ -49,7 +49,7 @@ describe('transformCSS', () => {
     expect(div2.hasAttribute('data-has-inline-styles')).toBeFalsy();
   });
 
-  it('preserves id, media, and title attributes when replacing link elements', async () => {
+  it('preserves id, media, and title attributes when replacing link elements', () => {
     document.head.innerHTML = `
       <link id="the-link" media="screen" title="stylish" rel="stylesheet" href="/sample.css"/>
     `;
@@ -58,7 +58,7 @@ describe('transformCSS', () => {
     const inlineStyles = new Map();
     const initialStyleElement = document.querySelector('style');
     expect(initialStyleElement).toBe(null);
-    await transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles, true);
     const transformedStyleElement = document.querySelector(
       'style',
     ) as HTMLStyleElement;
@@ -70,7 +70,7 @@ describe('transformCSS', () => {
     expect(transformedLink).toBe(null);
   });
 
-  it('creates new style elements for created styles', async () => {
+  it('creates new style elements for created styles', () => {
     document.head.innerHTML = ``;
     const styleData = [
       {
@@ -80,7 +80,7 @@ describe('transformCSS', () => {
         created: true,
       },
     ];
-    await transformCSS(styleData, undefined, true);
+    transformCSS(styleData, undefined, true);
 
     const createdStyleElement = document.querySelector(
       'style',

@@ -1329,7 +1329,6 @@ CSS inside the anchor-manual.css file:
   top: anchor(center);
 }</code></pre>
     </section>
-
     <section id="imports" class="demo-item">
       <h2>
         <a href="#imports" aria-hidden="true">🔗</a>
@@ -1340,17 +1339,20 @@ CSS inside the anchor-manual.css file:
         <div class="target" id="target-1">Target One</div>
         <div class="target" id="target-2">Target Two</div>
       </div>
-      <p class="note">
-        With polyfill applied: Target and Anchor text is orange (from styles
-        defined in an imported stylesheet). Target One is positioned at the
-        bottom right corner of the Anchor. The Anchor has an envelope icon on
-        both sides of the text.<br />
-
-        <strong>Note:</strong> Target Two has <code>position-area</code> defined
-        in an imported stylesheet, which is not parsed by the polyfill, so it is
-        not positioned correctly. It should be positioned at the bottom left
-        corner.
-      </p>
+      <div class="note">
+        <p>
+          With polyfill applied: Target and Anchor text is orange (from styles
+          defined in an imported stylesheet). Target One is positioned at the
+          bottom right corner of the Anchor. The Anchor has an envelope icon on
+          both sides of the text.
+        </p>
+        <p>
+          <strong>Note:</strong> Target Two has
+          <code>position-area</code> defined in an imported stylesheet, which is
+          not parsed by the polyfill, so it is not positioned correctly. It
+          should be positioned at the bottom left corner.
+        </p>
+      </div>
       <pre><code class="language-css">@import url('./import-is-imported-url.css') supports(display: grid) screen and (min-width: 400px);
 @import './import-is-imported-string.css';
 
@@ -1359,22 +1361,24 @@ CSS inside the anchor-manual.css file:
 }
 
 /* ./import-is-imported-url.css */
-#imports #target-1{
+#imports #target-1 {
   color: var(--brand-orange);
 }
 
-#imports #target-2{
+#imports #target-2 {
   position-area: block-end inline-start;
   color: var(--brand-orange);
 }
 
-/* ./import-is-imported-string.css */
-#imports .anchor{
-  color: var(--brand-orange);
+#imports .anchor::before {
+  content: url('./mail.svg');
 }
-      </code></pre>
-    </section>
 
+/* ./import-is-imported-string.css */
+#imports .anchor {
+  color: var(--brand-orange);
+}</code></pre>
+    </section>
     <section id="sponsor">
       <h2>Sponsor OddBird’s OSS Work</h2>
       <p>
