@@ -1,10 +1,24 @@
 import { type StyleData } from './utils.js';
 
+// This is a list of non-global attributes that apply to link elements but do
+// not apply to style elements. These should be removed when converting from a
+// link element to a style element. These mostly define loading behavior, which
+// is not relevant to style elements or our use case.
 const excludeAttributes = [
+  'as',
+  'blocking',
   'crossorigin',
+  // 'disabled' is not relevant for style elements, but this exclusion is
+  // theoretical, as a <link rel=stylesheet disabled> will not be loaded, and
+  // will not reach this part of the polyfill. See #246.
+  'disabled',
+  'fetchpriority',
   'href',
+  'hreflang',
   'integrity',
   'referrerpolicy',
+  'rel',
+  'type',
 ];
 
 export async function transformCSS(
@@ -20,7 +34,7 @@ export async function transformCSS(
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
-        // Create new link
+        // Replace link elements with style elements
         const styleEl = document.createElement('style');
         styleEl.textContent = css;
         for (const name of el.getAttributeNames()) {
@@ -31,15 +45,18 @@ export async function transformCSS(
             }
           }
         }
+        // Persist the href attribute to help with potential debugging.
+        if (el.hasAttribute('href')) {
+          styleEl.setAttribute('data-original-href', el.getAttribute('href')!);
+        }
         if (!created) {
           // This is an existing stylesheet, so we replace it.
           el.insertAdjacentElement('beforebegin', styleEl);
-          // Wait for new stylesheet to be loaded
           el.remove();
         } else {
+          styleEl.setAttribute('data-generated-by-polyfill', 'true');
           // This is a new stylesheet, so we append it.
           document.head.insertAdjacentElement('beforeend', styleEl);
-          // Wait for new stylesheet to be loaded
         }
         updatedObject.el = styleEl;
       } else if (el.hasAttribute('data-has-inline-styles')) {
