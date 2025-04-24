@@ -34,7 +34,11 @@ export function transformCSS(
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
-        // Replace link elements with style elements
+        // Replace link elements with style elements We use inline style
+        // elements rather link elements with blob URLs, as relative URLs for
+        // things like images and fonts are not supported in blob URLs. See
+        // https://github.com/oddbird/css-anchor-positioning/pull/324 for more
+        // discussion.
         const styleEl = document.createElement('style');
         styleEl.textContent = css;
         for (const name of el.getAttributeNames()) {
