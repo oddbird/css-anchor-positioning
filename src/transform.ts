@@ -35,7 +35,7 @@ export function transformCSS(
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
         // Replace link elements with style elements.
-        // We use inline style elements rather then link elements with blob
+        // We use inline style elements rather than link elements with blob
         // URLs, as relative URLs for things like images and fonts are not
         // supported in blob URLs. See
         // https://github.com/oddbird/css-anchor-positioning/pull/324 for more
