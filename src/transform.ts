@@ -1,13 +1,27 @@
 import { type StyleData } from './utils.js';
 
+// This is a list of non-global attributes that apply to link elements but do
+// not apply to style elements. These should be removed when converting from a
+// link element to a style element. These mostly define loading behavior, which
+// is not relevant to style elements or our use case.
 const excludeAttributes = [
+  'as',
+  'blocking',
   'crossorigin',
+  // 'disabled' is not relevant for style elements, but this exclusion is
+  // theoretical, as a <link rel=stylesheet disabled> will not be loaded, and
+  // will not reach this part of the polyfill. See #246.
+  'disabled',
+  'fetchpriority',
   'href',
+  'hreflang',
   'integrity',
   'referrerpolicy',
+  'rel',
+  'type',
 ];
 
-export async function transformCSS(
+export function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
   cleanup = false,
@@ -20,36 +34,31 @@ export async function transformCSS(
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
-        // Create new link
-        const blob = new Blob([css], { type: 'text/css' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('link');
+        // Replace link elements with style elements
+        const styleEl = document.createElement('style');
+        styleEl.textContent = css;
         for (const name of el.getAttributeNames()) {
           if (!name.startsWith('on') && !excludeAttributes.includes(name)) {
             const attr = el.getAttribute(name);
             if (attr !== null) {
-              link.setAttribute(name, attr);
+              styleEl.setAttribute(name, attr);
             }
           }
         }
-        link.setAttribute('href', url);
-        const promise = new Promise((res) => {
-          link.onload = res;
-        });
+        // Persist the href attribute to help with potential debugging.
+        if (el.hasAttribute('href')) {
+          styleEl.setAttribute('data-original-href', el.getAttribute('href')!);
+        }
         if (!created) {
           // This is an existing stylesheet, so we replace it.
-          el.insertAdjacentElement('beforebegin', link);
-          // Wait for new stylesheet to be loaded
-          await promise;
+          el.insertAdjacentElement('beforebegin', styleEl);
           el.remove();
         } else {
+          styleEl.setAttribute('data-generated-by-polyfill', 'true');
           // This is a new stylesheet, so we append it.
-          link.rel = 'stylesheet';
-          document.head.insertAdjacentElement('beforeend', link);
-          // Wait for new stylesheet to be loaded
-          await promise;
+          document.head.insertAdjacentElement('beforeend', styleEl);
         }
-        updatedObject.el = link;
+        updatedObject.el = styleEl;
       } else if (el.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');

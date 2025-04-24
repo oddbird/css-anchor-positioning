@@ -594,14 +594,14 @@ export async function polyfill(
   // pre parse CSS styles that we need to cascade
   const cascadeCausedChanges = cascadeCSS(styleData);
   if (cascadeCausedChanges) {
-    styleData = await transformCSS(styleData);
+    styleData = transformCSS(styleData);
   }
   // parse CSS
   const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // update source code
-    await transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles, true);
 
     // calculate position values
     await position(rules, options.useAnimationFrame);
