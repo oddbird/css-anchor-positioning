@@ -79,7 +79,7 @@
     "test:wpt": "node --loader ts-node/esm ./tests/wpt.ts"
   },
   "dependencies": {
-    "@floating-ui/dom": "^1.6.13",
+    "@floating-ui/dom": "^1.7.0",
     "@types/css-tree": "^2.3.10",
     "css-tree": "^3.1.0",
     "nanoid": "^5.1.5"
