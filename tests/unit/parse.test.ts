@@ -1,4 +1,4 @@
-import { type AnchorPositions, parseCSS } from '../../src/parse.js';
+import { parseCSS } from '../../src/parse.js';
 import { type StyleData } from '../../src/utils.js';
 import {
   cascadeCSSForTest,
@@ -636,7 +636,7 @@ describe('parseCSS', () => {
     const targetEl = document.getElementById('my-target-fallback');
     const anchor2El = document.getElementById('my-anchor-fallback-2');
     const target2El = document.getElementById('my-target-fallback-2');
-    const expected: AnchorPositions = {
+    const expected = {
       '#my-target-fallback': {
         declarations: {
           bottom: [
@@ -790,7 +790,7 @@ describe('parseCSS', () => {
     const { rules } = await parseCSS([{ css }] as StyleData[]);
     const li = document.querySelectorAll('li');
     const positioned = document.querySelectorAll<HTMLElement>('.positioned');
-    const expected: AnchorPositions = {
+    const expected = {
       'li .positioned': {
         declarations: {
           top: [
@@ -837,7 +837,7 @@ describe('parseCSS', () => {
     `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const expected = {
       '.positioned': {
         declarations: {
           top: [
@@ -879,7 +879,7 @@ describe('parseCSS', () => {
     `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const expected = {
       '.positioned': {
         declarations: {
           top: [
@@ -920,7 +920,7 @@ describe('parseCSS', () => {
     `);
     document.head.innerHTML = `<style>${css}</style>`;
     const { rules } = await parseCSS([{ css }] as StyleData[]);
-    const expected: AnchorPositions = {
+    const expected = {
       '.positioned': {
         declarations: {
           top: [

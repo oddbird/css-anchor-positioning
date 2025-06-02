@@ -5,7 +5,8 @@
     "types": ["vitest/globals"],
     "noEmit": true,
     "skipLibCheck": true,
-    "allowJs": true
+    "allowJs": true,
+    "noImplicitAny": false
   },
   "include": [
     "./**/*.ts",
