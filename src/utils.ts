@@ -31,6 +31,11 @@ export function getAST(cssText: string) {
   return parse(cssText, {
     parseAtrulePrelude: false,
     parseCustomProperty: true,
+    onParseError: (err) => {
+      const errorPrelude =
+        'Invalid CSS could not be parsed. CSS Anchor Positioning Polyfill was not applied.\n\n';
+      throw new Error(errorPrelude + err.formattedMessage, { cause: err });
+    },
   });
 }
 

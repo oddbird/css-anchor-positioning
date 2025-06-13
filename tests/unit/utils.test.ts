@@ -20,3 +20,23 @@ describe('splitCommaList', () => {
     ]);
   });
 });
+describe('getAST', () => {
+  it('parses valid CSS', () => {
+    const cssText = 'a { color: red; }';
+    const ast = getAST(cssText);
+    expect(ast.type).toBe('StyleSheet');
+  });
+
+  it('throws on invalid declaration', () => {
+    const cssText = 'a { color; red; } ';
+    expect(() => getAST(cssText)).toThrowError(
+      /Invalid CSS could not be parsed/,
+    );
+  });
+  it('throws on invalid selector', () => {
+    const cssText = 'a-[1] { color: red; } ';
+    expect(() => getAST(cssText)).toThrowError(
+      /Invalid CSS could not be parsed/,
+    );
+  });
+});
