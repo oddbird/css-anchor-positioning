@@ -32,6 +32,7 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
+import { cssParseErrors } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -590,14 +591,37 @@ export async function polyfill(
 
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
-
-  // pre parse CSS styles that we need to cascade
-  const cascadeCausedChanges = cascadeCSS(styleData);
-  if (cascadeCausedChanges) {
-    styleData = transformCSS(styleData);
+  let rules: AnchorPositions = {};
+  let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
+  try {
+    // pre parse CSS styles that we need to cascade
+    const cascadeCausedChanges = cascadeCSS(styleData);
+    if (cascadeCausedChanges) {
+      styleData = transformCSS(styleData);
+    }
+    // parse CSS
+    const parsedCSS = await parseCSS(styleData);
+    rules = parsedCSS.rules;
+    inlineStyles = parsedCSS.inlineStyles;
+  } catch (error) {
+    if (cssParseErrors.length > 0) {
+      // eslint-disable-next-line no-console
+      console.group(
+        `The CSS anchor positioning polyfill was not applied due to ${
+          cssParseErrors.length === 1
+            ? 'a CSS parse error.'
+            : 'CSS parse errors'
+        }.`,
+      );
+      cssParseErrors.forEach((err) => {
+        // eslint-disable-next-line no-console
+        console.warn(err.formattedMessage);
+      });
+      // eslint-disable-next-line no-console
+      console.groupEnd();
+    }
+    throw error;
   }
-  // parse CSS
-  const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // update source code

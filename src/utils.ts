@@ -6,6 +6,7 @@ import type {
   List,
   Selector as CssTreeSelector,
   SelectorList,
+  SyntaxParseError,
   Value,
 } from 'css-tree';
 import generate from 'css-tree/generator';
@@ -16,6 +17,8 @@ import { nanoid } from 'nanoid/non-secure';
 import type { Selector } from './dom.js';
 
 export const INSTANCE_UUID = nanoid();
+
+export const cssParseErrors = [] as SyntaxParseError[];
 
 // https://github.com/import-js/eslint-plugin-import/issues/3019
 
@@ -32,9 +35,7 @@ export function getAST(cssText: string) {
     parseAtrulePrelude: false,
     parseCustomProperty: true,
     onParseError: (err) => {
-      const errorPrelude =
-        'Invalid CSS could not be parsed. CSS Anchor Positioning Polyfill was not applied.\n\n';
-      throw new Error(errorPrelude + err.formattedMessage, { cause: err });
+      cssParseErrors.push(err);
     },
   });
 }
