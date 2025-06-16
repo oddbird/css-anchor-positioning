@@ -30,12 +30,12 @@ export function isAnchorFunction(node: CssNode | null): node is FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
 
-export function getAST(cssText: string) {
+export function getAST(cssText: string, captureErrors = false) {
   return parse(cssText, {
     parseAtrulePrelude: false,
     parseCustomProperty: true,
     onParseError: (err) => {
-      cssParseErrors.push(err);
+      if(captureErrors) cssParseErrors.push(err);
     },
   });
 }
