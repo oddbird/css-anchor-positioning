@@ -18,7 +18,11 @@ import type { Selector } from './dom.js';
 
 export const INSTANCE_UUID = nanoid();
 
-export const cssParseErrors = [] as SyntaxParseError[];
+/** Singleton to hold CSS parse errors in case polyfill fails.
+ *
+ * Not included in the store in parse.ts, as it has a different lifecycle.
+ */
+export const cssParseErrors = new Set() as Set<SyntaxParseError>;
 
 // https://github.com/import-js/eslint-plugin-import/issues/3019
 
@@ -29,13 +33,17 @@ export interface DeclarationWithValue extends Declaration {
 export function isAnchorFunction(node: CssNode | null): node is FunctionNode {
   return Boolean(node && node.type === 'Function' && node.name === 'anchor');
 }
-
+/**
+ * @param cssText
+ * @param captureErrors `true` only on the initial parse of CSS before the
+ * polyfill changes it
+ */
 export function getAST(cssText: string, captureErrors = false) {
   return parse(cssText, {
     parseAtrulePrelude: false,
     parseCustomProperty: true,
     onParseError: (err) => {
-      if(captureErrors) cssParseErrors.push(err);
+      if (captureErrors) cssParseErrors.add(err);
     },
   });
 }
@@ -105,4 +113,25 @@ export function getSelectors(rule: SelectorList | undefined) {
       } satisfies Selector;
     })
     .toArray();
+}
+
+export function reportParseErrorsOnFailure() {
+  if (cssParseErrors.size > 0) {
+    // eslint-disable-next-line no-console
+    console.group(
+      `The CSS anchor positioning polyfill was not applied due to ${
+        cssParseErrors.size === 1 ? 'a CSS parse error' : 'CSS parse errors'
+      }.`,
+    );
+    cssParseErrors.forEach((err) => {
+      // eslint-disable-next-line no-console
+      console.warn(err.formattedMessage);
+    });
+    // eslint-disable-next-line no-console
+    console.groupEnd();
+  }
+}
+
+export function resetParseErrors() {
+  cssParseErrors.clear();
 }

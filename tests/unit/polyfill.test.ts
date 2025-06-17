@@ -3,10 +3,12 @@ import {
   getAxisProperty,
   getPixelValue,
   type GetPixelValueOpts,
+  polyfill,
   resolveLogicalSideKeyword,
   resolveLogicalSizeKeyword,
 } from '../../src/polyfill.js';
 import { type AnchorSide, type AnchorSize } from '../../src/syntax.js';
+import { cssParseErrors } from '../../src/utils.js';
 
 describe('resolveLogicalSideKeyword', () => {
   it.each([
@@ -192,4 +194,63 @@ describe('getPixelValue [anchor-size() fn]', () => {
       expect(result).toEqual(expected);
     },
   );
+});
+
+const makeElements = (css) => {
+  const styleEl = document.createElement('style');
+  styleEl.innerHTML = css;
+  return [styleEl];
+};
+
+describe('polyfill', () => {
+  let consoleGroup;
+  let consoleWarn;
+  beforeEach(() => {
+    consoleGroup = vi.spyOn(console, 'group').mockImplementation(() => null);
+    consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => null);
+  });
+
+  afterAll(() => {
+    consoleGroup.mockReset();
+    consoleWarn.mockReset();
+  });
+  it('describes parse error on polyfill failure', async () => {
+    const elements = makeElements('.a-[1] { position-area: end; }');
+
+    await expect(polyfill({ elements })).rejects.toThrow(
+      'Cannot read properties',
+    );
+    expect(cssParseErrors).toHaveLength(1);
+    expect(consoleGroup).toHaveBeenCalledWith(
+      'The CSS anchor positioning polyfill was not applied due to a CSS parse error.',
+    );
+    expect(consoleWarn.mock.calls[0]).toMatchInlineSnapshot(`
+      [
+        "Parse error: Identifier is expected
+          1 |.a-[1] { position-area: end; }
+      -----------^",
+      ]
+    `);
+  });
+  it('does not report parse errors when polyfill succeeds', async () => {
+    const elements = makeElements('.a {width: var(a-[1a])}');
+
+    await expect(polyfill({ elements })).resolves.toBeDefined();
+    expect(cssParseErrors).toHaveLength(1);
+    expect(consoleGroup).not.toHaveBeenCalled();
+    expect(consoleWarn).not.toHaveBeenCalled();
+  });
+  it('parse errors do not persist across polyfill calls', async () => {
+    const styleEl = document.createElement('style');
+    styleEl.innerHTML = '.a {width: var(a-[1a])}';
+    const elements = makeElements('.a {width: var(a-[1a])}');
+
+    await expect(polyfill({ elements })).resolves.toBeDefined();
+    expect(cssParseErrors).toHaveLength(1);
+
+    // Call polyfill again with a parse error
+    const elements1 = makeElements('.a {width: var(a-[1a])}');
+    await expect(polyfill({ elements: elements1 })).resolves.toBeDefined();
+    expect(cssParseErrors).toHaveLength(1);
+  });
 });
