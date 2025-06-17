@@ -50,7 +50,7 @@ function shiftUnsupportedProperties(node: CssNode, block?: Block) {
 export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
     let changed = false;
-    const ast = getAST(styleObj.css);
+    const ast = getAST(styleObj.css, true);
     walk(ast, {
       visit: 'Declaration',
       enter(node) {

@@ -32,6 +32,7 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
+import { reportParseErrorsOnFailure, resetParseErrors } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -591,13 +592,30 @@ export async function polyfill(
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
 
-  // pre parse CSS styles that we need to cascade
-  const cascadeCausedChanges = cascadeCSS(styleData);
-  if (cascadeCausedChanges) {
-    styleData = transformCSS(styleData);
+  let rules: AnchorPositions = {};
+  let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
+
+  // Reset the CSS parse errors in case the polyfill is run multiple times, and
+  // at the beginning in case a previous run failed.
+  resetParseErrors();
+
+  // If the polyfill fails during the steps in the try catch, it is likely due
+  // to invalid CSS, so report the CSS parse errors. Subsequent errors are less
+  // likely to be caused by parse errors.
+  try {
+    // pre parse CSS styles that we need to cascade
+    const cascadeCausedChanges = cascadeCSS(styleData);
+    if (cascadeCausedChanges) {
+      styleData = transformCSS(styleData);
+    }
+    // parse CSS
+    const parsedCSS = await parseCSS(styleData);
+    rules = parsedCSS.rules;
+    inlineStyles = parsedCSS.inlineStyles;
+  } catch (error) {
+    reportParseErrorsOnFailure();
+    throw error;
   }
-  // parse CSS
-  const { rules, inlineStyles } = await parseCSS(styleData);
 
   if (Object.values(rules).length) {
     // update source code

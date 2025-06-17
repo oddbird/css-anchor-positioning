@@ -1,6 +1,6 @@
 import type * as csstree from 'css-tree';
 
-import { getAST, splitCommaList } from '../../src/utils.js';
+import { cssParseErrors, getAST, splitCommaList } from '../../src/utils.js';
 
 describe('splitCommaList', () => {
   it('works', () => {
@@ -18,5 +18,26 @@ describe('splitCommaList', () => {
       [{ name: 'e', type: 'Identifier', loc: null }],
       [{ name: 'f', type: 'Identifier', loc: null }],
     ]);
+  });
+});
+describe('getAST', () => {
+  beforeEach(() => {
+    cssParseErrors.clear();
+  });
+  it('parses valid CSS', () => {
+    const cssText = 'a { color: red; }';
+    const ast = getAST(cssText);
+    expect(ast.type).toBe('StyleSheet');
+  });
+
+  it('stores cssParseError on invalid declaration', () => {
+    const cssText = 'a { color; red; } ';
+    getAST(cssText, true);
+    expect(cssParseErrors.size).toBe(2);
+  });
+  it('stores cssParseError on invalid selector', () => {
+    const cssText = 'a-[1] { color: red; } ';
+    getAST(cssText, true);
+    expect(cssParseErrors.size).toBe(1);
   });
 });

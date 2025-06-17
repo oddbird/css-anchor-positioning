@@ -186,6 +186,17 @@ style properties at runtime.
 If you are using inline styles to set anchor-related properties and the polyfill
 isn't working, verify that the inline styles are actually showing up in the DOM.
 
+### Invalid CSS
+
+Some types of invalid CSS will cause the polyfill to throw an error. In these
+cases, the polyfill will report any parse errors encountered in the console as
+warnings. This will be followed by the error thrown by the polyfill.
+
+The polyfill can't determine which parse error caused the polyfill error, but
+please resolve any reported parse errors before opening a bug. We also recommend
+using a CSS linter like [Stylelint](https://stylelint.io/) or
+[@eslint/css](https://github.com/eslint/css).
+
 ## Sponsor OddBird's OSS Work
 
 At OddBird, we love contributing to the languages & tools developers rely on.
