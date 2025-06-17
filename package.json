@@ -1,6 +1,6 @@
 {
   "name": "@oddbird/css-anchor-positioning",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Polyfill for the proposed CSS anchor positioning spec",
   "license": "BSD-3-Clause",
   "publishConfig": {
