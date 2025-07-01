@@ -4,6 +4,7 @@
     "isolatedModules": false,
     "types": ["vitest/globals"],
     "noEmit": true,
+    "declaration": false,
     "skipLibCheck": true,
     "allowJs": true,
     "noImplicitAny": false
