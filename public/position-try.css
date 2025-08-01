@@ -27,6 +27,7 @@
   bottom: anchor(top);
   left: anchor(left);
   width: anchor-size(width);
+  /* stylelint-disable-next-line property-no-deprecated */
   position-try-options: --bottom-left, --top-right, --bottom-right;
   position-try-fallbacks: --bottom-left, --top-right, --bottom-right;
 }
