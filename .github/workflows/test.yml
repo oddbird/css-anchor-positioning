@@ -23,6 +23,8 @@ jobs:
           npm install
           npx playwright install --with-deps
       - run: npm run test:ci
+        env:
+          NODE_OPTIONS: --no-experimental-strip-types
 
   lint:
     name: Lint
