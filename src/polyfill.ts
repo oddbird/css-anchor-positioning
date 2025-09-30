@@ -583,6 +583,7 @@ function normalizePolyfillOptions(
 
 // Support a boolean option for backwards compatibility.
 export async function polyfill(
+  this: HTMLElement | void,
   useAnimationFrameOrOption?: boolean | AnchorPositioningPolyfillOptions,
 ) {
   const options = normalizePolyfillOptions(
@@ -609,7 +610,7 @@ export async function polyfill(
       styleData = transformCSS(styleData);
     }
     // parse CSS
-    const parsedCSS = await parseCSS(styleData);
+    const parsedCSS = await parseCSS.call(this, styleData);
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
   } catch (error) {

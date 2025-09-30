@@ -193,6 +193,7 @@ function getScope(
  * https://drafts.csswg.org/css-anchor-position-1/#target
  */
 export async function validatedForPositioning(
+  this: HTMLElement | void,
   targetEl: HTMLElement | null,
   anchorName: string | null,
   anchorSelectors: Selector[],
@@ -211,7 +212,7 @@ export async function validatedForPositioning(
   const anchorElements = anchorSelectors
     // Any element that matches a selector that sets the specified `anchor-name`
     // could be a potential match.
-    .flatMap(getElementsBySelector)
+    .flatMap(getElementsBySelector.bind(this))
     // Narrow down the potential match elements to just the ones whose computed
     // `anchor-name` matches the specified one. This accounts for the
     // `anchor-name` value that was actually applied by the CSS cascade.

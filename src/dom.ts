@@ -140,17 +140,20 @@ function getContainerScrollPosition(element: HTMLElement) {
  * Like `document.querySelectorAll`, but if the selector has a pseudo-element it
  * will return a wrapper for the rest of the polyfill to use.
  */
-export function getElementsBySelector(selector: Selector) {
+export function getElementsBySelector(
+  this: HTMLElement | void,
+  selector: Selector,
+) {
   const { elementPart, pseudoElementPart } = selector;
   const result: (HTMLElement | PseudoElement)[] = [];
   const isBefore = pseudoElementPart === '::before';
   const isAfter = pseudoElementPart === '::after';
 
-  // Current we only support `::before` and `::after` pseudo-elements.
+  // Currently we only support `::before` and `::after` pseudo-elements.
   if (pseudoElementPart && !(isBefore || isAfter)) return result;
 
   const elements = Array.from(
-    document.querySelectorAll<HTMLElement>(elementPart),
+    (this?.shadowRoot || document).querySelectorAll<HTMLElement>(elementPart),
   );
 
   if (!pseudoElementPart) {

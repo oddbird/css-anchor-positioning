@@ -259,6 +259,7 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
 }
 
 async function getAnchorEl(
+  this: HTMLElement | void,
   targetEl: HTMLElement | null,
   anchorObj?: AnchorFunction,
 ) {
@@ -283,7 +284,8 @@ async function getAnchorEl(
   const anchorNameScopeSelectors = anchorName
     ? anchorScopes[anchorName] || []
     : [];
-  return await validatedForPositioning(
+  return await validatedForPositioning.call(
+    this,
     targetEl,
     anchorName || null,
     anchorSelectors,
@@ -291,7 +293,10 @@ async function getAnchorEl(
   );
 }
 
-export async function parseCSS(styleData: StyleData[]) {
+export async function parseCSS(
+  this: HTMLElement | void,
+  styleData: StyleData[],
+) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
   resetStores();
@@ -693,9 +698,11 @@ export async function parseCSS(styleData: StyleData[]) {
     ) {
       // If we're dealing with a `@position-try` block,
       // then the targets are places where that `position-fallback` is used.
-      targets = document.querySelectorAll(fallbackTargets[targetSel].join(','));
+      targets = (this?.shadowRoot || document).querySelectorAll(
+        fallbackTargets[targetSel].join(','),
+      );
     } else {
-      targets = document.querySelectorAll(targetSel);
+      targets = (this?.shadowRoot || document).querySelectorAll(targetSel);
     }
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
       InsetProperty | SizingProperty,
@@ -704,7 +711,7 @@ export async function parseCSS(styleData: StyleData[]) {
       for (const anchorObj of anchorObjects) {
         for (const targetEl of targets) {
           // For every target element, find a valid anchor element
-          const anchorEl = await getAnchorEl(targetEl, anchorObj);
+          const anchorEl = await getAnchorEl.call(this, targetEl, anchorObj);
           const uuid = `--anchor-${nanoid(12)}`;
           // Store new mapping, in case inline styles have changed and will
           // be overwritten -- in which case new mappings will be re-added
@@ -754,11 +761,12 @@ export async function parseCSS(styleData: StyleData[]) {
   // .foo { position-area: end }
 
   for (const [targetSel, positions] of Object.entries(positionAreas)) {
-    const targets: NodeListOf<HTMLElement> =
-      document.querySelectorAll(targetSel);
+    const targets: NodeListOf<HTMLElement> = (
+      this?.shadowRoot || document
+    ).querySelectorAll(targetSel);
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
-      const anchorEl = await getAnchorEl(targetEl);
+      const anchorEl = await getAnchorEl.call(this, targetEl);
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {
