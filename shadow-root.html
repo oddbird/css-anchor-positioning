@@ -56,8 +56,7 @@
       class AnchorWebComponent extends HTMLElement {
         /* This would typically be run in connectedCallback() */
         applyPolyfill() {
-          const stylesheets = this.shadowRoot.querySelectorAll('link');
-          return polyfill({ root: [this.shadowRoot], elements: [...stylesheets] });
+          return polyfill({ root: [this.shadowRoot] });
         }
       }
       customElements.define('anchor-web-component', AnchorWebComponent);

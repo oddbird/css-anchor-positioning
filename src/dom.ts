@@ -153,9 +153,7 @@ export function getElementsBySelector(
   // Currently we only support `::before` and `::after` pseudo-elements.
   if (pseudoElementPart && !(isBefore || isAfter)) return result;
 
-  const elements = Array.from(
-    options.root[0].querySelectorAll<HTMLElement>(elementPart),
-  );
+  const elements = querySelectorAllRoot(options.root, elementPart);
 
   if (!pseudoElementPart) {
     result.push(...elements);
@@ -258,4 +256,13 @@ export const getOffsetParent = async (el: HTMLElement) => {
       window.document.documentElement;
   }
   return offsetParent as HTMLElement;
+};
+
+export const querySelectorAllRoot = (
+  root: AnchorPositioningRoot[],
+  selector: string,
+): HTMLElement[] => {
+  return root.flatMap(
+    (e) => [...e.querySelectorAll(selector)] as HTMLElement[],
+  );
 };

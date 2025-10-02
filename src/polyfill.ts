@@ -602,7 +602,7 @@ export async function polyfill(
   );
 
   // fetch CSS from stylesheet and inline style
-  let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
+  let styleData = await fetchCSS(options);
 
   let rules: AnchorPositions = {};
   let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
