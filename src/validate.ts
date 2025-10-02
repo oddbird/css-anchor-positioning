@@ -8,6 +8,7 @@ import {
   hasStyle,
   type Selector,
 } from './dom.js';
+import { type AnchorPositioningRoot } from './polyfill.js';
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
@@ -193,11 +194,11 @@ function getScope(
  * https://drafts.csswg.org/css-anchor-position-1/#target
  */
 export async function validatedForPositioning(
-  this: HTMLElement | void,
   targetEl: HTMLElement | null,
   anchorName: string | null,
   anchorSelectors: Selector[],
   scopeSelectors: Selector[],
+  options: { root: AnchorPositioningRoot[] },
 ) {
   if (
     !(
@@ -212,7 +213,7 @@ export async function validatedForPositioning(
   const anchorElements = anchorSelectors
     // Any element that matches a selector that sets the specified `anchor-name`
     // could be a potential match.
-    .flatMap(getElementsBySelector.bind(this))
+    .flatMap((sel) => getElementsBySelector(sel, options))
     // Narrow down the potential match elements to just the ones whose computed
     // `anchor-name` matches the specified one. This accounts for the
     // `anchor-name` value that was actually applied by the CSS cascade.

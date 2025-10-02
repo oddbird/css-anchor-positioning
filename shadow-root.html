@@ -57,7 +57,7 @@
         /* This would typically be run in connectedCallback() */
         applyPolyfill() {
           const stylesheets = this.shadowRoot.querySelectorAll('link');
-          return polyfill.call(this, { elements: [...stylesheets] });
+          return polyfill({ root: [this.shadowRoot], elements: [...stylesheets] });
         }
       }
       customElements.define('anchor-web-component', AnchorWebComponent);

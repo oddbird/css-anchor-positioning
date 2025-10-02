@@ -2,6 +2,7 @@ import { platform, type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
+import { type AnchorPositioningRoot } from './polyfill.js';
 
 /**
  * Representation of a CSS selector that allows getting the element part and
@@ -141,8 +142,8 @@ function getContainerScrollPosition(element: HTMLElement) {
  * will return a wrapper for the rest of the polyfill to use.
  */
 export function getElementsBySelector(
-  this: HTMLElement | void,
   selector: Selector,
+  options: { root: AnchorPositioningRoot[] },
 ) {
   const { elementPart, pseudoElementPart } = selector;
   const result: (HTMLElement | PseudoElement)[] = [];
@@ -153,7 +154,7 @@ export function getElementsBySelector(
   if (pseudoElementPart && !(isBefore || isAfter)) return result;
 
   const elements = Array.from(
-    (this?.shadowRoot || document).querySelectorAll<HTMLElement>(elementPart),
+    options.root[0].querySelectorAll<HTMLElement>(elementPart),
   );
 
   if (!pseudoElementPart) {
