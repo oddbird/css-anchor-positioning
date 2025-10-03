@@ -1,0 +1,9 @@
+#shadow-anchor-positioning {
+  anchor-name: --shadow-anchor-positioning;
+}
+
+#shadow-target-positioning {
+  position: absolute;
+  right: anchor(--shadow-anchor-positioning right, 50px);
+  top: anchor(--shadow-anchor-positioning bottom);
+}
