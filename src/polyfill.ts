@@ -598,7 +598,9 @@ function normalizePolyfillOptions(
     options.roots = [document];
   }
 
-  return Object.assign(options, { useAnimationFrame }) as NormalizedAnchorPositioningPolyfillOptions;
+  return Object.assign(options, {
+    useAnimationFrame,
+  }) as NormalizedAnchorPositioningPolyfillOptions;
 }
 
 // Support a boolean option for backwards compatibility.
