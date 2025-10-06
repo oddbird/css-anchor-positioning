@@ -99,71 +99,7 @@
       </button>
     </header>
     <section>
-      <h2>Anchoring Elements Using CSS</h2>
-      <p>
-        The CSS anchor positioning
-        <a
-          href="https://drafts.csswg.org/css-anchor-position/"
-          target="_blank"
-          rel="noopener noreferrer"
-          >specification</a
-        >
-        defines anchor positioning, “where a positioned element can size and
-        position itself relative to one or more ‘anchor elements’ elsewhere on
-        the page.” This CSS Anchor Positioning Polyfill supports and is based on
-        this specification.
-      </p>
-      <p>
-        The proposed <code>anchor()</code> and
-        <code>anchor-size()</code> functions add flexibility to how absolutely
-        positioned elements can be placed within a layout. Instead of being
-        sized and positioned based solely on the position of their containing
-        block, the proposed new functions allow absolutely positioned elements
-        to be placed relative to one or more author-defined anchor elements.
-      </p>
-      <ul>
-        <li>
-          View the polyfill on
-          <a
-            href="https://github.com/oddbird/css-anchor-positioning"
-            target="_blank"
-            rel="noopener noreferrer"
-            >GitHub</a
-          >
-          or browse
-          <a
-            href="https://github.com/oddbird/css-anchor-positioning/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            >open issues</a
-          >.
-        </li>
-        <li>
-          Find the polyfill on
-          <a
-            href="https://www.npmjs.com/package/@oddbird/css-anchor-positioning"
-            target="_blank"
-            rel="noopener noreferrer"
-            >npm</a
-          >.
-        </li>
-        <li>
-          Browse or open issues related to the specification
-          <a
-            href="https://github.com/w3c/csswg-drafts/labels/css-anchor-position-1"
-            target="_blank"
-            rel="noopener noreferrer"
-            >here</a
-          >
-          or
-          <a
-            href="https://github.com/tabatkins/specs/issues?q=is%3Aissue+is%3Aopen+%5Bcss-anchor-position%5D"
-            target="_blank"
-            rel="noopener noreferrer"
-            >here</a
-          >.
-        </li>
-      </ul>
+      <h2>Anchoring Elements in the shadow DOM</h2>
       <p>
         <strong>Note: </strong>We strive to keep the polyfill up-to-date with
         ongoing changes to the spec, and we welcome
@@ -227,8 +163,7 @@
 &lt;script&gt;
 class AnchorDemo extends HTMLElement {
   connectedCallback() {
-    const stylesheets = this.shadowRoot.querySelectorAll('style');
-    window.ANCHOR_POSITIONING_POLYFILL.call(this, { elements: [...stylesheets] });
+    window.ANCHOR_POSITIONING_POLYFILL({ roots: [this.shadowRoot] });
   }
 }
 customElements.define("anchor-web-component", AnchorDemo);

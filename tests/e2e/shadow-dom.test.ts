@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   // Listen for all console logs
   // eslint-disable-next-line no-console
   page.on('console', (msg) => console.log(msg.text()));
-  await page.goto('/shadow-root.html');
+  await page.goto('/shadow-dom.html');
 });
 
 const btnSelector = '#apply-polyfill';

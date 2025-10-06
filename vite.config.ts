@@ -15,6 +15,7 @@ export default defineConfig({
           input: {
             main: resolve(__dirname, 'index.html'),
             positionArea: resolve(__dirname, 'position-area.html'),
+            shadowDOM: resolve(__dirname, 'shadow-dom.html'),
           },
         },
       }
