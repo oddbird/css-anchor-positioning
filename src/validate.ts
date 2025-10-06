@@ -198,7 +198,7 @@ export async function validatedForPositioning(
   anchorName: string | null,
   anchorSelectors: Selector[],
   scopeSelectors: Selector[],
-  options: { root: AnchorPositioningRoot[] },
+  options: { roots: AnchorPositioningRoot[] },
 ) {
   if (
     !(

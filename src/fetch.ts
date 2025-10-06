@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid/non-secure';
 
-import { querySelectorAllRoot } from './dom.js';
-import { type AnchorPositioningPolyfillOptions } from './polyfill.js';
+import { querySelectorAllRoots } from './dom.js';
+import { type NormalizedAnchorPositioningPolyfillOptions } from './polyfill.js';
 import { type StyleData } from './utils.js';
 
 const INVALID_MIME_TYPE_ERROR = 'InvalidMimeType';
@@ -98,10 +98,10 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
 }
 
 export async function fetchCSS(
-  options: AnchorPositioningPolyfillOptions,
+  options: NormalizedAnchorPositioningPolyfillOptions,
 ): Promise<StyleData[]> {
   const targetElements: HTMLElement[] =
-    options.elements ?? querySelectorAllRoot(options.root!, 'link, style');
+    options.elements ?? querySelectorAllRoots(options.roots, 'link, style');
   const sources: Partial<StyleData>[] = [];
 
   targetElements

@@ -421,7 +421,7 @@ test('when multiple anchor elements have the same name and are valid, the last i
         /* anchorName: */ null,
         [anchorSelector],
         /* scopeSelectors: */ [],
-        { root: [document] },
+        { roots: [document] },
       ).then((value) => value);
 
       validatedData.results = { anchor };
@@ -516,7 +516,7 @@ test('target anchor element is first element el in tree order.', async ({
         /* anchorName: */ null,
         [anchorSelector],
         /* scopeSelectors: */ [],
-        { root: [document] },
+        { roots: [document] },
       ).then((value) => value);
 
       validatedData.results = { anchor };

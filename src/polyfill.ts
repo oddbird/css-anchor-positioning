@@ -559,7 +559,7 @@ export interface AnchorPositioningPolyfillOptions {
    * Set the root elements that are queried when looking for anchors and targets.
    * @default document
    */
-  root?: AnchorPositioningRoot[];
+  roots?: AnchorPositioningRoot[];
 
   // Whether to exclude elements with eligible inline styles. When not defined
   // or set to `false`, the polyfill will be applied to all elements that have
@@ -570,9 +570,17 @@ export interface AnchorPositioningPolyfillOptions {
   excludeInlineStyles?: boolean;
 }
 
+/** @internal */
+export interface NormalizedAnchorPositioningPolyfillOptions {
+  elements?: HTMLElement[];
+  excludeInlineStyles?: boolean;
+  roots: AnchorPositioningRoot[];
+  useAnimationFrame?: boolean;
+}
+
 function normalizePolyfillOptions(
   useAnimationFrameOrOption: boolean | AnchorPositioningPolyfillOptions = {},
-) {
+): NormalizedAnchorPositioningPolyfillOptions {
   const options =
     typeof useAnimationFrameOrOption === 'boolean'
       ? { useAnimationFrame: useAnimationFrameOrOption }
@@ -586,11 +594,11 @@ function normalizePolyfillOptions(
     options.elements = undefined;
   }
 
-  if (!Array.isArray(options.root)) {
-    options.root = [document];
+  if (!Array.isArray(options.roots)) {
+    options.roots = [document];
   }
 
-  return Object.assign(options, { useAnimationFrame });
+  return Object.assign(options, { useAnimationFrame }) as NormalizedAnchorPositioningPolyfillOptions;
 }
 
 // Support a boolean option for backwards compatibility.
@@ -621,7 +629,7 @@ export async function polyfill(
       styleData = transformCSS(styleData);
     }
     // parse CSS
-    const parsedCSS = await parseCSS(styleData, { root: options.root });
+    const parsedCSS = await parseCSS(styleData, { roots: options.roots });
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
   } catch (error) {

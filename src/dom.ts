@@ -143,7 +143,7 @@ function getContainerScrollPosition(element: HTMLElement) {
  */
 export function getElementsBySelector(
   selector: Selector,
-  options: { root: AnchorPositioningRoot[] },
+  options: { roots: AnchorPositioningRoot[] },
 ) {
   const { elementPart, pseudoElementPart } = selector;
   const result: (HTMLElement | PseudoElement)[] = [];
@@ -153,7 +153,7 @@ export function getElementsBySelector(
   // Currently we only support `::before` and `::after` pseudo-elements.
   if (pseudoElementPart && !(isBefore || isAfter)) return result;
 
-  const elements = querySelectorAllRoot(options.root, elementPart);
+  const elements = querySelectorAllRoots(options.roots, elementPart);
 
   if (!pseudoElementPart) {
     result.push(...elements);
@@ -258,11 +258,11 @@ export const getOffsetParent = async (el: HTMLElement) => {
   return offsetParent as HTMLElement;
 };
 
-export const querySelectorAllRoot = (
-  root: AnchorPositioningRoot[],
+export const querySelectorAllRoots = (
+  roots: AnchorPositioningRoot[],
   selector: string,
 ): HTMLElement[] => {
-  return root.flatMap(
+  return roots.flatMap(
     (e) => [...e.querySelectorAll(selector)] as HTMLElement[],
   );
 };
