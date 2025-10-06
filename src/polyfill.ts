@@ -594,7 +594,7 @@ function normalizePolyfillOptions(
     options.elements = undefined;
   }
 
-  if (!Array.isArray(options.roots)) {
+  if (!Array.isArray(options.roots) || options.roots.length === 0) {
     options.roots = [document];
   }
 
