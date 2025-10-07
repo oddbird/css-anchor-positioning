@@ -1,7 +1,0 @@
-{
-  "name": "Ubuntu 22.04",
-  "build": {
-    "dockerfile": "Dockerfile"
-  },
-  "forwardPorts": [3000]
-}
