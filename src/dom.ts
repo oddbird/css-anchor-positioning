@@ -2,6 +2,7 @@ import { platform, type VirtualElement } from '@floating-ui/dom';
 import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
+import { type AnchorPositioningRoot } from './polyfill.js';
 
 /**
  * Representation of a CSS selector that allows getting the element part and
@@ -140,18 +141,19 @@ function getContainerScrollPosition(element: HTMLElement) {
  * Like `document.querySelectorAll`, but if the selector has a pseudo-element it
  * will return a wrapper for the rest of the polyfill to use.
  */
-export function getElementsBySelector(selector: Selector) {
+export function getElementsBySelector(
+  selector: Selector,
+  options: { roots: AnchorPositioningRoot[] },
+) {
   const { elementPart, pseudoElementPart } = selector;
   const result: (HTMLElement | PseudoElement)[] = [];
   const isBefore = pseudoElementPart === '::before';
   const isAfter = pseudoElementPart === '::after';
 
-  // Current we only support `::before` and `::after` pseudo-elements.
+  // Currently we only support `::before` and `::after` pseudo-elements.
   if (pseudoElementPart && !(isBefore || isAfter)) return result;
 
-  const elements = Array.from(
-    document.querySelectorAll<HTMLElement>(elementPart),
-  );
+  const elements = querySelectorAllRoots(options.roots, elementPart);
 
   if (!pseudoElementPart) {
     result.push(...elements);
@@ -254,4 +256,13 @@ export const getOffsetParent = async (el: HTMLElement) => {
       window.document.documentElement;
   }
   return offsetParent as HTMLElement;
+};
+
+export const querySelectorAllRoots = (
+  roots: AnchorPositioningRoot[],
+  selector: string,
+): HTMLElement[] => {
+  return roots.flatMap(
+    (e) => [...e.querySelectorAll(selector)] as HTMLElement[],
+  );
 };

@@ -545,6 +545,8 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
   }
 }
 
+export type AnchorPositioningRoot = Document | HTMLElement;
+
 export interface AnchorPositioningPolyfillOptions {
   // Whether to use `requestAnimationFrame()` when updating target elements’
   // positions
@@ -552,6 +554,12 @@ export interface AnchorPositioningPolyfillOptions {
 
   // An array of explicitly targeted elements to polyfill
   elements?: HTMLElement[];
+
+  /**
+   * Set the root elements that are queried when looking for anchors and targets.
+   * @default document
+   */
+  roots?: AnchorPositioningRoot[];
 
   // Whether to exclude elements with eligible inline styles. When not defined
   // or set to `false`, the polyfill will be applied to all elements that have
@@ -562,9 +570,17 @@ export interface AnchorPositioningPolyfillOptions {
   excludeInlineStyles?: boolean;
 }
 
+/** @internal */
+export interface NormalizedAnchorPositioningPolyfillOptions {
+  elements?: HTMLElement[];
+  excludeInlineStyles?: boolean;
+  roots: AnchorPositioningRoot[];
+  useAnimationFrame?: boolean;
+}
+
 function normalizePolyfillOptions(
   useAnimationFrameOrOption: boolean | AnchorPositioningPolyfillOptions = {},
-) {
+): NormalizedAnchorPositioningPolyfillOptions {
   const options =
     typeof useAnimationFrameOrOption === 'boolean'
       ? { useAnimationFrame: useAnimationFrameOrOption }
@@ -578,7 +594,13 @@ function normalizePolyfillOptions(
     options.elements = undefined;
   }
 
-  return Object.assign(options, { useAnimationFrame });
+  if (!Array.isArray(options.roots) || options.roots.length === 0) {
+    options.roots = [document];
+  }
+
+  return Object.assign(options, {
+    useAnimationFrame,
+  }) as NormalizedAnchorPositioningPolyfillOptions;
 }
 
 // Support a boolean option for backwards compatibility.
@@ -590,7 +612,7 @@ export async function polyfill(
   );
 
   // fetch CSS from stylesheet and inline style
-  let styleData = await fetchCSS(options.elements, options.excludeInlineStyles);
+  let styleData = await fetchCSS(options);
 
   let rules: AnchorPositions = {};
   let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
@@ -609,7 +631,7 @@ export async function polyfill(
       styleData = transformCSS(styleData);
     }
     // parse CSS
-    const parsedCSS = await parseCSS(styleData);
+    const parsedCSS = await parseCSS(styleData, { roots: options.roots });
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
   } catch (error) {

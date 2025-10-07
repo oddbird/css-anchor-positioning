@@ -8,6 +8,7 @@ import {
   hasStyle,
   type Selector,
 } from './dom.js';
+import { type AnchorPositioningRoot } from './polyfill.js';
 
 // Given a target element's containing block (CB) and an anchor element,
 // determines if the anchor element is a descendant of the target CB.
@@ -197,6 +198,7 @@ export async function validatedForPositioning(
   anchorName: string | null,
   anchorSelectors: Selector[],
   scopeSelectors: Selector[],
+  options: { roots: AnchorPositioningRoot[] },
 ) {
   if (
     !(
@@ -211,7 +213,7 @@ export async function validatedForPositioning(
   const anchorElements = anchorSelectors
     // Any element that matches a selector that sets the specified `anchor-name`
     // could be a potential match.
-    .flatMap(getElementsBySelector)
+    .flatMap((sel) => getElementsBySelector(sel, options))
     // Narrow down the potential match elements to just the ones whose computed
     // `anchor-name` matches the specified one. This accounts for the
     // `anchor-name` value that was actually applied by the CSS cascade.

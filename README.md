@@ -71,6 +71,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
+      roots: [document],
       useAnimationFrame: false,
     };
     import("https://unpkg.com/@oddbird/css-anchor-positioning");
@@ -89,6 +90,7 @@ an argument.
     polyfill({
       elements: undefined,
       excludeInlineStyles: false,
+      roots: [document],
       useAnimationFrame: false,
     });
   }
@@ -114,6 +116,15 @@ that have eligible inline styles, regardless of whether the `elements` option is
 defined. When set to `true`, elements with eligible inline styles listed in the
 `elements` option will still be polyfilled, but no other elements in the
 document will be implicitly polyfilled.
+
+### roots
+
+type: `(Document | HTMLElement)[]`, default: `[document]`
+
+By default the polyfill applies to `document`, but you can configure one or more
+shadow roots the polyfill should apply to using this option. See the
+[shadow DOM examples](https://anchor-positioning.oddbird.net/shadow-dom) to learn
+more.
 
 ### useAnimationFrame
 
@@ -150,7 +161,7 @@ following features:
   `align-items` properties
 - `position-visibility` property
 - dynamically added/removed anchors or targets
-- anchors or targets in the shadow-dom
+- anchors and targets in separate shadow roots (see https://github.com/oddbird/css-anchor-positioning/issues/191)
 - anchors or targets in constructed stylesheets
   (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - anchor functions assigned to `inset-*` properties or `inset` shorthand

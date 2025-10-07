@@ -14,9 +14,14 @@ import {
   AnchorScopeValue,
   getCSSPropertyValue,
   type PseudoElement,
+  querySelectorAllRoots,
   type Selector,
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
+import type {
+  AnchorPositioningRoot,
+  NormalizedAnchorPositioningPolyfillOptions,
+} from './polyfill.js';
 import {
   activeWrapperStyles,
   addPositionAreaDeclarationBlockStyles,
@@ -260,7 +265,8 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
 
 async function getAnchorEl(
   targetEl: HTMLElement | null,
-  anchorObj?: AnchorFunction,
+  anchorObj: AnchorFunction | null,
+  options: { roots: AnchorPositioningRoot[] },
 ) {
   let anchorName = anchorObj?.anchorName;
   const customPropName = anchorObj?.customPropName;
@@ -288,10 +294,14 @@ async function getAnchorEl(
     anchorName || null,
     anchorSelectors,
     [...allScopeSelectors, ...anchorNameScopeSelectors],
+    { roots: options.roots },
   );
 }
 
-export async function parseCSS(styleData: StyleData[]) {
+export async function parseCSS(
+  styleData: StyleData[],
+  options: NormalizedAnchorPositioningPolyfillOptions,
+) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
   resetStores();
@@ -686,16 +696,19 @@ export async function parseCSS(styleData: StyleData[]) {
   const inlineStyles = new Map<HTMLElement, Record<string, string>>();
   // Store any `anchor()` fns
   for (const [targetSel, anchorFns] of Object.entries(anchorFunctions)) {
-    let targets: NodeListOf<HTMLElement>;
+    let targets: HTMLElement[];
     if (
       targetSel.startsWith('[data-anchor-polyfill=') &&
       fallbackTargets[targetSel]?.length
     ) {
       // If we're dealing with a `@position-try` block,
       // then the targets are places where that `position-fallback` is used.
-      targets = document.querySelectorAll(fallbackTargets[targetSel].join(','));
+      targets = querySelectorAllRoots(
+        options.roots,
+        fallbackTargets[targetSel].join(','),
+      );
     } else {
-      targets = document.querySelectorAll(targetSel);
+      targets = querySelectorAllRoots(options.roots, targetSel);
     }
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
       InsetProperty | SizingProperty,
@@ -704,7 +717,9 @@ export async function parseCSS(styleData: StyleData[]) {
       for (const anchorObj of anchorObjects) {
         for (const targetEl of targets) {
           // For every target element, find a valid anchor element
-          const anchorEl = await getAnchorEl(targetEl, anchorObj);
+          const anchorEl = await getAnchorEl(targetEl, anchorObj, {
+            roots: options.roots,
+          });
           const uuid = `--anchor-${nanoid(12)}`;
           // Store new mapping, in case inline styles have changed and will
           // be overwritten -- in which case new mappings will be re-added
@@ -754,11 +769,12 @@ export async function parseCSS(styleData: StyleData[]) {
   // .foo { position-area: end }
 
   for (const [targetSel, positions] of Object.entries(positionAreas)) {
-    const targets: NodeListOf<HTMLElement> =
-      document.querySelectorAll(targetSel);
+    const targets = querySelectorAllRoots(options.roots, targetSel);
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
-      const anchorEl = await getAnchorEl(targetEl);
+      const anchorEl = await getAnchorEl(targetEl, null, {
+        roots: options.roots,
+      });
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {

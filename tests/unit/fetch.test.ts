@@ -23,7 +23,7 @@ describe('fetch stylesheet', () => {
   it('fetches CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
     fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
-    const styleData = await fetchCSS();
+    const styleData = await fetchCSS({ roots: [document] });
 
     expect(styleData).toHaveLength(2);
     expect(styleData[0].url?.toString()).toBe(`${location.origin}/sample.css`);
@@ -82,7 +82,7 @@ describe('fetch inline styles', () => {
   it('fetch returns inline CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
     fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
-    const styleData = await fetchCSS();
+    const styleData = await fetchCSS({ roots: [document] });
 
     expect(styleData).toHaveLength(4);
     expect(styleData[2].url).toBeUndefined();
@@ -163,13 +163,17 @@ describe('fetch styles manually', () => {
   });
 
   it('fetches only inline styles if `elements` is empty', async () => {
-    const styleData = await fetchCSS([]);
+    const styleData = await fetchCSS({ roots: [document], elements: [] });
 
     expect(styleData).toHaveLength(2);
   });
 
   it('fetches nothing if `elements` is empty and exclusing inline styles', async () => {
-    const styleData = await fetchCSS([], true);
+    const styleData = await fetchCSS({
+      roots: [document],
+      elements: [],
+      excludeInlineStyles: true,
+    });
 
     expect(styleData).toHaveLength(0);
   });
@@ -184,8 +188,9 @@ describe('fetch styles manually', () => {
     const el4 = document.getElementById('el4')!;
     const el5 = document.getElementById('el5')!;
 
-    const styleData = await fetchCSS(
-      [
+    const styleData = await fetchCSS({
+      roots: [document],
+      elements: [
         el1,
         el2,
         el3,
@@ -199,8 +204,8 @@ describe('fetch styles manually', () => {
         // @ts-expect-error should be ignored
         123,
       ],
-      true,
-    );
+      excludeInlineStyles: true,
+    });
 
     expect(styleData).toHaveLength(4);
 
