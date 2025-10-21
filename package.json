@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
-    "@playwright/test": "1.56.1",
+    "@playwright/test": "1.43.1",
     "@rollup/plugin-replace": "^6.0.2",
     "@types/async": "^3.2.25",
     "@types/node": "*",
