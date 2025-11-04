@@ -1,9 +1,7 @@
-/// <reference types="vitest" />
-
 import replace from '@rollup/plugin-replace';
 import { resolve } from 'path';
 import { bundleStats } from 'rollup-plugin-bundle-stats';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   server: {
@@ -81,7 +79,6 @@ export default defineConfig({
       include: ['src/**/*.{js,ts}'],
       exclude: ['src/index.ts', 'src/index-fn.ts', 'src/index-wpt.ts'],
       skipFull: true,
-      all: true,
     },
   },
 });
