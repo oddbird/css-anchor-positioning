@@ -275,3 +275,11 @@ test('applies manual polyfill with automatic inline style polyfill', async ({
   expect(newTarget3Box.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
   expect(newTarget3Box.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
 });
+
+test('does not change position if anchor is invalid', async ({ page }) => {
+  const target = page.locator('#my-target-invalid');
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'top', 0);
+  await expectWithinOne(target, 'left', 0);
+});
