@@ -203,7 +203,7 @@ function parseAnchorFn(
     anchorName,
     anchorSide,
     anchorSize,
-    fallbackValue: fallbackValue || '0px',
+    fallbackValue,
     customPropName,
     uuid,
   };

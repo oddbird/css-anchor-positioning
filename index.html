@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="/position-area.css" />
     <link rel="stylesheet" href="/anchor-inside-outside.css" />
     <link rel="stylesheet" href="/import-has-import.css" />
+    <link rel="stylesheet" href="/invalid-anchor.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <style>
@@ -1387,6 +1388,19 @@ CSS inside the anchor-manual.css file:
       <p class="note">
         The polyfill can position targets and anchors inside a shadow root. See
         <a href="shadow-dom.html">shadow DOM examples</a>.
+      </p>
+    </section>
+    <section id="invalid-anchor" class="demo-item">
+      <h2>
+        <a href="#invalid-anchor" aria-hidden="true">🔗</a>
+        Invalid anchor
+      </h2>
+      <div class="demo-elements">
+        <div id="my-target-invalid" class="target">Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is not re-positioned, as an anchor is not
+        found.
       </p>
     </section>
     <section id="sponsor">

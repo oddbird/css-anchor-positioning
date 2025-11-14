@@ -1,0 +1,13 @@
+#my-target-invalid {
+  position: absolute;
+
+  /* Note: These anchors are intentionally not found */
+  right: anchor(--my-anchor-invalid left);
+  bottom: anchor(--my-anchor-invalid top);
+}
+
+#invalid-anchor .demo-elements {
+  position: relative;
+  border: 1pt dashed sandybrown;
+  block-size: 5em;
+}
