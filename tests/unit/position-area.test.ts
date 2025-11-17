@@ -34,7 +34,10 @@ describe('position-area', () => {
       ['span-self-block-end', 'block'],
       ['left', 'inline'],
       ['span-right', 'inline'],
-      ['span-x-self-start', 'inline'],
+      ['self-x-start', 'inline'],
+      ['self-y-end', 'block'],
+      ['span-self-x-start', 'inline'],
+      ['span-self-y-end', 'block'],
       ['center', 'ambiguous'],
       ['span-all', 'ambiguous'],
       ['start', 'ambiguous'],
@@ -51,6 +54,7 @@ describe('position-area', () => {
       [['left', 'bottom'], { block: 'bottom', inline: 'left' }],
       [['bottom', 'left'], { block: 'bottom', inline: 'left' }],
       [['x-start', 'y-end'], { block: 'y-end', inline: 'x-start' }],
+      [['self-x-start', 'self-y-end'], { block: 'self-y-end', inline: 'self-x-start' }],
     ])('%s parses', (input, expected) => {
       expect(
         getPositionAreaDeclaration(createPositionAreaNode(input))?.values,
