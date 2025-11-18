@@ -1,0 +1,9 @@
+#my-anchor-inset {
+  anchor-name: --my-anchor-inset;
+}
+
+#my-target-inset {
+  position: absolute;
+  inset-inline-end: anchor(--my-anchor-inset start);
+  inset-block-start: anchor(--my-anchor-inset end);
+}
