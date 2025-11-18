@@ -6,15 +6,31 @@
 html {
   --brand-blue: lch(38.953% 23.391 229.55deg);
   --brand-pink: lch(50.161% 77.603 3.8969deg);
-  --brand-pink-light: lch(from var(--brand-pink) calc(l + 8) c h);
-  --brand-pink-dark: lch(from var(--brand-pink) calc(l - 20) c h);
   --brand-orange: lch(70.149% 72.526 55.336deg);
-  --brand-orange-dark: lch(from var(--brand-orange) calc(l - 20) c h);
-  --gray-1: lch(from var(--brand-blue) calc(l + 53) calc(c - 19) h);
-  --gray-2: lch(from var(--brand-blue) calc(l + 14) calc(c - 19) h);
-  --gray-3: lch(from var(--brand-blue) calc(l + 4) calc(c - 13) h);
-  --gray-4: lch(from var(--brand-blue) calc(l - 13) calc(c - 13) h);
-  --gray-5: lch(from var(--brand-blue) calc(l - 26) calc(c - 13) h);
+
+  @supports (color: lch(from white l c h)) {
+    --brand-pink-light: lch(from var(--brand-pink) calc(l + 8) c h);
+    --brand-pink-dark: lch(from var(--brand-pink) calc(l - 20) c h);
+    --brand-orange-dark: lch(from var(--brand-orange) calc(l - 20) c h);
+    --gray-1: lch(from var(--brand-blue) calc(l + 53) calc(c - 19) h);
+    --gray-2: lch(from var(--brand-blue) calc(l + 14) calc(c - 19) h);
+    --gray-3: lch(from var(--brand-blue) calc(l + 4) calc(c - 13) h);
+    --gray-4: lch(from var(--brand-blue) calc(l - 13) calc(c - 13) h);
+    --gray-5: lch(from var(--brand-blue) calc(l - 26) calc(c - 13) h);
+  }
+
+  @supports not (color: lch(from white l c h)) {
+    --brand-pink-light: lch(50.161% 85.603 3.8969deg);
+    --brand-pink-dark: lch(50.161% 57.603 3.8969deg);
+    --brand-orange: lch(70.149% 72.526 55.336deg);
+    --brand-orange-dark: lch(50.149% 72.526 55.336deg);
+    --gray-1: lch(91% 4.391 229.55deg);
+    --gray-2: lch(52.953% 4.391 229.55deg);
+    --gray-3: lch(42.953% 10.391 229.55deg);
+    --gray-4: lch(25.953% 10.391 229.55deg);
+    --gray-5: lch(12.953% 10.391 229.55deg);
+  }
+
   --action: var(--brand-pink-dark);
   --anchor-color: var(--brand-pink);
   --bg: white;
