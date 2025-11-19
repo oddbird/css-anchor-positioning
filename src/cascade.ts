@@ -143,11 +143,11 @@ export function cascadeCSS(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
-        const { updated } = shiftUnsupportedProperties(node, block);
         const { updated: shorthandUpdated } = expandInsetShorthands(
           node,
           block,
         );
+        const { updated } = shiftUnsupportedProperties(node, block);
         if (updated || shorthandUpdated) {
           changed = true;
         }
