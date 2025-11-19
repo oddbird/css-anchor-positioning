@@ -86,13 +86,11 @@ export const getAxis = (position?: string) => {
     case 'bottom':
     case 'inset-block-start':
     case 'inset-block-end':
-    case 'inset-block':
       return 'y';
     case 'left':
     case 'right':
     case 'inset-inline-start':
     case 'inset-inline-end':
-    case 'inset-inline':
       return 'x';
   }
   return null;

@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="/anchor.css" />
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-inset.css" />
+    <link rel="stylesheet" href="/anchor-inset-shorthand.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
     <link rel="stylesheet" href="/position-try.css" />
     <link rel="stylesheet" href="/position-try-tactics.css" />
@@ -370,20 +371,11 @@
         <div id="my-target-inset" class="target">Target</div>
         <div id="my-anchor-inset" class="anchor">Anchor</div>
       </div>
-      <div class="note">
-        <p>
-          With polyfill applied: Target’s right edge aligns with Anchor’s left
-          edge. Target’s top edge lines up with the bottom edge of the Anchor.
-        </p>
-        <p>
-          <strong>Note: </strong><code>inset-inline</code> and
-          <code>inset-block</code> are implemented in the polyfill, but be aware
-          that they will place the Target element in an inset-modified
-          containing block with no height or width. The positioned element will
-          only be available through overflow. The <code>inset</code> shorthand
-          is not yet implemented.
-        </p>
-      </div>
+
+      <p class="note">
+        With polyfill applied: Target’s right edge aligns with Anchor’s left
+        edge. Target’s top edge lines up with the bottom edge of the Anchor.
+      </p>
       <pre><code class="language-css"
 >#my-anchor-inset {
   anchor-name: --my-anchor-inset;
@@ -393,6 +385,41 @@
   position: absolute;
   inset-inline-end: anchor(--my-anchor-inset start);
   inset-block-start: anchor(--my-anchor-inset end);
+}</code></pre>
+    </section>
+    <section id="anchor-inset-shorthand" class="demo-item">
+      <h2>
+        <a href="#anchor-inset-shorthand" aria-hidden="true">🔗</a>
+        Positioning with <code>anchor()</code> on <code>inset</code> shorthands
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-target-inset-shorthand" class="target">Target</div>
+        <div id="my-anchor-inset-shorthand" class="anchor">Anchor</div>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: Target’s top and bottom edges align with
+          Anchor’s top and bottom edge. Target’s left edge lines up with the
+          left edge of the Anchor, and the right edge is 20px from the right
+          edge.
+        </p>
+        <p>
+          <strong>Note: </strong><code>inset-inline</code>,
+          <code>inset-block</code> and <code>inset</code> are implemented in the
+          polyfill by converting them to the longhand form before applying the
+          positioning logic.
+        </p>
+      </div>
+      <pre><code class="language-css"
+>#my-anchor-inset-shorthand {
+  anchor-name: --my-anchor-inset-shorthand;
+}
+
+#my-target-inset-shorthand {
+  position: absolute;
+  position-anchor: --my-anchor-inset-shorthand;
+  inset-block: anchor(inside);
+  inset-inline: anchor(start) -20px;
 }</code></pre>
     </section>
     <section id="anchor-style-tag" class="demo-item">

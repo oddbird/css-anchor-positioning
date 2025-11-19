@@ -1,4 +1,5 @@
 import type { Block, CssNode } from 'css-tree';
+import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
 import { ACCEPTED_POSITION_TRY_PROPERTIES } from './syntax.js';
@@ -44,6 +45,93 @@ function shiftUnsupportedProperties(node: CssNode, block?: Block) {
 }
 
 /**
+ * Expand inset-* shorthand properties into their longhand equivalents.
+ */
+function expandInsetShorthands(node: CssNode, block?: Block) {
+  const INSET_SHORTHANDS = ['inset', 'inset-block', 'inset-inline'];
+  if (
+    !isDeclaration(node) ||
+    !block ||
+    !INSET_SHORTHANDS.includes(node.property)
+  ) {
+    return { updated: false };
+  }
+  const sides: {
+    'inset-block-start'?: CssNode;
+    'inset-block-end'?: CssNode;
+    'inset-inline-start'?: CssNode;
+    'inset-inline-end'?: CssNode;
+  } = {
+    'inset-block-start': undefined,
+    'inset-block-end': undefined,
+    'inset-inline-start': undefined,
+    'inset-inline-end': undefined,
+  };
+
+  if (node.property === 'inset') {
+    const values = node.value.children.toArray();
+    const [blockStart, inlineEnd, blockEnd, inlineStart] = (() => {
+      switch (values.length) {
+        case 1:
+          return [values[0], values[0], values[0], values[0]];
+        case 2:
+          return [values[0], values[1], values[0], values[1]];
+        case 3:
+          return [values[0], values[1], values[2], values[1]];
+        default:
+          return [values[0], values[1], values[2], values[3]];
+      }
+    })();
+    sides['inset-block-start'] = blockStart;
+    sides['inset-block-end'] = blockEnd;
+    sides['inset-inline-start'] = inlineStart;
+    sides['inset-inline-end'] = inlineEnd;
+  } else if (node.property === 'inset-block') {
+    const values = node.value.children.toArray();
+    const [blockStart, blockEnd] = (() => {
+      switch (values.length) {
+        case 1:
+          return [values[0], values[0]];
+        default:
+          return [values[0], values[1]];
+      }
+    })();
+    sides['inset-block-start'] = blockStart;
+    sides['inset-block-end'] = blockEnd;
+  } else if (node.property === 'inset-inline') {
+    const values = node.value.children.toArray();
+    const [inlineStart, inlineEnd] = (() => {
+      switch (values.length) {
+        case 1:
+          return [values[0], values[0]];
+        default:
+          return [values[0], values[1]];
+      }
+    })();
+    sides['inset-inline-start'] = inlineStart;
+    sides['inset-inline-end'] = inlineEnd;
+  } else {
+    return { updated: false };
+  }
+
+  Object.entries(sides).forEach(([property, value]) => {
+    if (!value) {
+      return;
+    }
+    block.children.appendData({
+      type: 'Declaration',
+      property,
+      important: false,
+      value: {
+        type: 'Value',
+        children: new List<CssNode>().fromArray([value]),
+      },
+    });
+  });
+  return { updated: true };
+}
+
+/**
  * Update the given style data to enable cascading and inheritance of properties
  * that are not yet natively supported.
  */
@@ -56,7 +144,11 @@ export function cascadeCSS(styleData: StyleData[]) {
       enter(node) {
         const block = this.rule?.block;
         const { updated } = shiftUnsupportedProperties(node, block);
-        if (updated) {
+        const { updated: shorthandUpdated } = expandInsetShorthands(
+          node,
+          block,
+        );
+        if (updated || shorthandUpdated) {
           changed = true;
         }
       },
