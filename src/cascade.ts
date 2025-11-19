@@ -41,7 +41,7 @@ function shiftUnsupportedProperties(node: CssNode, block?: Block) {
     });
     return { updated: true };
   }
-  return {};
+  return { updated: false };
 }
 
 /**
