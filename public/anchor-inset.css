@@ -6,4 +6,36 @@
   position: absolute;
   inset-inline-end: anchor(--my-anchor-inset start);
   inset-block-start: anchor(--my-anchor-inset end);
+  inset-block-end: 0;
+}
+
+#my-anchor-inset-shorthand {
+  anchor-name: --my-anchor-inset-shorthand;
+}
+
+#my-target-inset-shorthand {
+  position: absolute;
+  position-anchor: --my-anchor-inset-shorthand;
+  inset-block: anchor(inside);
+  inset-inline: anchor(start) 10px;
+  opacity: 0.8;
+}
+
+#my-anchor-inset-shortesthand {
+  anchor-name: --my-anchor-inset-shortesthand;
+}
+
+#my-target-inset-shortesthand {
+  position: absolute;
+  position-anchor: --my-anchor-inset-shortesthand;
+  inset: anchor(inside) 0;
+  opacity: 0.8;
+}
+
+.inset-containing-block {
+  position: relative;
+  width: 300px;
+  height: 200px;
+  border: 2px dashed var(--brand-blue);
+  padding: 30px;
 }

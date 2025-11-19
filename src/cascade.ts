@@ -56,21 +56,24 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
   ) {
     return { updated: false };
   }
-  const sides: {
-    'inset-block-start'?: CssNode;
-    'inset-block-end'?: CssNode;
-    'inset-inline-start'?: CssNode;
-    'inset-inline-end'?: CssNode;
-  } = {
-    'inset-block-start': undefined,
-    'inset-block-end': undefined,
-    'inset-inline-start': undefined,
-    'inset-inline-end': undefined,
+
+  const appendProperty = (property: string, value?: CssNode) => {
+    if (!value) return;
+    block.children.appendData({
+      ...node,
+      property,
+      value: {
+        type: 'Value',
+        children: new List<CssNode>().fromArray([value]),
+      },
+    });
   };
 
   if (node.property === 'inset') {
     const values = node.value.children.toArray();
-    const [blockStart, inlineEnd, blockEnd, inlineStart] = (() => {
+    // `inset` shorthand expands to top, right, bottom, left
+    // See https://drafts.csswg.org/css-position/#inset-shorthands
+    const [top, right, bottom, left] = (() => {
       switch (values.length) {
         case 1:
           return [values[0], values[0], values[0], values[0]];
@@ -78,62 +81,55 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
           return [values[0], values[1], values[0], values[1]];
         case 3:
           return [values[0], values[1], values[2], values[1]];
-        default:
+        case 4:
           return [values[0], values[1], values[2], values[3]];
+        default:
+          return [];
       }
     })();
-    sides['inset-block-start'] = blockStart;
-    sides['inset-block-end'] = blockEnd;
-    sides['inset-inline-start'] = inlineStart;
-    sides['inset-inline-end'] = inlineEnd;
+    appendProperty('top', top);
+    appendProperty('right', right);
+    appendProperty('bottom', bottom);
+    appendProperty('left', left);
   } else if (node.property === 'inset-block') {
     const values = node.value.children.toArray();
     const [blockStart, blockEnd] = (() => {
       switch (values.length) {
         case 1:
           return [values[0], values[0]];
-        default:
+        case 2:
           return [values[0], values[1]];
+        default:
+          return [];
       }
     })();
-    sides['inset-block-start'] = blockStart;
-    sides['inset-block-end'] = blockEnd;
+    appendProperty('inset-block-start', blockStart);
+    appendProperty('inset-block-end', blockEnd);
   } else if (node.property === 'inset-inline') {
     const values = node.value.children.toArray();
     const [inlineStart, inlineEnd] = (() => {
       switch (values.length) {
         case 1:
           return [values[0], values[0]];
-        default:
+        case 2:
           return [values[0], values[1]];
+        default:
+          return [];
       }
     })();
-    sides['inset-inline-start'] = inlineStart;
-    sides['inset-inline-end'] = inlineEnd;
+    appendProperty('inset-inline-start', inlineStart);
+    appendProperty('inset-inline-end', inlineEnd);
   } else {
     return { updated: false };
   }
 
-  Object.entries(sides).forEach(([property, value]) => {
-    if (!value) {
-      return;
-    }
-    block.children.appendData({
-      type: 'Declaration',
-      property,
-      important: false,
-      value: {
-        type: 'Value',
-        children: new List<CssNode>().fromArray([value]),
-      },
-    });
-  });
   return { updated: true };
 }
 
 /**
  * Update the given style data to enable cascading and inheritance of properties
- * that are not yet natively supported.
+ * that are not yet natively supported, or are needed in a different format for
+ * the polyfill to work as expected.
  */
 export function cascadeCSS(styleData: StyleData[]) {
   for (const styleObj of styleData) {
