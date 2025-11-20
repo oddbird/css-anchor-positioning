@@ -164,10 +164,9 @@ following features:
 - anchors and targets in separate shadow roots (see https://github.com/oddbird/css-anchor-positioning/issues/191)
 - anchors or targets in constructed stylesheets
   (https://github.com/oddbird/css-anchor-positioning/issues/228)
-- anchor functions assigned to `inset-*` properties or `inset` shorthand
-  property
 - vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
+  https://github.com/whatwg/html/pull/9144)
 - `position-area` is polyfilled by adding a wrapping element around the target,
   which adds a few differences:
   - This breaks selectors that rely on a direct relationship with the target,

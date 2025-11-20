@@ -25,6 +25,12 @@ async function getElementWidth(page: Page, sel: string) {
     .first()
     .evaluate((node: HTMLElement) => node.getBoundingClientRect().width);
 }
+async function getElementHeight(page: Page, sel: string) {
+  return page
+    .locator(sel)
+    .first()
+    .evaluate((node: HTMLElement) => node.getBoundingClientRect().height);
+}
 
 async function getParentWidth(page: Page, sel: string) {
   return page
@@ -72,6 +78,70 @@ test('applies polyfill for inside and outside keywords', async ({ page }) => {
 
   await expectWithinOne(target, 'left', parentWidth);
   await expectWithinOne(target, 'bottom', expected);
+});
+
+test('applies polyfill for inset- full longhands', async ({ page }) => {
+  const padding = 30;
+  const insetAnchorSelector = '#anchor-inset .anchor';
+  const insetTargetSelector = '#anchor-inset .target';
+  const target = page.locator(insetTargetSelector);
+  const parentWidth = await getParentWidth(page, insetTargetSelector);
+  const anchorHeight = await getElementHeight(page, insetAnchorSelector);
+
+  await expectWithinOne(target, 'left', padding);
+  await expectWithinOne(target, 'top', anchorHeight + padding, true);
+  await expectWithinOne(target, 'bottom', 0);
+
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'right', parentWidth - padding);
+  await expectWithinOne(target, 'top', anchorHeight + padding);
+  await expectWithinOne(target, 'bottom', 0);
+});
+
+test('applies polyfill for inset-[axis] shorthands', async ({ page }) => {
+  const padding = 30;
+  const insetAnchorSelector = '#anchor-inset-shorthand .anchor';
+  const insetTargetSelector = '#anchor-inset-shorthand .target';
+  const target = page.locator(insetTargetSelector);
+  const parentHeight = await getParentHeight(page, insetTargetSelector);
+  const anchorHeight = await getElementHeight(page, insetAnchorSelector);
+
+  await expectWithinOne(target, 'left', padding);
+  await expectWithinOne(target, 'top', padding);
+
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'right', 10);
+  await expectWithinOne(target, 'left', padding);
+  await expectWithinOne(target, 'top', padding);
+  await expectWithinOne(
+    target,
+    'bottom',
+    parentHeight - padding - anchorHeight,
+  );
+});
+test('applies polyfill for inset shorthand', async ({ page }) => {
+  const padding = 30;
+  const insetAnchorSelector = '#anchor-inset-shortesthand .anchor';
+  const insetTargetSelector = '#anchor-inset-shortesthand .target';
+  const target = page.locator(insetTargetSelector);
+  const parentHeight = await getParentHeight(page, insetTargetSelector);
+  const anchorHeight = await getElementHeight(page, insetAnchorSelector);
+
+  await expectWithinOne(target, 'left', padding);
+  await expectWithinOne(target, 'top', padding);
+
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'top', padding);
+  await expectWithinOne(
+    target,
+    'bottom',
+    parentHeight - padding - anchorHeight,
+  );
+  await expectWithinOne(target, 'right', 0);
+  await expectWithinOne(target, 'left', 0);
 });
 
 test('applies polyfill from inline styles', async ({ page }) => {

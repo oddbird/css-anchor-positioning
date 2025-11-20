@@ -84,9 +84,13 @@ export const getAxis = (position?: string) => {
   switch (position) {
     case 'top':
     case 'bottom':
+    case 'inset-block-start':
+    case 'inset-block-end':
       return 'y';
     case 'left':
     case 'right':
+    case 'inset-inline-start':
+    case 'inset-inline-end':
       return 'x';
   }
   return null;
@@ -200,9 +204,18 @@ export const getPixelValue = async ({
     ) {
       return fallback;
     }
-    // Since the polyfill does not yet support anchor functions on `inset-*`
-    // properties, they are omitted here.
-    const startwardProperties = ['top', 'left'];
+    const startwardProperties = [
+      'top',
+      'left',
+      'inset-block-start',
+      'inset-inline-start',
+    ];
+    const endwardProperties = [
+      'bottom',
+      'right',
+      'inset-block-end',
+      'inset-inline-end',
+    ];
 
     switch (anchorSide) {
       case 'left':
@@ -239,13 +252,14 @@ export const getPixelValue = async ({
 
     const dir = getAxisProperty(axis);
     if (hasPercentage && dir) {
-      if (targetProperty === 'bottom' || targetProperty === 'right') {
+      if (endwardProperties.includes(targetProperty)) {
         offsetParent = await getOffsetParent(targetEl);
       }
       let value =
         anchorRect[axis] + anchorRect[dir] * ((percentage as number) / 100);
       switch (targetProperty) {
-        case 'bottom': {
+        case 'bottom':
+        case 'inset-block-end': {
           if (!offsetParent) {
             break;
           }
@@ -259,7 +273,8 @@ export const getPixelValue = async ({
           value = offsetHeight - value;
           break;
         }
-        case 'right': {
+        case 'right':
+        case 'inset-inline-end': {
           if (!offsetParent) {
             break;
           }
