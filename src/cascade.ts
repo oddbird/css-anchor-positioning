@@ -119,8 +119,6 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
     })();
     appendProperty('inset-inline-start', inlineStart);
     appendProperty('inset-inline-end', inlineEnd);
-  } else {
-    return { updated: false };
   }
 
   return { updated: true };
