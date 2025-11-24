@@ -89,6 +89,19 @@
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
       }
+      // Vite errors while trying to parse the end script tag, but interpolating
+      // it avoids the error.
+      const polyfillCDN = `
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    import("https://unpkg.com/@oddbird/css-anchor-positioning");
+  }
+</script${'>'}`;
+
+      const copyButton = document.getElementById('copy-button');
+      copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(polyfillCDN);
+      });
 
       const updateBtn = document.getElementById('toggle-anchor-width');
       const updateAnchor = document.getElementById('my-anchor-update');
@@ -274,14 +287,57 @@
         the page.” This CSS Anchor Positioning Polyfill supports and is based on
         this specification.
       </p>
+      <h3>Quick start</h3>
+      <div class="copy-code">
+        <button type="button" id="copy-button" data-button>Copy</button>
+        <pre><code>&lt;script type=&quot;module&quot;&gt;
+  if (!(&quot;anchorName&quot; in document.documentElement.style)) {
+    import(&quot;https://unpkg.com/@oddbird/css-anchor-positioning&quot;);
+  }
+&lt;/script&gt;</code></pre>
+      </div>
       <p>
-        The proposed <code>anchor()</code> and
-        <code>anchor-size()</code> functions add flexibility to how absolutely
-        positioned elements can be placed within a layout. Instead of being
-        sized and positioned based solely on the position of their containing
-        block, the proposed new functions allow absolutely positioned elements
-        to be placed relative to one or more author-defined anchor elements.
+        For options and more ways to use the plugin, view the
+        <a
+          href="https://github.com/oddbird/css-anchor-positioning"
+          target="_blank"
+          rel="noopener noreferrer"
+          >README.md</a
+        >.
       </p>
+      <h3>Using CSS anchor positioning</h3>
+      <p>
+        The examples on this page demonstrate the capabilities, limitations and
+        edge cases of the polyfill. To learn more about CSS anchor positioning,
+        we recommend these resources:
+      </p>
+      <ul>
+        <li>
+          <a
+            href="https://web.dev/learn/css/anchor-positioning"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Learn CSS - Web.dev</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Anchor_positioning"
+            target="_blank"
+            rel="noopener noreferrer"
+            >MDN</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://oddbird.dev/courses/anchor-positioning/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >OddBird's CSS anchor positioning email course</a
+          >
+        </li>
+      </ul>
+      <h3>About the polyfill and spec</h3>
       <ul>
         <li>
           View the polyfill on
@@ -312,13 +368,6 @@
           Browse or open issues related to the specification
           <a
             href="https://github.com/w3c/csswg-drafts/labels/css-anchor-position-1"
-            target="_blank"
-            rel="noopener noreferrer"
-            >here</a
-          >
-          or
-          <a
-            href="https://github.com/tabatkins/specs/issues?q=is%3Aissue+is%3Aopen+%5Bcss-anchor-position%5D"
             target="_blank"
             rel="noopener noreferrer"
             >here</a
@@ -591,10 +640,18 @@
           Popover (Target)
         </div>
       </div>
-      <p class="note">
-        With polyfill applied: Target is positioned at the bottom right corner
-        of the Anchor.
-      </p>
+      <div class="note">
+        <p>
+          With polyfill applied: Target is positioned at the bottom right corner
+          of the Anchor.
+        </p>
+        <p>
+          <strong>Note:</strong> The polyfill does not create an implicit anchor
+          on buttons that open the popover, so you will need to explicitly add
+          an <code>anchor-name</code> to the triggering button, and refer to it
+          from the positioned element.
+        </p>
+      </div>
       <pre><code class="language-css"
 >#my-anchor-popover {
   position: absolute;

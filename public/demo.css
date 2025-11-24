@@ -319,3 +319,14 @@ pre[class*='language-'] {
 pre[class*='language-'] {
   background-color: lch(98% 2 269.6deg);
 }
+
+.copy-code {
+  position: relative;
+}
+
+#copy-button {
+  position: absolute;
+  right: 0.5em;
+  font-size: initial;
+  padding: 0.25em 0.5em;
+}
