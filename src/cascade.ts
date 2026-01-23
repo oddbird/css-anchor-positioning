@@ -70,7 +70,7 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
   };
 
   if (node.property === 'inset') {
-    const values = node.value.children.toArray();
+    const values = node.value.children?.toArray() || [];
     // `inset` shorthand expands to top, right, bottom, left
     // See https://drafts.csswg.org/css-position/#inset-shorthands
     const [top, right, bottom, left] = (() => {
@@ -92,7 +92,7 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
     appendProperty('bottom', bottom);
     appendProperty('left', left);
   } else if (node.property === 'inset-block') {
-    const values = node.value.children.toArray();
+    const values = node.value.children?.toArray() || [];
     const [blockStart, blockEnd] = (() => {
       switch (values.length) {
         case 1:
@@ -106,7 +106,7 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
     appendProperty('inset-block-start', blockStart);
     appendProperty('inset-block-end', blockEnd);
   } else if (node.property === 'inset-inline') {
-    const values = node.value.children.toArray();
+    const values = node.value.children?.toArray() || [];
     const [inlineStart, inlineEnd] = (() => {
       switch (values.length) {
         case 1:

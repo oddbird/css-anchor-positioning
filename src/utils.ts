@@ -61,7 +61,7 @@ export function isDeclaration(node: CssNode): node is DeclarationWithValue {
 }
 
 export function getDeclarationValue(node: DeclarationWithValue) {
-  return (node.value.children.first as Identifier).name;
+  return (node.value.children?.first as Identifier)?.name;
 }
 
 export interface StyleData {

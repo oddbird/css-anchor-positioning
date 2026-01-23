@@ -457,8 +457,8 @@ function isPositionAreaDeclaration(
 
 function parsePositionAreaValue(node: DeclarationWithValue) {
   const value = (node.value.children as List<Identifier>)
-    .toArray()
-    .map(({ name }) => name);
+    ?.toArray()
+    ?.map(({ name }) => name) || [];
   if (value.length === 1) {
     if (axisForPositionAreaValue(value[0]) === 'ambiguous') {
       value.push(value[0]);

@@ -142,7 +142,7 @@ function parseAnchorFn(
     customPropName: string | undefined;
 
   const args: CssNode[] = [];
-  node.children.toArray().forEach((child) => {
+  node.children?.toArray()?.forEach((child) => {
     if (foundComma) {
       fallbackValue = `${fallbackValue}${generateCSS(child)}`;
       return;
@@ -164,9 +164,9 @@ function parseAnchorFn(
     if (isIdentifier(name) && name.name.startsWith('--')) {
       // Store anchor name
       anchorName = name.name;
-    } else if (isVarFunction(name) && name.children.first) {
+    } else if (isVarFunction(name) && name.children?.first) {
       // Store CSS custom prop for anchor name
-      customPropName = (name.children.first as Identifier).name;
+      customPropName = (name.children.first as Identifier)?.name;
     }
   }
   if (sideOrSize) {
@@ -427,8 +427,8 @@ export async function parseCSS(
             isVarFunction(node) &&
             declaration &&
             prop &&
-            node.children.first &&
-            customPropsToCheck.has((node.children.first as Identifier).name) &&
+            node.children?.first &&
+            customPropsToCheck.has((node.children.first as Identifier)?.name) &&
             // For now, we only want assignments to other CSS custom properties
             prop.startsWith('--')
           ) {
@@ -496,7 +496,7 @@ export async function parseCSS(
           isVarFunction(node) &&
           declaration &&
           prop &&
-          node.children.first &&
+          node.children?.first &&
           // Now we only want assignments to inset/sizing properties
           (isInsetProp(prop) || isSizingProp(prop))
         ) {
@@ -649,7 +649,7 @@ export async function parseCSS(
         enter(node) {
           if (
             isVarFunction(node) &&
-            (node.children.first as Identifier)?.name?.startsWith('--') &&
+            (node.children?.first as Identifier)?.name?.startsWith('--') &&
             this.declaration?.property?.startsWith('--') &&
             this.block
           ) {

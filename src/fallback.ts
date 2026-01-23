@@ -319,7 +319,7 @@ function mapMargin(
 ) {
   // TODO: Handle flip-start
   if (key === 'margin') {
-    const [first, second, third, fourth] = valueAst.children.toArray();
+    const [first, second, third, fourth] = valueAst.children?.toArray() || [];
     if (tactic === 'flip-block') {
       if (fourth) {
         valueAst.children.fromArray([third, second, first, fourth]);
@@ -332,14 +332,14 @@ function mapMargin(
       } // No change needed for 1, 2 or 3 values
     }
   } else if (key === 'margin-block') {
-    const [first, second] = valueAst.children.toArray();
+    const [first, second] = valueAst.children?.toArray() || [];
     if (tactic === 'flip-block') {
       if (second) {
         valueAst.children.fromArray([second, first]);
       }
     }
   } else if (key === 'margin-inline') {
-    const [first, second] = valueAst.children.toArray();
+    const [first, second] = valueAst.children?.toArray() || [];
     if (tactic === 'flip-inline') {
       if (second) {
         valueAst.children.fromArray([second, first]);
@@ -351,9 +351,9 @@ function mapMargin(
 // Parses a value into an AST.
 const getValueAST = (property: string, val: string) => {
   const ast = getAST(`#id{${property}: ${val};}`) as Block;
-  const astDeclaration = (ast.children.first as Rule)?.block.children
-    .first as Declaration;
-  return astDeclaration.value as Value;
+  const astDeclaration = (ast.children?.first as Rule)?.block?.children
+    ?.first as Declaration;
+  return astDeclaration?.value as Value;
 };
 
 export function applyTryTacticToBlock(
@@ -453,7 +453,7 @@ function parsePositionTryFallbacks(list: List<CssNode>) {
 }
 
 function getPositionTryFallbacksDeclaration(node: Declaration) {
-  if (isPositionTryFallbacksDeclaration(node) && node.value.children.first) {
+  if (isPositionTryFallbacksDeclaration(node) && node.value.children?.first) {
     return parsePositionTryFallbacks(node.value.children);
   }
   return [];
@@ -463,11 +463,11 @@ export function getPositionTryDeclaration(node: Declaration): {
   order?: PositionTryOrder;
   options?: PositionTryObject[];
 } {
-  if (isPositionTryDeclaration(node) && node.value.children.first) {
+  if (isPositionTryDeclaration(node) && node.value.children?.first) {
     const declarationNode = clone(node) as DeclarationWithValue;
     let order: PositionTryOrder | undefined;
     // get potential order
-    const firstName = (declarationNode.value.children.first as Identifier).name;
+    const firstName = (declarationNode.value.children?.first as Identifier)?.name;
     if (firstName && isPositionTryOrder(firstName)) {
       order = firstName;
       declarationNode.value.children.shift();
@@ -480,9 +480,9 @@ export function getPositionTryDeclaration(node: Declaration): {
 }
 
 function getPositionTryOrderDeclaration(node: Declaration) {
-  if (isPositionTryOrderDeclaration(node) && node.value.children.first) {
+  if (isPositionTryOrderDeclaration(node) && node.value.children?.first) {
     return {
-      order: (node.value.children.first as Identifier).name as PositionTryOrder,
+      order: (node.value.children.first as Identifier)?.name as PositionTryOrder,
     };
   }
   return {};
