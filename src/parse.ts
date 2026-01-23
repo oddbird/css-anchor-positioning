@@ -210,7 +210,7 @@ function parseAnchorFn(
 }
 
 function getAnchorNames(node: DeclarationWithValue) {
-  return (node.value.children as List<Identifier>).map(({ name }) => name);
+  return (node.value.children as List<Identifier>)?.map(({ name }) => name) || [];
 }
 
 let anchorNames: AnchorSelectors = {};

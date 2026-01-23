@@ -95,7 +95,7 @@ export function getSelectors(rule: SelectorList | undefined) {
   if (!rule) return [];
 
   return (rule.children as List<CssTreeSelector>)
-    .map((selector) => {
+    ?.map((selector) => {
       let pseudoElementPart: string | undefined;
 
       if (selector.children.last?.type === 'PseudoElementSelector') {
@@ -112,7 +112,7 @@ export function getSelectors(rule: SelectorList | undefined) {
         pseudoElementPart,
       } satisfies Selector;
     })
-    .toArray();
+    .toArray() || [];
 }
 
 export function reportParseErrorsOnFailure() {
