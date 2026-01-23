@@ -2,13 +2,15 @@ import { polyfill } from './polyfill.js';
 
 // Used by the WPT test harness to delay test assertions
 // and give the polyfill time to apply changes
-window.CHECK_LAYOUT_DELAY = true;
+if (typeof window !== 'undefined') {
+  window.CHECK_LAYOUT_DELAY = true;
 
-// apply polyfill
-if (document.readyState !== 'complete') {
-  window.addEventListener('load', () => {
+  // apply polyfill
+  if (document.readyState !== 'complete') {
+    window.addEventListener('load', () => {
+      polyfill(true);
+    });
+  } else {
     polyfill(true);
-  });
-} else {
-  polyfill(true);
+  }
 }
