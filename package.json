@@ -72,7 +72,7 @@
     "prepack": "run-s build types",
     "test:unit": "vitest",
     "test:watch": "npm run test:unit -- --watch",
-    "test:e2e": "NODE_OPTIONS='--no-experimental-strip-types' playwright test tests/e2e/",
+    "test:e2e": "playwright test tests/e2e/",
     "test:e2e:ci": "npm run test:e2e -- --browser=all",
     "test": "run-p test:unit test:e2e",
     "test:ci": "run-p test:unit test:e2e:ci",
