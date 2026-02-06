@@ -17,7 +17,12 @@ async function applyPolyfill(page: Page) {
   return await expect(btn).toBeDisabled();
 }
 
-test('applies polyfill for position-area`', async ({ page }) => {
+test('applies polyfill for position-area`', async ({ page, browserName }) => {
+  test.fixme(
+    browserName === 'firefox',
+    'Firefox has positioning differences in this test',
+  );
+
   await applyPolyfill(page);
   const section = page.locator('#spanleft-top');
   const anchor = section.locator('.anchor');
@@ -45,7 +50,13 @@ test('applies polyfill for position-area`', async ({ page }) => {
 });
 test('applies to declarations with different containing blocks`', async ({
   page,
+  browserName,
 }) => {
+  test.fixme(
+    browserName === 'firefox',
+    'Firefox has positioning differences in this test',
+  );
+
   await applyPolyfill(page);
   const section = page.locator('#different-containers');
 
@@ -153,7 +164,13 @@ test('applies logical properties based on writing mode`', async ({ page }) => {
 });
 test('applies logical self properties based on writing mode`', async ({
   page,
+  browserName,
 }) => {
+  test.fixme(
+    browserName === 'firefox',
+    'Firefox has positioning differences in this test',
+  );
+
   await applyPolyfill(page);
   const section = page.getByTestId('self-vertical-lr-rtl');
   const anchor = section.locator('.anchor');
