@@ -560,7 +560,7 @@ async function position(rules: AnchorPositions, useAnimationFrame = false) {
   }
 }
 
-export type AnchorPositioningRoot = Document | HTMLElement;
+export type AnchorPositioningRoot = Document | HTMLElement | ShadowRoot;
 
 export interface AnchorPositioningPolyfillOptions {
   // Whether to use `requestAnimationFrame()` when updating target elements’
