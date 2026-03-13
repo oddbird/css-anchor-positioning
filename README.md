@@ -119,7 +119,7 @@ document will be implicitly polyfilled.
 
 ### roots
 
-type: `(Document | HTMLElement)[]`, default: `[document]`
+type: `(Document | HTMLElement | ShadowRoot)[]`, default: `[document]`
 
 By default the polyfill applies to `document`, but you can configure one or more
 shadow roots the polyfill should apply to using this option. See the
