@@ -24,8 +24,6 @@ export const INSTANCE_UUID = nanoid();
  */
 export const cssParseErrors = new Set() as Set<SyntaxParseError>;
 
-// https://github.com/import-js/eslint-plugin-import/issues/3019
-
 export interface DeclarationWithValue extends Declaration {
   value: Value;
 }
