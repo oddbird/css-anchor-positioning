@@ -166,14 +166,13 @@ export const getPixelValue = async ({
         size = anchorSize;
         break;
       default: {
-        let vertical = false;
         // Logical keywords require checking the writing-mode
         // of the target element (or its containing block):
         // `block` and `inline` should use the writing-mode of the element's
         // containing block, not the element itself:
         // https://trello.com/c/KnqCnHx3
         const writingMode = getCSSPropertyValue(targetEl, 'writing-mode');
-        vertical =
+        const vertical =
           writingMode.startsWith('vertical-') ||
           writingMode.startsWith('sideways-');
         size = resolveLogicalSizeKeyword(anchorSize, vertical);
@@ -629,6 +628,7 @@ export async function polyfill(
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options);
 
+  // eslint-disable-next-line no-useless-assignment
   let rules: AnchorPositions = {};
   let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
 

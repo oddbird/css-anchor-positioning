@@ -1,9 +1,9 @@
-/* eslint-disable import/no-named-as-default-member */
+/* eslint-disable import-x/no-named-as-default-member */
 
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
-import importPlugin from 'eslint-plugin-import';
+import { importX } from 'eslint-plugin-import-x';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -22,8 +22,8 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...tseslint.configs.stylistic,
-  importPlugin.flatConfigs.recommended,
-  importPlugin.flatConfigs.typescript,
+  importX.flatConfigs.recommended,
+  importX.flatConfigs.typescript,
   prettier,
   {
     files: ['**/*.{js,mjs,cjs,ts,cts,mts}'],
@@ -39,7 +39,7 @@ export default [
     },
     plugins: { 'simple-import-sort': simpleImportSort },
     settings: {
-      'import/resolver': {
+      'import-x/resolver': {
         typescript: {
           project: ['tsconfig.json', 'tests/tsconfig.json'],
         },
@@ -54,10 +54,10 @@ export default [
       'no-warning-comments': ['warn', { terms: ['todo', 'fixme', '@@@'] }],
       'simple-import-sort/imports': 'warn',
       'simple-import-sort/exports': 'warn',
-      'import/first': 'warn',
-      'import/newline-after-import': 'warn',
-      'import/no-duplicates': ['error', { 'prefer-inline': true }],
-      'import/order': 'off',
+      'import-x/first': 'warn',
+      'import-x/newline-after-import': 'warn',
+      'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
+      'import-x/order': 'off',
     },
   },
   {

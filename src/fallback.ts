@@ -45,7 +45,6 @@ import {
   type StyleData,
 } from './utils.js';
 
-// https://github.com/import-js/eslint-plugin-import/issues/3019
 interface AtRuleRaw extends Atrule {
   prelude: Raw | null;
 }

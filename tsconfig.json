@@ -8,6 +8,7 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
+    "rootDir": ".",
     "outDir": "./dist",
     "sourceMap": true
   },
