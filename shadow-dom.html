@@ -37,7 +37,9 @@
       const btn = document.getElementById('apply-polyfill');
 
       if (!SUPPORTS_ANCHOR_POSITIONING) {
-        btn.addEventListener('click', () => {
+        const shouldApply = location.hash === '#apply-polyfill';
+
+        if (shouldApply) {
           const roots = [
             document.querySelector('anchor-web-component').shadowRoot,
             document.querySelector('anchor-adopted-styles').shadowRoot,
@@ -46,6 +48,11 @@
             btn.innerText = 'Polyfill Applied';
             btn.setAttribute('disabled', '');
           });
+        }
+
+        btn.addEventListener('click', () => {
+          location.hash = 'apply-polyfill';
+          location.reload();
         });
       } else {
         btn.innerText = 'No Polyfill Needed';
