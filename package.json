@@ -82,7 +82,7 @@
     "@floating-ui/dom": "^1.7.6",
     "@types/css-tree": "^2.3.11",
     "css-tree": "^3.2.1",
-    "nanoid": "^5.1.7"
+    "nanoid": "^5.1.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -97,7 +97,7 @@
     "browserslist": "^4.28.2",
     "browserstack-local": "^1.5.13",
     "cross-env": "^10.1.0",
-    "eslint": "^10.2.1",
+    "eslint": "^10.3.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.2",
@@ -116,7 +116,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.1",
     "vite": "^8.0.10",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.5"
   },
   "sideEffects": [
     "./src/index.ts",
