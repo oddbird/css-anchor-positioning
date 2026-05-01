@@ -82,7 +82,7 @@
     "@floating-ui/dom": "^1.7.6",
     "@types/css-tree": "^2.3.11",
     "css-tree": "^3.2.1",
-    "nanoid": "^5.1.7"
+    "nanoid": "^5.1.11"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
