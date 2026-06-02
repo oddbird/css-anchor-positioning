@@ -385,7 +385,9 @@ async function runTestSuite(
       'Timed out',
       5 * 1000,
     );
-    const result = JSON.parse(await resultsElem.getAttribute('innerHTML'));
+    const result = JSON.parse(
+      (await resultsElem.getAttribute('innerHTML')) ?? '',
+    );
     console.info(`[${name}] Finished successfully`);
     return result;
   } catch (err) {
