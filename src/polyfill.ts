@@ -36,6 +36,14 @@ import { reportParseErrorsOnFailure, resetParseErrors } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
+const originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
+
+const adoptedStyleSheetsDescriptor = Object.getOwnPropertyDescriptor(
+  ShadowRoot.prototype,
+  'adoptedStyleSheets',
+)!;
+const originalAdoptedStyleSheetsSet = adoptedStyleSheetsDescriptor.set!;
+
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
   switch (side) {
@@ -625,6 +633,36 @@ export async function polyfill(
     useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
   );
 
+  // Patch `replaceSync` to capture styles from constructed stylesheets
+  if (CSSStyleSheet.prototype.replaceSync === originalReplaceSync) {
+    CSSStyleSheet.prototype.replaceSync = function (text: string) {
+      const styleData = {
+        el: null as unknown as HTMLElement,
+        css: text,
+      };
+
+      const cascadeCausedChanges = cascadeCSS([styleData]);
+
+      console.log('this', this);
+
+      console.log('Transformed CSS from', text, styleData.css);
+
+      return originalReplaceSync.call(this, cascadeCausedChanges ? styleData.css : text);
+    };
+  }
+
+  // Patch `adoptedStyleSheets` setter to track which sheets are adopted on each shadow root
+  if (adoptedStyleSheetsDescriptor.set === originalAdoptedStyleSheetsSet) {
+    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
+      ...adoptedStyleSheetsDescriptor,
+      set(sheets: CSSStyleSheet[]) {
+        console.log('Adding adopted stylesheets', this, sheets);
+
+        originalAdoptedStyleSheetsSet.call(this, sheets);
+      }
+    });
+  }
+
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options);
 
@@ -649,6 +687,11 @@ export async function polyfill(
     const parsedCSS = await parseCSS(styleData, { roots: options.roots });
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
+
+    console.log('rules', rules);
+    console.log('inlineStyles', inlineStyles);
+
+
   } catch (error) {
     reportParseErrorsOnFailure();
     throw error;

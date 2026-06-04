@@ -41,8 +41,7 @@
 
         if (shouldApply) {
           const roots = [
-            document.querySelector('anchor-web-component').shadowRoot,
-            document.querySelector('anchor-adopted-styles').shadowRoot,
+            document.querySelector('anchor-web-component').shadowRoot
           ];
           polyfill({ roots }).then(() => {
             btn.innerText = 'Polyfill Applied';
