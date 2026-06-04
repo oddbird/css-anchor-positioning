@@ -1,8 +1,11 @@
 import { nanoid } from 'nanoid/non-secure';
 
 import { querySelectorAllRoots } from './dom.js';
-import { type NormalizedAnchorPositioningPolyfillOptions } from './polyfill.js';
-import { type StyleData } from './utils.js';
+import {
+  type AnchorPositioningRoot,
+  type NormalizedAnchorPositioningPolyfillOptions,
+} from './polyfill.js';
+import { getAdoptedStylesheetText, type StyleData } from './utils.js';
 
 const INVALID_MIME_TYPE_ERROR = 'InvalidMimeType';
 
@@ -97,6 +100,33 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
   return inlineStyles;
 }
 
+// Collects constructed stylesheets that have been adopted (via
+// `adoptedStyleSheets`) on any of the given roots. The source text captured
+// when the stylesheet was constructed (or its serialized rules as a fallback)
+// is used so the styles can be re-parsed and transformed by the polyfill.
+function fetchAdoptedStyleSheets(roots: AnchorPositioningRoot[]) {
+  const adoptedStyles: Partial<StyleData>[] = [];
+  const seen = new Set<CSSStyleSheet>();
+  for (const root of roots) {
+    const sheets = (root as Document | ShadowRoot).adoptedStyleSheets;
+    if (!sheets) {
+      continue;
+    }
+    for (const sheet of sheets) {
+      if (seen.has(sheet)) {
+        continue;
+      }
+      seen.add(sheet);
+      adoptedStyles.push({
+        el: null as unknown as HTMLElement,
+        css: getAdoptedStylesheetText(sheet),
+        sheet,
+      });
+    }
+  }
+  return adoptedStyles;
+}
+
 export async function fetchCSS(
   options: NormalizedAnchorPositioningPolyfillOptions,
 ): Promise<StyleData[]> {
@@ -124,5 +154,12 @@ export async function fetchCSS(
 
   const inlines = fetchInlineStyles(elementsForInlines);
 
-  return await fetchLinkedStylesheets([...sources, ...inlines]);
+  // Collect constructed stylesheets adopted on the polyfill roots. Skipped when
+  // an explicit `elements` list is provided, as that opts into element-only
+  // polyfilling.
+  const adopted = options.elements
+    ? []
+    : fetchAdoptedStyleSheets(options.roots);
+
+  return await fetchLinkedStylesheets([...sources, ...inlines, ...adopted]);
 }

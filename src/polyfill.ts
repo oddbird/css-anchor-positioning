@@ -32,17 +32,109 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
-import { reportParseErrorsOnFailure, resetParseErrors } from './utils.js';
+import {
+  captureAdoptedStylesheetText,
+  originalReplaceSync,
+  reportParseErrorsOnFailure,
+  resetParseErrors,
+  type StyleData,
+} from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
-
-const originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
 
 const adoptedStyleSheetsDescriptor = Object.getOwnPropertyDescriptor(
   ShadowRoot.prototype,
   'adoptedStyleSheets',
-)!;
-const originalAdoptedStyleSheetsSet = adoptedStyleSheetsDescriptor.set!;
+);
+const originalAdoptedStyleSheetsSet = adoptedStyleSheetsDescriptor?.set;
+
+// Patch `replaceSync` and the `adoptedStyleSheets` setter as soon as this
+// module is loaded. This must happen before any custom element's
+// `connectedCallback` constructs a stylesheet or adopts it into a shadow root,
+// otherwise those styles would be missed by the polyfill.
+function installConstructedStylesheetPatches() {
+  // Patch `replaceSync` to capture the source text of constructed stylesheets
+  // and immediately cascade unsupported properties into custom properties, so
+  // the styles take effect as soon as the stylesheet is constructed. The
+  // original (untransformed) text is captured so the polyfill can later
+  // re-parse it to resolve `anchor()` functions.
+  if (CSSStyleSheet.prototype.replaceSync === originalReplaceSync) {
+    CSSStyleSheet.prototype.replaceSync = function (text: string) {
+      captureAdoptedStylesheetText(this, text);
+      const styleData: StyleData = {
+        el: null as unknown as HTMLElement,
+        css: text,
+      };
+      const cascadeCausedChanges = cascadeCSS([styleData]);
+      return originalReplaceSync.call(
+        this,
+        cascadeCausedChanges ? styleData.css : text,
+      );
+    };
+  }
+
+  // Patch the `adoptedStyleSheets` setter so that anchors/targets styled by
+  // constructed stylesheets get positioned. We have access to the `ShadowRoot`
+  // here (`this`), but the shadow root's children may not exist yet (e.g. when
+  // `adoptedStyleSheets` is assigned before `innerHTML` in `connectedCallback`).
+  // To position only after the shadow DOM is populated, we wrap the host
+  // element's `connectedCallback` and run the polyfill for the shadow root once
+  // the (original) callback has finished.
+  if (
+    adoptedStyleSheetsDescriptor &&
+    originalAdoptedStyleSheetsSet &&
+    adoptedStyleSheetsDescriptor.set === originalAdoptedStyleSheetsSet
+  ) {
+    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
+      ...adoptedStyleSheetsDescriptor,
+      set(this: ShadowRoot, sheets: CSSStyleSheet[]) {
+        originalAdoptedStyleSheetsSet.call(this, sheets);
+        if (sheets.length > 0) {
+          patchHostConnectedCallback(this);
+        }
+      },
+    });
+  }
+}
+
+// Marks host elements whose `connectedCallback` has already been wrapped, so we
+// don't wrap it more than once if multiple stylesheets are adopted.
+const patchedHosts = new WeakSet<HTMLElement>();
+
+interface CustomElementHost extends HTMLElement {
+  connectedCallback?: () => void;
+}
+
+/**
+ * Wraps the `connectedCallback` of a shadow root's host element so that, after
+ * the original callback runs (and the shadow DOM is populated), the polyfill is
+ * run for that shadow root to position its anchored elements.
+ */
+function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
+  const host = shadowRoot.host as CustomElementHost;
+  if (patchedHosts.has(host)) {
+    return;
+  }
+  patchedHosts.add(host);
+
+  const originalConnectedCallback = host.connectedCallback;
+  host.connectedCallback = function (this: CustomElementHost) {
+    originalConnectedCallback?.call(this);
+    void polyfill({ roots: [shadowRoot] });
+  };
+
+  // If the host is already connected (e.g. `adoptedStyleSheets` was assigned
+  // from within the host's `connectedCallback`), the wrapper above won't run
+  // for the current connection, so run the polyfill once the current callback
+  // has finished and the shadow DOM has been populated.
+  if (host.isConnected) {
+    queueMicrotask(() => {
+      void polyfill({ roots: [shadowRoot] });
+    });
+  }
+}
+
+installConstructedStylesheetPatches();
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -633,36 +725,6 @@ export async function polyfill(
     useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
   );
 
-  // Patch `replaceSync` to capture styles from constructed stylesheets
-  if (CSSStyleSheet.prototype.replaceSync === originalReplaceSync) {
-    CSSStyleSheet.prototype.replaceSync = function (text: string) {
-      const styleData = {
-        el: null as unknown as HTMLElement,
-        css: text,
-      };
-
-      const cascadeCausedChanges = cascadeCSS([styleData]);
-
-      console.log('this', this);
-
-      console.log('Transformed CSS from', text, styleData.css);
-
-      return originalReplaceSync.call(this, cascadeCausedChanges ? styleData.css : text);
-    };
-  }
-
-  // Patch `adoptedStyleSheets` setter to track which sheets are adopted on each shadow root
-  if (adoptedStyleSheetsDescriptor.set === originalAdoptedStyleSheetsSet) {
-    Object.defineProperty(ShadowRoot.prototype, 'adoptedStyleSheets', {
-      ...adoptedStyleSheetsDescriptor,
-      set(sheets: CSSStyleSheet[]) {
-        console.log('Adding adopted stylesheets', this, sheets);
-
-        originalAdoptedStyleSheetsSet.call(this, sheets);
-      }
-    });
-  }
-
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options);
 
@@ -687,11 +749,6 @@ export async function polyfill(
     const parsedCSS = await parseCSS(styleData, { roots: options.roots });
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
-
-    console.log('rules', rules);
-    console.log('inlineStyles', inlineStyles);
-
-
   } catch (error) {
     reportParseErrorsOnFailure();
     throw error;

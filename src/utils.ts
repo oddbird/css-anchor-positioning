@@ -68,6 +68,49 @@ export interface StyleData {
   url?: URL;
   changed?: boolean;
   created?: boolean; // Whether the element is created by the polyfill
+  // The constructed stylesheet this data came from, when the styles were
+  // adopted via `adoptedStyleSheets` rather than a `<style>`/`<link>` element.
+  sheet?: CSSStyleSheet;
+}
+
+// Reference to the native `CSSStyleSheet.prototype.replaceSync` so that the
+// polyfill can write transformed CSS back into a constructed stylesheet without
+// re-triggering the patched version (which would re-capture the text).
+export const originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
+
+// Maps a constructed stylesheet to the original (untransformed) CSS text that
+// was passed to `replaceSync`, so the polyfill can re-parse the source styles.
+export const adoptedSheetText = new WeakMap<CSSStyleSheet, string>();
+
+/**
+ * Records the original CSS text passed to a constructed stylesheet's
+ * `replaceSync`, so it can later be re-parsed by the polyfill.
+ */
+export function captureAdoptedStylesheetText(sheet: CSSStyleSheet, text: string) {
+  adoptedSheetText.set(sheet, text);
+}
+
+/**
+ * Serializes the current rules of a constructed stylesheet. Used as a fallback
+ * when the original `replaceSync` text was not captured (e.g. the sheet was
+ * populated before the polyfill patched `replaceSync`).
+ */
+export function getAdoptedStylesheetText(sheet: CSSStyleSheet) {
+  const captured = adoptedSheetText.get(sheet);
+  if (captured !== undefined) {
+    return captured;
+  }
+  return Array.from(sheet.cssRules)
+    .map((rule) => rule.cssText)
+    .join('\n');
+}
+
+/**
+ * Writes transformed CSS back into a constructed stylesheet, bypassing the
+ * patched `replaceSync` so the original source text remains captured.
+ */
+export function writeAdoptedStylesheet(sheet: CSSStyleSheet, css: string) {
+  originalReplaceSync.call(sheet, css);
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
