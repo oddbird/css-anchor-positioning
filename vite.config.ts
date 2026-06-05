@@ -60,7 +60,25 @@ export default defineConfig({
           ],
         },
       },
-  plugins: [bundleStats({ compare: false, silent: true })],
+  plugins: [
+    // This package's `sideEffects` allowlist (in package.json) marks everything
+    // outside `src/index.ts` and the built files as side-effect-free, which is
+    // correct for consumers tree-shaking the library. But Rolldown (Vite 8+)
+    // also applies that allowlist to the demo HTML's inline
+    // `<script type="module">` modules, tree-shaking their top-level statements
+    // away and leaving the demo pages without any JavaScript. Mark those inline
+    // script modules as having side effects so the demo keeps working.
+    // See https://github.com/oddbird/css-anchor-positioning/issues/404
+    {
+      name: 'anchor-polyfill:demo-inline-script-side-effects',
+      transform(code, id) {
+        if (id.includes('html-proxy')) {
+          return { code, map: null, moduleSideEffects: 'no-treeshake' };
+        }
+      },
+    },
+    bundleStats({ compare: false, silent: true }),
+  ],
   /**
    * @see https://vitest.dev/config/#configuration
    */
