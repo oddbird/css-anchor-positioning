@@ -63,7 +63,7 @@ export function getDeclarationValue(node: DeclarationWithValue) {
 }
 
 export interface StyleData {
-  el: HTMLElement;
+  el?: HTMLElement;
   css: string;
   url?: URL;
   changed?: boolean;

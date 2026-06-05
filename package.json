@@ -33,12 +33,20 @@
       "types": "./dist/index-fn.d.ts",
       "import": "./dist/css-anchor-positioning-fn.js",
       "require": "./dist/css-anchor-positioning-fn.umd.cjs"
+    },
+    "./shadow": {
+      "types": "./dist/index-shadow.d.ts",
+      "import": "./dist/css-anchor-positioning-shadow.js",
+      "require": "./dist/css-anchor-positioning-shadow.umd.cjs"
     }
   },
   "typesVersions": {
     "*": {
       "fn": [
         "./dist/index-fn.d.ts"
+      ],
+      "shadow": [
+        "./dist/index-shadow.d.ts"
       ]
     }
   },
@@ -52,6 +60,7 @@
     "build": "run-s build:demo build:dist build:fn",
     "build:dist": "vite build",
     "build:fn": "cross-env BUILD_FN=1 vite build",
+    "build:shadow": "cross-env BUILD_SHADOW=1 vite build",
     "build:wpt": "cross-env BUILD_WPT=1 vite build",
     "build:demo": "cross-env BUILD_DEMO=1 vite build",
     "preview": "vite preview",

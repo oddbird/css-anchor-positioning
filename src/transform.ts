@@ -35,7 +35,7 @@ export function transformCSS(
         // Write the transformed CSS back into the sheet, bypassing the patched
         // `replaceSync` so the original source text remains captured.
         writeAdoptedStylesheet(sheet, css);
-      } else if (el.tagName.toLowerCase() === 'style') {
+      } else if (el?.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
@@ -69,7 +69,7 @@ export function transformCSS(
           document.head.insertAdjacentElement('beforeend', styleEl);
         }
         updatedObject.el = styleEl;
-      } else if (el.hasAttribute('data-has-inline-styles')) {
+      } else if (el?.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
         if (attr) {

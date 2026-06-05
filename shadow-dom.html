@@ -29,68 +29,78 @@
       }
     </style>
     <script type="module">
-      import polyfill from '/src/index-fn.ts';
+      function defineCustomElements() {
+        class AnchorWebComponent extends HTMLElement {}
+        customElements.define('anchor-web-component', AnchorWebComponent);
+
+        class AnchorAdoptedStyles extends HTMLElement {
+          connectedCallback() {
+            this.attachShadow({ mode: 'open' });
+
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(`
+              .anchor {
+                anchor-name: --adopted-anchor;
+              }
+              .target {
+                position: absolute;
+                right: anchor(--adopted-anchor right, 50px);
+                top: anchor(--adopted-anchor bottom);
+              }
+            `);
+            this.shadowRoot.adoptedStyleSheets = [sheet];
+
+            this.shadowRoot.innerHTML = `
+              <link rel="stylesheet" href="/demo.css" />
+              <div style="position: relative">
+                <div class="target">Target</div>
+                <div class="anchor">Anchor</div>
+              </div>
+            `;
+          }
+        }
+        customElements.define('anchor-adopted-styles', AnchorAdoptedStyles);
+      }
+
+      const btn = document.getElementById('apply-polyfill');
 
       const SUPPORTS_ANCHOR_POSITIONING =
         'anchorName' in document.documentElement.style;
 
-      const btn = document.getElementById('apply-polyfill');
-
       if (!SUPPORTS_ANCHOR_POSITIONING) {
-        const shouldApply = location.hash === '#apply-polyfill';
+        if (location.hash === '#apply-polyfill') {
+          // Load the shadow entrypoint first so the `replaceSync` and
+          // `adoptedStyleSheets` patches are installed before any custom
+          // element's `connectedCallback` runs.
+          const { default: polyfill } = await import('/src/index-shadow.ts');
 
-        if (shouldApply) {
-          const roots = [
-            document.querySelector('anchor-web-component').shadowRoot
-          ];
-          polyfill({ roots }).then(() => {
-            btn.innerText = 'Polyfill Applied';
-            btn.setAttribute('disabled', '');
+          // Now define the custom elements
+          defineCustomElements();
+
+          // Load the polyfill explicitly for the <anchor-web-component> demo.
+          // The <anchor-adopted-styles> is already covered by the adopted
+          // stylesheet patch.
+          await polyfill({
+            roots: [document.querySelector('anchor-web-component').shadowRoot]
+          });
+
+          btn.innerText = 'Polyfill Applied';
+          btn.setAttribute('disabled', '');
+        } else {
+          btn.addEventListener('click', () => {
+            location.hash = 'apply-polyfill';
+            location.reload();
           });
         }
-
-        btn.addEventListener('click', () => {
-          location.hash = 'apply-polyfill';
-          location.reload();
-        });
       } else {
         btn.innerText = 'No Polyfill Needed';
         btn.setAttribute('disabled', '');
         console.log(
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
+
+        defineCustomElements();
       }
-
-      class AnchorWebComponent extends HTMLElement {}
-      customElements.define('anchor-web-component', AnchorWebComponent);
-
-      class AnchorAdoptedStyles extends HTMLElement {
-        connectedCallback() {
-          this.attachShadow({ mode: 'open' });
-
-          const sheet = new CSSStyleSheet();
-          sheet.replaceSync(`
-            .anchor {
-              anchor-name: --adopted-anchor;
-            }
-            .target {
-              position: absolute;
-              right: anchor(--adopted-anchor right, 50px);
-              top: anchor(--adopted-anchor bottom);
-            }
-          `);
-          this.shadowRoot.adoptedStyleSheets = [sheet];
-
-          this.shadowRoot.innerHTML = `
-            <link rel="stylesheet" href="/demo.css" />
-            <div style="position: relative">
-              <div class="target">Target</div>
-              <div class="anchor">Anchor</div>
-            </div>
-          `;
-        }
-      }
-      customElements.define('anchor-adopted-styles', AnchorAdoptedStyles);
     </script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
@@ -222,7 +232,12 @@ customElements.define("anchor-web-component", AnchorDemo);
       </div>
 
       <pre><code class="language-html"
->&lt;anchor-adopted-styles&gt;&lt;/anchor-adopted-styles&gt;
+>&lt;!-- Load the shadow entrypoint before defining custom elements,
+so the replaceSync and adoptedStyleSheets patches are installed
+before any connectedCallback runs. --&gt;
+&lt;script type="module" src="/dist/css-anchor-positioning-shadow.js"&gt;&lt;/script&gt;
+
+&lt;anchor-adopted-styles&gt;&lt;/anchor-adopted-styles&gt;
 &lt;script&gt;
 class AnchorAdoptedStyles extends HTMLElement {
   connectedCallback() {

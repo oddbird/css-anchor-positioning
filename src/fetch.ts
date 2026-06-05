@@ -118,7 +118,6 @@ function fetchAdoptedStyleSheets(roots: AnchorPositioningRoot[]) {
       }
       seen.add(sheet);
       adoptedStyles.push({
-        el: null as unknown as HTMLElement,
         css: getAdoptedStylesheetText(sheet),
         sheet,
       });
