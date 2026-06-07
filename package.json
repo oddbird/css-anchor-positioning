@@ -57,7 +57,7 @@
     "package.json"
   ],
   "scripts": {
-    "build": "run-s build:demo build:dist build:fn",
+    "build": "run-s build:demo build:dist build:fn build:shadow",
     "build:dist": "vite build",
     "build:fn": "cross-env BUILD_FN=1 vite build",
     "build:shadow": "cross-env BUILD_SHADOW=1 vite build",
