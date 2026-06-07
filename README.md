@@ -56,6 +56,32 @@ import polyfill from '@oddbird/css-anchor-positioning/fn';
 The `polyfill` function returns a promise that resolves when the polyfill has
 been applied.
 
+### Constructed stylesheets (`adoptedStyleSheets`)
+
+If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
+(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), load the
+dedicated shadow entrypoint **before** any custom element's `connectedCallback` runs:
+
+```html
+<script type="module">
+  if (!("anchorName" in document.documentElement.style)) {
+    await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-shadow.js");
+    // Define your custom elements after the entrypoint has loaded
+  }
+</script>
+```
+
+With a bundler:
+
+```js
+import '@oddbird/css-anchor-positioning/shadow';
+```
+
+This entrypoint patches `CSSStyleSheet.prototype.replaceSync` to capture
+stylesheet source text, and patches the `ShadowRoot.prototype.adoptedStyleSheets`
+setter to automatically run the polyfill for each shadow root once its host
+element's `connectedCallback` finishes.
+
 You can view a more complete demo
 [here](https://anchor-positioning.oddbird.net/).
 
@@ -162,8 +188,6 @@ following features:
 - `position-visibility` property
 - dynamically added/removed anchors or targets
 - anchors and targets in separate shadow roots (see https://github.com/oddbird/css-anchor-positioning/issues/191)
-- anchors or targets in constructed stylesheets
-  (https://github.com/oddbird/css-anchor-positioning/issues/228)
 - vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
   https://github.com/whatwg/html/pull/9144)
