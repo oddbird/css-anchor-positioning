@@ -91,7 +91,6 @@
             location.hash = 'apply-polyfill';
             location.reload();
           });
-          defineCustomElements();
         }
       } else {
         btn.innerText = 'No Polyfill Needed';
@@ -178,7 +177,8 @@
         </p>
         <p>
           <strong>Note: </strong> this will not work across shadow root
-          boundaries, and will not work with constructed stylesheets.
+          boundaries. See the <a href="#adopted-stylesheets">next demo</a> for
+          an example of how to use the polyfill with adopted stylesheets.
         </p>
       </div>
 
