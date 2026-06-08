@@ -57,3 +57,24 @@ test('applies polyfill inside shadow root', async ({ page }) => {
   await expectWithinOne(target, 'top', parentHeight);
   await expectWithinOne(target, 'right', expected);
 });
+
+test('applies polyfill for adopted stylesheets in shadow root', async ({
+  page,
+}) => {
+  const anchorSelector = 'anchor-adopted-styles .anchor';
+  const targetSelector = 'anchor-adopted-styles .target';
+  const target = page.locator(targetSelector);
+  const width = await getElementWidth(page, anchorSelector);
+  const parentWidth = await getParentWidth(page, targetSelector);
+  const parentHeight = await getParentHeight(page, targetSelector);
+  const expected = parentWidth - width;
+
+  // Before the polyfill is applied, the `anchor()` values fall back to their
+  // defaults (`right: 50px`, `top` is unset).
+  await expect(target).toHaveCSS('right', '50px');
+
+  await applyPolyfill(page);
+
+  await expectWithinOne(target, 'top', parentHeight);
+  await expectWithinOne(target, 'right', expected);
+});

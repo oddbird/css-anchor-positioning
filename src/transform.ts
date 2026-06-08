@@ -1,4 +1,4 @@
-import { type StyleData } from './utils.js';
+import { type StyleData, writeAdoptedStylesheet } from './utils.js';
 
 // This is a list of non-global attributes that apply to link elements but do
 // not apply to style elements. These should be removed when converting from a
@@ -27,10 +27,15 @@ export function transformCSS(
   cleanup = false,
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const { el, css, changed, created = false } of styleData) {
-    const updatedObject: StyleData = { el, css, changed: false };
+  for (const { el, css, changed, created = false, sheet } of styleData) {
+    const updatedObject: StyleData = { el, css, changed: false, sheet };
     if (changed) {
-      if (el.tagName.toLowerCase() === 'style') {
+      if (sheet) {
+        // Handle constructed stylesheets adopted via `adoptedStyleSheets`.
+        // Write the transformed CSS back into the sheet, bypassing the patched
+        // `replaceSync` so the original source text remains captured.
+        writeAdoptedStylesheet(sheet, css);
+      } else if (el?.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
       } else if (el instanceof HTMLLinkElement) {
@@ -64,7 +69,7 @@ export function transformCSS(
           document.head.insertAdjacentElement('beforeend', styleEl);
         }
         updatedObject.el = styleEl;
-      } else if (el.hasAttribute('data-has-inline-styles')) {
+      } else if (el?.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
         if (attr) {
@@ -84,7 +89,7 @@ export function transformCSS(
       }
     }
     // Remove no-longer-needed data-attribute
-    if (cleanup && el.hasAttribute('data-has-inline-styles')) {
+    if (cleanup && el?.hasAttribute('data-has-inline-styles')) {
       el.removeAttribute('data-has-inline-styles');
     }
     updatedStyleData.push(updatedObject);
