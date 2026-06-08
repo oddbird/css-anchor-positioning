@@ -81,7 +81,7 @@
           // The <anchor-adopted-styles> is already covered by the adopted
           // stylesheet patch.
           await polyfill({
-            roots: [document.querySelector('anchor-web-component').shadowRoot]
+            roots: [document.querySelector('anchor-web-component').shadowRoot],
           });
 
           btn.innerText = 'Polyfill Applied';

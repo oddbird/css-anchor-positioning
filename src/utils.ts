@@ -86,7 +86,10 @@ export const adoptedSheetText = new WeakMap<CSSStyleSheet, string>();
  * Records the original CSS text passed to a constructed stylesheet's
  * `replaceSync`, so it can later be re-parsed by the polyfill.
  */
-export function captureAdoptedStylesheetText(sheet: CSSStyleSheet, text: string) {
+export function captureAdoptedStylesheetText(
+  sheet: CSSStyleSheet,
+  text: string,
+) {
   adoptedSheetText.set(sheet, text);
 }
 

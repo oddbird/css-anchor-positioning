@@ -64,8 +64,8 @@ dedicated shadow entrypoint **before** any custom element's `connectedCallback` 
 
 ```html
 <script type="module">
-  if (!("anchorName" in document.documentElement.style)) {
-    await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-shadow.js");
+  if (!('anchorName' in document.documentElement.style)) {
+    await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-shadow.js');
     // Define your custom elements after the entrypoint has loaded
   }
 </script>

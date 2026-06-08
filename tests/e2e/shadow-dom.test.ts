@@ -78,4 +78,3 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   await expectWithinOne(target, 'top', parentHeight);
   await expectWithinOne(target, 'right', expected);
 });
-

@@ -32,10 +32,7 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
-import {
-  reportParseErrorsOnFailure,
-  resetParseErrors,
-} from './utils.js';
+import { reportParseErrorsOnFailure, resetParseErrors } from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
