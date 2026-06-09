@@ -64,14 +64,17 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   const anchorSelector = 'anchor-adopted-styles .anchor';
   const targetSelector = 'anchor-adopted-styles .target';
   const target = page.locator(targetSelector);
+  const anchor = page.locator(anchorSelector);
   const width = await getElementWidth(page, anchorSelector);
   const parentWidth = await getParentWidth(page, targetSelector);
   const parentHeight = await getParentHeight(page, targetSelector);
   const expected = parentWidth - width;
 
-  // Before the polyfill is applied, the `anchor()` values fall back to their
-  // defaults (`right: 50px`, `top` is unset).
-  await expect(target).toHaveCSS('right', '50px');
+  // The empty value is `""`, so require more than one character.
+  const nonEmptyValue = /.+/;
+  // Before the polyfill is applied, anchor rules in adopted stylesheets are
+  // stripped out, and not present in the stylesheet at all.
+  await expect(anchor).not.toHaveCSS('anchor-name', nonEmptyValue);
 
   await applyPolyfill(page);
 

@@ -35,6 +35,7 @@
 
         class AnchorAdoptedStyles extends HTMLElement {
           connectedCallback() {
+            console.log('connected');
             this.attachShadow({ mode: 'open' });
 
             const sheet = new CSSStyleSheet();
@@ -91,6 +92,7 @@
             location.hash = 'apply-polyfill';
             location.reload();
           });
+          defineCustomElements();
         }
       } else {
         btn.innerText = 'No Polyfill Needed';
