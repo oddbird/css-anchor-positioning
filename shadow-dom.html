@@ -35,7 +35,6 @@
 
         class AnchorAdoptedStyles extends HTMLElement {
           connectedCallback() {
-            console.log('connected');
             this.attachShadow({ mode: 'open' });
 
             const sheet = new CSSStyleSheet();
