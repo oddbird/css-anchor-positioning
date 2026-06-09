@@ -81,6 +81,7 @@ export interface StyleData {
 // stylesheet is being transformed, indicating the presence of CSSStyleSheet
 // support.
 export const originalReplaceSync =
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   globalThis.CSSStyleSheet?.prototype.replaceSync ?? (() => {});
 
 // Maps a constructed stylesheet to the original (untransformed) CSS text that
