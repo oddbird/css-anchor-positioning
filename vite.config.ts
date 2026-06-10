@@ -35,21 +35,13 @@ export default defineConfig({
                 // the proper extensions will be added
                 fileName: 'css-anchor-positioning-fn',
               }
-            : process.env.BUILD_SHADOW
-              ? // build that installs the constructed-stylesheet patches on import
-                {
-                  entry: resolve(__dirname, 'src/index-shadow.ts'),
-                  name: 'CssAnchorPositioningShadow',
-                  // the proper extensions will be added
-                  fileName: 'css-anchor-positioning-shadow',
-                }
-              : // build that runs the polyfill on import
-                {
-                  entry: resolve(__dirname, 'src/index.ts'),
-                  name: 'CssAnchorPositioning',
-                  // the proper extensions will be added
-                  fileName: 'css-anchor-positioning',
-                },
+            : // build that runs the polyfill on import
+              {
+                entry: resolve(__dirname, 'src/index.ts'),
+                name: 'CssAnchorPositioning',
+                // the proper extensions will be added
+                fileName: 'css-anchor-positioning',
+              },
         emptyOutDir: false,
         target: 'es6',
         sourcemap: true,
