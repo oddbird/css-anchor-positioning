@@ -75,8 +75,14 @@ export interface StyleData {
 
 // Reference to the native `CSSStyleSheet.prototype.replaceSync` so that the
 // polyfill can write transformed CSS back into a constructed stylesheet without
-// re-triggering the patched version (which would re-capture the text).
-export const originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
+// re-triggering the patched version (which would re-capture the text). In
+// environments without support for constructed stylesheets, fallback to a
+// no-op. This allows E2E tests to run, and is only called when a constructed
+// stylesheet is being transformed, indicating the presence of CSSStyleSheet
+// support.
+export const originalReplaceSync =
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  globalThis.CSSStyleSheet?.prototype.replaceSync ?? (() => {});
 
 // Maps a constructed stylesheet to the original (untransformed) CSS text that
 // was passed to `replaceSync`, so the polyfill can re-parse the source styles.
