@@ -51,6 +51,8 @@ For build tools such as Vite, Webpack, and Parcel, that will look like this:
 
 ```js
 import polyfill from '@oddbird/css-anchor-positioning/fn';
+
+polyfill();
 ```
 
 The `polyfill` function returns a promise that resolves when the polyfill has
@@ -64,9 +66,11 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 ```html
 <script type="module">
   if (!('anchorName' in document.documentElement.style)) {
-    const { patchAndPolyfillConstructedStylesheets } =
+    const { default: polyfill, patchAndPolyfillConstructedStylesheets } =
       await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
-    // Define your custom elements after the entrypoint has loaded
+    patchAndPolyfillConstructedStylesheets();
+    await polyfill();
+    // Define your custom elements after the polyfill has loaded
   }
 </script>
 ```
@@ -74,7 +78,12 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 With a bundler:
 
 ```js
-import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
+import polyfill, {
+  patchAndPolyfillConstructedStylesheets,
+} from '@oddbird/css-anchor-positioning/fn';
+
+patchAndPolyfillConstructedStylesheets();
+polyfill();
 ```
 
 This patches `CSSStyleSheet.prototype.replaceSync` to capture

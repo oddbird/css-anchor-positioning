@@ -95,12 +95,7 @@ export default defineConfig({
       provider: 'istanbul',
       reporter: ['text-summary', 'html'],
       include: ['src/**/*.{js,ts}'],
-      exclude: [
-        'src/index.ts',
-        'src/index-fn.ts',
-        'src/index-shadow.ts',
-        'src/index-wpt.ts',
-      ],
+      exclude: ['src/index.ts', 'src/index-fn.ts', 'src/index-wpt.ts'],
       skipFull: true,
     },
   },
