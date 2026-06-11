@@ -59,12 +59,12 @@ been applied.
 ### Constructed stylesheets (`adoptedStyleSheets`)
 
 If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
-(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), call `installConstructedStylesheetPatches()` **before** any custom element's `connectedCallback` runs:
+(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), call `patchAndPolyfillConstructedStylesheets()` **before** any custom element's `connectedCallback` runs:
 
 ```html
 <script type="module">
   if (!('anchorName' in document.documentElement.style)) {
-    const { installConstructedStylesheetPatches } =
+    const { patchAndPolyfillConstructedStylesheets } =
       await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
     // Define your custom elements after the entrypoint has loaded
   }
@@ -74,7 +74,7 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 With a bundler:
 
 ```js
-import { installConstructedStylesheetPatches } from '@oddbird/css-anchor-positioning/fn';
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
 ```
 
 This patches `CSSStyleSheet.prototype.replaceSync` to capture
