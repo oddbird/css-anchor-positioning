@@ -66,11 +66,11 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 ```html
 <script type="module">
   if (!('anchorName' in document.documentElement.style)) {
-    const { default: polyfill, patchAndPolyfillConstructedStylesheets } =
+    const { patchAndPolyfillConstructedStylesheets } =
       await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
     patchAndPolyfillConstructedStylesheets();
-    await polyfill();
-    // Define your custom elements after the polyfill has loaded
+    // Define your custom elements after the patch has applied the polyfill.
+    // You don't need to explicitly call polyfill().
   }
 </script>
 ```
@@ -83,7 +83,6 @@ import polyfill, {
 } from '@oddbird/css-anchor-positioning/fn';
 
 patchAndPolyfillConstructedStylesheets();
-polyfill();
 ```
 
 This patches `CSSStyleSheet.prototype.replaceSync` to capture
