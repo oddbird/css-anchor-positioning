@@ -78,9 +78,7 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 With a bundler:
 
 ```js
-import polyfill, {
-  patchAndPolyfillConstructedStylesheets,
-} from '@oddbird/css-anchor-positioning/fn';
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
 
 patchAndPolyfillConstructedStylesheets();
 ```
