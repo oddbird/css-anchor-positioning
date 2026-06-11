@@ -51,6 +51,8 @@ For build tools such as Vite, Webpack, and Parcel, that will look like this:
 
 ```js
 import polyfill from '@oddbird/css-anchor-positioning/fn';
+
+polyfill();
 ```
 
 The `polyfill` function returns a promise that resolves when the polyfill has
@@ -59,14 +61,16 @@ been applied.
 ### Constructed stylesheets (`adoptedStyleSheets`)
 
 If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
-(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), load the
-dedicated shadow entrypoint **before** any custom element's `connectedCallback` runs:
+(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), call `patchAndPolyfillConstructedStylesheets()` **before** any custom element's `connectedCallback` runs:
 
 ```html
 <script type="module">
   if (!('anchorName' in document.documentElement.style)) {
-    await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-shadow.js');
-    // Define your custom elements after the entrypoint has loaded
+    const { patchAndPolyfillConstructedStylesheets } =
+      await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
+    patchAndPolyfillConstructedStylesheets();
+    // Define your custom elements after the patch has applied the polyfill.
+    // You don't need to explicitly call polyfill().
   }
 </script>
 ```
@@ -74,16 +78,18 @@ dedicated shadow entrypoint **before** any custom element's `connectedCallback` 
 With a bundler:
 
 ```js
-import '@oddbird/css-anchor-positioning/shadow';
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
+
+patchAndPolyfillConstructedStylesheets();
 ```
 
-This entrypoint patches `CSSStyleSheet.prototype.replaceSync` to capture
+This patches `CSSStyleSheet.prototype.replaceSync` to capture
 stylesheet source text, and patches the `ShadowRoot.prototype.adoptedStyleSheets`
 setter to automatically run the polyfill for each shadow root once its host
 element's `connectedCallback` finishes.
 
 You can view a more complete demo
-[here](https://anchor-positioning.oddbird.net/).
+[here](https://anchor-positioning.oddbird.net/shadow-dom.html).
 
 ## Configuration
 

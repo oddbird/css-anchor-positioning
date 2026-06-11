@@ -72,7 +72,11 @@
           // Load the shadow entrypoint first so the `replaceSync` and
           // `adoptedStyleSheets` patches are installed before any custom
           // element's `connectedCallback` runs.
-          const { default: polyfill } = await import('/src/index-shadow.ts');
+          const { default: polyfill, patchAndPolyfillConstructedStylesheets } =
+            await import('/src/index-fn.ts');
+
+          // Patch Constructed stylesheets
+          patchAndPolyfillConstructedStylesheets();
 
           // Now define the custom elements
           defineCustomElements();
