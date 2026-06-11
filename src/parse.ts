@@ -289,12 +289,23 @@ async function getAnchorEl(
   const anchorNameScopeSelectors = anchorName
     ? anchorScopes[anchorName] || []
     : [];
+  // When the target is a shadow host (e.g. matched via a `:host` rule), its
+  // anchor can live in the host's own tree (the light DOM), outside the roots
+  // being polyfilled. Include the target's root node so such anchors are found.
+  let roots = options.roots;
+  const targetRoot = targetEl?.getRootNode();
+  if (
+    (targetRoot instanceof Document || targetRoot instanceof ShadowRoot) &&
+    !roots.includes(targetRoot)
+  ) {
+    roots = [...roots, targetRoot];
+  }
   return await validatedForPositioning(
     targetEl,
     anchorName || null,
     anchorSelectors,
     [...allScopeSelectors, ...anchorNameScopeSelectors],
-    { roots: options.roots },
+    { roots },
   );
 }
 

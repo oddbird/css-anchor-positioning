@@ -81,3 +81,30 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   await expectWithinOne(target, 'top', parentHeight);
   await expectWithinOne(target, 'right', expected);
 });
+
+test('positions a custom element host anchored via position-anchor', async ({
+  page,
+}) => {
+  const buttonSelector = '#host-custom-element #button';
+  const tooltipSelector = '#host-custom-element x-tooltip';
+  const button = page.locator(buttonSelector);
+  const tooltip = page.locator(tooltipSelector);
+
+  const getRect = (locator: typeof button) =>
+    locator.evaluate((node: HTMLElement) =>
+      node.getBoundingClientRect().toJSON(),
+    );
+
+  await applyPolyfill(page);
+
+  const buttonRect = await getRect(button);
+  const tooltipRect = await getRect(tooltip);
+
+  // The tooltip's `:host` rule uses `top: calc(anchor(top) - 4px)`,
+  // `left: anchor(center)` and `translate: -50% -100%`, so it should sit 4px
+  // above the button, horizontally centered on it.
+  const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+  const tooltipCenterX = tooltipRect.left + tooltipRect.width / 2;
+  expect(tooltipCenterX).toBeCloseTo(buttonCenterX, 0);
+  expect(tooltipRect.bottom).toBeCloseTo(buttonRect.top - 4, 0);
+});

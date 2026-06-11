@@ -60,6 +60,52 @@
           }
         }
         customElements.define('anchor-adopted-styles', AnchorAdoptedStyles);
+
+        class Tooltip extends HTMLElement {
+          connectedCallback() {
+            const anchorName = `--x-tooltip-${Math.random().toString(36).slice(2)}`;
+            const targetId = this.getAttribute('for');
+            const target = targetId && this.getRootNode().getElementById(targetId);
+            // Write the anchor properties as raw `style` attribute strings.
+            // In browsers without native anchor-positioning support, the typed
+            // CSSOM (`el.style.anchorName = ...`) silently drops these unknown
+            // properties, so no `style` attribute is produced and the polyfill
+            // never sees them. Setting the literal attribute string preserves
+            // the declarations for the polyfill to read.
+            if (target) {
+              target.setAttribute(
+                'style',
+                `anchor-name: ${anchorName}; ${target.getAttribute('style') ?? ''}`,
+              );
+            }
+            this.setAttribute(
+              'style',
+              `position-anchor: ${anchorName}; ${this.getAttribute('style') ?? ''}`,
+            );
+
+            this.attachShadow({ mode: 'open' });
+
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(`
+              :host {
+                position: absolute;
+                top: calc(anchor(top) - 4px);
+                left: anchor(center);
+                background: #222;
+                color: #fff;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 0.8em;
+                white-space: nowrap;
+                pointer-events: none;
+                translate: -50% -100%;
+              }
+            `);
+            this.shadowRoot.adoptedStyleSheets = [sheet];
+            this.shadowRoot.innerHTML = '<slot></slot>';
+          }
+        }
+        customElements.define('x-tooltip', Tooltip);
       }
 
       const btn = document.getElementById('apply-polyfill');
@@ -78,7 +124,8 @@
           defineCustomElements();
 
           // Load the polyfill explicitly for the <anchor-web-component> demo.
-          // The <anchor-adopted-styles> is already covered by the adopted
+          // The <anchor-adopted-styles> and <x-tooltip> demos use
+          // `adoptedStyleSheets`, so they are already covered by the adopted
           // stylesheet patch.
           await polyfill({
             roots: [document.querySelector('anchor-web-component').shadowRoot],
@@ -266,6 +313,75 @@ class AnchorAdoptedStyles extends HTMLElement {
     `;
   }
 }
+&lt;/script&gt;
+</code></pre>
+    </section>
+    <section id="host-custom-element" class="demo-item">
+      <h2>
+        <a href="#host-custom-element" aria-hidden="true">🔗</a>
+        Works when a custom element host has <code>position-anchor</code>
+      </h2>
+      <div class="demo-elements">
+        <div style="position: relative; padding: 3em; text-align: center;">
+          <button id="button">Button</button>
+          <x-tooltip for="button">I am a tooltip</x-tooltip>
+        </div>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: The tooltip appears above the button,
+          centered horizontally.
+        </p>
+        <p>
+          This demo uses <code>position-anchor</code> on a custom element host
+          (<code>&lt;x-tooltip&gt;</code>), with <code>anchor()</code> in the
+          shadow root's <code>:host</code> styles.
+        </p>
+      </div>
+
+      <pre><code class="language-html"
+>&lt;button id="button"&gt;Button&lt;/button&gt;
+&lt;x-tooltip for="button"&gt;I am a tooltip&lt;/x-tooltip&gt;
+&lt;script&gt;
+class Tooltip extends HTMLElement {
+  connectedCallback() {
+    const anchorName = `--x-tooltip-${Math.random().toString(36).slice(2)}`;
+    const targetId = this.getAttribute("for");
+    const target = targetId &amp;&amp; this.getRootNode().getElementById(targetId);
+    if (target) {
+      target.setAttribute(
+        "style",
+        `anchor-name: ${anchorName}; ${target.getAttribute("style") ?? ""}`,
+      );
+    }
+    this.setAttribute(
+      "style",
+      `position-anchor: ${anchorName}; ${this.getAttribute("style") ?? ""}`,
+    );
+
+    this.attachShadow({ mode: "open" });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host {
+        position: absolute;
+        top: calc(anchor(top) - 4px);
+        left: anchor(center);
+        background: #222;
+        color: #fff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        white-space: nowrap;
+        pointer-events: none;
+        translate: -50% -100%;
+      }
+    `);
+    this.shadowRoot.adoptedStyleSheets = [sheet];
+    this.shadowRoot.innerHTML = "&lt;slot&gt;&lt;/slot&gt;";
+  }
+}
+customElements.define("x-tooltip", Tooltip);
 &lt;/script&gt;
 </code></pre>
     </section>
