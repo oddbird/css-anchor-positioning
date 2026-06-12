@@ -72,8 +72,14 @@
             // properties, so no `style` attribute is produced and the polyfill
             // never sees them. Setting the literal attribute string preserves
             // the declarations for the polyfill to read.
-            this.setAttribute('style', 'position-anchor: --position-anchor-on-host');
-            target?.setAttribute('style', 'anchor-name: --position-anchor-on-host');
+            this.setAttribute(
+              'style',
+              'position-anchor: --position-anchor-on-host',
+            );
+            target?.setAttribute(
+              'style',
+              'anchor-name: --position-anchor-on-host',
+            );
 
             this.attachShadow({ mode: 'open' });
 
@@ -329,8 +335,8 @@ class AnchorAdoptedStyles extends HTMLElement {
         </p>
         <p>
           This demo uses <code>position-anchor</code> on a custom element host
-          (<code>&lt;position-anchor-on-host&gt;</code>), with <code>anchor()</code> in
-          the shadow root's <code>:host</code> styles.
+          (<code>&lt;position-anchor-on-host&gt;</code>), with
+          <code>anchor()</code> in the shadow root's <code>:host</code> styles.
         </p>
       </div>
 
@@ -376,7 +382,6 @@ class PositionAnchorOnHost extends HTMLElement {
 }
 customElements.define("position-anchor-on-host", PositionAnchorOnHost);
 &lt;/script&gt;
-</code></pre>
 </code></pre>
     </section>
     <section id="sponsor">
