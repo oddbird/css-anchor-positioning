@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="/anchor-positioning.css" />
     <link rel="stylesheet" href="/anchor-inset.css" />
     <link rel="stylesheet" href="/anchor-popover.css" />
+    <link rel="stylesheet" href="/anchor-popover-position-area.css" />
     <link rel="stylesheet" href="/position-try.css" />
     <link rel="stylesheet" href="/position-try-tactics.css" />
     <link rel="stylesheet" href="/position-try-tactics-combined.css" />
@@ -663,6 +664,48 @@
   position: absolute;
   left: anchor(--my-anchor-popover right);
   top: anchor(--my-anchor-popover bottom);
+}</code></pre>
+    </section>
+    <section id="anchor-positioning-popover-position-area" class="demo-item">
+      <h2>
+        <a href="#anchor-positioning-popover-position-area" aria-hidden="true">🔗</a>
+        Anchoring a <code>popover</code> with <code>position-area</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <button
+          id="my-anchor-popover-position-area"
+          class="anchor"
+          popovertarget="my-target-popover-position-area"
+        >
+          Anchor (click to open)
+        </button>
+        <div id="my-target-popover-position-area" class="target" popover>
+          Popover (Target)
+        </div>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: Target is positioned below the Anchor, aligned
+          to its bottom right corner.
+        </p>
+        <p>
+          <strong>Note:</strong> The polyfill does not create an implicit anchor
+          on buttons that open the popover, so you will need to explicitly add
+          an <code>anchor-name</code> to the triggering button, and refer to it
+          from the positioned element.
+        </p>
+      </div>
+      <pre><code class="language-css"
+>#my-anchor-popover-position-area {
+  position: absolute;
+  left: 200px;
+  anchor-name: --my-anchor-popover-position-area;
+}
+
+#my-target-popover-position-area {
+  position: absolute;
+  position-anchor: --my-anchor-popover-position-area;
+  position-area: end;
 }</code></pre>
     </section>
     <section id="custom-prop-name" class="demo-item">
