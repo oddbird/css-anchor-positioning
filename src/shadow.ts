@@ -47,7 +47,7 @@ function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
  * `connectedCallback` runs — so that constructed stylesheets are captured and
  * their shadow roots are queued for positioning.
  */
-export function installConstructedStylesheetPatches() {
+export function patchAndPolyfillConstructedStylesheets() {
   // Patch `replaceSync` to capture the source text of constructed stylesheets
   // so the polyfill can later re-parse it.
   if (CSSStyleSheet.prototype.replaceSync === originalReplaceSync) {
