@@ -32,9 +32,16 @@
 
       const btn = document.getElementById('apply-polyfill');
 
+      // Add `?no-containing-block` to the URL to apply the polyfill with
+      // `positionAreaContainingBlock: false`, which positions targets
+      // directly instead of wrapping them.
+      const positionAreaContainingBlock = !new URLSearchParams(
+        location.search,
+      ).has('no-containing-block');
+
       if (!SUPPORTS_ANCHOR_POSITIONING) {
         btn.addEventListener('click', () =>
-          polyfill().then((rules) => {
+          polyfill({ positionAreaContainingBlock }).then((rules) => {
             btn.innerText = 'Polyfill Applied';
             btn.setAttribute('disabled', '');
             console.log(rules);
@@ -112,6 +119,13 @@
         a <code>&lt;POLYFILL-POSITION-AREA&gt;</code> element. Be aware that
         this may impact selectors that target the positioned element using
         direct child or sibling selectors.
+      </p>
+      <p>
+        Alternatively, set the <code>positionAreaContainingBlock</code> polyfill
+        option to <code>false</code> to compute and apply inset values directly
+        on the positioned element, without a wrapper element.
+        <a href="?no-containing-block">Try these examples without the wrapper</a
+        >.
       </p>
       <button id="toggle-wrapper" type="button" disabled>
         Apply polyfill to enable wrapper visibility

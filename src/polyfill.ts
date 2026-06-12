@@ -20,6 +20,7 @@ import {
 import {
   type InsetValue,
   POSITION_AREA_CASCADE_PROPERTY,
+  POSITION_AREA_TARGET_ATTRIBUTE,
   POSITION_AREA_WRAPPER_ATTRIBUTE,
   type PositionAreaTargetData,
 } from './position-area.js';
@@ -299,13 +300,40 @@ export const getPixelValue = async ({
 const isPositionAreaTarget = (
   value: AnchorFunction | PositionAreaTargetData,
 ): value is PositionAreaTargetData => {
-  return 'wrapperEl' in value;
+  return 'targetUUID' in value;
 };
 
 const isAnchorFunction = (
   value: AnchorFunction | PositionAreaTargetData,
 ): value is AnchorFunction => {
   return 'uuid' in value;
+};
+
+// Resolve the alignment within the position-area grid area to a pair of inset
+// values for one axis. `start` and `end` alignment only set the inset on the
+// aligned side, so the target keeps its natural size and position based on
+// normal absolute positioning rules. `center` alignment computes the centered
+// offset from the grid area size and the target's margin-box size.
+const resolveAxisInsetValues = (
+  alignment: 'start' | 'end' | 'center',
+  areaStart: string | null,
+  areaEnd: string | null,
+  containingBlockSize: number,
+  targetMarginBoxSize: number,
+): [string, string] => {
+  switch (alignment) {
+    case 'start':
+      return [areaStart ?? '0px', 'auto'];
+    case 'end':
+      return ['auto', areaEnd ?? '0px'];
+    case 'center': {
+      const start = parseFloat(areaStart ?? '0');
+      const end = parseFloat(areaEnd ?? '0');
+      const offset =
+        start + (containingBlockSize - start - end - targetMarginBoxSize) / 2;
+      return [`${offset}px`, 'auto'];
+    }
+  }
 };
 
 async function applyAnchorPositions(
@@ -323,7 +351,14 @@ async function applyAnchorPositions(
       const target = anchorValue.targetEl;
       if (anchor && target) {
         if (isPositionAreaTarget(anchorValue)) {
-          const wrapper = anchorValue.wrapperEl!;
+          // When the `positionAreaContainingBlock` option is `true`, the
+          // target is wrapped with an element that approximates the
+          // containing block created by `position-area`, and the insets and
+          // alignments are applied through CSS on the wrapper and target.
+          // Otherwise the alignment is resolved to inset values that are
+          // applied directly to the target.
+          const wrapper = anchorValue.wrapperEl;
+          const floating = wrapper ?? target;
           const getPositionAreaPixelValue = async (
             inset: InsetValue,
             targetProperty: GetPixelValueOpts['targetProperty'],
@@ -331,7 +366,7 @@ async function applyAnchorPositions(
           ) => {
             if (inset === 0) return '0px';
             return await getPixelValue({
-              targetEl: wrapper,
+              targetEl: floating,
               targetProperty: targetProperty,
               anchorRect: anchorRect,
               anchorSide: inset,
@@ -340,45 +375,94 @@ async function applyAnchorPositions(
 
           autoUpdate(
             anchor,
-            wrapper,
+            floating,
             async () => {
               // Check which `position-area` declaration would win based on the
-              // cascade, and apply an attribute on the wrapper. This activates
-              // the generated CSS styles that map the inset and alignment
-              // values to their respective properties.
+              // cascade, and apply an attribute on the wrapper (or the target,
+              // when there is no wrapper). This activates the generated CSS
+              // styles that map the inset and alignment values to their
+              // respective properties.
               const appliedId = getCSSPropertyValue(
                 target,
                 POSITION_AREA_CASCADE_PROPERTY,
               );
-              wrapper.setAttribute(POSITION_AREA_WRAPPER_ATTRIBUTE, appliedId);
+              if (wrapper) {
+                wrapper.setAttribute(
+                  POSITION_AREA_WRAPPER_ATTRIBUTE,
+                  appliedId,
+                );
+              } else {
+                target.setAttribute(POSITION_AREA_TARGET_ATTRIBUTE, appliedId);
+              }
 
               const rects = await platform.getElementRects({
                 reference: anchor,
-                floating: wrapper,
+                floating,
                 strategy: 'absolute',
               });
               const insets = anchorValue.insets;
 
-              const topInset = await getPositionAreaPixelValue(
+              // Insets of the position-area grid area, relative to the
+              // target's containing block.
+              const areaTop = await getPositionAreaPixelValue(
                 insets.block[0],
                 'top',
                 rects.reference,
               );
-              const bottomInset = await getPositionAreaPixelValue(
+              const areaBottom = await getPositionAreaPixelValue(
                 insets.block[1],
                 'bottom',
                 rects.reference,
               );
-              const leftInset = await getPositionAreaPixelValue(
+              const areaLeft = await getPositionAreaPixelValue(
                 insets.inline[0],
                 'left',
                 rects.reference,
               );
-              const rightInset = await getPositionAreaPixelValue(
+              const areaRight = await getPositionAreaPixelValue(
                 insets.inline[1],
                 'right',
                 rects.reference,
               );
+
+              let topInset, bottomInset, leftInset, rightInset;
+              if (wrapper) {
+                // The grid area insets are applied to the wrapper, and the
+                // target is aligned within it through `justify-self` and
+                // `align-self`.
+                [topInset, bottomInset, leftInset, rightInset] = [
+                  areaTop,
+                  areaBottom,
+                  areaLeft,
+                  areaRight,
+                ];
+                root.style.setProperty(
+                  `${anchorValue.targetUUID}-justify-self`,
+                  anchorValue.alignments.inline,
+                );
+                root.style.setProperty(
+                  `${anchorValue.targetUUID}-align-self`,
+                  anchorValue.alignments.block,
+                );
+              } else {
+                const offsetParent = await getOffsetParent(target);
+                const margins = getMargins(target);
+
+                [topInset, bottomInset] = resolveAxisInsetValues(
+                  anchorValue.alignments.block,
+                  areaTop,
+                  areaBottom,
+                  offsetParent.clientHeight,
+                  rects.floating.height + margins.top + margins.bottom,
+                );
+                [leftInset, rightInset] = resolveAxisInsetValues(
+                  anchorValue.alignments.inline,
+                  areaLeft,
+                  areaRight,
+                  offsetParent.clientWidth,
+                  rects.floating.width + margins.left + margins.right,
+                );
+              }
 
               root.style.setProperty(
                 `${anchorValue.targetUUID}-top`,
@@ -395,14 +479,6 @@ async function applyAnchorPositions(
               root.style.setProperty(
                 `${anchorValue.targetUUID}-bottom`,
                 bottomInset || null,
-              );
-              root.style.setProperty(
-                `${anchorValue.targetUUID}-justify-self`,
-                anchorValue.alignments.inline,
-              );
-              root.style.setProperty(
-                `${anchorValue.targetUUID}-align-self`,
-                anchorValue.alignments.block,
               );
             },
             { animationFrame: useAnimationFrame },
@@ -582,12 +658,23 @@ export interface AnchorPositioningPolyfillOptions {
   // in the `elements` option will still be polyfilled, but no other elements
   // in the document will be implicitly polyfilled.
   excludeInlineStyles?: boolean;
+
+  /**
+   * Whether `position-area` is polyfilled by wrapping the target with an
+   * element that approximates the containing block created by
+   * `position-area`. When set to `false`, no wrapper element is added, and
+   * the polyfill computes and applies inset values on the target itself
+   * instead.
+   * @default true
+   */
+  positionAreaContainingBlock?: boolean;
 }
 
 /** @internal */
 export interface NormalizedAnchorPositioningPolyfillOptions {
   elements?: HTMLElement[];
   excludeInlineStyles?: boolean;
+  positionAreaContainingBlock?: boolean;
   roots: AnchorPositioningRoot[];
   useAnimationFrame?: boolean;
 }
@@ -610,6 +697,10 @@ function normalizePolyfillOptions(
 
   if (!Array.isArray(options.roots) || options.roots.length === 0) {
     options.roots = [document];
+  }
+
+  if (options.positionAreaContainingBlock === undefined) {
+    options.positionAreaContainingBlock = true;
   }
 
   return Object.assign(options, {
@@ -646,7 +737,7 @@ export async function polyfill(
       styleData = transformCSS(styleData);
     }
     // parse CSS
-    const parsedCSS = await parseCSS(styleData, { roots: options.roots });
+    const parsedCSS = await parseCSS(styleData, options);
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
   } catch (error) {

@@ -23,6 +23,7 @@ import type {
   NormalizedAnchorPositioningPolyfillOptions,
 } from './polyfill.js';
 import {
+  activeTargetStyles,
   activeWrapperStyles,
   addPositionAreaDeclarationBlockStyles,
   dataForPositionAreaTarget,
@@ -304,6 +305,8 @@ export async function parseCSS(
 ) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
+  const positionAreaContainingBlock =
+    options.positionAreaContainingBlock ?? true;
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -359,6 +362,7 @@ export async function parseCSS(
           addPositionAreaDeclarationBlockStyles(
             positionAreaDeclaration,
             this.block,
+            positionAreaContainingBlock,
           );
           for (const { selector } of selectors) {
             positionAreas[selector] = [
@@ -776,14 +780,20 @@ export async function parseCSS(
         roots: options.roots,
       });
       // For every position-area declaration with this selector, create a new
-      // UUID, and make sure the target has a wrapper.
+      // UUID, and make sure the target has a wrapper (or is marked with a
+      // matching attribute, when the `positionAreaContainingBlock` option is
+      // `false`).
       for (const positionData of positions) {
         const targetData = await dataForPositionAreaTarget(
           targetEl,
           positionData,
           anchorEl,
+          positionAreaContainingBlock,
         );
-        positionAreaMappingStyleElement.css += activeWrapperStyles(
+        const activeStyles = positionAreaContainingBlock
+          ? activeWrapperStyles
+          : activeTargetStyles;
+        positionAreaMappingStyleElement.css += activeStyles(
           targetData.targetUUID,
           positionData.selectorUUID,
         );

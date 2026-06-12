@@ -1,10 +1,12 @@
 import type { Rule, StyleSheet } from 'css-tree';
 
 import {
+  activeTargetStyles,
   activeWrapperStyles,
   axisForPositionAreaValue,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
+  markPositionAreaTarget,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
 import { getAST } from '../../src/utils.js';
@@ -193,10 +195,63 @@ describe('position-area', () => {
     });
   });
 
+  describe('markPositionAreaTarget', () => {
+    let element: HTMLElement;
+    beforeEach(() => {
+      element = document.createElement('div');
+    });
+    it('marks a target', () => {
+      markPositionAreaTarget(element, 'uuid');
+      expect(element.hasAttribute('data-pa-target-for-uuid')).toBe(true);
+    });
+    it('marks a target for multiple declarations', () => {
+      markPositionAreaTarget(element, 'uuid1');
+      markPositionAreaTarget(element, 'uuid2');
+      expect(element.hasAttribute('data-pa-target-for-uuid1')).toBe(true);
+      expect(element.hasAttribute('data-pa-target-for-uuid2')).toBe(true);
+    });
+  });
+
+  describe('dataForPositionAreaTarget', () => {
+    it('wraps the target by default', async () => {
+      const element = createEl();
+      const res = await dataForPositionAreaTarget(
+        element,
+        getPositionAreaDeclaration(createPositionAreaNode(['top', 'right']))!,
+        null,
+      );
+      expect(res.wrapperEl).toBeDefined();
+      expect(res.wrapperEl!.tagName).toBe('POLYFILL-POSITION-AREA');
+      expect(element.parentElement).toBe(res.wrapperEl);
+    });
+    it('marks the target without `positionAreaContainingBlock`', async () => {
+      const element = createEl();
+      const res = await dataForPositionAreaTarget(
+        element,
+        getPositionAreaDeclaration(createPositionAreaNode(['top', 'right']))!,
+        null,
+        false,
+      );
+      expect(res.wrapperEl).toBeUndefined();
+      expect(element.parentElement).toBeNull();
+      expect(element.hasAttribute(`data-pa-target-for-${res.targetUUID}`)).toBe(
+        true,
+      );
+    });
+  });
+
   describe('activeWrapperStyles', () => {
     it('returns the active styles', () => {
       expect(
         activeWrapperStyles('targetUUID', 'selectorUUID'),
+      ).toMatchSnapshot();
+    });
+  });
+
+  describe('activeTargetStyles', () => {
+    it('returns the active styles', () => {
+      expect(
+        activeTargetStyles('targetUUID', 'selectorUUID'),
       ).toMatchSnapshot();
     });
   });

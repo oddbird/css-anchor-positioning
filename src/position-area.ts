@@ -9,16 +9,24 @@
 // Because each declaration may apply to multiple targets, and the generated
 // containing block for each target may be different, we create a targetUUID for
 // each element targeted by a selector. This is the UUID that is used to
-// generate the inset and alignment values in polyfill.ts that are applied to
-// the root element.
+// generate the inset values in polyfill.ts that are applied to the root
+// element.
 
 // The rules are created in a new stylesheet that matches the selectorUUID that
 // won the cascade and the targetUUID. This stylesheet maps the properties set
 // on the root element to `--pa-value-*:`.
 
-// Each target is wrapped with a `polyfill-position-area` element. It sets its
-// inset values from `--pa-value-*` values. The `justify-self` and `align-self`
-// properties are mapped on the element itself.
+// By default (the `positionAreaContainingBlock` option is `true`), each target
+// is wrapped with a `polyfill-position-area` element that approximates the
+// containing block created by `position-area`. The wrapper sets its inset
+// values from the `--pa-value-*` values, and the `justify-self` and
+// `align-self` properties are mapped on the target itself.
+
+// When the `positionAreaContainingBlock` option is `false`, no wrapper element
+// is created. The target's inset properties are set to the `--pa-value-*`
+// values in the same rule as the `position-area` declaration, and alignment
+// within the position-area grid area is resolved to pixel inset values in
+// polyfill.ts, so the target is positioned directly.
 
 import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
@@ -36,7 +44,13 @@ export const POSITION_AREA_CASCADE_PROPERTY = '--pa-cascade-property';
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
 export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
 
+// Set this as an attribute on the target with the uuid of the winning
+// `POSITION_AREA_CASCADE_PROPERTY` as the value, when the
+// `positionAreaContainingBlock` option is `false`.
+export const POSITION_AREA_TARGET_ATTRIBUTE = 'data-anchor-position-area';
+
 const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
+const TARGET_ATTRIBUTE_PRELUDE = 'data-pa-target-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
@@ -445,7 +459,8 @@ export interface PositionAreaTargetData {
   selectorUUID: string;
   targetUUID: string;
   anchorEl: HTMLElement | PseudoElement | null;
-  wrapperEl: HTMLElement;
+  // Only set when the `positionAreaContainingBlock` option is `true`.
+  wrapperEl?: HTMLElement;
   targetEl: HTMLElement;
 }
 
@@ -515,12 +530,14 @@ export function getPositionAreaDeclaration(
 export function addPositionAreaDeclarationBlockStyles(
   declaration: PositionAreaDeclaration,
   block: Block,
+  positionAreaContainingBlock = true,
 ) {
-  [
-    // Insets are applied to a wrapping element
-    'justify-self',
-    'align-self',
-  ].forEach((prop) => {
+  const props = positionAreaContainingBlock
+    ? // Insets are applied to a wrapping element
+      ['justify-self', 'align-self']
+    : // Insets are applied to the target itself
+      ['top', 'left', 'right', 'bottom'];
+  props.forEach((prop) => {
     block.children.appendData({
       type: 'Declaration',
       property: prop,
@@ -570,10 +587,20 @@ export function wrapperForPositionedElement(
   return wrapperEl;
 }
 
+export function markPositionAreaTarget(
+  targetEl: HTMLElement,
+  targetUUID: string,
+) {
+  // A target can be affected by multiple declarations, so set each targetUUID
+  // as a boolean attribute instead of a value.
+  targetEl.setAttribute(`${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}`, '');
+}
+
 export async function dataForPositionAreaTarget(
   targetEl: HTMLElement,
   positionAreaData: PositionAreaDeclaration,
   anchorEl: HTMLElement | PseudoElement | null,
+  positionAreaContainingBlock = true,
 ): Promise<PositionAreaTargetData> {
   const targetUUID = `--pa-target-${nanoid(12)}`;
   const writingModeModifiedGrid = await getWritingModeModifiedGrid(
@@ -582,16 +609,28 @@ export async function dataForPositionAreaTarget(
   );
   const insets = getInsets(writingModeModifiedGrid);
 
-  const relevantWritingMode = getRelevantWritingMode(
-    positionAreaData.grid.block[2],
-    positionAreaData.grid.inline[2],
-  );
-  const alignmentGrid = [
-    WritingMode.LogicalSelf,
-    WritingMode.PhysicalSelf,
-  ].includes(relevantWritingMode)
-    ? writingModeModifiedGrid
-    : positionAreaData.grid;
+  let alignmentGrid;
+  if (positionAreaContainingBlock) {
+    // The wrapper inherits the writing mode of the containing block, so
+    // logical alignment values are resolved natively by CSS. Only `self`
+    // writing modes (based on the target's own writing mode) need the
+    // writing-mode-modified grid.
+    const relevantWritingMode = getRelevantWritingMode(
+      positionAreaData.grid.block[2],
+      positionAreaData.grid.inline[2],
+    );
+    alignmentGrid = [
+      WritingMode.LogicalSelf,
+      WritingMode.PhysicalSelf,
+    ].includes(relevantWritingMode)
+      ? writingModeModifiedGrid
+      : positionAreaData.grid;
+  } else {
+    // Alignments are resolved to physical inset values in polyfill.ts, so
+    // they are always based on the writing-mode-modified (physical) grid,
+    // like the insets.
+    alignmentGrid = writingModeModifiedGrid;
+  }
   const alignments = {
     block: getAxisAlignment([alignmentGrid.block[0], alignmentGrid.block[1]]),
     inline: getAxisAlignment([
@@ -600,13 +639,20 @@ export async function dataForPositionAreaTarget(
     ]),
   };
 
+  let wrapperEl;
+  if (positionAreaContainingBlock) {
+    wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
+  } else {
+    markPositionAreaTarget(targetEl, targetUUID);
+  }
+
   return {
     insets,
     alignments,
     targetUUID,
     targetEl,
     anchorEl,
-    wrapperEl: wrapperForPositionedElement(targetEl, targetUUID),
+    wrapperEl,
     values: positionAreaData.values,
     grid: positionAreaData.grid,
     selectorUUID: positionAreaData.selectorUUID,
@@ -622,6 +668,17 @@ export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
       --pa-value-bottom: var(${targetUUID}-bottom);
       --pa-value-justify-self: var(${targetUUID}-justify-self);
       --pa-value-align-self: var(${targetUUID}-align-self);
+    }
+  `.replaceAll('\n', '');
+}
+
+export function activeTargetStyles(targetUUID: string, selectorUUID: string) {
+  return `
+    [${POSITION_AREA_TARGET_ATTRIBUTE}="${selectorUUID}"][${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
+      --pa-value-top: var(${targetUUID}-top);
+      --pa-value-left: var(${targetUUID}-left);
+      --pa-value-right: var(${targetUUID}-right);
+      --pa-value-bottom: var(${targetUUID}-bottom);
     }
   `.replaceAll('\n', '');
 }

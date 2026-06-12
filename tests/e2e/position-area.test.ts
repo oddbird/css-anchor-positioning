@@ -177,3 +177,113 @@ test('applies logical self properties based on writing mode`', async ({
     0,
   );
 });
+
+test.describe('with `positionAreaContainingBlock: false`', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/position-area.html?no-containing-block');
+  });
+
+  test('does not wrap the target element', async ({ page }) => {
+    await applyPolyfill(page);
+    await expect(page.locator('polyfill-position-area')).toHaveCount(0);
+    // The target is still a direct child of its original parent, so selectors
+    // that rely on a direct relationship with the target keep working.
+    await expect(
+      page.locator('#spanleft-top .demo-elements > .target'),
+    ).toHaveCount(1);
+  });
+
+  test('applies polyfill for position-area', async ({ page }) => {
+    await applyPolyfill(page);
+    const section = page.locator('#spanleft-top');
+    const anchor = section.locator('.anchor');
+    const anchorBox = await anchor.boundingBox();
+
+    const target = section.locator('.target');
+    const targetBox = await target.boundingBox();
+
+    // Right sides should be aligned
+    expect(targetBox!.x + targetBox!.width).toBeCloseTo(
+      anchorBox!.x + anchorBox!.width,
+      0,
+    );
+    // Target bottom should be aligned with anchor top
+    expect(targetBox!.y + targetBox!.height).toBeCloseTo(anchorBox!.y, 0);
+  });
+
+  test('applies to declarations with different containing blocks', async ({
+    page,
+  }) => {
+    await applyPolyfill(page);
+    const section = page.locator('#different-containers');
+
+    for (const testId of ['container1', 'container2']) {
+      const container = section.getByTestId(testId);
+      const anchorBox = await container.locator('.anchor').boundingBox();
+      const targetBox = await container.locator('.target').boundingBox();
+
+      // Target left should be aligned with anchor right
+      expect(targetBox!.x).toBeCloseTo(anchorBox!.x + anchorBox!.width, 0);
+      // Target top should be aligned with anchor bottom
+      expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
+    }
+  });
+
+  test('respects cascade', async ({ page }) => {
+    await applyPolyfill(page);
+    const section = page.locator('#cascade');
+    const anchor = section.locator('.anchor');
+    const target = section.locator('#cascade-target');
+
+    const anchorBox = await anchor.boundingBox();
+    const targetBox = await target.boundingBox();
+
+    // `right top` should win initially
+    expect(targetBox!.x).toBeCloseTo(anchorBox!.x + anchorBox!.width, 0);
+    expect(targetBox!.y + targetBox!.height).toBeCloseTo(anchorBox!.y, 0);
+
+    // Switch the cascade so `right bottom` wins, and trigger a position
+    // recalculation by scrolling.
+    await page.locator('#switch-cascade').click();
+    await page.mouse.wheel(0, 10);
+
+    await expect(async () => {
+      const aBox = await anchor.boundingBox();
+      const tBox = await target.boundingBox();
+      expect(tBox!.x).toBeCloseTo(aBox!.x + aBox!.width, 0);
+      expect(tBox!.y).toBeCloseTo(aBox!.y + aBox!.height, 0);
+    }).toPass();
+  });
+
+  test('applies logical properties based on writing mode', async ({ page }) => {
+    await applyPolyfill(page);
+    const section = page.getByTestId('vertical-rl-rtl');
+    const anchorBox = await section.locator('.anchor').boundingBox();
+
+    const target = section.locator('.target');
+    const targetBox = await target.boundingBox();
+    await expect(target).toHaveText('vertical-rl rtl');
+
+    // Right side should be aligned with anchor left
+    expect(targetBox!.x + targetBox!.width).toBeCloseTo(anchorBox!.x, 0);
+    // Target bottom should be aligned with anchor top
+    expect(targetBox!.y + targetBox!.height).toBeCloseTo(anchorBox!.y, 0);
+  });
+
+  test('applies logical self properties based on writing mode', async ({
+    page,
+  }) => {
+    await applyPolyfill(page);
+    const section = page.getByTestId('self-vertical-lr-rtl');
+    const anchorBox = await section.locator('.anchor').boundingBox();
+
+    const target = section.locator('.target');
+    const targetBox = await target.boundingBox();
+    await expect(target).toHaveText('vertical-lr rtl');
+
+    // Left side should be aligned with anchor right
+    expect(targetBox!.x).toBeCloseTo(anchorBox!.x + anchorBox!.width, 0);
+    // Target bottom should be aligned with anchor top
+    expect(targetBox!.y + targetBox!.height).toBeCloseTo(anchorBox!.y, 0);
+  });
+});
