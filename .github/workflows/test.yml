@@ -2,8 +2,8 @@ name: Lint & Test
 
 on:
   push:
+    branches: [main]
   pull_request:
-    types: [reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
