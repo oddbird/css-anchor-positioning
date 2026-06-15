@@ -627,44 +627,31 @@
 
     <section id="fixed-target" class="demo-item">
       <h2>
-        <a href="#position-anchor" aria-hidden="true">🔗</a>
+        <a href="#fixed" aria-hidden="true">🔗</a>
         Positioning fixed position target
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="my-fixed-position-anchor" class="anchor">Anchor A</div>
-        <div id="my-fixed-position-target" class="target">Target A</div>
+        <div id="my-fixed-position-anchor" class="anchor">Anchor</div>
+        <div id="my-fixed-position-target" class="target">Fixed Target</div>
       </div>
       <p class="note">
-        With polyfill applied: Targets are positioned at the top right corner of
-        their respective Anchors.
+        With polyfill applied: Target is positioned at the bottom right corner
+        of the Anchor.
       </p>
       <pre><code class="language-html"
->&lt;div id="my-position-anchor-a" class="anchor"&gt;Anchor A&lt;/div&gt;
-&lt;div id="my-position-target-a" class="target"&gt;Target A&lt;/div&gt;
-&lt;div id="my-position-anchor-b" class="anchor"&gt;Anchor B&lt;/div&gt;
-&lt;div id="my-position-target-b" class="target"&gt;Target B&lt;/div&gt;</code>
+>&lt;div id="my-fixed-position-anchor" class="anchor"&gt;Anchor&lt;/div&gt;
+&lt;div id="my-fixed-position-target" class="target"&gt;Fixed Target&lt;/div&gt;</code>
 
 <code class="language-css"
->#my-position-target-a {
-  position-anchor: --my-position-anchor-a;
+>#my-fixed-position-anchor {
+  anchor-name: --my-fixed-position-anchor;
 }
 
-#my-position-target-b {
-  position-anchor: --my-position-anchor-b;
-}
-
-.target {
-  position: absolute;
-  bottom: anchor(top);
+#my-fixed-position-target {
+  position: fixed;
+  position-anchor: --my-fixed-position-anchor;
+  top: anchor(bottom);
   left: anchor(right);
-}
-
-#my-position-anchor-a {
-  anchor-name: --my-position-anchor-a;
-}
-
-#my-position-anchor-b {
-  anchor-name: --my-position-anchor-b;
 }</code></pre>
     </section>
 
