@@ -654,13 +654,11 @@
       </div>
       <pre><code class="language-css"
 >#my-anchor-popover {
-  position: absolute;
-  left: 200px;
   anchor-name: --my-anchor-popover;
 }
 
 #my-target-popover {
-  position: absolute;
+  margin: initial;
   left: anchor(--my-anchor-popover right);
   top: anchor(--my-anchor-popover bottom);
 }</code></pre>
