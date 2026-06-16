@@ -263,6 +263,18 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
   return {};
 }
 
+/**
+ * Whether the element declares `position-anchor` in its own inline `style`
+ * attribute. This is used to distinguish a `position-anchor` that is tree-scoped
+ * to the element's own tree (e.g. an inline style on a shadow host, in the light
+ * DOM) from one inherited via a shadow-scoped `:host` rule. Only the former may
+ * reference an anchor in the host's outer tree.
+ */
+function hasInlinePositionAnchor(el: HTMLElement): boolean {
+  const style = el.getAttribute('style');
+  return style ? /(?:^|;)\s*position-anchor\s*:/i.test(style) : false;
+}
+
 async function getAnchorEl(
   targetEl: HTMLElement | null,
   anchorObj: AnchorFunction | null,
@@ -270,6 +282,10 @@ async function getAnchorEl(
 ) {
   let anchorName = anchorObj?.anchorName;
   const customPropName = anchorObj?.customPropName;
+  // Whether `anchorName` was resolved from a `position-anchor` declaration in
+  // the target's own tree (e.g. an inline style on a shadow host), as opposed
+  // to an explicit `anchor()` name or a shadow-scoped `:host` rule.
+  let anchorNameFromOwnTree = false;
   if (targetEl && !anchorName) {
     const positionAnchorProperty = getCSSPropertyValue(
       targetEl,
@@ -278,6 +294,7 @@ async function getAnchorEl(
 
     if (positionAnchorProperty) {
       anchorName = positionAnchorProperty;
+      anchorNameFromOwnTree = hasInlinePositionAnchor(targetEl);
     } else if (customPropName) {
       anchorName = getCSSPropertyValue(targetEl, customPropName);
     }
@@ -289,12 +306,17 @@ async function getAnchorEl(
   const anchorNameScopeSelectors = anchorName
     ? anchorScopes[anchorName] || []
     : [];
-  // When the target is a shadow host (e.g. matched via a `:host` rule), its
-  // anchor can live in the host's own tree (the light DOM), outside the roots
-  // being polyfilled. Include the target's root node so such anchors are found.
+  // When the target is a shadow host with `position-anchor` set in its own tree
+  // (e.g. an inline style), its anchor lives in the host's own tree (the light
+  // DOM), outside the roots being polyfilled. Include the target's root node so
+  // such anchors are found. Anchor names that are tree-scoped to the shadow tree
+  // — an explicit `anchor()` name or `position-anchor` from a `:host` rule —
+  // must NOT resolve to anchors in the outer tree, so the search is not extended
+  // for them.
   let roots = options.roots;
   const targetRoot = targetEl?.getRootNode();
   if (
+    anchorNameFromOwnTree &&
     (targetRoot instanceof Document || targetRoot instanceof ShadowRoot) &&
     !roots.includes(targetRoot)
   ) {

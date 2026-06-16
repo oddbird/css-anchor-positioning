@@ -85,7 +85,7 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
 test('positions a custom element host anchored via position-anchor', async ({
   page,
 }) => {
-  const buttonSelector = '#host-custom-element #anchor';
+  const buttonSelector = '#host-custom-element .anchor';
   const tooltipSelector = '#host-custom-element position-anchor-on-host';
   const button = page.locator(buttonSelector);
   const tooltip = page.locator(tooltipSelector);
