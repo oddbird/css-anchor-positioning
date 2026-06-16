@@ -103,6 +103,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     };
@@ -122,6 +123,7 @@ an argument.
     polyfill({
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     });
@@ -148,6 +150,30 @@ that have eligible inline styles, regardless of whether the `elements` option is
 defined. When set to `true`, elements with eligible inline styles listed in the
 `elements` option will still be polyfilled, but no other elements in the
 document will be implicitly polyfilled.
+
+### positionAreaContainingBlock
+
+type: `boolean | 'auto'`, default: `true`
+
+By default, `position-area` is polyfilled by wrapping the target with a
+`<polyfill-position-area>` element that approximates the containing block
+created by `position-area`. When set to `false`, no wrapper element is added,
+and the polyfill computes and applies inset values on the target itself
+instead. This avoids breaking selectors that rely on a direct relationship
+with the target (for instance `> target` or `:nth-child()`), but comes with
+its own trade-offs. See [Limitations](#limitations) for the differences
+between the two approaches.
+
+When set to `'auto'`, the choice is made per target: the wrapper is added only
+for targets whose styles resolve against the containing block — percentage
+sizes (`width`, `height`, `min-*`, `max-*`), `stretch`/`-webkit-fill-available`
+sizes, percentage or `auto` margins, percentage padding, or `stretch`/
+`anchor-center` self-alignment. Every other target is positioned directly,
+without a wrapper. This keeps the wrapper (and its selector trade-offs) only
+where it is needed to preserve correct sizing. The detection is conservative
+and reads authored values, so targets whose containing-block dependence is only
+expressed dynamically (e.g. set via script after the polyfill runs) may not be
+detected.
 
 ### roots
 
@@ -201,11 +227,26 @@ following features:
   which adds a few differences:
   - This breaks selectors that rely on a direct relationship with the target,
     for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+    Set the [`positionAreaContainingBlock`](#positionareacontainingblock)
+    option to `false` to position the target directly, without a wrapping
+    element.
   - Overflow alignment is not applied for a target that overflows its
     inset-modified containing block but would still fit within its original
     containing block. In other words, a polyfilled target may be placed in a
     `position-area` grid section outside its containing block, where the
     implementation would move the target inside the containing block.
+- When the [`positionAreaContainingBlock`](#positionareacontainingblock) option
+  is set to `false`, `position-area` is polyfilled by computing and applying
+  inset values on the target element instead of adding a wrapping element,
+  which adds a few other differences:
+  - Inset properties (`top`, `left`, etc.) set by the author on the target are
+    overridden by the polyfill, rather than resolved relative to the
+    `position-area` containing block.
+  - Self-alignment properties (`justify-self` and `align-self`) on the target
+    do not override the alignment derived from `position-area`.
+  - A target that is center-aligned on an axis is not constrained by the size
+    of the `position-area` grid area on that axis, and may overflow it.
+  - Overflow alignment is not applied (same as the default behavior above).
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
