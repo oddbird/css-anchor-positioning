@@ -554,8 +554,13 @@ export function wrapperForPositionedElement(
     wrapperEl.style.pointerEvents = 'none';
     targetEl.style.pointerEvents = originalPointerEvents;
 
-    // The wrapper sets the inset values, so the target should not have them.
-    targetEl.style.inset = 'auto';
+    // A popover in the top layer receives `inset: 0` from the UA stylesheet,
+    // which would conflict with the wrapper-based positioning. Reset it so the
+    // wrapper's inset values take effect. Non-popover targets already default to
+    // `inset: auto`, so this is only needed for popovers.
+    if (targetEl.hasAttribute('popover')) {
+      targetEl.style.inset = 'auto';
+    }
 
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
