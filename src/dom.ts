@@ -272,7 +272,7 @@ function hostMatchesSelector(host: HTMLElement, selector: string): boolean {
   const match = /^:host\(\s*(.+?)\s*\)$/.exec(trimmed);
   if (match) {
     try {
-      return host.matches(match[1]);
+      return match[1].split(',').some(m => host.matches(m.trim()));
     } catch {
       return false;
     }

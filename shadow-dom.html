@@ -63,24 +63,6 @@
 
         class PositionAnchorOnHost extends HTMLElement {
           connectedCallback() {
-            const targetId = this.getAttribute('for'),
-              target = targetId && this.getRootNode().getElementById(targetId);
-
-            // Write the anchor properties as raw `style` attribute strings.
-            // In browsers without native anchor-positioning support, the typed
-            // CSSOM (`el.style.anchorName = ...`) silently drops these unknown
-            // properties, so no `style` attribute is produced and the polyfill
-            // never sees them. Setting the literal attribute string preserves
-            // the declarations for the polyfill to read.
-            this.setAttribute(
-              'style',
-              'position-anchor: --position-anchor-on-host',
-            );
-            target?.setAttribute(
-              'style',
-              'anchor-name: --position-anchor-on-host',
-            );
-
             this.attachShadow({ mode: 'open' });
 
             const sheet = new CSSStyleSheet();
@@ -325,8 +307,8 @@ class AnchorAdoptedStyles extends HTMLElement {
         Works when a custom element host has <code>position-anchor</code>
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div id="anchor" class="anchor">Anchor</div>
-        <position-anchor-on-host for="anchor">Target</position-anchor-on-host>
+        <div class="anchor" style="anchor-name: --position-anchor-on-host">Anchor</div>
+        <position-anchor-on-host style="position-anchor: --position-anchor-on-host">Target</position-anchor-on-host>
       </div>
       <div class="note">
         <p>
@@ -351,27 +333,13 @@ before any connectedCallback runs. --&gt;
 &lt;script&gt;
 class PositionAnchorOnHost extends HTMLElement {
   connectedCallback() {
-    const targetId = this.getAttribute("for"),
-      target = targetId &amp;&amp; this.getRootNode().getElementById(targetId);
-
-    this.setAttribute("style", "position-anchor: --position-anchor-on-host");
-    target?.setAttribute("style", "anchor-name: --position-anchor-on-host");
-
     this.attachShadow({ mode: "open" });
 
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(`
       :host {
-        --element-color: var(--target, var(--outer-anchored));
-        background: var(--element-color);
-        border: thin solid var(--border);
-        border-radius: var(--radius-1);
-        color: white;
-        font-weight: bold;
         top: anchor(top);
         left: anchor(center);
-        padding: 0.5em;
-        white-space: nowrap;
         position: absolute;
         translate: -50% -100%;
       }
