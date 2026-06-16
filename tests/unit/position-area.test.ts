@@ -3,13 +3,15 @@ import type { Rule, StyleSheet } from 'css-tree';
 import {
   activeTargetStyles,
   activeWrapperStyles,
+  addPositionAreaDeclarationBlockStyles,
   axisForPositionAreaValue,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
+  isContainingBlockDependentDeclaration,
   markPositionAreaTarget,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
-import { getAST } from '../../src/utils.js';
+import { generateCSS, getAST } from '../../src/utils.js';
 
 const createPositionAreaNode = (input: string[]) => {
   const css = getAST(`a{position-area:${input.join(' ')}}`) as StyleSheet;
@@ -176,10 +178,10 @@ describe('position-area', () => {
       const style = getComputedStyle(wrapper);
       expect(style.position).toBe('absolute');
       expect(style.display).toBe('grid');
-      expect(style.top).toBe(`var(--pa-value-top)`);
-      expect(style.bottom).toBe(`var(--pa-value-bottom)`);
-      expect(style.left).toBe(`var(--pa-value-left)`);
-      expect(style.right).toBe(`var(--pa-value-right)`);
+      expect(style.top).toBe(`var(--pa-wrapper-top)`);
+      expect(style.bottom).toBe(`var(--pa-wrapper-bottom)`);
+      expect(style.left).toBe(`var(--pa-wrapper-left)`);
+      expect(style.right).toBe(`var(--pa-wrapper-right)`);
       expect(wrapper.getAttribute('data-pa-wrapper-for-uuid')).toBeDefined();
     });
     it('does not rewrap an element', () => {
@@ -253,6 +255,84 @@ describe('position-area', () => {
       expect(
         activeTargetStyles('targetUUID', 'selectorUUID'),
       ).toMatchSnapshot();
+    });
+  });
+
+  describe('isContainingBlockDependentDeclaration', () => {
+    it.each([
+      // Sizes resolved against the containing block.
+      ['width', '50%', true],
+      ['height', '100%', true],
+      ['min-width', '10%', true],
+      ['max-block-size', '50%', true],
+      ['width', 'stretch', true],
+      ['width', '-webkit-fill-available', true],
+      // Sizes that do not depend on the containing block.
+      ['width', '200px', false],
+      ['width', 'auto', false],
+      ['width', 'max-content', false],
+      ['height', 'fit-content', false],
+      // Margins: percentages and `auto` distribute against the CB.
+      ['margin', '5%', true],
+      ['margin-left', 'auto', true],
+      ['margin-inline', 'auto', true],
+      ['margin', '10px', false],
+      // Padding: only percentages depend on the CB.
+      ['padding', '5%', true],
+      ['padding-top', '1em', false],
+      // Self-alignment: only stretch / anchor-center depend on the area.
+      ['justify-self', 'stretch', true],
+      ['align-self', 'anchor-center', true],
+      ['justify-self', 'center', false],
+      ['align-self', 'normal', false],
+      // Insets are overridden by the polyfill, so they never force a wrapper.
+      ['top', '50%', false],
+      ['inset', '0', false],
+      // Unrelated properties.
+      ['color', 'red', false],
+    ])('%s: %s -> %s', (property, value, expected) => {
+      expect(isContainingBlockDependentDeclaration(property, value)).toBe(
+        expected,
+      );
+    });
+  });
+
+  describe('addPositionAreaDeclarationBlockStyles', () => {
+    const blockFor = (mode: boolean | 'auto') => {
+      const ast = getAST('a{position-area:top right}') as StyleSheet;
+      const block = (ast.children.first! as Rule).block;
+      const declaration = getPositionAreaDeclaration(block.children.first!)!;
+      addPositionAreaDeclarationBlockStyles(declaration, block, mode);
+      return block.children
+        .toArray()
+        .filter((node) => node.type === 'Declaration')
+        .map((node) => `${node.property}:${generateCSS(node.value)}`);
+    };
+
+    it('applies insets to a wrapper when true', () => {
+      const decls = blockFor(true);
+      expect(decls).toContain('justify-self:var(--pa-value-justify-self)');
+      expect(decls).toContain('align-self:var(--pa-value-align-self)');
+      expect(decls.some((d) => d.startsWith('top:'))).toBe(false);
+    });
+
+    it('applies insets to the target when false', () => {
+      const decls = blockFor(false);
+      expect(decls).toContain('top:var(--pa-value-top)');
+      expect(decls).toContain('bottom:var(--pa-value-bottom)');
+      expect(decls.some((d) => d.startsWith('justify-self:'))).toBe(false);
+    });
+
+    it('emits both alignment and inset declarations with fallbacks in auto mode', () => {
+      const decls = blockFor('auto');
+      expect(decls).toContain(
+        'justify-self:var(--pa-value-justify-self, normal)',
+      );
+      expect(decls).toContain('align-self:var(--pa-value-align-self, normal)');
+      expect(decls).toContain('top:var(--pa-value-top, auto)');
+      expect(decls).toContain('left:var(--pa-value-left, auto)');
+      expect(decls).toContain('right:var(--pa-value-right, auto)');
+      expect(decls).toContain('bottom:var(--pa-value-bottom, auto)');
     });
   });
 });

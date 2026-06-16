@@ -153,7 +153,7 @@ document will be implicitly polyfilled.
 
 ### positionAreaContainingBlock
 
-type: `boolean`, default: `true`
+type: `boolean | 'auto'`, default: `true`
 
 By default, `position-area` is polyfilled by wrapping the target with a
 `<polyfill-position-area>` element that approximates the containing block
@@ -163,6 +163,17 @@ instead. This avoids breaking selectors that rely on a direct relationship
 with the target (for instance `> target` or `:nth-child()`), but comes with
 its own trade-offs. See [Limitations](#limitations) for the differences
 between the two approaches.
+
+When set to `'auto'`, the choice is made per target: the wrapper is added only
+for targets whose styles resolve against the containing block — percentage
+sizes (`width`, `height`, `min-*`, `max-*`), `stretch`/`-webkit-fill-available`
+sizes, percentage or `auto` margins, percentage padding, or `stretch`/
+`anchor-center` self-alignment. Every other target is positioned directly,
+without a wrapper. This keeps the wrapper (and its selector trade-offs) only
+where it is needed to preserve correct sizing. The detection is conservative
+and reads authored values, so targets whose containing-block dependence is only
+expressed dynamically (e.g. set via script after the polyfill runs) may not be
+detected.
 
 ### roots
 

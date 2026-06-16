@@ -18,8 +18,8 @@
 
 // By default (the `positionAreaContainingBlock` option is `true`), each target
 // is wrapped with a `polyfill-position-area` element that approximates the
-// containing block created by `position-area`. The wrapper sets its inset
-// values from the `--pa-value-*` values, and the `justify-self` and
+// containing block created by `position-area`. The wrapper sets its own inset
+// values from the `--pa-wrapper-*` values, and the `justify-self` and
 // `align-self` properties are mapped on the target itself.
 
 // When the `positionAreaContainingBlock` option is `false`, no wrapper element
@@ -27,6 +27,14 @@
 // values in the same rule as the `position-area` declaration, and alignment
 // within the position-area grid area is resolved to pixel inset values in
 // polyfill.ts, so the target is positioned directly.
+
+// When the option is `'auto'`, the choice is made per target: a target whose
+// styles resolve against the containing block (see
+// `isContainingBlockDependentDeclaration`) is wrapped, and any other target is
+// positioned directly. Because the generated declarations are shared by every
+// element matching a selector, both the wrapped (`justify-self`/`align-self`)
+// and unwrapped (inset) declarations are emitted, each falling back to its
+// initial value so only the relevant set takes effect per target.
 
 import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
@@ -52,6 +60,100 @@ export const POSITION_AREA_TARGET_ATTRIBUTE = 'data-anchor-position-area';
 const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
 const TARGET_ATTRIBUTE_PRELUDE = 'data-pa-target-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
+
+// The `positionAreaContainingBlock` option. `true` always wraps the target,
+// `false` never does, and `'auto'` wraps only targets that have styles which
+// resolve against the containing block (and so need the area-sized block that
+// `position-area` would natively create).
+export type PositionAreaContainingBlock = boolean | 'auto';
+
+// Sizing properties resolve a percentage, `stretch`, or `-webkit-fill-available`
+// against the containing block's size.
+const SIZE_PROPERTIES = [
+  'width',
+  'height',
+  'min-width',
+  'min-height',
+  'max-width',
+  'max-height',
+  'block-size',
+  'inline-size',
+  'min-block-size',
+  'min-inline-size',
+  'max-block-size',
+  'max-inline-size',
+];
+
+// Margin (and its longhands) resolves percentages — and distributes `auto` —
+// against the containing block's width.
+const MARGIN_PROPERTIES = [
+  'margin',
+  'margin-top',
+  'margin-right',
+  'margin-bottom',
+  'margin-left',
+  'margin-block',
+  'margin-inline',
+  'margin-block-start',
+  'margin-block-end',
+  'margin-inline-start',
+  'margin-inline-end',
+];
+
+// Padding (and its longhands) resolves percentages against the containing
+// block's width.
+const PADDING_PROPERTIES = [
+  'padding',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'padding-block',
+  'padding-inline',
+  'padding-block-start',
+  'padding-block-end',
+  'padding-inline-start',
+  'padding-inline-end',
+];
+
+const SELF_ALIGNMENT_PROPERTIES = ['justify-self', 'align-self', 'place-self'];
+
+/**
+ * Whether a declaration's value resolves against the containing block, and so
+ * would compute differently inside the area-sized block that `position-area`
+ * creates than against the original containing block. Used by the `'auto'`
+ * mode of `positionAreaContainingBlock` to decide whether a target needs the
+ * wrapper element.
+ *
+ * The check is intentionally conservative: when in doubt it returns `true` so
+ * the wrapper is kept (the always-correct behavior). Inset properties are
+ * ignored because the polyfill overrides them on the target regardless.
+ */
+export function isContainingBlockDependentDeclaration(
+  property: string,
+  value: string,
+): boolean {
+  const prop = property.toLowerCase().trim();
+  const val = value.toLowerCase();
+  if (SIZE_PROPERTIES.includes(prop)) {
+    return (
+      val.includes('%') ||
+      val.includes('stretch') ||
+      val.includes('fill-available') ||
+      val.includes('webkit-fill-available')
+    );
+  }
+  if (MARGIN_PROPERTIES.includes(prop)) {
+    return val.includes('%') || val.includes('auto');
+  }
+  if (PADDING_PROPERTIES.includes(prop)) {
+    return val.includes('%');
+  }
+  if (SELF_ALIGNMENT_PROPERTIES.includes(prop)) {
+    return val.includes('stretch') || val.includes('anchor-center');
+  }
+  return false;
+}
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
 
@@ -530,27 +632,39 @@ export function getPositionAreaDeclaration(
 export function addPositionAreaDeclarationBlockStyles(
   declaration: PositionAreaDeclaration,
   block: Block,
-  positionAreaContainingBlock = true,
+  positionAreaContainingBlock: PositionAreaContainingBlock = true,
 ) {
-  const props = positionAreaContainingBlock
-    ? // Insets are applied to a wrapping element
-      ['justify-self', 'align-self']
-    : // Insets are applied to the target itself
-      ['top', 'left', 'right', 'bottom'];
-  props.forEach((prop) => {
+  const appendDeclaration = (property: string, value: string) => {
     block.children.appendData({
       type: 'Declaration',
-      property: prop,
-      value: { type: 'Raw', value: `var(--pa-value-${prop})` },
+      property,
+      value: { type: 'Raw', value },
       important: false,
     });
-  });
-  block.children.appendData({
-    type: 'Declaration',
-    property: POSITION_AREA_CASCADE_PROPERTY,
-    value: { type: 'Raw', value: declaration.selectorUUID },
-    important: false,
-  });
+  };
+
+  if (positionAreaContainingBlock === 'auto') {
+    // The decision to wrap is made per target, but these declarations are
+    // shared by every element matching the selector. Emit both the wrapped
+    // (alignment) and unwrapped (inset) declarations, each with a fallback to
+    // its initial value. A wrapped target only receives the alignment values
+    // (the insets fall back to `auto`); a directly-positioned target only
+    // receives the inset values (the alignments fall back to `normal`).
+    appendDeclaration('justify-self', 'var(--pa-value-justify-self, normal)');
+    appendDeclaration('align-self', 'var(--pa-value-align-self, normal)');
+    appendDeclaration('top', 'var(--pa-value-top, auto)');
+    appendDeclaration('left', 'var(--pa-value-left, auto)');
+    appendDeclaration('right', 'var(--pa-value-right, auto)');
+    appendDeclaration('bottom', 'var(--pa-value-bottom, auto)');
+  } else {
+    const props = positionAreaContainingBlock
+      ? // Insets are applied to a wrapping element
+        ['justify-self', 'align-self']
+      : // Insets are applied to the target itself
+        ['top', 'left', 'right', 'bottom'];
+    props.forEach((prop) => appendDeclaration(prop, `var(--pa-value-${prop})`));
+  }
+  appendDeclaration(POSITION_AREA_CASCADE_PROPERTY, declaration.selectorUUID);
 }
 
 export function wrapperForPositionedElement(
@@ -571,8 +685,12 @@ export function wrapperForPositionedElement(
     wrapperEl.style.pointerEvents = 'none';
     targetEl.style.pointerEvents = originalPointerEvents;
 
+    // The wrapper's own insets use a dedicated custom property namespace. In
+    // `'auto'` mode the (shared) target rule reads `--pa-value-*` for its insets
+    // with an `auto` fallback; using `--pa-wrapper-*` here keeps the wrapper's
+    // inset values from being inherited by the target as its own insets.
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
-      wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
+      wrapperEl.style.setProperty(prop, `var(--pa-wrapper-${prop})`);
     });
     targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
     wrapperEl.appendChild(targetEl);
@@ -662,10 +780,10 @@ export async function dataForPositionAreaTarget(
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
   return `
     [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      --pa-value-top: var(${targetUUID}-top);
-      --pa-value-left: var(${targetUUID}-left);
-      --pa-value-right: var(${targetUUID}-right);
-      --pa-value-bottom: var(${targetUUID}-bottom);
+      --pa-wrapper-top: var(${targetUUID}-top);
+      --pa-wrapper-left: var(${targetUUID}-left);
+      --pa-wrapper-right: var(${targetUUID}-right);
+      --pa-wrapper-bottom: var(${targetUUID}-bottom);
       --pa-value-justify-self: var(${targetUUID}-justify-self);
       --pa-value-align-self: var(${targetUUID}-align-self);
     }

@@ -22,6 +22,7 @@ import {
   POSITION_AREA_CASCADE_PROPERTY,
   POSITION_AREA_TARGET_ATTRIBUTE,
   POSITION_AREA_WRAPPER_ATTRIBUTE,
+  type PositionAreaContainingBlock,
   type PositionAreaTargetData,
 } from './position-area.js';
 import {
@@ -664,17 +665,20 @@ export interface AnchorPositioningPolyfillOptions {
    * element that approximates the containing block created by
    * `position-area`. When set to `false`, no wrapper element is added, and
    * the polyfill computes and applies inset values on the target itself
-   * instead.
+   * instead. When set to `'auto'`, the wrapper is added only for targets whose
+   * styles resolve against the containing block (e.g. percentage sizes, `auto`
+   * or percentage margins, percentage padding, or stretch/`anchor-center`
+   * self-alignment); other targets are positioned directly.
    * @default true
    */
-  positionAreaContainingBlock?: boolean;
+  positionAreaContainingBlock?: PositionAreaContainingBlock;
 }
 
 /** @internal */
 export interface NormalizedAnchorPositioningPolyfillOptions {
   elements?: HTMLElement[];
   excludeInlineStyles?: boolean;
-  positionAreaContainingBlock?: boolean;
+  positionAreaContainingBlock?: PositionAreaContainingBlock;
   roots: AnchorPositioningRoot[];
   useAnimationFrame?: boolean;
 }

@@ -287,3 +287,68 @@ test.describe('with `positionAreaContainingBlock: false`', () => {
     expect(targetBox!.y + targetBox!.height).toBeCloseTo(anchorBox!.y, 0);
   });
 });
+
+test.describe('with `positionAreaContainingBlock: auto`', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/position-area.html?auto');
+  });
+
+  test('wraps only targets whose styles resolve against the containing block', async ({
+    page,
+  }) => {
+    await applyPolyfill(page);
+
+    // `.target.spanleft-top` has `padding-right: 50%`, which resolves against
+    // the containing block, so it must be wrapped.
+    await expect(
+      page.locator('#spanleft-top polyfill-position-area'),
+    ).toHaveCount(1);
+
+    // `.target.center-left` has no containing-block-dependent styles, so it is
+    // positioned directly, without a wrapper.
+    await expect(
+      page.locator('#center-left polyfill-position-area'),
+    ).toHaveCount(0);
+    await expect(
+      page.locator('#center-left .demo-elements > .target'),
+    ).toHaveCount(1);
+  });
+
+  test('positions a wrapped target correctly', async ({ page }) => {
+    await applyPolyfill(page);
+    const section = page.locator('#spanleft-top');
+    const anchorBox = await section.locator('.anchor').boundingBox();
+
+    const targetWrapper = section.locator('polyfill-position-area');
+    const targetWrapperBox = await targetWrapper.boundingBox();
+    const target = targetWrapper.locator('.target');
+
+    await expect(target).toHaveCSS('justify-self', 'end');
+    await expect(target).toHaveCSS('align-self', 'end');
+
+    // Right sides should be aligned
+    expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
+      anchorBox!.x + anchorBox!.width,
+      0,
+    );
+    // Target bottom should be aligned with anchor top
+    expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
+      anchorBox!.y,
+      0,
+    );
+  });
+
+  test('positions an unwrapped target correctly', async ({ page }) => {
+    await applyPolyfill(page);
+    const section = page.locator('#center-left');
+    const anchorBox = await section.locator('.anchor').boundingBox();
+    const targetBox = await section.locator('.target').boundingBox();
+
+    // `center left`: target sits to the left of the anchor, vertically centered.
+    expect(targetBox!.x + targetBox!.width).toBeCloseTo(anchorBox!.x, 0);
+    expect(targetBox!.y + targetBox!.height / 2).toBeCloseTo(
+      anchorBox!.y + anchorBox!.height / 2,
+      0,
+    );
+  });
+});

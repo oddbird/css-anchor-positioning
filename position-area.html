@@ -34,10 +34,14 @@
 
       // Add `?no-containing-block` to the URL to apply the polyfill with
       // `positionAreaContainingBlock: false`, which positions targets
-      // directly instead of wrapping them.
-      const positionAreaContainingBlock = !new URLSearchParams(
-        location.search,
-      ).has('no-containing-block');
+      // directly instead of wrapping them. Add `?auto` to use `'auto'`, which
+      // wraps only targets whose styles resolve against the containing block.
+      const params = new URLSearchParams(location.search);
+      const positionAreaContainingBlock = params.has('no-containing-block')
+        ? false
+        : params.has('auto')
+          ? 'auto'
+          : true;
 
       if (!SUPPORTS_ANCHOR_POSITIONING) {
         btn.addEventListener('click', () =>
@@ -125,7 +129,9 @@
         option to <code>false</code> to compute and apply inset values directly
         on the positioned element, without a wrapper element.
         <a href="?no-containing-block">Try these examples without the wrapper</a
-        >.
+        >. Or set it to <code>'auto'</code> to add the wrapper only for targets
+        whose styles resolve against the containing block.
+        <a href="?auto">Try these examples in <code>auto</code> mode</a>.
       </p>
       <button id="toggle-wrapper" type="button" disabled>
         Apply polyfill to enable wrapper visibility
