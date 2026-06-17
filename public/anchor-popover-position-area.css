@@ -7,6 +7,7 @@
 #my-target-popover-position-area {
   position: absolute;
   margin: 0;
+  inset: 10px;
   position-anchor: --my-anchor-popover-position-area;
   position-area: end;
 }
