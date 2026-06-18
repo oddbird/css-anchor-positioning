@@ -46,14 +46,10 @@ test.afterAll(async ({ browser }) => {
   await browser.close();
 });
 
-// A bare selector shape passed across the Playwright serialization boundary.
-// `Selector.root` is omitted here (it is unused by `validatedForPositioning`):
-// its `Document | HTMLElement | ShadowRoot` type is not serializable and makes
-// `page.evaluate`'s arg types recurse, so callers cast to `Selector` in-page.
 const anchorSelector = {
   selector: '#my-anchor-positioning',
   elementPart: '#my-anchor-positioning',
-};
+} satisfies Selector;
 const targetSelector = '#my-target-positioning';
 
 async function callValidFunction(page: Page) {
@@ -423,7 +419,7 @@ test('when multiple anchor elements have the same name and are valid, the last i
       const anchor = await validatedForPositioning(
         targetElement,
         /* anchorName: */ null,
-        [anchorSelector as unknown as Selector],
+        [anchorSelector],
         /* scopeSelectors: */ [],
         { roots: [document] },
       ).then((value) => value);
@@ -518,7 +514,7 @@ test('target anchor element is first element el in tree order.', async ({
       const anchor = await validatedForPositioning(
         targetElement,
         /* anchorName: */ null,
-        [anchorSelector as unknown as Selector],
+        [anchorSelector],
         /* scopeSelectors: */ [],
         { roots: [document] },
       ).then((value) => value);
@@ -533,7 +529,10 @@ test('target anchor element is first element el in tree order.', async ({
 
       return validatedData;
     },
-    [{ selector: '.anchor1', elementPart: '.anchor1' }, '.target9'] as const,
+    [
+      { selector: '.anchor1', elementPart: '.anchor1' } satisfies Selector,
+      '.target9',
+    ] as const,
   );
 
   await page.close();

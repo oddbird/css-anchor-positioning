@@ -98,11 +98,7 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
       el.setAttribute(dataAttribute, selector);
       const styles = el.getAttribute('style');
       const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
-      inlineStyles.push({
-        el,
-        css,
-        root: el.getRootNode() as AnchorPositioningRoot,
-      });
+      inlineStyles.push({ el, css });
     });
 
   return inlineStyles;
@@ -125,14 +121,9 @@ function fetchAdoptedStyleSheets(roots: AnchorPositioningRoot[]) {
         continue;
       }
       seen.add(sheet);
-      // TODO(tree-scope): a constructed stylesheet can be adopted on multiple
-      // roots. We currently attribute it to the first adopting root. Fully
-      // tree-scoping shared sheets means emitting one StyleData per (sheet,
-      // root) and reconciling the write-back in `transformCSS`.
       adoptedStyles.push({
         css: getAdoptedStylesheetText(sheet),
         sheet,
-        root,
       });
     }
   }
@@ -149,15 +140,14 @@ export async function fetchCSS(
   targetElements
     .filter((el) => el instanceof HTMLElement)
     .forEach((el) => {
-      const root = el.getRootNode() as AnchorPositioningRoot;
       if (el.tagName.toLowerCase() === 'link') {
         const url = getStylesheetUrl(el as HTMLLinkElement);
         if (url) {
-          sources.push({ el, url, root });
+          sources.push({ el, url });
         }
       }
       if (el.tagName.toLowerCase() === 'style') {
-        sources.push({ el, css: el.innerHTML, root });
+        sources.push({ el, css: el.innerHTML });
       }
     });
 

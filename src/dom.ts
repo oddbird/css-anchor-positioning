@@ -12,9 +12,6 @@ export interface Selector {
   selector: string;
   elementPart: string;
   pseudoElementPart?: string;
-  // The tree (document or shadow root) this selector was authored in, so anchor
-  // resolution can be scoped to the same tree per the CSS scoping rules.
-  root: AnchorPositioningRoot;
 }
 
 /**
@@ -275,7 +272,7 @@ function hostMatchesSelector(host: HTMLElement, selector: string): boolean {
   const match = /^:host\(\s*(.+?)\s*\)$/.exec(trimmed);
   if (match) {
     try {
-      return match[1].split(',').some((m) => host.matches(m.trim()));
+      return host.matches(match[1]);
     } catch {
       return false;
     }

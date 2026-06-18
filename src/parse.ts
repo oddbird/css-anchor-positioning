@@ -354,7 +354,7 @@ export async function parseCSS(
     const ast = getAST(styleObj.css);
     walk(ast, function (node) {
       const rule = this.rule?.prelude as SelectorList | undefined;
-      const selectors = getSelectors(rule, styleObj.root);
+      const selectors = getSelectors(rule);
 
       // Parse `anchor-name` declaration
       if (isAnchorNameDeclaration(node) && selectors.length) {
@@ -637,7 +637,7 @@ export async function parseCSS(
           // properties, the value will be different each time. So we append
           // the property to the uuid, and update the CSS property to point
           // to the new uuid...
-          const selectors = getSelectors(rule, styleObj.root);
+          const selectors = getSelectors(rule);
 
           for (const anchorFnData of [...anchorFns, ...referencedFns]) {
             const data = { ...anchorFnData };
@@ -810,7 +810,6 @@ export async function parseCSS(
     changed: false,
     created: true,
     css: '',
-    root: document,
   };
   styleData.push(positionAreaMappingStyleElement);
 

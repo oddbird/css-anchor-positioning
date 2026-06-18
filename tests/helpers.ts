@@ -21,7 +21,7 @@ export const sampleBaseCSS = '.a { color: red; } .b { color: green; }';
  * Update a CSS string used in tests by running it through `cascadeCSS`.
  */
 export function cascadeCSSForTest(css: string) {
-  const styleObj: StyleData = { el: null!, css, root: document };
+  const styleObj: StyleData = { el: null!, css };
   cascadeCSS([styleObj]);
   return styleObj.css;
 }

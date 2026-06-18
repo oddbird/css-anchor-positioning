@@ -17,19 +17,17 @@ describe('transformCSS', () => {
     const div = document.getElementById('div') as HTMLDivElement;
     const div2 = document.getElementById('div2') as HTMLDivElement;
     const styleData = [
-      { el: link, css: 'html { margin: 0; }', changed: true, root: document },
-      { el: style, css: 'html { padding: 0; }', changed: true, root: document },
+      { el: link, css: 'html { margin: 0; }', changed: true },
+      { el: style, css: 'html { padding: 0; }', changed: true },
       {
         el: div,
         css: '[data-has-inline-styles="key"]{color:blue;}',
         changed: true,
-        root: document,
       },
       {
         el: div2,
         css: '[data-has-inline-styles="key2"]{color:blue;}',
         changed: false,
-        root: document,
       },
     ];
     const inlineStyles = new Map();
@@ -58,9 +56,7 @@ describe('transformCSS', () => {
       <link id="the-link" media="screen" title="stylish" rel="stylesheet" href="/sample.css"/>
     `;
     const link = document.querySelector('link') as HTMLLinkElement;
-    const styleData = [
-      { el: link, css: 'html { margin: 0; }', changed: true, root: document },
-    ];
+    const styleData = [{ el: link, css: 'html { margin: 0; }', changed: true }];
     const inlineStyles = new Map();
     const initialStyleElement = document.querySelector('style');
     expect(initialStyleElement).toBe(null);
@@ -84,7 +80,6 @@ describe('transformCSS', () => {
         css: 'html { margin: 0; }',
         changed: true,
         created: true,
-        root: document,
       },
     ];
     transformCSS(styleData, undefined);

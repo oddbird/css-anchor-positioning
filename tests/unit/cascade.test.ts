@@ -16,7 +16,7 @@ describe('cascadeCSS', () => {
   it('adds insets with anchors as custom properties', async () => {
     const srcCSS = getSampleCSS('position-try-tactics');
     const styleData: StyleData[] = [
-      { css: srcCSS, el: document.createElement('div'), root: document },
+      { css: srcCSS, el: document.createElement('div') },
     ];
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(true);
@@ -27,7 +27,7 @@ describe('cascadeCSS', () => {
   it('returns false if no changes were made', async () => {
     const srcCSS = `.my-class { color: blue; }`;
     const styleData: StyleData[] = [
-      { css: srcCSS, el: document.createElement('div'), root: document },
+      { css: srcCSS, el: document.createElement('div') },
     ];
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(false);
