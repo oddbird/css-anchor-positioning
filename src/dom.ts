@@ -12,6 +12,9 @@ export interface Selector {
   selector: string;
   elementPart: string;
   pseudoElementPart?: string;
+  // The tree (document or shadow root) this selector was authored in, so anchor
+  // resolution can be scoped to the same tree per the CSS scoping rules.
+  root: AnchorPositioningRoot;
 }
 
 /**

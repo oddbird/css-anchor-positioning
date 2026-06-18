@@ -570,7 +570,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
       visit: 'Declaration',
       enter(node) {
         const rule = this.rule?.prelude as SelectorList | undefined;
-        const selectors = getSelectors(rule);
+        const selectors = getSelectors(rule, styleObj.root);
         if (!selectors.length) return;
 
         // Parse `position-try`, `position-try-order`, and

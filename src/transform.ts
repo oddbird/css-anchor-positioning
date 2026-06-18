@@ -27,8 +27,8 @@ export function transformCSS(
   cleanup = false,
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const { el, css, changed, created = false, sheet } of styleData) {
-    const updatedObject: StyleData = { el, css, changed: false, sheet };
+  for (const { el, css, changed, created = false, sheet, root } of styleData) {
+    const updatedObject: StyleData = { el, css, changed: false, sheet, root };
     if (changed) {
       if (sheet) {
         // Handle constructed stylesheets adopted via `adoptedStyleSheets`.
