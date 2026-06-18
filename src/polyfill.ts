@@ -620,7 +620,7 @@ function normalizePolyfillOptions(
 // Support a boolean option for backwards compatibility.
 export async function polyfill(
   useAnimationFrameOrOption?: boolean | AnchorPositioningPolyfillOptions,
-) {
+): Promise<AnchorPositions> {
   const options = normalizePolyfillOptions(
     useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
   );
@@ -643,7 +643,7 @@ export async function polyfill(
     // pre parse CSS styles that we need to cascade
     const cascadeCausedChanges = cascadeCSS(styleData);
     if (cascadeCausedChanges) {
-      styleData = transformCSS(styleData);
+      styleData = transformCSS(styleData, undefined, options.roots);
     }
     // parse CSS
     const parsedCSS = await parseCSS(styleData, { roots: options.roots });
@@ -656,7 +656,7 @@ export async function polyfill(
 
   if (Object.values(rules).length) {
     // update source code
-    transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles, options.roots);
 
     // calculate position values
     await position(rules, options.useAnimationFrame);

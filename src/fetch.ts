@@ -89,8 +89,12 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
   elementsWithInlineAnchorStyles
     .filter((el) => el instanceof HTMLElement)
     .forEach((el) => {
-      const selector = nanoid(12);
       const dataAttribute = 'data-has-inline-styles';
+      // Reuse an existing id rather than minting a new one each run: a
+      // concurrent run (e.g. another shadow root being polyfilled) may already
+      // be relying on this element's id in an anchor selector, and re-stamping
+      // it would invalidate that selector.
+      const selector = el.getAttribute(dataAttribute) ?? nanoid(12);
       el.setAttribute(dataAttribute, selector);
       const styles = el.getAttribute('style');
       const css = `[${dataAttribute}="${selector}"] { ${styles} }`;

@@ -279,6 +279,13 @@ async function getAnchorEl(
   targetEl: HTMLElement | null,
   anchorObj: AnchorFunction | null,
   options: { roots: AnchorPositioningRoot[] },
+  // Snapshots of the anchor-name/scope registries, passed in (rather than read
+  // from module scope) so that a concurrently-running `parseCSS` — which resets
+  // and repopulates those module-level registries — cannot corrupt this run's
+  // anchor resolution across the `await` below. These parameters intentionally
+  // shadow the module-level `anchorNames`/`anchorScopes`.
+  anchorNames: AnchorSelectors,
+  anchorScopes: AnchorSelectors,
 ) {
   let anchorName = anchorObj?.anchorName;
   const customPropName = anchorObj?.customPropName;
@@ -725,6 +732,14 @@ export async function parseCSS(
     }
   }
 
+  // Snapshot the anchor-name/scope registries now, before the awaits below.
+  // Everything up to here ran synchronously, so these hold this run's data; the
+  // snapshots are passed into `getAnchorEl` so a concurrent `parseCSS` call
+  // (which resets and repopulates the module-level registries) can't corrupt
+  // anchor resolution mid-run.
+  const anchorNamesSnapshot = anchorNames;
+  const anchorScopesSnapshot = anchorScopes;
+
   // Store inline style custom property mappings for each target element
   const inlineStyles = new Map<HTMLElement, Record<string, string>>();
   // Store any `anchor()` fns
@@ -750,9 +765,13 @@ export async function parseCSS(
       for (const anchorObj of anchorObjects) {
         for (const targetEl of targets) {
           // For every target element, find a valid anchor element
-          const anchorEl = await getAnchorEl(targetEl, anchorObj, {
-            roots: options.roots,
-          });
+          const anchorEl = await getAnchorEl(
+            targetEl,
+            anchorObj,
+            { roots: options.roots },
+            anchorNamesSnapshot,
+            anchorScopesSnapshot,
+          );
           const uuid = `--anchor-${nanoid(12)}`;
           // Store new mapping, in case inline styles have changed and will
           // be overwritten -- in which case new mappings will be re-added
@@ -806,9 +825,13 @@ export async function parseCSS(
     const targets = querySelectorAllRoots(options.roots, targetSel);
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
-      const anchorEl = await getAnchorEl(targetEl, null, {
-        roots: options.roots,
-      });
+      const anchorEl = await getAnchorEl(
+        targetEl,
+        null,
+        { roots: options.roots },
+        anchorNamesSnapshot,
+        anchorScopesSnapshot,
+      );
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper.
       for (const positionData of positions) {

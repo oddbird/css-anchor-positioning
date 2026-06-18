@@ -61,28 +61,33 @@
         }
         customElements.define('anchor-adopted-styles', AnchorAdoptedStyles);
 
+        // One constructed stylesheet, shared (adopted) by every
+        // `<position-anchor-on-host>` instance — the "construct once, adopt
+        // everywhere" pattern. Each host resolves `anchor()` against its own
+        // `position-anchor`, so the polyfill must transform this shared sheet
+        // per host rather than clobbering it for all but the last one.
+        const positionAnchorOnHostSheet = new CSSStyleSheet();
+        positionAnchorOnHostSheet.replaceSync(`
+          :host {
+            --element-color: var(--target, var(--outer-anchored));
+            background: var(--element-color);
+            border: thin solid var(--border);
+            border-radius: var(--radius-1);
+            color: white;
+            font-weight: bold;
+            top: anchor(top);
+            left: anchor(center);
+            padding: 0.5em;
+            white-space: nowrap;
+            position: absolute;
+            translate: -50% -100%;
+          }
+        `);
+
         class PositionAnchorOnHost extends HTMLElement {
           connectedCallback() {
             this.attachShadow({ mode: 'open' });
-
-            const sheet = new CSSStyleSheet();
-            sheet.replaceSync(`
-              :host {
-                --element-color: var(--target, var(--outer-anchored));
-                background: var(--element-color);
-                border: thin solid var(--border);
-                border-radius: var(--radius-1);
-                color: white;
-                font-weight: bold;
-                top: anchor(top);
-                left: anchor(center);
-                padding: 0.5em;
-                white-space: nowrap;
-                position: absolute;
-                translate: -50% -100%;
-              }
-            `);
-            this.shadowRoot.adoptedStyleSheets = [sheet];
+            this.shadowRoot.adoptedStyleSheets = [positionAnchorOnHostSheet];
             this.shadowRoot.innerHTML = '<slot></slot>';
           }
         }
@@ -307,12 +312,25 @@ class AnchorAdoptedStyles extends HTMLElement {
         Works when a custom element host has <code>position-anchor</code>
       </h2>
       <div style="position: relative" class="demo-elements">
-        <div class="anchor" style="anchor-name: --position-anchor-on-host">
+        <div
+          class="anchor"
+          style="
+            anchor-name: --position-anchor-on-host;
+            margin-block-end: calc(1lh + 1rem);
+          "
+        >
           Anchor
+        </div>
+        <div class="anchor" style="anchor-name: --position-anchor-on-host-2">
+          Anchor 2
         </div>
         <position-anchor-on-host
           style="position-anchor: --position-anchor-on-host"
           >Target</position-anchor-on-host
+        >
+        <position-anchor-on-host
+          style="position-anchor: --position-anchor-on-host-2"
+          >Target 2</position-anchor-on-host
         >
       </div>
       <div class="note">

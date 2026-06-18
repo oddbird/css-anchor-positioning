@@ -82,29 +82,39 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   await expectWithinOne(target, 'right', expected);
 });
 
-test('positions a custom element host anchored via position-anchor', async ({
+test('positions every custom-element host sharing one constructed stylesheet', async ({
   page,
 }) => {
-  const buttonSelector = '#host-custom-element .anchor';
-  const tooltipSelector = '#host-custom-element position-anchor-on-host';
-  const button = page.locator(buttonSelector);
-  const tooltip = page.locator(tooltipSelector);
+  // Two `<position-anchor-on-host>` hosts, each linked (via `position-anchor`)
+  // to its own anchor, all driven by a single shared constructed stylesheet.
+  const anchors = page.locator('#host-custom-element .anchor');
+  const tooltips = page.locator('#host-custom-element position-anchor-on-host');
 
-  const getRect = (locator: typeof button) =>
+  const getRect = (locator: ReturnType<typeof page.locator>) =>
     locator.evaluate((node: HTMLElement) =>
       node.getBoundingClientRect().toJSON(),
     );
 
   await applyPolyfill(page);
 
-  const buttonRect = await getRect(button);
-  const tooltipRect = await getRect(tooltip);
+  const count = await tooltips.count();
+  expect(count).toBe(2);
 
-  // The target's `:host` rule uses `top: anchor(top)`, `left: anchor(center)`
-  // and `translate: -50% -100%`, so it should sit above the anchor,
-  // horizontally centered on it.
-  const buttonCenterX = buttonRect.left + buttonRect.width / 2;
-  const tooltipCenterX = tooltipRect.left + tooltipRect.width / 2;
-  expect(tooltipCenterX).toBeCloseTo(buttonCenterX, 0);
-  expect(tooltipRect.bottom).toBeCloseTo(buttonRect.top, 0);
+  // Each host's `:host` rule uses `top: anchor(top)`, `left: anchor(center)`
+  // and `translate: -50% -100%`, so every host should sit above its own anchor,
+  // horizontally centered on it — not just the last one to be processed.
+  for (let i = 0; i < count; i++) {
+    const anchorRect = await getRect(anchors.nth(i));
+    const tooltipRect = await getRect(tooltips.nth(i));
+    const anchorCenterX = anchorRect.left + anchorRect.width / 2;
+    const tooltipCenterX = tooltipRect.left + tooltipRect.width / 2;
+    expect(tooltipCenterX, `host ${i} horizontal center`).toBeCloseTo(
+      anchorCenterX,
+      0,
+    );
+    expect(tooltipRect.bottom, `host ${i} sits above anchor`).toBeCloseTo(
+      anchorRect.top,
+      0,
+    );
+  }
 });
