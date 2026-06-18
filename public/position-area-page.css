@@ -129,3 +129,8 @@
   background: repeating-linear-gradient(45deg, #ccc 0 5px, transparent 0 10px);
   outline: 1pt dotted var(--brand-orange);
 }
+
+.target.fixed {
+  position: fixed;
+  position-area: end;
+}
