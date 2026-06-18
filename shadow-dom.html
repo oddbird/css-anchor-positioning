@@ -339,6 +339,11 @@ class AnchorAdoptedStyles extends HTMLElement {
           horizontally centered on it.
         </p>
         <p>
+          There are two anchors and two targets, to demonstrate that each target
+          resolves its own anchor independently, even though they share the same
+          shadow root and the same adopted stylesheet.
+        </p>
+        <p>
           This demo uses <code>position-anchor</code> on a custom element host
           (<code>&lt;position-anchor-on-host&gt;</code>), with
           <code>anchor()</code> in the shadow root's <code>:host</code> styles.
