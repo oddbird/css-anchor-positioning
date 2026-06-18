@@ -1,3 +1,4 @@
+import { type Strategy } from '@floating-ui/dom';
 import type {
   CssNode,
   Declaration,
@@ -14,7 +15,7 @@ import parse from 'css-tree/parser';
 import { clone } from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
-import type { Selector } from './dom.js';
+import { getCSSPropertyValue, type Selector } from './dom.js';
 
 export const INSTANCE_UUID = nanoid();
 
@@ -185,3 +186,8 @@ export function reportParseErrorsOnFailure() {
 export function resetParseErrors() {
   cssParseErrors.clear();
 }
+
+export const strategyForElement = (el: HTMLElement): Strategy => {
+  const position = getCSSPropertyValue(el, 'position');
+  return position === 'fixed' ? 'fixed' : 'absolute';
+};

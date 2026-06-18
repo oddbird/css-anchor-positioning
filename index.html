@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="/anchor-inside-outside.css" />
     <link rel="stylesheet" href="/import-has-import.css" />
     <link rel="stylesheet" href="/invalid-anchor.css" />
+    <link rel="stylesheet" href="/anchor-fixed.css" />
     <!-- Included to test invalid stylesheets -->
     <link rel="stylesheet" href="/fake.css" />
     <style>
@@ -624,6 +625,37 @@
   anchor-name: --my-position-anchor-b;
 }</code></pre>
     </section>
+
+    <section id="fixed" class="demo-item">
+      <h2>
+        <a href="#fixed" aria-hidden="true">🔗</a>
+        Positioning fixed position target
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-fixed-position-anchor" class="anchor">Anchor</div>
+        <div id="my-fixed-position-target" class="target">Fixed Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: Target is positioned at the bottom right corner
+        of the Anchor.
+      </p>
+      <pre><code class="language-html"
+>&lt;div id="my-fixed-position-anchor" class="anchor"&gt;Anchor&lt;/div&gt;
+&lt;div id="my-fixed-position-target" class="target"&gt;Fixed Target&lt;/div&gt;</code>
+
+<code class="language-css"
+>#my-fixed-position-anchor {
+  anchor-name: --my-fixed-position-anchor;
+}
+
+#my-fixed-position-target {
+  position: fixed;
+  position-anchor: --my-fixed-position-anchor;
+  top: anchor(bottom);
+  left: anchor(right);
+}</code></pre>
+    </section>
+
     <section id="anchor-positioning-popover" class="demo-item">
       <h2>
         <a href="#anchor-positioning-popover" aria-hidden="true">🔗</a>
@@ -655,13 +687,11 @@
       </div>
       <pre><code class="language-css"
 >#my-anchor-popover {
-  position: absolute;
-  left: 200px;
   anchor-name: --my-anchor-popover;
 }
 
 #my-target-popover {
-  position: absolute;
+  margin: initial;
   left: anchor(--my-anchor-popover right);
   top: anchor(--my-anchor-popover bottom);
 }</code></pre>
