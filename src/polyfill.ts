@@ -32,7 +32,11 @@ import {
   type SizingProperty,
 } from './syntax.js';
 import { transformCSS } from './transform.js';
-import { reportParseErrorsOnFailure, resetParseErrors } from './utils.js';
+import {
+  reportParseErrorsOnFailure,
+  resetParseErrors,
+  strategyForElement,
+} from './utils.js';
 
 const platformWithCache = { ...platform, _c: new Map() };
 
@@ -322,6 +326,7 @@ async function applyAnchorPositions(
       const anchor = anchorValue.anchorEl;
       const target = anchorValue.targetEl;
       if (anchor && target) {
+        const strategy = strategyForElement(target);
         if (isPositionAreaTarget(anchorValue)) {
           const wrapper = anchorValue.wrapperEl!;
           const getPositionAreaPixelValue = async (
@@ -355,7 +360,9 @@ async function applyAnchorPositions(
               const rects = await platform.getElementRects({
                 reference: anchor,
                 floating: wrapper,
-                strategy: 'absolute',
+                // Use the strategy for the wrapper, which should match the
+                // target it wraps.
+                strategy: strategyForElement(wrapper),
               });
               const insets = anchorValue.insets;
 
@@ -415,7 +422,7 @@ async function applyAnchorPositions(
               const rects = await platform.getElementRects({
                 reference: anchor,
                 floating: target,
-                strategy: 'absolute',
+                strategy,
               });
               const resolved = await getPixelValue({
                 targetEl: target,
@@ -448,7 +455,7 @@ async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
   const rects = await platform.getElementRects({
     reference: target,
     floating: target,
-    strategy: 'absolute',
+    strategy: strategyForElement(target),
   });
   const overflow = await detectOverflow(
     {
@@ -460,7 +467,7 @@ async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
         floating: target,
         reference: offsetParent,
       },
-      strategy: 'absolute',
+      strategy: strategyForElement(target),
     } as unknown as MiddlewareState,
     {
       padding: getMargins(target),

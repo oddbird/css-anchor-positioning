@@ -1,0 +1,10 @@
+#my-fixed-position-anchor {
+  anchor-name: --my-fixed-position-anchor;
+}
+
+#my-fixed-position-target {
+  position: fixed;
+  position-anchor: --my-fixed-position-anchor;
+  top: anchor(bottom);
+  left: anchor(right);
+}

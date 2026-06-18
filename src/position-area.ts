@@ -25,7 +25,7 @@ import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
 
 import { getOffsetParent, type PseudoElement } from './dom.js';
-import { type DeclarationWithValue } from './utils.js';
+import { type DeclarationWithValue, strategyForElement } from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
 // check it to determine which position area declaration should win, if there
@@ -546,7 +546,7 @@ export function wrapperForPositionedElement(
   } else {
     wrapperEl = document.createElement(WRAPPER_ELEMENT);
     wrapperEl.style.display = 'grid';
-    wrapperEl.style.position = 'absolute';
+    wrapperEl.style.position = strategyForElement(targetEl);
 
     // The wrapper should not receive pointer events, but the target's initial
     // `pointer-events` value should be preserved.
