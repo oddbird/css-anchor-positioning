@@ -60,6 +60,33 @@
           }
         }
         customElements.define('anchor-adopted-styles', AnchorAdoptedStyles);
+
+        class PositionAnchorOnHost extends HTMLElement {
+          connectedCallback() {
+            this.attachShadow({ mode: 'open' });
+
+            const sheet = new CSSStyleSheet();
+            sheet.replaceSync(`
+              :host {
+                --element-color: var(--target, var(--outer-anchored));
+                background: var(--element-color);
+                border: thin solid var(--border);
+                border-radius: var(--radius-1);
+                color: white;
+                font-weight: bold;
+                top: anchor(top);
+                left: anchor(center);
+                padding: 0.5em;
+                white-space: nowrap;
+                position: absolute;
+                translate: -50% -100%;
+              }
+            `);
+            this.shadowRoot.adoptedStyleSheets = [sheet];
+            this.shadowRoot.innerHTML = '<slot></slot>';
+          }
+        }
+        customElements.define('position-anchor-on-host', PositionAnchorOnHost);
       }
 
       const btn = document.getElementById('apply-polyfill');
@@ -82,7 +109,8 @@
           defineCustomElements();
 
           // Load the polyfill explicitly for the <anchor-web-component> demo.
-          // The <anchor-adopted-styles> is already covered by the adopted
+          // The <anchor-adopted-styles> and <position-anchor-on-host> demos use
+          // `adoptedStyleSheets`, so they are already covered by the adopted
           // stylesheet patch.
           await polyfill({
             roots: [document.querySelector('anchor-web-component').shadowRoot],
@@ -270,6 +298,62 @@ class AnchorAdoptedStyles extends HTMLElement {
     `;
   }
 }
+&lt;/script&gt;
+</code></pre>
+    </section>
+    <section id="host-custom-element" class="demo-item">
+      <h2>
+        <a href="#host-custom-element" aria-hidden="true">🔗</a>
+        Works when a custom element host has <code>position-anchor</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor" style="anchor-name: --position-anchor-on-host">
+          Anchor
+        </div>
+        <position-anchor-on-host
+          style="position-anchor: --position-anchor-on-host"
+          >Target</position-anchor-on-host
+        >
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: Target is positioned above the Anchor,
+          horizontally centered on it.
+        </p>
+        <p>
+          This demo uses <code>position-anchor</code> on a custom element host
+          (<code>&lt;position-anchor-on-host&gt;</code>), with
+          <code>anchor()</code> in the shadow root's <code>:host</code> styles.
+        </p>
+      </div>
+
+      <pre><code class="language-html"
+>&lt;!-- Load the shadow entrypoint before defining custom elements,
+so the replaceSync and adoptedStyleSheets patches are installed
+before any connectedCallback runs. --&gt;
+&lt;script type="module" src="/dist/css-anchor-positioning-shadow.js"&gt;&lt;/script&gt;
+
+&lt;div id="anchor" class="anchor"&gt;Anchor&lt;/div&gt;
+&lt;position-anchor-on-host for="anchor"&gt;Target&lt;/position-anchor-on-host&gt;
+&lt;script&gt;
+class PositionAnchorOnHost extends HTMLElement {
+  connectedCallback() {
+    this.attachShadow({ mode: "open" });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host {
+        top: anchor(top);
+        left: anchor(center);
+        position: absolute;
+        translate: -50% -100%;
+      }
+    `);
+    this.shadowRoot.adoptedStyleSheets = [sheet];
+    this.shadowRoot.innerHTML = "&lt;slot&gt;&lt;/slot&gt;";
+  }
+}
+customElements.define("position-anchor-on-host", PositionAnchorOnHost);
 &lt;/script&gt;
 </code></pre>
     </section>

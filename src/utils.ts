@@ -15,6 +15,7 @@ import { clone } from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
 import type { Selector } from './dom.js';
+import type { AnchorPositioningRoot } from './polyfill.js';
 
 export const INSTANCE_UUID = nanoid();
 
@@ -65,6 +66,10 @@ export function getDeclarationValue(node: DeclarationWithValue) {
 export interface StyleData {
   el?: HTMLElement;
   css: string;
+  // The tree (document or shadow root) this stylesheet was authored in. Used to
+  // tree-scope `anchor-name` / `anchor()` / `position-anchor` resolution per the
+  // CSS scoping rules, rather than treating all roots as one flat namespace.
+  root: AnchorPositioningRoot;
   url?: URL;
   changed?: boolean;
   created?: boolean; // Whether the element is created by the polyfill
@@ -141,7 +146,10 @@ export function splitCommaList(list: List<CssNode>) {
   );
 }
 
-export function getSelectors(rule: SelectorList | undefined) {
+export function getSelectors(
+  rule: SelectorList | undefined,
+  root: AnchorPositioningRoot,
+) {
   if (!rule) return [];
 
   return (rule.children as List<CssTreeSelector>)
@@ -160,6 +168,7 @@ export function getSelectors(rule: SelectorList | undefined) {
         selector: elementPart + (pseudoElementPart ?? ''),
         elementPart,
         pseudoElementPart,
+        root,
       } satisfies Selector;
     })
     .toArray();

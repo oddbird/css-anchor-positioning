@@ -12,6 +12,9 @@ export interface Selector {
   selector: string;
   elementPart: string;
   pseudoElementPart?: string;
+  // The tree (document or shadow root) this selector was authored in, so anchor
+  // resolution can be scoped to the same tree per the CSS scoping rules.
+  root: AnchorPositioningRoot;
 }
 
 /**
@@ -258,11 +261,42 @@ export const getOffsetParent = async (el: HTMLElement) => {
   return offsetParent as HTMLElement;
 };
 
+/**
+ * Checks whether a shadow root's host element matches a `:host` or
+ * `:host(<compound-selector>)` selector. The `:host` pseudo-class cannot be
+ * matched via `querySelectorAll()` from within the shadow root, so we resolve
+ * it manually against the host element.
+ */
+function hostMatchesSelector(host: HTMLElement, selector: string): boolean {
+  const trimmed = selector.trim();
+  if (trimmed === ':host') {
+    return true;
+  }
+  const match = /^:host\(\s*(.+?)\s*\)$/.exec(trimmed);
+  if (match) {
+    try {
+      return match[1].split(',').some((m) => host.matches(m.trim()));
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export const querySelectorAllRoots = (
   roots: AnchorPositioningRoot[],
   selector: string,
 ): HTMLElement[] => {
-  return roots.flatMap(
-    (e) => [...e.querySelectorAll(selector)] as HTMLElement[],
-  );
+  return roots.flatMap((root) => {
+    const elements = [...root.querySelectorAll(selector)] as HTMLElement[];
+    // `:host` (and `:host(...)`) selectors don't match via `querySelectorAll()`
+    // within a shadow root, so resolve them to the shadow root's host element.
+    if (root instanceof ShadowRoot) {
+      const host = root.host as HTMLElement;
+      if (hostMatchesSelector(host, selector)) {
+        elements.push(host);
+      }
+    }
+    return elements;
+  });
 };
