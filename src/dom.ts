@@ -300,3 +300,29 @@ export const querySelectorAllRoots = (
     return elements;
   });
 };
+
+/** A selector paired with the tree (root) it was authored in. */
+export interface ScopedSelector {
+  selector: string;
+  root: AnchorPositioningRoot;
+}
+
+/**
+ * Resolves selectors to elements, querying each selector only within the tree
+ * (root) it was authored in, per the CSS tree-scoping rules. Selectors that
+ * share a root are combined into a single query so duplicate matches collapse
+ * (matching `querySelectorAll`'s behavior for a comma-separated selector list).
+ */
+export const querySelectorAllScoped = (
+  selectors: ScopedSelector[],
+): HTMLElement[] => {
+  const selectorsByRoot = new Map<AnchorPositioningRoot, Set<string>>();
+  for (const { selector, root } of selectors) {
+    const set = selectorsByRoot.get(root) ?? new Set<string>();
+    set.add(selector);
+    selectorsByRoot.set(root, set);
+  }
+  return [...selectorsByRoot].flatMap(([root, set]) =>
+    querySelectorAllRoots([root], [...set].join(',')),
+  );
+};

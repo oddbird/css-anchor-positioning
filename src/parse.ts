@@ -14,7 +14,7 @@ import {
   AnchorScopeValue,
   getCSSPropertyValue,
   type PseudoElement,
-  querySelectorAllRoots,
+  querySelectorAllScoped,
   type Selector,
 } from './dom.js';
 import { parsePositionFallbacks, type PositionTryOrder } from './fallback.js';
@@ -337,6 +337,13 @@ export async function parseCSS(
 ) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
+  // For each target selector used as a key in `anchorFunctions`/`positionAreas`,
+  // remember the selectors (with their authoring root) so the targets can be
+  // resolved within the tree they were authored in, rather than across all roots.
+  const targetSelectors: Record<string, Selector[]> = {};
+  const recordTarget = (sel: Selector) => {
+    (targetSelectors[sel.selector] ??= []).push(sel);
+  };
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -377,11 +384,13 @@ export async function parseCSS(
         // *and* the same exact declaration property:
         // (e.g. multiple `top: anchor(...)` declarations
         // for the same `.foo {...}` selector)
-        for (const { selector } of selectors) {
+        for (const sel of selectors) {
+          const { selector } = sel;
           anchorFunctions[selector] = {
             ...anchorFunctions[selector],
             [prop]: [...(anchorFunctions[selector]?.[prop] ?? []), data],
           };
+          recordTarget(sel);
         }
       }
 
@@ -393,11 +402,13 @@ export async function parseCSS(
             positionAreaDeclaration,
             this.block,
           );
-          for (const { selector } of selectors) {
+          for (const sel of selectors) {
+            const { selector } = sel;
             positionAreas[selector] = [
               ...(positionAreas[selector] ?? []),
               positionAreaDeclaration,
             ];
+            recordTarget(sel);
           }
         }
       }
@@ -638,11 +649,13 @@ export async function parseCSS(
             const uuid = data.uuid;
             data.uuid = uuidWithProp;
 
-            for (const { selector } of selectors) {
+            for (const sel of selectors) {
+              const { selector } = sel;
               anchorFunctions[selector] = {
                 ...anchorFunctions[selector],
                 [prop]: [...(anchorFunctions[selector]?.[prop] ?? []), data],
               };
+              recordTarget(sel);
             }
             // Store new name with declaration prop appended,
             // so that we can go back and update the original custom
@@ -736,12 +749,9 @@ export async function parseCSS(
     ) {
       // If we're dealing with a `@position-try` block,
       // then the targets are places where that `position-fallback` is used.
-      targets = querySelectorAllRoots(
-        options.roots,
-        fallbackTargets[targetSel].join(','),
-      );
+      targets = querySelectorAllScoped(fallbackTargets[targetSel]);
     } else {
-      targets = querySelectorAllRoots(options.roots, targetSel);
+      targets = querySelectorAllScoped(targetSelectors[targetSel] ?? []);
     }
     for (const [targetProperty, anchorObjects] of Object.entries(anchorFns) as [
       InsetProperty | SizingProperty,
@@ -803,7 +813,7 @@ export async function parseCSS(
   // .foo { position-area: end }
 
   for (const [targetSel, positions] of Object.entries(positionAreas)) {
-    const targets = querySelectorAllRoots(options.roots, targetSel);
+    const targets = querySelectorAllScoped(targetSelectors[targetSel] ?? []);
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
       const anchorEl = await getAnchorEl(targetEl, null, {

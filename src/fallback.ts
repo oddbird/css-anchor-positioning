@@ -13,7 +13,7 @@ import { clone, List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 import { nanoid } from 'nanoid/non-secure';
 
-import { getCSSPropertyValue } from './dom.js';
+import { getCSSPropertyValue, type ScopedSelector } from './dom.js';
 import {
   type AnchorPosition,
   type AnchorPositions,
@@ -50,8 +50,9 @@ interface AtRuleRaw extends Atrule {
 }
 
 // `key` is the `@position-try` block uuid
-// `value` is the target element selector
-type FallbackTargets = Record<string, string[]>;
+// `value` is the target element selectors, each paired with the tree (root) it
+// was authored in, so target resolution can be scoped to that tree.
+type FallbackTargets = Record<string, ScopedSelector[]>;
 
 type Fallbacks = Record<
   // `key` is a reference to a specific `position-try-fallbacks` value, which
@@ -580,7 +581,7 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         if (order) {
           anchorPosition.order = order;
         }
-        selectors.forEach(({ selector }) => {
+        selectors.forEach(({ selector, root }) => {
           options?.forEach((tryObject) => {
             let name;
             // Apply try fallback
@@ -619,9 +620,9 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
 
             if (name && fallbacks[name]) {
               const dataAttr = `[data-anchor-polyfill="${fallbacks[name].uuid}"]`;
-              // Store mapping of data-attr to target selectors
+              // Store mapping of data-attr to target selectors (with their root)
               fallbackTargets[dataAttr] ??= [];
-              fallbackTargets[dataAttr].push(selector);
+              fallbackTargets[dataAttr].push({ selector, root });
 
               if (!fallbacksAdded.has(name)) {
                 anchorPosition.fallbacks ??= [];

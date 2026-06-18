@@ -13,9 +13,12 @@ describe('parseCSS', () => {
   });
 
   it('handles css with no `anchor()` fn', async () => {
-    const { rules } = await parseCSS([{ css: sampleBaseCSS }] as StyleData[], {
-      roots: [document],
-    });
+    const { rules } = await parseCSS(
+      [{ css: sampleBaseCSS, root: document }] as StyleData[],
+      {
+        roots: [document],
+      },
+    );
 
     expect(rules).toEqual({});
   });
@@ -31,7 +34,7 @@ describe('parseCSS', () => {
     const targetEl = document.getElementById('my-target-positioning');
     const css = getSampleCSS('anchor-positioning');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
 
@@ -71,7 +74,7 @@ describe('parseCSS', () => {
       '<div id="my-anchor-name-prop"></div></div>';
     const css = getSampleCSS('anchor-name-custom-prop');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -113,7 +116,7 @@ describe('parseCSS', () => {
       }
     `;
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -159,7 +162,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -218,7 +221,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -271,7 +274,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -299,7 +302,7 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target"></div><div id="my-anchor"></div></div>';
     const css = getSampleCSS('anchor');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -337,7 +340,7 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target-props"></div><div id="my-anchor-props"></div></div>';
     const css = getSampleCSS('anchor-custom-props');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -375,7 +378,7 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="target-duplicate-custom-props"></div><div id="anchor-duplicate-custom-props"></div></div>';
     const css = getSampleCSS('anchor-duplicate-custom-props');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -445,7 +448,7 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-anchor-name-list"></div><div id="my-target-name-list-a"></div><div id="my-target-name-list-b"></div></div>';
     const css = getSampleCSS('anchor-name-list');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -507,7 +510,7 @@ describe('parseCSS', () => {
       '<div style="position: relative"><div id="my-target-math"></div><div id="my-anchor-math"></div></div>';
     const css = getSampleCSS('anchor-math');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -566,7 +569,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -623,7 +626,7 @@ describe('parseCSS', () => {
     const anchorEl = document.getElementById('my-anchor-size');
     const css = getSampleCSS('anchor-size');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
 
@@ -659,7 +662,7 @@ describe('parseCSS', () => {
     `;
     const css = getSampleCSS('position-try');
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const anchorEl = document.getElementById('my-anchor-fallback');
@@ -794,7 +797,7 @@ describe('parseCSS', () => {
         position-fallback: --fallback;
       }
     `;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
 
@@ -819,7 +822,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const li = document.querySelectorAll('li');
@@ -870,7 +873,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -914,7 +917,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -957,7 +960,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -999,7 +1002,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
@@ -1040,7 +1043,7 @@ describe('parseCSS', () => {
       }
     `);
     document.head.innerHTML = `<style>${css}</style>`;
-    const { rules } = await parseCSS([{ css }] as StyleData[], {
+    const { rules } = await parseCSS([{ css, root: document }] as StyleData[], {
       roots: [document],
     });
     const expected = {
