@@ -271,13 +271,13 @@ customElements.define("anchor-web-component", AnchorDemo);
       </div>
 
       <pre><code class="language-html"
->&lt;!-- Load the shadow entrypoint before defining custom elements,
+>&lt;anchor-adopted-styles&gt;&lt;/anchor-adopted-styles&gt;
+&lt;script&gt;
+&lt;!-- Load the shadow entrypoint before defining custom elements,
 so the replaceSync and adoptedStyleSheets patches are installed
 before any connectedCallback runs. --&gt;
-&lt;script type="module" src="/dist/css-anchor-positioning-shadow.js"&gt;&lt;/script&gt;
-
-&lt;anchor-adopted-styles&gt;&lt;/anchor-adopted-styles&gt;
-&lt;script&gt;
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
+patchAndPolyfillConstructedStylesheets();
 class AnchorAdoptedStyles extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: "open" });
