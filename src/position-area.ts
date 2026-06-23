@@ -567,6 +567,7 @@ export function wrapperForPositionedElement(
     // already works and is left untouched.
     if (targetEl.hasAttribute('popover')) {
       const targetStyles = getComputedStyle(targetEl);
+     // Logical insets can also be retrieved via their physical equivalents, so we don't need to loop through those as well.
       (['top', 'right', 'bottom', 'left'] as const).forEach((side) => {
         const value = targetStyles[side];
         if (value && value !== 'auto' && parseFloat(value) !== 0) {
