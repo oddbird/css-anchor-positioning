@@ -121,6 +121,14 @@
         to stay within its containing block in supporting browsers.
       </p>
       <p>
+        For <code>popover</code> targets, the browser promotes the element to
+        the top layer when it is shown, making the viewport (not the wrapper)
+        its containing block. The polyfill compensates by stripping any
+        non-<code>auto</code> inset from the target (setting
+        <code>inset: auto</code>) and re-applying it as padding on the wrapper,
+        so the wrapper continues to drive positioning.
+      </p>
+      <p>
         <strong>Note: </strong>We strive to keep the polyfill up-to-date with
         ongoing changes to the spec, and we welcome
         <a
