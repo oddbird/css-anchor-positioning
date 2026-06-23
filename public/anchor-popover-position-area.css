@@ -1,0 +1,11 @@
+#my-anchor-popover-position-area {
+  position: absolute;
+  left: 200px;
+  anchor-name: --my-anchor-popover-position-area;
+}
+
+#my-target-popover-position-area {
+  inset: 10px 5%;
+  position-anchor: --my-anchor-popover-position-area;
+  position-area: end;
+}

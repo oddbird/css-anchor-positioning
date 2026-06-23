@@ -554,6 +554,30 @@ export function wrapperForPositionedElement(
     wrapperEl.style.pointerEvents = 'none';
     targetEl.style.pointerEvents = originalPointerEvents;
 
+    // When a popover is shown it is promoted to the top layer, so its
+    // containing block becomes the viewport rather than this wrapper. That means
+    // any non-`auto` `inset` on the popover — the UA stylesheet's `inset: 0`, or
+    // an author value such as `inset: 10px` — pins it to the viewport instead of
+    // letting it take its place inside the wrapper's grid cell. Strip the inset
+    // off the target so the wrapper drives positioning, and re-apply any author
+    // offset as padding on the wrapper. Because the wrapper represents the
+    // `position-area` cell and the target is aligned within it, padding shrinks
+    // the cell and offsets the target inward — matching `inset` semantics. Non-popover
+    // targets stay in this wrapper's containing block, so their own `inset`
+    // already works and is left untouched.
+    if (targetEl.hasAttribute('popover')) {
+      const targetStyles = getComputedStyle(targetEl);
+      // Logical insets can also be retrieved via their physical equivalents, so
+      // we don't need to loop through those as well.
+      (['top', 'right', 'bottom', 'left'] as const).forEach((side) => {
+        const value = targetStyles[side];
+        if (value && value !== 'auto' && parseFloat(value) !== 0) {
+          wrapperEl.style.setProperty(`padding-${side}`, value);
+        }
+      });
+      targetEl.style.inset = 'auto';
+    }
+
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
     });

@@ -206,6 +206,11 @@ following features:
     containing block. In other words, a polyfilled target may be placed in a
     `position-area` grid section outside its containing block, where the
     implementation would move the target inside the containing block.
+  - For `popover` targets, the browser promotes the element to the top layer
+    when it is shown, which makes the viewport (not the wrapper) its containing
+    block. To work around this, the polyfill strips any non-`auto` inset from
+    the target (setting `inset: auto`) and re-applies it as padding on the
+    wrapper, so the wrapper continues to drive positioning.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
