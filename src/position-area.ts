@@ -562,8 +562,7 @@ export function wrapperForPositionedElement(
     // off the target so the wrapper drives positioning, and re-apply any author
     // offset as padding on the wrapper. Because the wrapper represents the
     // `position-area` cell and the target is aligned within it, padding shrinks
-    // the cell and offsets the target inward — matching `inset` semantics. The
-    // UA's `inset: 0` resolves to zero padding, so it is a no-op. Non-popover
+    // the cell and offsets the target inward — matching `inset` semantics. Non-popover
     // targets stay in this wrapper's containing block, so their own `inset`
     // already works and is left untouched.
     if (targetEl.hasAttribute('popover')) {
