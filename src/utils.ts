@@ -16,6 +16,7 @@ import { clone } from 'css-tree/utils';
 import { nanoid } from 'nanoid/non-secure';
 
 import { getCSSPropertyValue, type Selector } from './dom.js';
+import type { AnchorPositioningRoot } from './polyfill.js';
 
 export const INSTANCE_UUID = nanoid();
 
@@ -115,12 +116,58 @@ export function getAdoptedStylesheetText(sheet: CSSStyleSheet) {
     .join('\n');
 }
 
+// Constructed stylesheets the polyfill created as private, per-root copies of a
+// user's (possibly shared) adopted stylesheet. These are safe to mutate in
+// place; the user's original sheet is never modified.
+const polyfillOwnedSheets = new WeakSet<CSSStyleSheet>();
+
 /**
- * Writes transformed CSS back into a constructed stylesheet, bypassing the
- * patched `replaceSync` so the original source text remains captured.
+ * Writes transformed CSS for a constructed stylesheet, bypassing the patched
+ * `replaceSync` so the original source text remains captured.
+ *
+ * A single constructed stylesheet can be adopted by multiple roots ("construct
+ * once, adopt everywhere"). The polyfill rewrites a sheet's `anchor()` functions
+ * to custom properties that each adopting host defines locally, so it must not
+ * mutate the user's source sheet: a separate run for another root would rewrite
+ * it again and leave earlier hosts pointing at custom properties that no longer
+ * exist.
+ *
+ * Instead we create one polyfill-owned copy holding the transformed CSS and swap
+ * it into every `roots` entry that currently adopts the original, leaving the
+ * original pristine for roots transformed in other (later) runs. A sheet we
+ * already own is rewritten in place. Returns the sheet that was written so
+ * callers can keep tracking it.
  */
-export function writeAdoptedStylesheet(sheet: CSSStyleSheet, css: string) {
+export function writeAdoptedStylesheet(
+  sheet: CSSStyleSheet,
+  css: string,
+  roots?: AnchorPositioningRoot[],
+): CSSStyleSheet {
+  if (!polyfillOwnedSheets.has(sheet)) {
+    const adopters = (roots ?? []).filter(
+      (root): root is Document | ShadowRoot =>
+        'adoptedStyleSheets' in root &&
+        (root as Document | ShadowRoot).adoptedStyleSheets.includes(sheet),
+    );
+    if (adopters.length) {
+      const copy = new CSSStyleSheet({
+        media: sheet.media,
+        disabled: sheet.disabled,
+      });
+      originalReplaceSync.call(copy, css);
+      polyfillOwnedSheets.add(copy);
+      for (const root of adopters) {
+        root.adoptedStyleSheets = root.adoptedStyleSheets.map((s) =>
+          s === sheet ? copy : s,
+        );
+      }
+      return copy;
+    }
+  }
+  // Either a copy we already own, or we couldn't locate an adopting root — safe
+  // to write in place.
   originalReplaceSync.call(sheet, css);
+  return sheet;
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;

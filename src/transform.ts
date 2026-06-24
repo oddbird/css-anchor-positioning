@@ -1,3 +1,4 @@
+import type { AnchorPositioningRoot } from './polyfill.js';
 import { type StyleData, writeAdoptedStylesheet } from './utils.js';
 
 // This is a list of non-global attributes that apply to link elements but do
@@ -24,7 +25,7 @@ const excludeAttributes = [
 export function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
-  cleanup = false,
+  roots?: AnchorPositioningRoot[],
 ) {
   const updatedStyleData: StyleData[] = [];
   for (const { el, css, changed, created = false, sheet } of styleData) {
@@ -32,9 +33,10 @@ export function transformCSS(
     if (changed) {
       if (sheet) {
         // Handle constructed stylesheets adopted via `adoptedStyleSheets`.
-        // Write the transformed CSS back into the sheet, bypassing the patched
-        // `replaceSync` so the original source text remains captured.
-        writeAdoptedStylesheet(sheet, css);
+        // Write the transformed CSS into a polyfill-owned copy of the sheet (so
+        // a sheet shared across roots isn't clobbered), swapping it into every
+        // adopting root in this run, and track that copy.
+        updatedObject.sheet = writeAdoptedStylesheet(sheet, css, roots);
       } else if (el?.tagName.toLowerCase() === 'style') {
         // Handle inline stylesheets
         el.innerHTML = css;
@@ -84,14 +86,30 @@ export function transformCSS(
               styles = `${key}: var(${val}); ${styles}`;
             }
           }
+          // Preserve any `--anchor-*` mappings a concurrently-running polyfill
+          // added to this element after this run captured its inline styles, so
+          // we don't clobber another run's target. Read the *current* value here
+          // (not the text captured at fetch time) so late writes are kept.
+          const preserved = (el.getAttribute('style') ?? '')
+            .split(';')
+            .map((decl) => decl.trim())
+            .filter((decl) => {
+              const prop = decl.slice(0, decl.indexOf(':')).trim();
+              return (
+                prop.startsWith('--anchor-') && !styles.includes(`${prop}:`)
+              );
+            });
+          if (preserved.length) {
+            styles = `${preserved.join('; ')}; ${styles}`;
+          }
           el.setAttribute('style', styles);
         }
       }
     }
-    // Remove no-longer-needed data-attribute
-    if (cleanup && el?.hasAttribute('data-has-inline-styles')) {
-      el.removeAttribute('data-has-inline-styles');
-    }
+    // Note: `data-has-inline-styles` is intentionally left in place. The id is
+    // reused across runs (see `fetchInlineStyles`) so concurrent runs share a
+    // stable selector for the element; removing it would let a later run mint a
+    // new id and invalidate another run's anchor selector.
     updatedStyleData.push(updatedObject);
   }
   return updatedStyleData;

@@ -32,7 +32,7 @@ describe('transformCSS', () => {
     ];
     const inlineStyles = new Map();
     inlineStyles.set(div, { '--foo': '--bar' });
-    transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles);
 
     expect(link.isConnected).toBe(false);
     const newLink = document.querySelector(
@@ -45,8 +45,10 @@ describe('transformCSS', () => {
     expect(style.innerHTML).toBe('html { padding: 0; }');
     expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue;');
     expect(div2.getAttribute('style')).toBe('color: red;');
-    expect(div.hasAttribute('data-has-inline-styles')).toBeFalsy();
-    expect(div2.hasAttribute('data-has-inline-styles')).toBeFalsy();
+    // `data-has-inline-styles` is intentionally retained so its id stays stable
+    // across (possibly concurrent) polyfill runs.
+    expect(div.getAttribute('data-has-inline-styles')).toBe('key');
+    expect(div2.getAttribute('data-has-inline-styles')).toBe('key2');
   });
 
   it('preserves id, media, and title attributes when replacing link elements', () => {
@@ -58,7 +60,7 @@ describe('transformCSS', () => {
     const inlineStyles = new Map();
     const initialStyleElement = document.querySelector('style');
     expect(initialStyleElement).toBe(null);
-    transformCSS(styleData, inlineStyles, true);
+    transformCSS(styleData, inlineStyles);
     const transformedStyleElement = document.querySelector(
       'style',
     ) as HTMLStyleElement;
@@ -80,7 +82,7 @@ describe('transformCSS', () => {
         created: true,
       },
     ];
-    transformCSS(styleData, undefined, true);
+    transformCSS(styleData, undefined);
 
     const createdStyleElement = document.querySelector(
       'style',
