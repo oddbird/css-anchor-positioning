@@ -22,3 +22,4 @@ updates:
         dependency-type: development
     ignore:
       - dependency-name: '@playwright/test'
+      - dependency-name: 'playwright'
