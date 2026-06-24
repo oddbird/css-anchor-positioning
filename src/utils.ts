@@ -150,7 +150,10 @@ export function writeAdoptedStylesheet(
         (root as Document | ShadowRoot).adoptedStyleSheets.includes(sheet),
     );
     if (adopters.length) {
-      const copy = new CSSStyleSheet();
+      const copy = new CSSStyleSheet({
+        media: sheet.media,
+        disabled: sheet.disabled,
+      });
       originalReplaceSync.call(copy, css);
       polyfillOwnedSheets.add(copy);
       for (const root of adopters) {
