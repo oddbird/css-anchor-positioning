@@ -717,8 +717,9 @@
       </div>
       <div class="note">
         <p>
-          With polyfill applied: Target is positioned below the Anchor, aligned
-          to its bottom right corner.
+          With polyfill applied: Target is positioned below and to the right of
+          the Anchor. Its containing block is aligned to its bottom right
+          corner, adjusted with <code>inset: 10px 5%</code>.
         </p>
         <p>
           <strong>Note:</strong> The polyfill does not create an implicit anchor
@@ -795,9 +796,9 @@
     <section id="position-try-tactics" class="demo-item">
       <h2>
         <a href="#position-try-tactics" aria-hidden="true">🔗</a>
-        Fallbacks with <code>position-try-fallbacks</code>
+        Fallbacks with <code>position-try-fallbacks</code> ⚠️
       </h2>
-      <div style="position: relative" class="demo-elements">
+      <div style="position: relative" class="demo-elements tight">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -813,6 +814,10 @@
         </div>
       </div>
       <div class="note">
+        <p>
+          <strong>⚠️ Note: </strong>This example is broken in both polyfilled
+          and non-polyfilled browsers.
+        </p>
         <p>
           With polyfill applied, the following positions are attempted in order:
         </p>
@@ -880,7 +885,7 @@
         Fallbacks with <code>position-try-fallbacks</code> and
         <code>@position-try</code>
       </h2>
-      <div style="position: relative" class="demo-elements">
+      <div style="position: relative" class="demo-elements tight">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -987,7 +992,7 @@
         <a href="#position-try-tactics-combined" aria-hidden="true">🔗</a>
         Positioning with combined try tactics
       </h2>
-      <div style="position: relative" class="demo-elements">
+      <div style="position: relative" class="demo-elements tight">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -1048,7 +1053,7 @@
         <a href="#anchor-scroll" aria-hidden="true">🔗</a>
         Positioning with <code>anchor()</code> [scrolling elements]
       </h2>
-      <div style="position: relative" class="demo-elements">
+      <div style="position: relative" class="demo-elements tight">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -1375,7 +1380,7 @@
         <a href="#anchor-pseudo-element" aria-hidden="true">🔗</a>
         Pseudo-element anchor
       </h2>
-      <div style="position: relative" class="demo-elements">
+      <div style="position: relative" class="demo-elements tight">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -1450,7 +1455,7 @@
           Polyfill target 1 and 3
         </button>
       </div>
-      <div class="demo-elements">
+      <div class="demo-elements tight">
         <div id="my-anchor-manual" class="anchor">Anchor</div>
         <div id="my-target-manual-style-el" class="target">
           Target 1 (with <code>&lt;style&gt;</code>)
@@ -1518,7 +1523,7 @@ CSS inside the anchor-manual.css file:
         <a href="#anchor-scope" aria-hidden="true">🔗</a>
         Scope an anchor name
       </h2>
-      <div class="demo-elements">
+      <div class="demo-elements tight">
         <ul>
           <li class="anchor">
             <span>List item One</span><span class="arrow">▶</span>
@@ -1626,7 +1631,7 @@ CSS inside the anchor-manual.css file:
         <a href="#invalid-anchor" aria-hidden="true">🔗</a>
         Invalid anchor
       </h2>
-      <div class="demo-elements">
+      <div class="demo-elements tight">
         <div id="my-target-invalid" class="target">Target</div>
       </div>
       <p class="note">

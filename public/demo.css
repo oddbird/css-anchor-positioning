@@ -180,6 +180,11 @@ footer p {
   font-family: var(--font-sans);
 }
 
+.demo-elements:not(.tight) {
+  /* Sync with DEMO_ELEMENT_PADDING in polyfill.test.ts */
+  padding: 30px;
+}
+
 .note {
   background-color: var(--callout);
   border-inline-start: 0.5em solid var(--note-color);
