@@ -12,6 +12,8 @@ test.beforeEach(async ({ page }) => {
 const btnSelector = '#apply-polyfill';
 const targetSelector = '#my-target-positioning';
 const anchorSelector = '#my-anchor-positioning';
+const DEMO_ELEMENT_PADDING = '30px';
+const DEMO_ELEMENT_PADDING_NUMBER = 30;
 
 async function applyPolyfill(page: Page) {
   const btn = page.locator(btnSelector);
@@ -53,13 +55,21 @@ test('applies polyfill for `anchor()`', async ({ page }) => {
   const parentHeight = await getParentHeight(page, targetSelector);
   const expected = parentWidth - width;
 
-  await expect(target).toHaveCSS('top', '0px');
+  await expect(target).toHaveCSS('top', DEMO_ELEMENT_PADDING);
   await expectWithinOne(target, 'right', expected, true);
 
   await applyPolyfill(page);
 
-  await expectWithinOne(target, 'top', parentHeight);
-  await expectWithinOne(target, 'right', expected);
+  await expectWithinOne(
+    target,
+    'top',
+    parentHeight - DEMO_ELEMENT_PADDING_NUMBER,
+  );
+  await expectWithinOne(
+    target,
+    'right',
+    expected - DEMO_ELEMENT_PADDING_NUMBER,
+  );
 });
 
 test('applies polyfill for inside and outside keywords', async ({ page }) => {
@@ -71,13 +81,21 @@ test('applies polyfill for inside and outside keywords', async ({ page }) => {
   const parentHeight = await getParentHeight(page, inoutTargetSelector);
   const expected = parentHeight - height;
 
-  await expectWithinOne(target, 'left', 0);
+  await expectWithinOne(target, 'left', DEMO_ELEMENT_PADDING_NUMBER);
   await expectWithinOne(target, 'bottom', expected, true);
 
   await applyPolyfill(page);
 
-  await expectWithinOne(target, 'left', parentWidth);
-  await expectWithinOne(target, 'bottom', expected);
+  await expectWithinOne(
+    target,
+    'left',
+    parentWidth - DEMO_ELEMENT_PADDING_NUMBER,
+  );
+  await expectWithinOne(
+    target,
+    'bottom',
+    expected + DEMO_ELEMENT_PADDING_NUMBER,
+  );
 });
 
 test('applies polyfill for inset- full longhands', async ({ page }) => {
@@ -151,13 +169,21 @@ test('applies polyfill from inline styles', async ({ page }) => {
   const parentHeight = await getParentHeight(page, targetSelector);
   const expected = parentWidth - width;
 
-  await expect(targetInLine).toHaveCSS('top', '0px');
+  await expect(targetInLine).toHaveCSS('top', DEMO_ELEMENT_PADDING);
   await expectWithinOne(targetInLine, 'right', expected, true);
 
   await applyPolyfill(page);
 
-  await expectWithinOne(targetInLine, 'top', parentHeight);
-  await expectWithinOne(targetInLine, 'right', expected);
+  await expectWithinOne(
+    targetInLine,
+    'top',
+    parentHeight - DEMO_ELEMENT_PADDING_NUMBER,
+  );
+  await expectWithinOne(
+    targetInLine,
+    'right',
+    expected - DEMO_ELEMENT_PADDING_NUMBER,
+  );
 });
 
 test('updates when sizes change', async ({ page }) => {
@@ -167,14 +193,26 @@ test('updates when sizes change', async ({ page }) => {
   const parentHeight = await getParentHeight(page, targetSelector);
   await applyPolyfill(page);
 
-  await expectWithinOne(target, 'top', parentHeight);
-  await expectWithinOne(target, 'right', parentWidth - width);
+  await expectWithinOne(
+    target,
+    'top',
+    parentHeight - DEMO_ELEMENT_PADDING_NUMBER,
+  );
+  await expectWithinOne(
+    target,
+    'right',
+    parentWidth - width - DEMO_ELEMENT_PADDING_NUMBER,
+  );
 
   await page
     .locator(anchorSelector)
     .evaluate((anchor) => (anchor.style.width = '50px'));
 
-  await expectWithinOne(target, 'right', parentWidth - 50);
+  await expectWithinOne(
+    target,
+    'right',
+    parentWidth - 50 - DEMO_ELEMENT_PADDING_NUMBER,
+  );
 });
 
 test('applies polyfill for `@position-fallback`', async ({ page }) => {
