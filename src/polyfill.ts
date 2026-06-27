@@ -1,7 +1,5 @@
 import {
   autoUpdate,
-  detectOverflow,
-  type MiddlewareState,
   platform,
   type Rect,
   type VirtualElement,
@@ -37,8 +35,6 @@ import {
   resetParseErrors,
   strategyForElement,
 } from './utils.js';
-
-const platformWithCache = { ...platform, _c: new Map() };
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -125,6 +121,9 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
     ) || 0
   );
 };
+
+const getBorder = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
+  parseInt(getCSSPropertyValue(el, `border-${dir}-width`), 10) || 0;
 
 const getMargin = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
   parseInt(getCSSPropertyValue(el, `margin-${dir}`), 10) || 0;
@@ -451,29 +450,53 @@ async function applyAnchorPositions(
   }
 }
 
-async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
-  const rects = await platform.getElementRects({
-    reference: target,
-    floating: target,
-    strategy: strategyForElement(target),
-  });
-  const overflow = await detectOverflow(
-    {
-      x: target.offsetLeft,
-      y: target.offsetTop,
-      platform: platformWithCache,
-      rects,
-      elements: {
-        floating: target,
-        reference: offsetParent,
-      },
-      strategy: strategyForElement(target),
-    } as unknown as MiddlewareState,
-    {
-      padding: getMargins(target),
-    },
-  );
-  return overflow;
+// How far the target's margin-box overflows each edge of its containing block.
+// Positive values indicate overflow on that side.
+//
+// Per spec, position-try options are evaluated against the target's
+// inset-modified containing block — not the scrollport of an arbitrary ancestor
+// scroll container. We therefore measure against the target's `offsetParent`
+// (its containing block), which is what native browsers use. Both rects are read
+// in viewport coordinates via `getBoundingClientRect`, so the page's scroll
+// offset cancels out regardless of how far down the document the target is. See
+// https://github.com/oddbird/css-anchor-positioning/issues/279.
+function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
+  const targetRect = target.getBoundingClientRect();
+  const margin = getMargins(target);
+  const marginBox = {
+    top: targetRect.top - margin.top,
+    bottom: targetRect.bottom + margin.bottom,
+    left: targetRect.left - margin.left,
+    right: targetRect.right + margin.right,
+  };
+
+  // The containing block for an absolutely positioned element is the padding box
+  // of its `offsetParent`. When there is no element offsetParent (e.g. a
+  // fixed-positioned target), the containing block is the viewport.
+  let containingBlock;
+  if (offsetParent === document.documentElement) {
+    containingBlock = {
+      top: 0,
+      left: 0,
+      right: document.documentElement.clientWidth,
+      bottom: document.documentElement.clientHeight,
+    };
+  } else {
+    const parentRect = offsetParent.getBoundingClientRect();
+    containingBlock = {
+      top: parentRect.top + getBorder(offsetParent, 'top'),
+      left: parentRect.left + getBorder(offsetParent, 'left'),
+      right: parentRect.right - getBorder(offsetParent, 'right'),
+      bottom: parentRect.bottom - getBorder(offsetParent, 'bottom'),
+    };
+  }
+
+  return {
+    top: containingBlock.top - marginBox.top,
+    bottom: marginBox.bottom - containingBlock.bottom,
+    left: containingBlock.left - marginBox.left,
+    right: marginBox.right - containingBlock.right,
+  };
 }
 
 async function applyPositionFallbacks(
@@ -507,7 +530,7 @@ async function applyPositionFallbacks(
         }
         checking = true;
         target.removeAttribute('data-anchor-polyfill');
-        const defaultOverflow = await checkOverflow(target, offsetParent);
+        const defaultOverflow = checkOverflow(target, offsetParent);
         // If none of the sides overflow, don't try fallbacks
         if (Object.values(defaultOverflow).every((side) => side <= 0)) {
           target.removeAttribute('data-anchor-polyfill-last-successful');
@@ -520,7 +543,7 @@ async function applyPositionFallbacks(
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
 
-          const overflow = await checkOverflow(target, offsetParent);
+          const overflow = checkOverflow(target, offsetParent);
 
           // If none of the sides overflow, use this fallback and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {

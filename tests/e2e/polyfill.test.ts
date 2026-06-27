@@ -220,16 +220,21 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   const target = page.locator(targetSel);
   await target.scrollIntoViewIfNeeded();
 
-  await expect(target).toHaveCSS('left', '0px');
+  // Capture the target's pre-polyfill (static) position so we can assert the
+  // polyfill moves it.
+  const initialLeft = await target.evaluate(
+    (node) => getComputedStyle(node).left,
+  );
 
   await applyPolyfill(page);
 
-  await expect(target).not.toHaveCSS('left', '0px');
+  await expect(target).not.toHaveCSS('left', initialLeft);
   await expect(target).not.toHaveCSS('width', '100px');
 
   await target.evaluate((node: HTMLElement) => {
-    (node.offsetParent as HTMLElement).scrollLeft = 180;
-    (node.offsetParent as HTMLElement).scrollTop = 120;
+    const scrollContainer = node.closest('.scroll-container') as HTMLElement;
+    scrollContainer.scrollLeft = 180;
+    scrollContainer.scrollTop = 120;
   });
 
   await expect(target).toHaveCSS('width', '100px');
