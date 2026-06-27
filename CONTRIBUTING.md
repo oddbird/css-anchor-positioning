@@ -28,6 +28,7 @@ apply to which elements on the page.
 ## Development
 
 - Clone the repository.
+- Install [nvm](https://github.com/nvm-sh/nvm) and run `nvm use`.
 - Install dependencies: `npm install`.
 - Start dev server: `npm run serve`. Visit `localhost:3000`.
 
