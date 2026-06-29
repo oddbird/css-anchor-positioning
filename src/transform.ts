@@ -87,11 +87,10 @@ export function transformCSS(
           const containers = new Set(
             (roots?.length ? roots : [document]).map(getRootStyleContainer),
           );
-          let first = true;
           for (const container of containers) {
-            const node = first ? styleEl : (styleEl.cloneNode(true) as Element);
+            // If there are multiple roots, clone the element for each root
+            const node = styleEl.isConnected ? styleEl : (styleEl.cloneNode(true));
             container.append(node);
-            first = false;
           }
         }
         updatedObject.el = styleEl;
