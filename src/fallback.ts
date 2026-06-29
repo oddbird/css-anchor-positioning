@@ -580,8 +580,8 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
           // Each selector in a comma-separated list gets its own position, so
           // fallbacks generated for one selector don't leak onto another. This
           // matters for try-tactics, whose fallbacks are keyed per selector
-          // (`${selector}-${tactics}`); without per-selector scoping, the second
-          // target ends up trying the first target's fallbacks. See
+          // (`${selector}-${tactics}`); without per-selector scoping, the
+          // second target ends up trying the first target's fallbacks. See
           // https://github.com/oddbird/css-anchor-positioning/issues/279.
           const anchorPosition: AnchorPosition = {};
           if (order) {
