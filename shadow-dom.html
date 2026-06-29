@@ -44,18 +44,16 @@
               }
               .target {
                 position: absolute;
-                right: anchor(--adopted-anchor right, 50px);
-                top: anchor(--adopted-anchor bottom);
+                position-anchor: --adopted-anchor;
+                position-area: bottom span-left;
               }
             `);
             this.shadowRoot.adoptedStyleSheets = [sheet];
 
             this.shadowRoot.innerHTML = `
               <link rel="stylesheet" href="/demo.css" />
-              <div style="position: relative">
-                <div class="target">Target</div>
-                <div class="anchor">Anchor</div>
-              </div>
+              <div class="anchor">Anchor</div>
+              <div class="target">Target</div>
             `;
           }
         }
@@ -289,17 +287,15 @@ class AnchorAdoptedStyles extends HTMLElement {
       }
       .target {
         position: absolute;
-        right: anchor(--adopted-anchor right, 50px);
-        top: anchor(--adopted-anchor bottom);
+        position-anchor: --adopted-anchor;
+        position-area: bottom span-left;
       }
     `);
     this.shadowRoot.adoptedStyleSheets = [sheet];
 
     this.shadowRoot.innerHTML = `
-      &lt;div style="position: relative"&gt;
-        &lt;div class="target"&gt;Target&lt;/div&gt;
-        &lt;div class="anchor"&gt;Anchor&lt;/div&gt;
-      &lt;/div&gt;
+      &lt;div class="target"&gt;Target&lt;/div&gt;
+      &lt;div class="anchor"&gt;Anchor&lt;/div&gt;
     `;
   }
 }

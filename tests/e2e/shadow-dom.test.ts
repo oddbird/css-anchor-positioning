@@ -62,13 +62,7 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   page,
 }) => {
   const anchorSelector = 'anchor-adopted-styles .anchor';
-  const targetSelector = 'anchor-adopted-styles .target';
-  const target = page.locator(targetSelector);
   const anchor = page.locator(anchorSelector);
-  const width = await getElementWidth(page, anchorSelector);
-  const parentWidth = await getParentWidth(page, targetSelector);
-  const parentHeight = await getParentHeight(page, targetSelector);
-  const expected = parentWidth - width;
 
   // The empty value is `""`, so require more than one character.
   const nonEmptyValue = /.+/;
@@ -78,8 +72,29 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
 
   await applyPolyfill(page);
 
-  await expectWithinOne(target, 'top', parentHeight);
-  await expectWithinOne(target, 'right', expected);
+  // The target uses `position-area: bottom span-left`, so the polyfill wraps it
+  // in a `<polyfill-position-area>` element that carries the position values.
+  const targetWrapper = page.locator(
+    'anchor-adopted-styles POLYFILL-POSITION-AREA',
+  );
+  const target = targetWrapper.locator('.target');
+
+  // `span-left` aligns the inline (x) end; `bottom` aligns the block (y) start.
+  await expect(target).toHaveCSS('justify-self', 'end');
+  await expect(target).toHaveCSS('align-self', 'start');
+  await expectWithinOne(targetWrapper, 'bottom', 0);
+  await expectWithinOne(targetWrapper, 'left', 0);
+
+  const anchorBox = await anchor.boundingBox();
+  const targetWrapperBox = await targetWrapper.boundingBox();
+
+  // Right sides should be aligned.
+  expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
+    anchorBox!.x + anchorBox!.width,
+    0,
+  );
+  // Target top should be aligned with anchor bottom.
+  expect(targetWrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('positions every custom-element host sharing one constructed stylesheet', async ({
