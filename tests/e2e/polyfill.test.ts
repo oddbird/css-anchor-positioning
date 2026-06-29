@@ -293,12 +293,12 @@ test('applies `@position-try` fallback for a fixed-positioned target', async ({
     };
   });
 
-  // The target is anchored horizontally (`left: anchor(left)`), which only holds
-  // if `anchor()` actually resolved — guarding against a trivial pass where the
-  // polyfill didn't run and the target sits at its static position.
+  // The target is anchored horizontally (`left: anchor(left)`), which only
+  // holds if `anchor()` actually resolved — guarding against a trivial pass
+  // where the polyfill didn't run and the target sits at its static position.
   expect(target.left).toBeCloseTo(anchor.left, 0);
-  // The base position (below the anchor) overflows the viewport, so the fallback
-  // flips the target above its anchor to keep it in view.
+  // The base position (below the anchor) overflows the viewport, so the
+  // fallback flips the target above its anchor to keep it in view.
   expect(target.bottom).toBeLessThanOrEqual(anchor.top + 1);
 });
 

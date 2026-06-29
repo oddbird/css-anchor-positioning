@@ -116,14 +116,14 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
       : ['border-top-width', 'border-bottom-width'];
   return (
     props.reduce(
-      (total, prop) => total + parseInt(getCSSPropertyValue(el, prop), 10),
+      (total, prop) => total + parseFloat(getCSSPropertyValue(el, prop)),
       0,
     ) || 0
   );
 };
 
 const getBorder = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
-  parseInt(getCSSPropertyValue(el, `border-${dir}-width`), 10) || 0;
+  parseFloat(getComputedStyle(el).getPropertyValue(`border-${dir}-width`)) || 0;
 
 // Read the element's used margins from its computed style. Unlike reading the
 // shifted `--margin-*` custom properties, this resolves the `margin` shorthand,
@@ -460,10 +460,10 @@ async function applyAnchorPositions(
 // Per spec, position-try options are evaluated against the target's
 // inset-modified containing block — not the scrollport of an arbitrary ancestor
 // scroll container. We therefore measure against the target's `offsetParent`
-// (its containing block), which is what native browsers use. Both rects are read
-// in viewport coordinates via `getBoundingClientRect`, so the page's scroll
-// offset cancels out regardless of how far down the document the target is. See
-// https://github.com/oddbird/css-anchor-positioning/issues/279.
+// (its containing block), which is what native browsers use. Both rects are
+// read in viewport coordinates via `getBoundingClientRect`, so the page's
+// scroll offset cancels out regardless of how far down the document the target
+// is. See https://github.com/oddbird/css-anchor-positioning/issues/279.
 function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
   const targetRect = target.getBoundingClientRect();
   const margin = getMargins(target);
@@ -474,8 +474,8 @@ function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
     right: targetRect.right + margin.right,
   };
 
-  // The containing block for an absolutely positioned element is the padding box
-  // of its `offsetParent`. When there is no element offsetParent (e.g. a
+  // The containing block for an absolutely positioned element is the padding
+  // box of its `offsetParent`. When there is no element offsetParent (e.g. a
   // fixed-positioned target), the containing block is the viewport.
   const containingBlock: {
     top: number;
