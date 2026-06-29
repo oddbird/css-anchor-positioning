@@ -125,15 +125,19 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
 const getBorder = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
   parseInt(getCSSPropertyValue(el, `border-${dir}-width`), 10) || 0;
 
-const getMargin = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
-  parseInt(getCSSPropertyValue(el, `margin-${dir}`), 10) || 0;
-
+// Read the element's used margins from its computed style. Unlike reading the
+// shifted `--margin-*` custom properties, this resolves the `margin` shorthand,
+// logical margins, percentages, and `auto` to physical pixel values, and
+// reflects any margin applied by the currently-active position fallback.
 const getMargins = (el: HTMLElement) => {
+  const style = getComputedStyle(el);
+  const margin = (dir: 'top' | 'right' | 'bottom' | 'left') =>
+    parseFloat(style.getPropertyValue(`margin-${dir}`)) || 0;
   return {
-    top: getMargin(el, 'top'),
-    right: getMargin(el, 'right'),
-    bottom: getMargin(el, 'bottom'),
-    left: getMargin(el, 'left'),
+    top: margin('top'),
+    right: margin('right'),
+    bottom: margin('bottom'),
+    left: margin('left'),
   };
 };
 
@@ -473,23 +477,28 @@ function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
   // The containing block for an absolutely positioned element is the padding box
   // of its `offsetParent`. When there is no element offsetParent (e.g. a
   // fixed-positioned target), the containing block is the viewport.
-  let containingBlock;
-  if (offsetParent === document.documentElement) {
-    containingBlock = {
-      top: 0,
-      left: 0,
-      right: document.documentElement.clientWidth,
-      bottom: document.documentElement.clientHeight,
-    };
-  } else {
-    const parentRect = offsetParent.getBoundingClientRect();
-    containingBlock = {
-      top: parentRect.top + getBorder(offsetParent, 'top'),
-      left: parentRect.left + getBorder(offsetParent, 'left'),
-      right: parentRect.right - getBorder(offsetParent, 'right'),
-      bottom: parentRect.bottom - getBorder(offsetParent, 'bottom'),
-    };
-  }
+  const containingBlock: {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+  } =
+    offsetParent === document.documentElement
+      ? {
+          top: 0,
+          left: 0,
+          right: document.documentElement.clientWidth,
+          bottom: document.documentElement.clientHeight,
+        }
+      : (() => {
+          const parentRect = offsetParent.getBoundingClientRect();
+          return {
+            top: parentRect.top + getBorder(offsetParent, 'top'),
+            left: parentRect.left + getBorder(offsetParent, 'left'),
+            right: parentRect.right - getBorder(offsetParent, 'right'),
+            bottom: parentRect.bottom - getBorder(offsetParent, 'bottom'),
+          };
+        })();
 
   return {
     top: containingBlock.top - marginBox.top,

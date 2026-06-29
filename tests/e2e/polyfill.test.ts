@@ -241,6 +241,67 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   await expect(target).toHaveCSS('height', '100px');
 });
 
+test('applies `@position-try` fallback for a fixed-positioned target', async ({
+  page,
+}) => {
+  // A fixed-positioned target's containing block is the viewport, so its
+  // `offsetParent` resolves to the document element. This exercises the
+  // viewport branch of `checkOverflow`. The anchor sits near the bottom of the
+  // viewport, so the base position (below the anchor) overflows and the
+  // fallback (above the anchor) should be applied.
+  await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      #fixed-fallback-anchor {
+        anchor-name: --fixed-fallback-anchor;
+        position: fixed;
+        top: 90vh;
+        left: 50px;
+        width: 100px;
+        height: 20px;
+      }
+      #fixed-fallback-target {
+        position: fixed;
+        position-anchor: --fixed-fallback-anchor;
+        top: anchor(bottom);
+        left: anchor(left);
+        width: 100px;
+        height: 100px;
+        position-try-fallbacks: --fixed-flip;
+      }
+      @position-try --fixed-flip {
+        bottom: anchor(top);
+        top: revert;
+      }
+    `;
+    document.head.append(style);
+    const anchor = document.createElement('div');
+    anchor.id = 'fixed-fallback-anchor';
+    const target = document.createElement('div');
+    target.id = 'fixed-fallback-target';
+    document.body.append(anchor, target);
+  });
+
+  await applyPolyfill(page);
+
+  const { anchor, target } = await page.evaluate(() => {
+    const anchorEl = document.getElementById('fixed-fallback-anchor')!;
+    const targetEl = document.getElementById('fixed-fallback-target')!;
+    return {
+      anchor: anchorEl.getBoundingClientRect(),
+      target: targetEl.getBoundingClientRect(),
+    };
+  });
+
+  // The target is anchored horizontally (`left: anchor(left)`), which only holds
+  // if `anchor()` actually resolved — guarding against a trivial pass where the
+  // polyfill didn't run and the target sits at its static position.
+  expect(target.left).toBeCloseTo(anchor.left, 0);
+  // The base position (below the anchor) overflows the viewport, so the fallback
+  // flips the target above its anchor to keep it in view.
+  expect(target.bottom).toBeLessThanOrEqual(anchor.top + 1);
+});
+
 test('applies manual polyfill', async ({ page }) => {
   const applyButton = page.locator('#apply-polyfill-manually');
   await applyButton.click();
