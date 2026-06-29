@@ -14,8 +14,8 @@ import {
 /**
  * Map of CSS property to CSS custom property that the property's value is
  * shifted into. This is used to subject properties that are not yet natively
- * supported to the CSS cascade and inheritance rules. It is also used by the
- * fallback algorithm to find initial, non-computed values.
+ * supported to the CSS cascade so later stages can read computed values. It is
+ * also used by the fallback algorithm to find initial, non-computed values.
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...ACCEPTED_POSITION_TRY_PROPERTIES,
@@ -28,6 +28,45 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   },
   {} as Record<string, string>,
 );
+
+/**
+ * Register the shifted custom properties as non-inherited.
+ *
+ * Every property we shift (insets, margins, sizing, self-alignment,
+ * `position-anchor`, `position-area`, `anchor-name`, `anchor-scope`) is
+ * non-inherited in CSS, but custom properties inherit by default. Without
+ * registering them as non-inherited, a value set on an ancestor (e.g.
+ * `height: 400px` on a scroll container) would be inherited by descendants
+ * through the shifted custom property and incorrectly read back as if it were
+ * set directly on them — leaking, for example, into every generated position
+ * fallback. See https://github.com/oddbird/css-anchor-positioning/issues/279.
+ *
+ * Registered properties are global to the document (including shadow trees), so
+ * this only needs to run once.
+ */
+let propertiesRegistered = false;
+export function registerShiftedProperties() {
+  if (
+    propertiesRegistered ||
+    typeof CSS === 'undefined' ||
+    typeof CSS.registerProperty !== 'function'
+  ) {
+    return;
+  }
+  for (const customProperty of Object.values(SHIFTED_PROPERTIES)) {
+    try {
+      CSS.registerProperty({
+        name: customProperty,
+        syntax: '*',
+        inherits: false,
+      });
+    } catch {
+      // Ignore properties that are already registered (e.g. by an earlier run
+      // of the polyfill).
+    }
+  }
+  propertiesRegistered = true;
+}
 
 /**
  * Shift property declarations for properties that are not yet natively
@@ -130,6 +169,8 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
  * the polyfill to work as expected.
  */
 export function cascadeCSS(styleData: StyleData[]) {
+  registerShiftedProperties();
+
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css, true);

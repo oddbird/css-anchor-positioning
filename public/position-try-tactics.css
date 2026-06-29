@@ -1,3 +1,20 @@
+/* Promote the targets' containing block to the `.demo-elements` wrapper
+   (outside the scroll container) so scrolling can push them to overflow and
+   trigger fallbacks. Position-try options are evaluated against the
+   inset-modified containing block, not the scrollport. See
+   https://github.com/oddbird/css-anchor-positioning/issues/279. */
+#position-try-tactics .scroll-container {
+  position: static;
+}
+
+/* Clip targets at the wrapper (which tightly bounds the scroll container) so a
+   target whose anchor has scrolled out of view doesn't float over other
+   content. The wrapper is the targets' containing block, so this does not
+   affect where fallbacks are evaluated. */
+#position-try-tactics .demo-elements {
+  overflow: clip;
+}
+
 #my-anchor-try-tactics {
   anchor-name: --my-anchor-try-tactics;
 }
