@@ -89,7 +89,9 @@ export function transformCSS(
           );
           for (const container of containers) {
             // If there are multiple roots, clone the element for each root
-            const node = styleEl.isConnected ? styleEl : (styleEl.cloneNode(true));
+            const node = styleEl.isConnected
+              ? styleEl
+              : styleEl.cloneNode(true);
             container.append(node);
           }
         }
