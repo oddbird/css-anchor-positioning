@@ -23,10 +23,12 @@ import type {
   NormalizedAnchorPositioningPolyfillOptions,
 } from './polyfill.js';
 import {
+  activeTargetStyles,
   activeWrapperStyles,
   addPositionAreaDeclarationBlockStyles,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
+  isContainingBlockDependentDeclaration,
   type PositionAreaDeclaration,
   type PositionAreaTargetData,
 } from './position-area.js';
@@ -338,12 +340,35 @@ async function getAnchorEl(
   );
 }
 
+/**
+ * Whether the element matches any of the given selectors. Selectors that are
+ * not valid for `Element.matches()` (e.g. those containing pseudo-elements) are
+ * skipped rather than throwing.
+ */
+function matchesAnySelector(el: HTMLElement, selectors: Set<string>): boolean {
+  for (const selector of selectors) {
+    try {
+      if (el.matches(selector)) {
+        return true;
+      }
+    } catch {
+      // Ignore selectors that can't be used with `matches()`.
+    }
+  }
+  return false;
+}
+
 export async function parseCSS(
   styleData: StyleData[],
   options: NormalizedAnchorPositioningPolyfillOptions,
 ) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
+  const positionAreaContainingBlock =
+    options.positionAreaContainingBlock ?? true;
+  // In `'auto'` mode, the selectors whose declarations resolve against the
+  // containing block. A `position-area` target matching any of these is wrapped.
+  const containingBlockDependentSelectors = new Set<string>();
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -369,6 +394,22 @@ export async function parseCSS(
         for (const name of getAnchorNames(node)) {
           anchorScopes[name] ??= [];
           anchorScopes[name].push(...selectors);
+        }
+      }
+
+      // Record selectors with containing-block-dependent declarations, so
+      // `'auto'` mode can decide per target whether the wrapper is needed.
+      if (
+        positionAreaContainingBlock === 'auto' &&
+        node.type === 'Declaration' &&
+        selectors.length &&
+        isContainingBlockDependentDeclaration(
+          node.property,
+          generateCSS(node.value),
+        )
+      ) {
+        for (const { selector } of selectors) {
+          containingBlockDependentSelectors.add(selector);
         }
       }
 
@@ -399,6 +440,7 @@ export async function parseCSS(
           addPositionAreaDeclarationBlockStyles(
             positionAreaDeclaration,
             this.block,
+            positionAreaContainingBlock,
           );
           for (const { selector } of selectors) {
             positionAreas[selector] = [
@@ -831,15 +873,27 @@ export async function parseCSS(
         anchorNamesSnapshot,
         anchorScopesSnapshot,
       );
+      // Resolve whether this target needs the wrapper. In `'auto'` mode, wrap
+      // only targets with containing-block-dependent styles; otherwise the
+      // option value is used directly.
+      const needsWrapper =
+        positionAreaContainingBlock === 'auto'
+          ? matchesAnySelector(targetEl, containingBlockDependentSelectors)
+          : positionAreaContainingBlock;
       // For every position-area declaration with this selector, create a new
-      // UUID, and make sure the target has a wrapper.
+      // UUID, and make sure the target has a wrapper (or is marked with a
+      // matching attribute, when the wrapper is not needed).
       for (const positionData of positions) {
         const targetData = await dataForPositionAreaTarget(
           targetEl,
           positionData,
           anchorEl,
+          needsWrapper,
         );
-        positionAreaMappingStyleElement.css += activeWrapperStyles(
+        const activeStyles = needsWrapper
+          ? activeWrapperStyles
+          : activeTargetStyles;
+        positionAreaMappingStyleElement.css += activeStyles(
           targetData.targetUUID,
           positionData.selectorUUID,
         );
