@@ -103,6 +103,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     };
@@ -122,6 +123,7 @@ an argument.
     polyfill({
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     });
@@ -171,6 +173,29 @@ used sparingly.
 For legacy support, this option can also be set by setting the value of
 `window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`, or, when applying the polyfill
 manually, by passing a single boolean with `polyfill(true)`.
+
+### positionAreaContainingBlock
+
+type: `boolean | 'auto'`, default: `true`
+
+Controls how the polyfill emulates the containing block that `position-area`
+natively creates for a target.
+
+- `true` (default): the polyfill wraps each `position-area` target with an
+  element that approximates the grid-area containing block, and aligns the
+  target within it. This matches the native behavior most closely, but the extra
+  wrapper element can interfere with author CSS that depends on the target's
+  position in the DOM tree (for example direct-child or sibling combinators, or
+  flex/grid layout of the target's original parent).
+- `false`: the polyfill never adds a wrapper. Instead it computes and applies
+  inset values directly on the target. This avoids the extra element, but styles
+  that resolve against the containing block — percentage sizes, `auto` or
+  percentage margins, percentage padding, or `stretch`/`anchor-center`
+  self-alignment — will not match the native behavior.
+- `'auto'`: the polyfill adds the wrapper only for targets whose styles resolve
+  against the containing block (using the same heuristics listed above), and
+  positions all other targets directly. This keeps the wrapper's correctness
+  where it matters while avoiding the extra element for the common case.
 
 ## Limitations
 
