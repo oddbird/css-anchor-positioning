@@ -93,12 +93,10 @@ export async function isAcceptableAnchorElement(
 
   // Either el is a descendant of query el’s containing block
   // or query el’s containing block is the initial containing block.
-  if (
-    !(
-      isContainingBlockDescendant(queryElContainingBlock, el) ||
-      isWindow(queryElContainingBlock)
-    )
-  ) {
+  if (!(
+    isContainingBlockDescendant(queryElContainingBlock, el) ||
+    isWindow(queryElContainingBlock)
+  )) {
     return false;
   }
 
@@ -176,9 +174,9 @@ function getScope(
   // can be guaranteed that the computed value we read was set explicitly, not
   // inherited. Then we verify that the specified anchor scope is actually the
   // one applied by the CSS cascade.
-  while (
-    !(element.matches(scopeSelector) && hasAnchorScope(element, anchorName))
-  ) {
+  while (!(
+    element.matches(scopeSelector) && hasAnchorScope(element, anchorName)
+  )) {
     if (!element.parentElement) {
       return null;
     }
@@ -200,13 +198,11 @@ export async function validatedForPositioning(
   scopeSelectors: Selector[],
   options: { roots: AnchorPositioningRoot[] },
 ) {
-  if (
-    !(
-      targetEl instanceof HTMLElement &&
-      anchorSelectors.length &&
-      isAbsolutelyPositioned(targetEl)
-    )
-  ) {
+  if (!(
+    targetEl instanceof HTMLElement &&
+    anchorSelectors.length &&
+    isAbsolutelyPositioned(targetEl)
+  )) {
     return null;
   }
 

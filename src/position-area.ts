@@ -581,7 +581,12 @@ export function wrapperForPositionedElement(
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(--pa-value-${prop})`);
     });
-    targetEl.parentElement?.insertBefore(wrapperEl, targetEl);
+    // Insert the wrapper relative to the target itself rather than going
+    // through its parent: when `targetEl` sits directly inside a shadow root,
+    // `parentElement` is `null` (a `ShadowRoot` is a `Node`, not an `Element`),
+    // which would skip the insert while still appending the target to the
+    // wrapper — detaching it from the DOM entirely.
+    targetEl.insertAdjacentElement('beforebegin', wrapperEl);
     wrapperEl.appendChild(targetEl);
   }
   // Wrapper can be be reused by multiple declarations, so set all as boolean

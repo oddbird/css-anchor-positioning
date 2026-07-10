@@ -201,13 +201,11 @@ export const getPixelValue = async ({
     // and if a physical keyword ('left', 'right', 'top', 'bottom') is used,
     // the axis of the keyword must match the axis of the inset property:
     // https://drafts.csswg.org/css-anchor-1/#queries
-    if (
-      !(
-        isInsetProp(targetProperty) &&
-        axis &&
-        (!isInsetProp(anchorSide) || axis === getAxis(anchorSide))
-      )
-    ) {
+    if (!(
+      isInsetProp(targetProperty) &&
+      axis &&
+      (!isInsetProp(anchorSide) || axis === getAxis(anchorSide))
+    )) {
       return fallback;
     }
     const startwardProperties = [

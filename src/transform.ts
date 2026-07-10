@@ -22,6 +22,19 @@ const excludeAttributes = [
   'type',
 ];
 
+// Resolves the node that a polyfill-generated `<style>` should be appended to
+// for a given root, so its rules apply to wrapper elements created within that
+// root. Styles in `document.head` do not pierce into a shadow root, so styles
+// for a shadow root (or an element inside one) must be appended there instead.
+function getRootStyleContainer(
+  root: AnchorPositioningRoot,
+): ShadowRoot | HTMLHeadElement {
+  if (root instanceof ShadowRoot) return root;
+  if (root instanceof Document) return root.head;
+  const rootNode = root.getRootNode();
+  return rootNode instanceof ShadowRoot ? rootNode : document.head;
+}
+
 export function transformCSS(
   styleData: StyleData[],
   inlineStyles?: Map<HTMLElement, Record<string, string>>,
@@ -67,8 +80,20 @@ export function transformCSS(
           el.remove();
         } else {
           styleEl.setAttribute('data-generated-by-polyfill', 'true');
-          // This is a new stylesheet, so we append it.
-          document.head.insertAdjacentElement('beforeend', styleEl);
+          // This is a new stylesheet (the position-area mapping styles). Its
+          // rules target wrapper elements that live inside the roots being
+          // polyfilled, so it must be inserted into each of those roots: a
+          // `<style>` in `document.head` does not apply inside a shadow root.
+          const containers = new Set(
+            (roots?.length ? roots : [document]).map(getRootStyleContainer),
+          );
+          for (const container of containers) {
+            // If there are multiple roots, clone the element for each root
+            const node = styleEl.isConnected
+              ? styleEl
+              : styleEl.cloneNode(true);
+            container.append(node);
+          }
         }
         updatedObject.el = styleEl;
       } else if (el?.hasAttribute('data-has-inline-styles')) {
