@@ -189,6 +189,13 @@ following features:
 - Polyfill allows anchoring in scroll more permissively than the spec allows,
   for instance without a default `position-anchor`.
 - `anchor-scope` property on pseudo-elements
+- The polyfill shifts not-yet-supported properties (e.g. `anchor-name`,
+  `anchor-scope`) into custom properties. These are registered as non-inherited
+  via `CSS.registerProperty` (Safari 16.4+, Firefox 128+) so they mirror the
+  non-inherited behavior of the properties they stand in for. On older engines
+  where `CSS.registerProperty` is unavailable, they fall back to inheriting like
+  any other custom property, so a value set on an ancestor (e.g. a `height` on a
+  scroll container) may be incorrectly read back on descendants.
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
 - `position-visibility` property
