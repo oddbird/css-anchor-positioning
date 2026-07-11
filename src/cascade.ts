@@ -30,6 +30,14 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
 );
 
 /**
+ * Attribute marking a `<style>` element the polyfill generates itself -- the
+ * non-inheritance reset below, and the position-area mapping styles in
+ * `transform.ts`. These are polyfill output, not author input, so `fetchCSS`
+ * skips them to avoid re-collecting and re-processing them on subsequent runs.
+ */
+export const POLYFILLED_STYLE_ATTRIBUTE = 'data-generated-by-polyfill';
+
+/**
  * Make the shifted custom properties non-inherited.
  *
  * Every property we shift (insets, margins, sizing, self-alignment,
@@ -80,6 +88,7 @@ export function registerShiftedProperties() {
       .map((customProperty) => `${customProperty}: initial;`)
       .join('\n  ');
     const style = document.createElement('style');
+    style.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
     style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
     document.head.append(style);
     propertiesMadeNonInheriting = true;
