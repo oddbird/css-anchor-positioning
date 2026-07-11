@@ -36,11 +36,10 @@ export const enum AnchorScopeValue {
  * Gets the computed value of a CSS property for an element or pseudo-element.
  *
  * Note: properties that are not natively supported are read from the custom
- * property they were shifted into. Where `CSS.registerProperty` is supported
- * (Safari 16.4+, Firefox 128+), those custom properties are registered as
- * non-inherited (see `registerShiftedProperties`), so this mirrors the
- * (non-inherited) behavior of the properties they stand in for. On older
- * engines they fall back to inheriting like any other custom property.
+ * property they were shifted into. `registerShiftedProperties` makes those
+ * custom properties non-inherited (via `CSS.registerProperty` where supported,
+ * or a universal `initial` reset on older engines), so this mirrors the
+ * (non-inherited) behavior of the properties they stand in for.
  */
 export function getCSSPropertyValue(
   el: HTMLElement | PseudoElement,
@@ -211,12 +210,10 @@ export function getElementsBySelector(
 
 /**
  * Checks whether the given element has the given anchor name, based on the
- * element's computed style. Where `CSS.registerProperty` is supported, our
- * `--anchor-name` custom property is registered as non-inherited (see
+ * element's computed style. `registerShiftedProperties` makes our
+ * `--anchor-name` custom property non-inherited (see
  * `registerShiftedProperties`), so this reflects only a value set directly on
- * the element, matching native `anchor-name`. On older engines the custom
- * property inherits, so this should only be called for elements known to have
- * an explicitly set value for `anchor-name`.
+ * the element, matching native `anchor-name`.
  */
 export function hasAnchorName(
   el: PseudoElement | HTMLElement,
@@ -234,12 +231,9 @@ export function hasAnchorName(
 
 /**
  * Checks whether the given element serves as a scope for the given anchor.
- * Where `CSS.registerProperty` is supported, our `--anchor-scope` custom
- * property is registered as non-inherited (see `registerShiftedProperties`), so
- * this reflects only a value set directly on the element, matching native
- * `anchor-scope`. On older engines the custom property inherits, so this should
- * only be called for elements known to have an explicitly set value for
- * `anchor-scope`.
+ * `registerShiftedProperties` makes our `--anchor-scope` custom property
+ * non-inherited, so this reflects only a value set directly on the element,
+ * matching native `anchor-scope`.
  */
 export function hasAnchorScope(
   el: PseudoElement | HTMLElement,

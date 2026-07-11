@@ -457,3 +457,52 @@ test('does not change position if anchor is invalid', async ({ page }) => {
   await expectWithinOne(target, 'top', 0);
   await expectWithinOne(target, 'left', 0);
 });
+
+test('emulates non-inheritance of shifted properties without `CSS.registerProperty`', async ({
+  page,
+}) => {
+  // Simulate an engine without `CSS.registerProperty` (e.g. Firefox < 128),
+  // where the shifted custom properties would otherwise inherit. The polyfill
+  // falls back to injecting a universal `initial` reset to emulate the
+  // non-inherited behavior of the properties they stand in for. See
+  // https://github.com/oddbird/css-anchor-positioning/issues/279.
+  await page.addInitScript(() => {
+    delete (CSS as unknown as { registerProperty?: unknown }).registerProperty;
+  });
+  await page.goto('/');
+  expect(await page.evaluate(() => typeof CSS.registerProperty)).not.toBe(
+    'function',
+  );
+
+  await applyPolyfill(page);
+
+  // The combined-tactics demo's `.scroll-container` sets `height: 400px`, which
+  // is shifted into `--height-<uuid>`. Without emulated non-inheritance that
+  // value would leak onto the descendant target and corrupt its generated
+  // fallback (the Firefox < 128 bug). Assert the container reads back the
+  // shifted value while the descendant target reads back empty.
+  const { containerHeight, targetHeight } = await page.evaluate(() => {
+    // Discover the shifted `--height-<uuid>` property name from the reset style.
+    const resetText = [...document.head.querySelectorAll('style')]
+      .map((el) => el.textContent ?? '')
+      .find((text) => /--height-[\w-]+:\s*initial/.test(text))!;
+    const heightProp = resetText.match(/(--height-[\w-]+):\s*initial/)![1];
+    const container = document.querySelector(
+      '#position-try-tactics-combined .scroll-container',
+    ) as HTMLElement;
+    const target = document.getElementById(
+      'my-target-try-tactics-combined',
+    ) as HTMLElement;
+    return {
+      containerHeight: getComputedStyle(container)
+        .getPropertyValue(heightProp)
+        .trim(),
+      targetHeight: getComputedStyle(target)
+        .getPropertyValue(heightProp)
+        .trim(),
+    };
+  });
+
+  expect(containerHeight).toBe('400px');
+  expect(targetHeight).toBe('');
+});

@@ -30,42 +30,60 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
 );
 
 /**
- * Register the shifted custom properties as non-inherited.
+ * Make the shifted custom properties non-inherited.
  *
  * Every property we shift (insets, margins, sizing, self-alignment,
  * `position-anchor`, `position-area`, `anchor-name`, `anchor-scope`) is
  * non-inherited in CSS, but custom properties inherit by default. Without
- * registering them as non-inherited, a value set on an ancestor (e.g.
- * `height: 400px` on a scroll container) would be inherited by descendants
- * through the shifted custom property and incorrectly read back as if it were
- * set directly on them — leaking, for example, into every generated position
- * fallback. See https://github.com/oddbird/css-anchor-positioning/issues/279.
+ * making them non-inherited, a value set on an ancestor (e.g. `height: 400px`
+ * on a scroll container) would be inherited by descendants through the shifted
+ * custom property and incorrectly read back as if it were set directly on them
+ * -- leaking, for example, into every generated position fallback. See
+ * https://github.com/oddbird/css-anchor-positioning/issues/279.
  *
- * Registered properties are global to the document (including shadow trees), so
- * this only needs to run once.
+ * Where `CSS.registerProperty` is supported (Safari 16.4+, Firefox 128+), we
+ * register the properties with `inherits: false`. This is global to the
+ * document (including shadow trees), so it only needs to run once.
+ *
+ * On older engines we fall back to injecting a universal rule that resets each
+ * shifted property to `initial` on every element (and the `::before`/`::after`
+ * pseudo-elements we read). For an unregistered custom property, `initial` is
+ * the guaranteed-invalid value, so any element that doesn't explicitly set the
+ * property reads back as empty instead of inheriting its ancestor's value --
+ * emulating non-inheritance. The reset has the lowest possible specificity, so
+ * real declarations still win, and it only touches our private custom
+ * properties, never the native properties that drive layout. Injected into
+ * `document.head`, this reset does not reach separate shadow trees.
  */
-let propertiesRegistered = false;
+let propertiesMadeNonInheriting = false;
 export function registerShiftedProperties() {
-  if (
-    propertiesRegistered ||
-    typeof CSS === 'undefined' ||
-    typeof CSS.registerProperty !== 'function'
-  ) {
+  if (propertiesMadeNonInheriting || typeof CSS === 'undefined') {
     return;
   }
-  for (const customProperty of Object.values(SHIFTED_PROPERTIES)) {
-    try {
-      CSS.registerProperty({
-        name: customProperty,
-        syntax: '*',
-        inherits: false,
-      });
-    } catch {
-      // Ignore properties that are already registered (e.g. by an earlier run
-      // of the polyfill).
+  const customProperties = Object.values(SHIFTED_PROPERTIES);
+  if (typeof CSS.registerProperty === 'function') {
+    for (const customProperty of customProperties) {
+      try {
+        CSS.registerProperty({
+          name: customProperty,
+          syntax: '*',
+          inherits: false,
+        });
+      } catch {
+        // Ignore properties that are already registered (e.g. by an earlier run
+        // of the polyfill).
+      }
     }
+    propertiesMadeNonInheriting = true;
+  } else if (typeof document !== 'undefined') {
+    const resets = customProperties
+      .map((customProperty) => `${customProperty}: initial;`)
+      .join('\n  ');
+    const style = document.createElement('style');
+    style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
+    document.head.append(style);
+    propertiesMadeNonInheriting = true;
   }
-  propertiesRegistered = true;
 }
 
 /**
