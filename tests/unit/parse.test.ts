@@ -1,3 +1,5 @@
+/* eslint-disable vitest/valid-expect */
+
 import { parseCSS } from '../../src/parse.js';
 import { type StyleData } from '../../src/utils.js';
 import {
