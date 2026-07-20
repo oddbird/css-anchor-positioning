@@ -222,20 +222,26 @@ following features:
 - vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
   https://github.com/whatwg/html/pull/9144)
-- `position-area` is polyfilled by adding a wrapping element around the target,
-  which adds a few differences:
-  - This breaks selectors that rely on a direct relationship with the target,
-    for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+- `position-area` support has a few differences from native behavior:
   - Overflow alignment is not applied for a target that overflows its
     inset-modified containing block but would still fit within its original
     containing block. In other words, a polyfilled target may be placed in a
     `position-area` grid section outside its containing block, where the
     implementation would move the target inside the containing block.
-  - For `popover` targets, the browser promotes the element to the top layer
-    when it is shown, which makes the viewport (not the wrapper) its containing
-    block. To work around this, the polyfill strips any non-`auto` inset from
-    the target (setting `inset: auto`) and re-applies it as padding on the
-    wrapper, so the wrapper continues to drive positioning.
+  - When the polyfill emulates the containing block by adding a wrapping element
+    around the target (see the [`positionAreaContainingBlock`](#positionareacontainingblock)
+    option), this adds further differences:
+    - It breaks selectors that rely on a direct relationship with the target,
+      for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+    - For `popover` targets, the browser promotes the element to the top layer
+      when it is shown, which makes the viewport (not the wrapper) its
+      containing block. To work around this, the polyfill strips any non-`auto`
+      inset from the target (setting `inset: auto`) and re-applies it as padding
+      on the wrapper, so the wrapper continues to drive positioning.
+  - When the wrapper is not added, styles that resolve against the containing
+    block — percentage sizes, `auto` or percentage margins, percentage padding,
+    or `stretch`/`anchor-center` self-alignment — will not match native
+    behavior.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.

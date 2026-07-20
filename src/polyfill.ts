@@ -748,7 +748,7 @@ export async function polyfill(
       styleData = transformCSS(styleData, undefined, options.roots);
     }
     // parse CSS
-    const parsedCSS = await parseCSS(styleData, { roots: options.roots });
+    const parsedCSS = await parseCSS(styleData, options);
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
   } catch (error) {
