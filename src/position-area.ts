@@ -139,8 +139,7 @@ export function isContainingBlockDependentDeclaration(
     return (
       val.includes('%') ||
       val.includes('stretch') ||
-      val.includes('fill-available') ||
-      val.includes('webkit-fill-available')
+      val.includes('-webkit-fill-available')
     );
   }
   if (MARGIN_PROPERTIES.includes(prop)) {
