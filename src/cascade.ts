@@ -64,10 +64,11 @@ export const POLYFILLED_STYLE_ATTRIBUTE = 'data-generated-by-polyfill';
  * real declarations still win, and it only touches our private custom
  * properties, never the native properties that drive layout. A `<style>` does
  * not pierce shadow boundaries, so the reset is injected once per polyfilled
- * root (`document` and any shadow roots in `roots`).
+ * root (`document` and any shadow roots in `roots`). We dedupe against the live
+ * DOM (rather than tracking injected roots separately) so this self-heals if a
+ * container's contents are later replaced.
  */
 let propertiesRegistered = false;
-const resetContainers = new WeakSet<Node>();
 export function registerShiftedProperties(
   roots: AnchorPositioningRoot[] = [document],
 ) {
@@ -95,21 +96,27 @@ export function registerShiftedProperties(
     }
     propertiesRegistered = true;
   } else if (typeof document !== 'undefined') {
+    const [firstProperty] = customProperties;
     const resets = customProperties
       .map((customProperty) => `${customProperty}: initial;`)
       .join('\n  ');
     for (const root of roots) {
       const container = getRootStyleContainer(root);
       // Inject the reset once per container (a shadow root, or a document head
-      // shared by several light-DOM roots).
-      if (resetContainers.has(container)) {
+      // shared by several light-DOM roots). Dedupe against the live DOM: scope
+      // the query to our own generated styles via the marker attribute, then
+      // confirm it's the reset (not a position-area mapping style, which shares
+      // the attribute) by its first declaration.
+      const alreadyReset = [
+        ...container.querySelectorAll(`style[${POLYFILLED_STYLE_ATTRIBUTE}]`),
+      ].some((el) => el.textContent?.includes(`${firstProperty}: initial`));
+      if (alreadyReset) {
         continue;
       }
       const style = document.createElement('style');
       style.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
       style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
       container.append(style);
-      resetContainers.add(container);
     }
   }
 }
