@@ -2,10 +2,12 @@ import type { Block, CssNode } from 'css-tree';
 import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
+import { type AnchorPositioningRoot } from './polyfill.js';
 import { ACCEPTED_POSITION_TRY_PROPERTIES } from './syntax.js';
 import {
   generateCSS,
   getAST,
+  getRootStyleContainer,
   INSTANCE_UUID,
   isDeclaration,
   type StyleData,
@@ -60,16 +62,25 @@ export const POLYFILLED_STYLE_ATTRIBUTE = 'data-generated-by-polyfill';
  * property reads back as empty instead of inheriting its ancestor's value --
  * emulating non-inheritance. The reset has the lowest possible specificity, so
  * real declarations still win, and it only touches our private custom
- * properties, never the native properties that drive layout. Injected into
- * `document.head`, this reset does not reach separate shadow trees.
+ * properties, never the native properties that drive layout. A `<style>` does
+ * not pierce shadow boundaries, so the reset is injected once per polyfilled
+ * root (`document` and any shadow roots in `roots`).
  */
-let propertiesMadeNonInheriting = false;
-export function registerShiftedProperties() {
-  if (propertiesMadeNonInheriting || typeof CSS === 'undefined') {
+let propertiesRegistered = false;
+const resetContainers = new WeakSet<Node>();
+export function registerShiftedProperties(
+  roots: AnchorPositioningRoot[] = [document],
+) {
+  if (typeof CSS === 'undefined') {
     return;
   }
   const customProperties = Object.values(SHIFTED_PROPERTIES);
   if (typeof CSS.registerProperty === 'function') {
+    // Registered properties are global to the document (including shadow
+    // trees), so this only needs to run once, regardless of roots.
+    if (propertiesRegistered) {
+      return;
+    }
     for (const customProperty of customProperties) {
       try {
         CSS.registerProperty({
@@ -82,16 +93,24 @@ export function registerShiftedProperties() {
         // of the polyfill).
       }
     }
-    propertiesMadeNonInheriting = true;
+    propertiesRegistered = true;
   } else if (typeof document !== 'undefined') {
     const resets = customProperties
       .map((customProperty) => `${customProperty}: initial;`)
       .join('\n  ');
-    const style = document.createElement('style');
-    style.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
-    style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
-    document.head.append(style);
-    propertiesMadeNonInheriting = true;
+    for (const root of roots) {
+      const container = getRootStyleContainer(root);
+      // Inject the reset once per container (a shadow root, or a document head
+      // shared by several light-DOM roots).
+      if (resetContainers.has(container)) {
+        continue;
+      }
+      const style = document.createElement('style');
+      style.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+      style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
+      container.append(style);
+      resetContainers.add(container);
+    }
   }
 }
 
@@ -195,8 +214,11 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
  * that are not yet natively supported, or are needed in a different format for
  * the polyfill to work as expected.
  */
-export function cascadeCSS(styleData: StyleData[]) {
-  registerShiftedProperties();
+export function cascadeCSS(
+  styleData: StyleData[],
+  roots?: AnchorPositioningRoot[],
+) {
+  registerShiftedProperties(roots);
 
   for (const styleObj of styleData) {
     let changed = false;

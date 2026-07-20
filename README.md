@@ -192,11 +192,10 @@ following features:
 - The polyfill shifts not-yet-supported properties (e.g. `anchor-name`,
   `anchor-scope`) into custom properties, which it makes non-inherited so they
   mirror the non-inherited behavior of the properties they stand in for -- via
-  `CSS.registerProperty` (Safari 16.4+, Firefox 128+), or a universal `initial`
-  reset on older engines. The reset is injected into the document, so it does
-  not reach separate shadow trees; on engines without `CSS.registerProperty`, a
-  value set on an ancestor (e.g. a `height` on a scroll container) inside a
-  shadow tree may be incorrectly read back on descendants in that tree.
+  `CSS.registerProperty` (Safari 16.4+, Firefox 128+), or, on older engines, a
+  universal `initial` reset injected once per polyfilled root. This reaches
+  every root the polyfill reads these properties from (`document` and any shadow
+  roots passed in the `roots` option).
 - `anchor-center` value for `justify-self`, `align-self`, `justify-items`, and
   `align-items` properties
 - `position-visibility` property

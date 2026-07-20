@@ -678,7 +678,7 @@ export async function polyfill(
   // likely to be caused by parse errors.
   try {
     // pre parse CSS styles that we need to cascade
-    const cascadeCausedChanges = cascadeCSS(styleData);
+    const cascadeCausedChanges = cascadeCSS(styleData, options.roots);
     if (cascadeCausedChanges) {
       styleData = transformCSS(styleData, undefined, options.roots);
     }
