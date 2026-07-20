@@ -340,24 +340,6 @@ async function getAnchorEl(
   );
 }
 
-/**
- * Whether the element matches any of the given selectors. Selectors that are
- * not valid for `Element.matches()` (e.g. those containing pseudo-elements) are
- * skipped rather than throwing.
- */
-function matchesAnySelector(el: HTMLElement, selectors: Set<string>): boolean {
-  for (const selector of selectors) {
-    try {
-      if (el.matches(selector)) {
-        return true;
-      }
-    } catch {
-      // Ignore selectors that can't be used with `matches()`.
-    }
-  }
-  return false;
-}
-
 export async function parseCSS(
   styleData: StyleData[],
   options: NormalizedAnchorPositioningPolyfillOptions,
@@ -861,9 +843,43 @@ export async function parseCSS(
   //
   // .foo { position-area: start }
   // .foo { position-area: end }
+  const positionAreaTargets = Object.entries(positionAreas).map(
+    ([targetSel, positions]) => ({
+      targetSel,
+      positions,
+      targets: querySelectorAllRoots(options.roots, targetSel),
+    }),
+  );
 
-  for (const [targetSel, positions] of Object.entries(positionAreas)) {
-    const targets = querySelectorAllRoots(options.roots, targetSel);
+  // In `'auto'` mode, flag the position-area targets whose own styles resolve
+  // against the containing block, so the per-target decision in the loop below
+  // is an O(1) lookup. We resolve the containing-block-dependent selectors to
+  // elements once (using the native selector engine) and keep only the ones
+  // that are actually position-area targets, rather than testing every target
+  // against every dependent selector.
+  const containingBlockDependentTargets = new WeakSet<HTMLElement>();
+  if (positionAreaContainingBlock === 'auto') {
+    const allTargets = new Set(
+      positionAreaTargets.flatMap(({ targets }) => targets),
+    );
+    for (const selector of containingBlockDependentSelectors) {
+      let matched: HTMLElement[];
+      try {
+        matched = querySelectorAllRoots(options.roots, selector);
+      } catch {
+        // Ignore selectors that can't be used with `querySelectorAll()`
+        // (e.g. those containing pseudo-elements).
+        continue;
+      }
+      for (const el of matched) {
+        if (allTargets.has(el)) {
+          containingBlockDependentTargets.add(el);
+        }
+      }
+    }
+  }
+
+  for (const { targetSel, positions, targets } of positionAreaTargets) {
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
       const anchorEl = await getAnchorEl(
@@ -878,7 +894,7 @@ export async function parseCSS(
       // option value is used directly.
       const needsWrapper =
         positionAreaContainingBlock === 'auto'
-          ? matchesAnySelector(targetEl, containingBlockDependentSelectors)
+          ? containingBlockDependentTargets.has(targetEl)
           : positionAreaContainingBlock;
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper (or is marked with a
