@@ -28,7 +28,10 @@ describe('fetch stylesheet', () => {
   it('fetches CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
     fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
-    const styleData = await fetchCSS({ roots: [document] });
+    const styleData = await fetchCSS({
+      roots: [document],
+      positionAreaContainingBlock: true,
+    });
 
     expect(styleData).toHaveLength(2);
     expect(styleData[0].url?.toString()).toBe(`${location.origin}/sample.css`);
@@ -87,7 +90,10 @@ describe('fetch inline styles', () => {
   it('fetch returns inline CSS', async () => {
     const css = getSampleCSS('anchor-positioning');
     fetchMock.getOnce('end:sample.css', requestWithCSSType(css));
-    const styleData = await fetchCSS({ roots: [document] });
+    const styleData = await fetchCSS({
+      roots: [document],
+      positionAreaContainingBlock: true,
+    });
 
     expect(styleData).toHaveLength(4);
     expect(styleData[2].url).toBeUndefined();
@@ -168,7 +174,11 @@ describe('fetch styles manually', () => {
   });
 
   it('fetches only inline styles if `elements` is empty', async () => {
-    const styleData = await fetchCSS({ roots: [document], elements: [] });
+    const styleData = await fetchCSS({
+      roots: [document],
+      elements: [],
+      positionAreaContainingBlock: true,
+    });
 
     expect(styleData).toHaveLength(2);
   });
@@ -178,6 +188,7 @@ describe('fetch styles manually', () => {
       roots: [document],
       elements: [],
       excludeInlineStyles: true,
+      positionAreaContainingBlock: true,
     });
 
     expect(styleData).toHaveLength(0);
