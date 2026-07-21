@@ -33,6 +33,13 @@
         class AnchorWebComponent extends HTMLElement {}
         customElements.define('anchor-web-component', AnchorWebComponent);
 
+        // Hosts a declarative shadow root whose anchor is a `::before`
+        // pseudo-element. Like `<anchor-web-component>`, it relies on the
+        // explicit `polyfill({ roots })` call below rather than an
+        // adopted-stylesheet patch.
+        class AnchorPseudoElement extends HTMLElement {}
+        customElements.define('anchor-pseudo-element', AnchorPseudoElement);
+
         class AnchorAdoptedStyles extends HTMLElement {
           connectedCallback() {
             this.attachShadow({ mode: 'open' });
@@ -111,12 +118,15 @@
           // Now define the custom elements
           defineCustomElements();
 
-          // Load the polyfill explicitly for the <anchor-web-component> demo.
-          // The <anchor-adopted-styles> and <position-anchor-on-host> demos use
-          // `adoptedStyleSheets`, so they are already covered by the adopted
-          // stylesheet patch.
+          // Load the polyfill explicitly for the <anchor-web-component> and
+          // <anchor-pseudo-element> demos. The <anchor-adopted-styles> and
+          // <position-anchor-on-host> demos use `adoptedStyleSheets`, so they
+          // are already covered by the adopted stylesheet patch.
           await polyfill({
-            roots: [document.querySelector('anchor-web-component').shadowRoot],
+            roots: [
+              document.querySelector('anchor-web-component').shadowRoot,
+              document.querySelector('anchor-pseudo-element').shadowRoot,
+            ],
           });
 
           btn.innerText = 'Polyfill Applied';
@@ -245,6 +255,96 @@ class AnchorDemo extends HTMLElement {
   }
 }
 customElements.define("anchor-web-component", AnchorDemo);
+&lt;/script&gt;
+</code></pre>
+    </section>
+    <section id="pseudo-element" class="demo-item">
+      <h2>
+        <a href="#pseudo-element" aria-hidden="true">🔗</a>
+        Works when the anchor is a pseudo-element inside a shadow root
+      </h2>
+      <div class="demo-elements">
+        <anchor-pseudo-element>
+          <template shadowrootmode="open">
+            <link rel="stylesheet" href="/demo.css" />
+            <style>
+              #shadow-pseudo-anchor {
+                display: block;
+                width: fit-content;
+              }
+              #shadow-pseudo-anchor::before {
+                content: 'Anchor';
+                display: block;
+                width: 120px;
+                height: 100px;
+                background: var(--anchor-color);
+                border-radius: var(--radius-1);
+                color: white;
+                font-weight: bold;
+                text-align: center;
+                align-content: center;
+                anchor-name: --shadow-pseudo-anchor;
+              }
+              #shadow-pseudo-target {
+                position: absolute;
+                position-anchor: --shadow-pseudo-anchor;
+                top: anchor(bottom);
+                left: anchor(right);
+              }
+            </style>
+            <div style="position: relative">
+              <span id="shadow-pseudo-anchor"></span>
+              <div id="shadow-pseudo-target" class="target">Target</div>
+            </div>
+          </template>
+        </anchor-pseudo-element>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: the Target is positioned against the anchor's
+          <code>::before</code> pseudo-element (its top-left corner meets the
+          pseudo-element's bottom-right corner).
+        </p>
+        <p>
+          To measure a pseudo-element the polyfill creates a temporary "fake
+          pseudo-element" and a matching <code>&lt;style&gt;</code>. That style
+          is appended to the shadow root, since a <code>&lt;style&gt;</code> in
+          <code>document.head</code> would not apply inside the shadow root.
+        </p>
+      </div>
+
+      <pre><code class="language-html"
+>&lt;anchor-pseudo-element&gt;
+  &lt;template shadowrootmode="open"&gt;
+    &lt;style&gt;
+    #shadow-pseudo-anchor::before {
+      content: "";
+      display: block;
+      width: 120px;
+      height: 100px;
+      anchor-name: --shadow-pseudo-anchor;
+    }
+
+    #shadow-pseudo-target {
+      position: absolute;
+      position-anchor: --shadow-pseudo-anchor;
+      top: anchor(bottom);
+      left: anchor(right);
+    }
+    &lt;/style&gt;
+    &lt;div style="position: relative"&gt;
+      &lt;span id="shadow-pseudo-anchor"&gt;&lt;/span&gt;
+      &lt;div id="shadow-pseudo-target"&gt;Target&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/template&gt;
+&lt;/anchor-pseudo-element&gt;
+&lt;script&gt;
+class AnchorPseudoElement extends HTMLElement {
+  connectedCallback() {
+    window.ANCHOR_POSITIONING_POLYFILL({ roots: [this.shadowRoot] });
+  }
+}
+customElements.define("anchor-pseudo-element", AnchorPseudoElement);
 &lt;/script&gt;
 </code></pre>
     </section>

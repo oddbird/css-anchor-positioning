@@ -93,7 +93,15 @@ function createFakePseudoElement(
   // Hide the pseudo-element while the "fake pseudo-element" is visible.
   sheet.textContent += `${selector} { display: none !important; }`;
 
-  document.head.append(sheet);
+  // Append the sheet to the element's own root, not `document.head`: a
+  // `<style>` in `document.head` does not apply inside a shadow root, so the
+  // `content` rule (which sizes the fake pseudo-element) and the `display: none`
+  // rule (which hides the real pseudo-element) would both be ignored when
+  // `element` lives in a shadow tree. The fake pseudo-element is inserted into
+  // `element` below, so it shares this same root.
+  const root = element.getRootNode();
+  const styleContainer = root instanceof ShadowRoot ? root : document.head;
+  styleContainer.append(sheet);
 
   const insertionPoint =
     pseudoElementPart === '::before' ? 'afterbegin' : 'beforeend';
