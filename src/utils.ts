@@ -170,6 +170,20 @@ export function writeAdoptedStylesheet(
   return sheet;
 }
 
+// Resolves the node that a polyfill-generated `<style>` should be appended to
+// for a given root (or an element within one), so its rules apply to elements
+// created within that root. Styles in `document.head` do not pierce into a
+// shadow root, so styles for a shadow root (or an element inside one) must be
+// appended there instead.
+export function getRootStyleContainer(
+  root: AnchorPositioningRoot,
+): ShadowRoot | HTMLHeadElement {
+  if (root instanceof ShadowRoot) return root;
+  if (root instanceof Document) return root.head;
+  const rootNode = root.getRootNode();
+  return rootNode instanceof ShadowRoot ? rootNode : document.head;
+}
+
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
 
 export function splitCommaList(list: List<CssNode>) {

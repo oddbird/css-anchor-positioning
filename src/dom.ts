@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
 import { type AnchorPositioningRoot } from './polyfill.js';
+import { getRootStyleContainer } from './utils.js';
 
 /**
  * Representation of a CSS selector that allows getting the element part and
@@ -99,9 +100,7 @@ function createFakePseudoElement(
   // rule (which hides the real pseudo-element) would both be ignored when
   // `element` lives in a shadow tree. The fake pseudo-element is inserted into
   // `element` below, so it shares this same root.
-  const root = element.getRootNode();
-  const styleContainer = root instanceof ShadowRoot ? root : document.head;
-  styleContainer.append(sheet);
+  getRootStyleContainer(element).append(sheet);
 
   const insertionPoint =
     pseudoElementPart === '::before' ? 'afterbegin' : 'beforeend';
