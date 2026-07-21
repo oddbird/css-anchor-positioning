@@ -326,6 +326,17 @@ test.describe('with `positionAreaContainingBlock: auto`', () => {
     await expect(target).toHaveCSS('justify-self', 'end');
     await expect(target).toHaveCSS('align-self', 'end');
 
+    // The reason this target is wrapped: its `padding-right: 50%` must resolve
+    // against the wrapper (the position-area cell), not the original parent.
+    // Confirm the computed padding is half the wrapper's content width.
+    const wrapperContentWidth = await targetWrapper.evaluate(
+      (el) => el.clientWidth,
+    );
+    const paddingRight = await target.evaluate((el) =>
+      parseFloat(getComputedStyle(el).paddingRight),
+    );
+    expect(paddingRight).toBeCloseTo(wrapperContentWidth / 2, 0);
+
     // Right sides should be aligned
     expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
       anchorBox!.x + anchorBox!.width,

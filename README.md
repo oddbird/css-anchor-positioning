@@ -197,6 +197,19 @@ natively creates for a target.
   positions all other targets directly. This keeps the wrapper's correctness
   where it matters while avoiding the extra element for the common case.
 
+  Two caveats apply to `'auto'`:
+
+  - The wrap decision is made from a target's base styles when the polyfill
+    runs. Containing-block-dependent styles that appear only in a
+    `@position-try` fallback block are not detected, so a target that becomes
+    containing-block dependent only in a fallback may be positioned without the
+    wrapper it needs.
+  - The decision is computed once and not re-evaluated. If author CSS later
+    toggles a containing-block-dependent style on a target (for example by
+    adding a class with a percentage size or `auto` margin), the target is not
+    re-wrapped. Use `true` when a target's containing-block dependence can
+    change at runtime.
+
 ## Limitations
 
 While this polyfill supports many basic use cases, it doesn't (yet) support the

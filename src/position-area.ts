@@ -74,6 +74,26 @@ const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
 const paWrapperProperty = (prop: string) =>
   `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
 
+// The physical sides the polyfill sets as insets, on the wrapper or (in the
+// unwrapped path) directly on the target. A single source of truth so the
+// mapping-stylesheet writes, the `var()` reads, and the non-inheritance
+// registration below can't drift out of sync.
+const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
+
+// Custom properties the polyfill both sets on and reads from the *same* element
+// -- the wrapper's insets, and (in the unwrapped path) the target's insets.
+// These must be registered non-inherited: unlike
+// `--pa-value-{justify,align}-self` (which are set on the wrapper and read on
+// the target child, and so must inherit), an inset set on one `position-area`
+// target would otherwise leak through inheritance onto a descendant that is
+// itself a `position-area` target, overriding its `auto` fallback. See
+// `registerShiftedProperties` in cascade.ts and
+// https://github.com/oddbird/css-anchor-positioning/issues/279.
+export const NON_INHERITED_POSITION_AREA_PROPERTIES = [
+  ...PA_INSET_SIDES.map((side) => paValueProperty(side)),
+  ...PA_INSET_SIDES.map((side) => paWrapperProperty(side)),
+];
+
 // Set this as an attribute on a wrapper with the uuid of the winning
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
 export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
@@ -111,8 +131,8 @@ export function hasContainingBlockDependentDeclaration(
   for (const prop of SIZING_PROPS) {
     const val = getCSSPropertyValue(element, prop);
     if (
-      ['%', 'stretch', '-webkit-fill-available'].some((testVal) =>
-        val.includes(testVal),
+      ['%', 'stretch', 'fit-content', '-webkit-fill-available'].some(
+        (testVal) => val.includes(testVal),
       )
     ) {
       return true;
@@ -641,16 +661,15 @@ export function addPositionAreaDeclarationBlockStyles(
       'align-self',
       `var(${paValueProperty('align-self')}, normal)`,
     );
-    appendDeclaration('top', `var(${paValueProperty('top')}, auto)`);
-    appendDeclaration('left', `var(${paValueProperty('left')}, auto)`);
-    appendDeclaration('right', `var(${paValueProperty('right')}, auto)`);
-    appendDeclaration('bottom', `var(${paValueProperty('bottom')}, auto)`);
+    PA_INSET_SIDES.forEach((prop) =>
+      appendDeclaration(prop, `var(${paValueProperty(prop)}, auto)`),
+    );
   } else {
     const props = positionAreaContainingBlock
       ? // Insets are applied to a wrapping element
         ['justify-self', 'align-self']
       : // Insets are applied to the target itself
-        ['top', 'left', 'right', 'bottom'];
+        [...PA_INSET_SIDES];
     props.forEach((prop) =>
       appendDeclaration(prop, `var(${paValueProperty(prop)})`),
     );
@@ -704,7 +723,7 @@ export function wrapperForPositionedElement(
     // `'auto'` mode the (shared) target rule reads `--pa-value-*` for its insets
     // with an `auto` fallback; using `--pa-wrapper-*` here keeps the wrapper's
     // inset values from being inherited by the target as its own insets.
-    ['top', 'left', 'right', 'bottom'].forEach((prop) => {
+    PA_INSET_SIDES.forEach((prop) => {
       wrapperEl.style.setProperty(prop, `var(${paWrapperProperty(prop)})`);
     });
     // Insert the wrapper relative to the target itself rather than going
@@ -738,7 +757,7 @@ export async function dataForPositionAreaTarget(
   targetEl: HTMLElement,
   positionAreaData: PositionAreaDeclaration,
   anchorEl: HTMLElement | PseudoElement | null,
-  positionAreaContainingBlock = true,
+  wrap = true,
 ): Promise<PositionAreaTargetData> {
   const targetUUID = `--pa-target-${nanoid(12)}`;
   const writingModeModifiedGrid = await getWritingModeModifiedGrid(
@@ -748,7 +767,7 @@ export async function dataForPositionAreaTarget(
   const insets = getInsets(writingModeModifiedGrid);
 
   let alignmentGrid;
-  if (positionAreaContainingBlock) {
+  if (wrap) {
     // The wrapper inherits the writing mode of the containing block, so
     // logical alignment values are resolved natively by CSS. Only `self`
     // writing modes (based on the target's own writing mode) need the
@@ -778,7 +797,7 @@ export async function dataForPositionAreaTarget(
   };
 
   let wrapperEl;
-  if (positionAreaContainingBlock) {
+  if (wrap) {
     wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
   } else {
     markPositionAreaTarget(targetEl, targetUUID);
@@ -798,12 +817,12 @@ export async function dataForPositionAreaTarget(
 }
 
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
+  const insets = PA_INSET_SIDES.map(
+    (side) => `${paWrapperProperty(side)}: var(${targetUUID}-${side});`,
+  ).join('\n      ');
   return `
     [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      ${paWrapperProperty('top')}: var(${targetUUID}-top);
-      ${paWrapperProperty('left')}: var(${targetUUID}-left);
-      ${paWrapperProperty('right')}: var(${targetUUID}-right);
-      ${paWrapperProperty('bottom')}: var(${targetUUID}-bottom);
+      ${insets}
       ${paValueProperty('justify-self')}: var(${targetUUID}-justify-self);
       ${paValueProperty('align-self')}: var(${targetUUID}-align-self);
     }
@@ -811,12 +830,12 @@ export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
 }
 
 export function activeTargetStyles(targetUUID: string, selectorUUID: string) {
+  const insets = PA_INSET_SIDES.map(
+    (side) => `${paValueProperty(side)}: var(${targetUUID}-${side});`,
+  ).join('\n      ');
   return `
     [${POSITION_AREA_TARGET_ATTRIBUTE}="${selectorUUID}"][${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      ${paValueProperty('top')}: var(${targetUUID}-top);
-      ${paValueProperty('left')}: var(${targetUUID}-left);
-      ${paValueProperty('right')}: var(${targetUUID}-right);
-      ${paValueProperty('bottom')}: var(${targetUUID}-bottom);
+      ${insets}
     }
   `.replaceAll('\n', '');
 }

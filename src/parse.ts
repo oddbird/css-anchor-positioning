@@ -346,8 +346,7 @@ export async function parseCSS(
 ) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
-  const positionAreaContainingBlock =
-    options.positionAreaContainingBlock ?? true;
+  const positionAreaContainingBlock = options.positionAreaContainingBlock;
 
   resetStores();
 

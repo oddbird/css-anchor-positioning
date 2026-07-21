@@ -3,6 +3,7 @@ import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
 import { type AnchorPositioningRoot } from './polyfill.js';
+import { NON_INHERITED_POSITION_AREA_PROPERTIES } from './position-area.js';
 import { ACCEPTED_POSITION_TRY_PROPERTIES, PADDING_PROPS } from './syntax.js';
 import {
   generateCSS,
@@ -53,6 +54,11 @@ export const POLYFILLED_STYLE_ATTRIBUTE = 'data-generated-by-polyfill';
  * -- leaking, for example, into every generated position fallback. See
  * https://github.com/oddbird/css-anchor-positioning/issues/279.
  *
+ * The same treatment is applied to the `position-area` inset custom properties
+ * (`NON_INHERITED_POSITION_AREA_PROPERTIES`), which the polyfill sets directly
+ * on a target (or wrapper); non-inheritance keeps one `position-area` target's
+ * inset from leaking onto a descendant that is itself a `position-area` target.
+ *
  * Where `CSS.registerProperty` is supported (Safari 16.4+, Firefox 128+), we
  * register the properties with `inherits: false`. This is global to the
  * document (including shadow trees), so it only needs to run once.
@@ -77,7 +83,10 @@ export function registerShiftedProperties(
   if (typeof CSS === 'undefined') {
     return;
   }
-  const customProperties = Object.values(SHIFTED_PROPERTIES);
+  const customProperties = [
+    ...Object.values(SHIFTED_PROPERTIES),
+    ...NON_INHERITED_POSITION_AREA_PROPERTIES,
+  ];
   if (typeof CSS.registerProperty === 'function') {
     // Registered properties are global to the document (including shadow
     // trees), so this only needs to run once, regardless of roots.

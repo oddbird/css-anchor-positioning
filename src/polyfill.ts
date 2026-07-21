@@ -306,7 +306,7 @@ export const getPixelValue = async ({
 const isPositionAreaTarget = (
   value: AnchorFunction | PositionAreaTargetData,
 ): value is PositionAreaTargetData => {
-  return 'wrapperEl' in value;
+  return 'targetUUID' in value;
 };
 
 const isAnchorFunction = (
@@ -320,7 +320,7 @@ const isAnchorFunction = (
 // aligned side, so the target keeps its natural size and position based on
 // normal absolute positioning rules. `center` alignment computes the centered
 // offset from the grid area size and the target's margin-box size.
-const resolveAxisInsetValues = (
+export const resolveAxisInsetValues = (
   alignment: 'start' | 'end' | 'center',
   areaStart: string | null,
   areaEnd: string | null,
@@ -721,7 +721,7 @@ export interface AnchorPositioningPolyfillOptions {
 export interface NormalizedAnchorPositioningPolyfillOptions {
   elements?: HTMLElement[];
   excludeInlineStyles?: boolean;
-  positionAreaContainingBlock?: PositionAreaContainingBlock;
+  positionAreaContainingBlock: PositionAreaContainingBlock;
   roots: AnchorPositioningRoot[];
   useAnimationFrame?: boolean;
 }
@@ -748,6 +748,7 @@ function normalizePolyfillOptions(
 
   return Object.assign(options, {
     useAnimationFrame,
+    positionAreaContainingBlock: options.positionAreaContainingBlock ?? true,
   }) as NormalizedAnchorPositioningPolyfillOptions;
 }
 

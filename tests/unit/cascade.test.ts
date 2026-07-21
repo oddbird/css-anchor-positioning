@@ -3,6 +3,7 @@ import {
   registerShiftedProperties,
   SHIFTED_PROPERTIES,
 } from '../../src/cascade.js';
+import { NON_INHERITED_POSITION_AREA_PROPERTIES } from '../../src/position-area.js';
 import { INSTANCE_UUID, type StyleData } from '../../src/utils.js';
 import { cascadeCSSForTest, getSampleCSS } from './../helpers.js';
 
@@ -21,6 +22,20 @@ describe('registerShiftedProperties', () => {
     );
     expect(style!.textContent).toContain('::before');
     expect(style!.textContent).toContain('::after');
+  });
+
+  it('resets the position-area inset custom properties so they do not inherit', () => {
+    // The unwrapped `position-area` path sets these directly on a target; without
+    // the reset an inset would leak onto a descendant that is itself a
+    // `position-area` target. See issue #279.
+    registerShiftedProperties();
+    const style = [...document.head.querySelectorAll('style')].find((el) =>
+      el.textContent?.includes(`${SHIFTED_PROPERTIES['anchor-name']}: initial`),
+    );
+    expect(NON_INHERITED_POSITION_AREA_PROPERTIES.length).toBeGreaterThan(0);
+    for (const property of NON_INHERITED_POSITION_AREA_PROPERTIES) {
+      expect(style!.textContent).toContain(`${property}: initial`);
+    }
   });
 });
 

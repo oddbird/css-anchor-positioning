@@ -4,11 +4,52 @@ import {
   getPixelValue,
   type GetPixelValueOpts,
   polyfill,
+  resolveAxisInsetValues,
   resolveLogicalSideKeyword,
   resolveLogicalSizeKeyword,
 } from '../../src/polyfill.js';
 import { type AnchorSide, type AnchorSize } from '../../src/syntax.js';
 import { cssParseErrors } from '../../src/utils.js';
+
+describe('resolveAxisInsetValues', () => {
+  it.each([
+    // `start`/`end` pin a single side, so the target keeps its natural size.
+    ['start', '10px', '90px', 100, 20, ['10px', 'auto']],
+    ['end', '10px', '90px', 100, 20, ['auto', '90px']],
+    // A missing area edge falls back to the containing-block edge (`0px`).
+    ['start', null, '90px', 100, 20, ['0px', 'auto']],
+    ['end', '10px', null, 100, 20, ['auto', '0px']],
+    // `center` offsets the target's margin box to the area's midpoint:
+    // start + (CB - start - end - marginBox) / 2.
+    // 10 + (100 - 10 - 10 - 20) / 2 = 40
+    ['center', '10px', '10px', 100, 20, ['40px', 'auto']],
+    // Missing edges resolve to `0`: 0 + (100 - 0 - 0 - 40) / 2 = 30
+    ['center', null, null, 100, 40, ['30px', 'auto']],
+    // A target larger than the area yields a negative (still valid) offset:
+    // 0 + (100 - 0 - 0 - 140) / 2 = -20
+    ['center', '0px', '0px', 100, 140, ['-20px', 'auto']],
+  ] as [
+    'start' | 'end' | 'center',
+    string | null,
+    string | null,
+    number,
+    number,
+    [string, string],
+  ][])(
+    '%s (%s, %s) in a %ipx block with a %ipx target -> %s',
+    (alignment, areaStart, areaEnd, cbSize, marginBox, expected) => {
+      expect(
+        resolveAxisInsetValues(
+          alignment,
+          areaStart,
+          areaEnd,
+          cbSize,
+          marginBox,
+        ),
+      ).toEqual(expected);
+    },
+  );
+});
 
 describe('resolveLogicalSideKeyword', () => {
   it.each([

@@ -241,6 +241,23 @@ describe('position-area', () => {
         true,
       );
     });
+
+    it('resolves insets and alignments for an unwrapped target', async () => {
+      // The unwrapped path resolves alignment via the physical
+      // (writing-mode-modified) grid; under the default LTR horizontal writing
+      // mode this matches the wrapped path, so the values are the reference
+      // for the physical `top right` placement.
+      const res = await dataForPositionAreaTarget(
+        createEl(),
+        getPositionAreaDeclaration(createPositionAreaNode(['top', 'right']))!,
+        null,
+        false,
+      );
+      expect(res.insets.block).toEqual([0, 'top']);
+      expect(res.insets.inline).toEqual(['right', 0]);
+      expect(res.alignments.block).toBe('end');
+      expect(res.alignments.inline).toBe('start');
+    });
   });
 
   describe('activeWrapperStyles', () => {
@@ -294,11 +311,14 @@ describe('position-area', () => {
       ['max-block-size', '50%', true],
       ['width', 'stretch', true],
       ['width', '-webkit-fill-available', true],
+      // `fit-content` clamps to the stretch-fit (containing-block) size.
+      ['height', 'fit-content', true],
+      ['width', 'fit-content(200px)', true],
       // Sizes that do not depend on the containing block.
       ['width', '200px', false],
       ['width', 'auto', false],
       ['width', 'max-content', false],
-      ['height', 'fit-content', false],
+      ['width', 'min-content', false],
       // Margins: percentages and `auto` distribute against the CB.
       ['margin', '5%', true],
       ['margin-left', 'auto', true],
