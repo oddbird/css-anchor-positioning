@@ -180,9 +180,28 @@ footer p {
   font-family: var(--font-sans);
 }
 
-.demo-elements:not(.tight) {
+.demo-elements:not(.tight, .scroll-fallback) {
   /* Sync with DEMO_ELEMENT_PADDING in polyfill.test.ts */
   padding: 30px;
+}
+
+/* Fallback demos that scroll their anchor out of view. The target's containing
+   block must be the `.demo-elements` wrapper (outside the scroll container) so
+   scrolling can push the target to overflow and trigger fallbacks: position-try
+   options are evaluated against the inset-modified containing block, not the
+   scrollport, so if the scroll container were the containing block the target
+   would scroll in lockstep with its anchor and never overflow. Making
+   `.scroll-container` non-positioned promotes the containing block up to the
+   wrapper. The wrapper clips its content (so a target whose anchor has scrolled
+   out of view doesn't float over other content) and has no padding, so it
+   tightly bounds the scroll container — both are required for the pattern to
+   work. See https://github.com/oddbird/css-anchor-positioning/issues/279. */
+.demo-elements.scroll-fallback {
+  overflow: clip;
+}
+
+.demo-elements.scroll-fallback .scroll-container {
+  position: static;
 }
 
 .note {

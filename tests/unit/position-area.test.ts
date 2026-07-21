@@ -7,7 +7,7 @@ import {
   getPositionAreaDeclaration,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
-import { getAST } from '../../src/utils.js';
+import { getAST, INSTANCE_UUID } from '../../src/utils.js';
 
 const createPositionAreaNode = (input: string[]) => {
   const css = getAST(`a{position-area:${input.join(' ')}}`) as StyleSheet;
@@ -174,10 +174,10 @@ describe('position-area', () => {
       const style = getComputedStyle(wrapper);
       expect(style.position).toBe('absolute');
       expect(style.display).toBe('grid');
-      expect(style.top).toBe(`var(--pa-value-top)`);
-      expect(style.bottom).toBe(`var(--pa-value-bottom)`);
-      expect(style.left).toBe(`var(--pa-value-left)`);
-      expect(style.right).toBe(`var(--pa-value-right)`);
+      expect(style.top).toBe(`var(--pa-value-top-${INSTANCE_UUID})`);
+      expect(style.bottom).toBe(`var(--pa-value-bottom-${INSTANCE_UUID})`);
+      expect(style.left).toBe(`var(--pa-value-left-${INSTANCE_UUID})`);
+      expect(style.right).toBe(`var(--pa-value-right-${INSTANCE_UUID})`);
       expect(wrapper.getAttribute('data-pa-wrapper-for-uuid')).toBeDefined();
     });
     it('does not rewrap an element', () => {
@@ -195,9 +195,20 @@ describe('position-area', () => {
 
   describe('activeWrapperStyles', () => {
     it('returns the active styles', () => {
-      expect(
-        activeWrapperStyles('targetUUID', 'selectorUUID'),
-      ).toMatchSnapshot();
+      // Built with `INSTANCE_UUID` rather than a stored snapshot, since the
+      // UUID differs per run (see `paValueProperty`).
+      const u = INSTANCE_UUID;
+      expect(activeWrapperStyles('targetUUID', 'selectorUUID')).toBe(
+        '    [data-anchor-position-wrapper="selectorUUID"]' +
+          '[data-pa-wrapper-for-targetUUID] {' +
+          `      --pa-value-top-${u}: var(targetUUID-top);` +
+          `      --pa-value-left-${u}: var(targetUUID-left);` +
+          `      --pa-value-right-${u}: var(targetUUID-right);` +
+          `      --pa-value-bottom-${u}: var(targetUUID-bottom);` +
+          `      --pa-value-justify-self-${u}: var(targetUUID-justify-self);` +
+          `      --pa-value-align-self-${u}: var(targetUUID-align-self);` +
+          '    }  ',
+      );
     });
   });
 });

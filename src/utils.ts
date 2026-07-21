@@ -171,10 +171,9 @@ export function writeAdoptedStylesheet(
 }
 
 // Resolves the node that a polyfill-generated `<style>` should be appended to
-// for a given root (or an element within one), so its rules apply to elements
-// created within that root. Styles in `document.head` do not pierce into a
-// shadow root, so styles for a shadow root (or an element inside one) must be
-// appended there instead.
+// for a given root, so its rules apply within that root. Styles in
+// `document.head` do not pierce into a shadow root, so styles for a shadow root
+// (or an element inside one) must be appended there instead.
 export function getRootStyleContainer(
   root: AnchorPositioningRoot,
 ): ShadowRoot | HTMLHeadElement {

@@ -14,10 +14,15 @@ describe('fetch stylesheet', () => {
         p { color: red; }
       </style>
     `;
+    // `fetchCSS` scans the whole document for inline anchor styles, so clear the
+    // body too: otherwise an anchor-styled element leaked into a shared document
+    // by another test would be collected as an extra stylesheet here.
+    document.body.innerHTML = '';
   });
 
   afterAll(() => {
     document.head.innerHTML = '';
+    document.body.innerHTML = '';
   });
 
   it('fetches CSS', async () => {

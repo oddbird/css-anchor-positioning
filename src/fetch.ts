@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
+import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import { querySelectorAllRoots } from './dom.js';
 import {
   type AnchorPositioningRoot,
@@ -139,6 +140,10 @@ export async function fetchCSS(
 
   targetElements
     .filter((el) => el instanceof HTMLElement)
+    // Skip `<style>` elements the polyfill generated itself (the
+    // non-inheritance reset and the position-area mapping styles), so we don't
+    // re-collect and re-process our own output on subsequent runs.
+    .filter((el) => !el.hasAttribute(POLYFILLED_STYLE_ATTRIBUTE))
     .forEach((el) => {
       if (el.tagName.toLowerCase() === 'link') {
         const url = getStylesheetUrl(el as HTMLLinkElement);

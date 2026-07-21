@@ -1,3 +1,4 @@
+import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
 import {
   getRootStyleContainer,
@@ -70,7 +71,7 @@ export function transformCSS(
           el.insertAdjacentElement('beforebegin', styleEl);
           el.remove();
         } else {
-          styleEl.setAttribute('data-generated-by-polyfill', 'true');
+          styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
           // This is a new stylesheet (the position-area mapping styles). Its
           // rules target wrapper elements that live inside the roots being
           // polyfilled, so it must be inserted into each of those roots: a
