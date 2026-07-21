@@ -105,7 +105,6 @@ export type PositionAreaContainingBlock = boolean | 'auto';
  * the wrapper is kept (the always-correct behavior). Inset properties are
  * ignored because the polyfill overrides them on the target regardless.
  */
-
 export function hasContainingBlockDependentDeclaration(
   element: HTMLElement,
 ): boolean {
