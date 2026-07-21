@@ -652,7 +652,9 @@ export function addPositionAreaDeclarationBlockStyles(
         ['justify-self', 'align-self']
       : // Insets are applied to the target itself
         ['top', 'left', 'right', 'bottom'];
-    props.forEach((prop) => appendDeclaration(prop, `var(${paValueProperty(prop)})`));
+    props.forEach((prop) =>
+      appendDeclaration(prop, `var(${paValueProperty(prop)})`),
+    );
   }
   appendDeclaration(POSITION_AREA_CASCADE_PROPERTY, declaration.selectorUUID);
 }

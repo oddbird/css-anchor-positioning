@@ -360,7 +360,9 @@ describe('position-area', () => {
       expect(decls).toContain(
         `justify-self:var(--pa-value-justify-self-${u}, normal)`,
       );
-      expect(decls).toContain(`align-self:var(--pa-value-align-self-${u}, normal)`);
+      expect(decls).toContain(
+        `align-self:var(--pa-value-align-self-${u}, normal)`,
+      );
       expect(decls).toContain(`top:var(--pa-value-top-${u}, auto)`);
       expect(decls).toContain(`left:var(--pa-value-left-${u}, auto)`);
       expect(decls).toContain(`right:var(--pa-value-right-${u}, auto)`);
