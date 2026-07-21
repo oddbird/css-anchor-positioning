@@ -3,8 +3,11 @@ import {
   registerShiftedProperties,
   SHIFTED_PROPERTIES,
 } from '../../src/cascade.js';
-import { NON_INHERITED_POSITION_AREA_PROPERTIES } from '../../src/position-area.js';
-import { INSTANCE_UUID, type StyleData } from '../../src/utils.js';
+import {
+  INSTANCE_UUID,
+  NON_INHERITED_POSITION_AREA_PROPERTIES,
+  type StyleData,
+} from '../../src/utils.js';
 import { cascadeCSSForTest, getSampleCSS } from './../helpers.js';
 
 describe('registerShiftedProperties', () => {

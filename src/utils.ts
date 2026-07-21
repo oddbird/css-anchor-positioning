@@ -185,6 +185,42 @@ export function getRootStyleContainer(
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
 
+// Names the custom property the polyfill uses to carry a resolved
+// `position-area` value (e.g. `top`, `justify-self`) from the mapping
+// stylesheet to the target or wrapper. Suffixed with `INSTANCE_UUID` so we
+// don't squat on an author's custom property. Read and write sites all go
+// through this helper so the names can't drift. Lives here (rather than in
+// `position-area.ts`) so `cascade.ts` can register these as non-inherited
+// without importing `position-area.ts` -- that would create a
+// `cascade -> position-area -> dom -> cascade` import cycle.
+export const paValueProperty = (prop: string) =>
+  `--pa-value-${prop}-${INSTANCE_UUID}`;
+
+// Names the custom properties for a wrapper's insets, so a shared `auto`
+// selector's target insets don't collide.
+export const paWrapperProperty = (prop: string) =>
+  `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
+
+// The physical sides the polyfill sets as insets, on the wrapper or (in the
+// unwrapped path) directly on the target. A single source of truth so the
+// mapping-stylesheet writes, the `var()` reads, and the non-inheritance
+// registration in `cascade.ts` can't drift out of sync.
+export const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
+
+// Custom properties the polyfill both sets on and reads from the *same* element
+// -- the wrapper's insets, and (in the unwrapped path) the target's insets.
+// These must be registered non-inherited: unlike
+// `--pa-value-{justify,align}-self` (which are set on the wrapper and read on
+// the target child, and so must inherit), an inset set on one `position-area`
+// target would otherwise leak through inheritance onto a descendant that is
+// itself a `position-area` target, overriding its `auto` fallback. See
+// `registerShiftedProperties` in cascade.ts and
+// https://github.com/oddbird/css-anchor-positioning/issues/279.
+export const NON_INHERITED_POSITION_AREA_PROPERTIES = [
+  ...PA_INSET_SIDES.map((side) => paValueProperty(side)),
+  ...PA_INSET_SIDES.map((side) => paWrapperProperty(side)),
+];
+
 export function splitCommaList(list: List<CssNode>) {
   return list.toArray().reduce(
     (acc: Identifier[][], child) => {

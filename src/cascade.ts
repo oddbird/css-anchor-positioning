@@ -3,7 +3,6 @@ import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
 import { type AnchorPositioningRoot } from './polyfill.js';
-import { NON_INHERITED_POSITION_AREA_PROPERTIES } from './position-area.js';
 import { ACCEPTED_POSITION_TRY_PROPERTIES, PADDING_PROPS } from './syntax.js';
 import {
   generateCSS,
@@ -11,6 +10,7 @@ import {
   getRootStyleContainer,
   INSTANCE_UUID,
   isDeclaration,
+  NON_INHERITED_POSITION_AREA_PROPERTIES,
   type StyleData,
 } from './utils.js';
 

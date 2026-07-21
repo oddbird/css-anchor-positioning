@@ -53,6 +53,9 @@ import {
 import {
   type DeclarationWithValue,
   INSTANCE_UUID,
+  PA_INSET_SIDES,
+  paValueProperty,
+  paWrapperProperty,
   strategyForElement,
 } from './utils.js';
 
@@ -61,38 +64,6 @@ import {
 // are multiple. Suffixed with `INSTANCE_UUID` so we don't squat on a custom
 // property an author might be using.
 export const POSITION_AREA_CASCADE_PROPERTY = `--pa-cascade-property-${INSTANCE_UUID}`;
-
-// Names the custom property the polyfill uses to carry a resolved
-// `position-area` value (e.g. `top`, `justify-self`) from the mapping
-// stylesheet to the wrapper. Suffixed with `INSTANCE_UUID` so we don't squat on
-// an author's custom property. Read and write sites all go through this helper
-// so the names can't drift.
-const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
-
-// Names the custom properties for a wrapper's insets, so a shared `auto`
-// selector's target insets don't collide.
-const paWrapperProperty = (prop: string) =>
-  `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
-
-// The physical sides the polyfill sets as insets, on the wrapper or (in the
-// unwrapped path) directly on the target. A single source of truth so the
-// mapping-stylesheet writes, the `var()` reads, and the non-inheritance
-// registration below can't drift out of sync.
-const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
-
-// Custom properties the polyfill both sets on and reads from the *same* element
-// -- the wrapper's insets, and (in the unwrapped path) the target's insets.
-// These must be registered non-inherited: unlike
-// `--pa-value-{justify,align}-self` (which are set on the wrapper and read on
-// the target child, and so must inherit), an inset set on one `position-area`
-// target would otherwise leak through inheritance onto a descendant that is
-// itself a `position-area` target, overriding its `auto` fallback. See
-// `registerShiftedProperties` in cascade.ts and
-// https://github.com/oddbird/css-anchor-positioning/issues/279.
-export const NON_INHERITED_POSITION_AREA_PROPERTIES = [
-  ...PA_INSET_SIDES.map((side) => paValueProperty(side)),
-  ...PA_INSET_SIDES.map((side) => paWrapperProperty(side)),
-];
 
 // Set this as an attribute on a wrapper with the uuid of the winning
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
@@ -160,13 +131,14 @@ export function hasContainingBlockDependentDeclaration(
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
 
-enum WritingMode {
-  Logical = 'Logical',
-  LogicalSelf = 'LogicalSelf',
-  Physical = 'Physical',
-  PhysicalSelf = 'PhysicalSelf',
-  Irrelevant = 'Irrelevant',
-}
+const WritingMode = {
+  Logical: 'Logical',
+  LogicalSelf: 'LogicalSelf',
+  Physical: 'Physical',
+  PhysicalSelf: 'PhysicalSelf',
+  Irrelevant: 'Irrelevant',
+} as const;
+type WritingMode = (typeof WritingMode)[keyof typeof WritingMode];
 
 export const POSITION_AREA_PROPS = [
   'left',
@@ -776,10 +748,11 @@ export async function dataForPositionAreaTarget(
       positionAreaData.grid.block[2],
       positionAreaData.grid.inline[2],
     );
-    alignmentGrid = [
+    const selfWritingModes: WritingMode[] = [
       WritingMode.LogicalSelf,
       WritingMode.PhysicalSelf,
-    ].includes(relevantWritingMode)
+    ];
+    alignmentGrid = selfWritingModes.includes(relevantWritingMode)
       ? writingModeModifiedGrid
       : positionAreaData.grid;
   } else {
