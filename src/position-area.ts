@@ -50,7 +50,6 @@ import {
   SELF_ALIGNMENT_PROPS,
   SIZING_PROPS,
 } from './syntax.js';
-
 import {
   type DeclarationWithValue,
   INSTANCE_UUID,
@@ -72,7 +71,8 @@ const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
 
 // Names the custom properties for a wrapper's insets, so a shared `auto`
 // selector's target insets don't collide.
-const paWrapperProperty = (prop: string) => `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
+const paWrapperProperty = (prop: string) =>
+  `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
 
 // Set this as an attribute on a wrapper with the uuid of the winning
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
@@ -634,19 +634,25 @@ export function addPositionAreaDeclarationBlockStyles(
     // its initial value. A wrapped target only receives the alignment values
     // (the insets fall back to `auto`); a directly-positioned target only
     // receives the inset values (the alignments fall back to `normal`).
-    appendDeclaration('justify-self', 'var(--pa-value-justify-self, normal)');
-    appendDeclaration('align-self', 'var(--pa-value-align-self, normal)');
-    appendDeclaration('top', 'var(--pa-value-top, auto)');
-    appendDeclaration('left', 'var(--pa-value-left, auto)');
-    appendDeclaration('right', 'var(--pa-value-right, auto)');
-    appendDeclaration('bottom', 'var(--pa-value-bottom, auto)');
+    appendDeclaration(
+      'justify-self',
+      `var(${paValueProperty('justify-self')}, normal)`,
+    );
+    appendDeclaration(
+      'align-self',
+      `var(${paValueProperty('align-self')}, normal)`,
+    );
+    appendDeclaration('top', `var(${paValueProperty('top')}, auto)`);
+    appendDeclaration('left', `var(${paValueProperty('left')}, auto)`);
+    appendDeclaration('right', `var(${paValueProperty('right')}, auto)`);
+    appendDeclaration('bottom', `var(${paValueProperty('bottom')}, auto)`);
   } else {
     const props = positionAreaContainingBlock
       ? // Insets are applied to a wrapping element
         ['justify-self', 'align-self']
       : // Insets are applied to the target itself
         ['top', 'left', 'right', 'bottom'];
-    props.forEach((prop) => appendDeclaration(prop, `var(--pa-value-${prop})`));
+    props.forEach((prop) => appendDeclaration(prop, `var(${paValueProperty(prop)})`));
   }
   appendDeclaration(POSITION_AREA_CASCADE_PROPERTY, declaration.selectorUUID);
 }

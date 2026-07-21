@@ -265,15 +265,13 @@ describe('position-area', () => {
   describe('activeTargetStyles', () => {
     it('returns the active styles', () => {
       const u = INSTANCE_UUID;
-      expect(
-        activeTargetStyles('targetUUID', 'selectorUUID'),
-      ).toBe(
-        '    [data-anchor-position-area="selectorUUID"][data-pa-target-for-targetUUID] {'+
-        `      --pa-value-top-${u}: var(targetUUID-top);` +
-        `      --pa-value-left-${u}: var(targetUUID-left);` +
-        `      --pa-value-right-${u}: var(targetUUID-right);` +
-        `      --pa-value-bottom-${u}: var(targetUUID-bottom);` +
-        '    }  '
+      expect(activeTargetStyles('targetUUID', 'selectorUUID')).toBe(
+        '    [data-anchor-position-area="selectorUUID"][data-pa-target-for-targetUUID] {' +
+          `      --pa-value-top-${u}: var(targetUUID-top);` +
+          `      --pa-value-left-${u}: var(targetUUID-left);` +
+          `      --pa-value-right-${u}: var(targetUUID-right);` +
+          `      --pa-value-bottom-${u}: var(targetUUID-bottom);` +
+          '    }  ',
       );
     });
   });
@@ -342,28 +340,31 @@ describe('position-area', () => {
 
     it('applies insets to a wrapper when true', () => {
       const decls = blockFor(true);
-      expect(decls).toContain('justify-self:var(--pa-value-justify-self)');
-      expect(decls).toContain('align-self:var(--pa-value-align-self)');
+      const u = INSTANCE_UUID;
+      expect(decls).toContain(`justify-self:var(--pa-value-justify-self-${u})`);
+      expect(decls).toContain(`align-self:var(--pa-value-align-self-${u})`);
       expect(decls.some((d) => d.startsWith('top:'))).toBe(false);
     });
 
     it('applies insets to the target when false', () => {
       const decls = blockFor(false);
-      expect(decls).toContain('top:var(--pa-value-top)');
-      expect(decls).toContain('bottom:var(--pa-value-bottom)');
+      const u = INSTANCE_UUID;
+      expect(decls).toContain(`top:var(--pa-value-top-${u})`);
+      expect(decls).toContain(`bottom:var(--pa-value-bottom-${u})`);
       expect(decls.some((d) => d.startsWith('justify-self:'))).toBe(false);
     });
 
     it('emits both alignment and inset declarations with fallbacks in auto mode', () => {
+      const u = INSTANCE_UUID;
       const decls = blockFor('auto');
       expect(decls).toContain(
-        'justify-self:var(--pa-value-justify-self, normal)',
+        `justify-self:var(--pa-value-justify-self-${u}, normal)`,
       );
-      expect(decls).toContain('align-self:var(--pa-value-align-self, normal)');
-      expect(decls).toContain('top:var(--pa-value-top, auto)');
-      expect(decls).toContain('left:var(--pa-value-left, auto)');
-      expect(decls).toContain('right:var(--pa-value-right, auto)');
-      expect(decls).toContain('bottom:var(--pa-value-bottom, auto)');
+      expect(decls).toContain(`align-self:var(--pa-value-align-self-${u}, normal)`);
+      expect(decls).toContain(`top:var(--pa-value-top-${u}, auto)`);
+      expect(decls).toContain(`left:var(--pa-value-left-${u}, auto)`);
+      expect(decls).toContain(`right:var(--pa-value-right-${u}, auto)`);
+      expect(decls).toContain(`bottom:var(--pa-value-bottom-${u}, auto)`);
     });
   });
 });
