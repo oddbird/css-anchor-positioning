@@ -2,10 +2,12 @@ import type { Block, CssNode } from 'css-tree';
 import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
+import { type AnchorPositioningRoot } from './polyfill.js';
 import { ACCEPTED_POSITION_TRY_PROPERTIES, PADDING_PROPS } from './syntax.js';
 import {
   generateCSS,
   getAST,
+  getRootStyleContainer,
   INSTANCE_UUID,
   isDeclaration,
   type StyleData,
@@ -14,8 +16,8 @@ import {
 /**
  * Map of CSS property to CSS custom property that the property's value is
  * shifted into. This is used to subject properties that are not yet natively
- * supported to the CSS cascade and inheritance rules. It is also used by the
- * fallback algorithm to find initial, non-computed values.
+ * supported to the CSS cascade so later stages can read computed values. It is
+ * also used by the fallback algorithm to find initial, non-computed values.
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...ACCEPTED_POSITION_TRY_PROPERTIES,
@@ -30,6 +32,96 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   },
   {} as Record<string, string>,
 );
+
+/**
+ * Attribute marking a `<style>` element the polyfill generates itself -- the
+ * non-inheritance reset below, and the position-area mapping styles in
+ * `transform.ts`. These are polyfill output, not author input, so `fetchCSS`
+ * skips them to avoid re-collecting and re-processing them on subsequent runs.
+ */
+export const POLYFILLED_STYLE_ATTRIBUTE = 'data-generated-by-polyfill';
+
+/**
+ * Make the shifted custom properties non-inherited.
+ *
+ * Every property we shift (insets, margins, sizing, self-alignment,
+ * `position-anchor`, `position-area`, `anchor-name`, `anchor-scope`) is
+ * non-inherited in CSS, but custom properties inherit by default. Without
+ * making them non-inherited, a value set on an ancestor (e.g. `height: 400px`
+ * on a scroll container) would be inherited by descendants through the shifted
+ * custom property and incorrectly read back as if it were set directly on them
+ * -- leaking, for example, into every generated position fallback. See
+ * https://github.com/oddbird/css-anchor-positioning/issues/279.
+ *
+ * Where `CSS.registerProperty` is supported (Safari 16.4+, Firefox 128+), we
+ * register the properties with `inherits: false`. This is global to the
+ * document (including shadow trees), so it only needs to run once.
+ *
+ * On older engines we fall back to injecting a universal rule that resets each
+ * shifted property to `initial` on every element (and the `::before`/`::after`
+ * pseudo-elements we read). For an unregistered custom property, `initial` is
+ * the guaranteed-invalid value, so any element that doesn't explicitly set the
+ * property reads back as empty instead of inheriting its ancestor's value --
+ * emulating non-inheritance. The reset has the lowest possible specificity, so
+ * real declarations still win, and it only touches our private custom
+ * properties, never the native properties that drive layout. A `<style>` does
+ * not pierce shadow boundaries, so the reset is injected once per polyfilled
+ * root (`document` and any shadow roots in `roots`). We dedupe against the live
+ * DOM (rather than tracking injected roots separately) so this self-heals if a
+ * container's contents are later replaced.
+ */
+let propertiesRegistered = false;
+export function registerShiftedProperties(
+  roots: AnchorPositioningRoot[] = [document],
+) {
+  if (typeof CSS === 'undefined') {
+    return;
+  }
+  const customProperties = Object.values(SHIFTED_PROPERTIES);
+  if (typeof CSS.registerProperty === 'function') {
+    // Registered properties are global to the document (including shadow
+    // trees), so this only needs to run once, regardless of roots.
+    if (propertiesRegistered) {
+      return;
+    }
+    for (const customProperty of customProperties) {
+      try {
+        CSS.registerProperty({
+          name: customProperty,
+          syntax: '*',
+          inherits: false,
+        });
+      } catch {
+        // Ignore properties that are already registered (e.g. by an earlier run
+        // of the polyfill).
+      }
+    }
+    propertiesRegistered = true;
+  } else if (typeof document !== 'undefined') {
+    const [firstProperty] = customProperties;
+    const resets = customProperties
+      .map((customProperty) => `${customProperty}: initial;`)
+      .join('\n  ');
+    for (const root of roots) {
+      const container = getRootStyleContainer(root);
+      // Inject the reset once per container (a shadow root, or a document head
+      // shared by several light-DOM roots). Dedupe against the live DOM: scope
+      // the query to our own generated styles via the marker attribute, then
+      // confirm it's the reset (not a position-area mapping style, which shares
+      // the attribute) by its first declaration.
+      const alreadyReset = [
+        ...container.querySelectorAll(`style[${POLYFILLED_STYLE_ATTRIBUTE}]`),
+      ].some((el) => el.textContent?.includes(`${firstProperty}: initial`));
+      if (alreadyReset) {
+        continue;
+      }
+      const style = document.createElement('style');
+      style.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+      style.textContent = `*,\n::before,\n::after {\n  ${resets}\n}`;
+      container.append(style);
+    }
+  }
+}
 
 /**
  * Shift property declarations for properties that are not yet natively
@@ -131,7 +223,12 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
  * that are not yet natively supported, or are needed in a different format for
  * the polyfill to work as expected.
  */
-export function cascadeCSS(styleData: StyleData[]) {
+export function cascadeCSS(
+  styleData: StyleData[],
+  roots?: AnchorPositioningRoot[],
+) {
+  registerShiftedProperties(roots);
+
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css, true);

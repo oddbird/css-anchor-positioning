@@ -133,3 +133,62 @@ test('positions every custom-element host sharing one constructed stylesheet', a
     );
   }
 });
+
+test('emulates non-inheritance of shifted properties inside a shadow root without `CSS.registerProperty`', async ({
+  page,
+}) => {
+  // Without `CSS.registerProperty` (e.g. Firefox < 128) the polyfill emulates
+  // non-inheritance with a universal `initial` reset. A `<style>` in
+  // `document.head` can't pierce a shadow boundary, so the reset must be
+  // injected into each shadow root passed in `options.roots`. See
+  // https://github.com/oddbird/css-anchor-positioning/issues/279.
+  await page.addInitScript(() => {
+    delete (CSS as unknown as { registerProperty?: unknown }).registerProperty;
+  });
+  await page.goto('/shadow-dom.html');
+
+  const result = await page.evaluate(async () => {
+    // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
+    // and the import linter from trying to resolve it statically.
+    const fnEntry = '/src/index-fn.ts';
+    const { default: polyfill } = await import(fnEntry);
+
+    // A scroll container inside a shadow root sets an explicit `height` (a
+    // shifted sizing property); its descendant target never sets one.
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>.container { height: 400px; overflow: scroll; position: static; }</style>
+      <div class="container">
+        <span id="s-anchor" style="anchor-name: --s-anchor">anchor</span>
+        <div id="s-target"
+             style="position: absolute; position-anchor: --s-anchor; top: anchor(bottom)">target</div>
+      </div>`;
+
+    await polyfill({ roots: [shadow] });
+
+    // Discover the shifted `--height-<uuid>` name from the reset in the shadow.
+    const resetText = [...shadow.querySelectorAll('style')]
+      .map((el) => el.textContent ?? '')
+      .find((text) => /--height-[\w-]+:\s*initial/.test(text));
+    const heightProp = resetText?.match(/(--height-[\w-]+):\s*initial/)?.[1];
+    const container = shadow.querySelector('.container') as HTMLElement;
+    const target = shadow.getElementById('s-target') as HTMLElement;
+    return {
+      resetInShadow: Boolean(resetText),
+      containerHeight: heightProp
+        ? getComputedStyle(container).getPropertyValue(heightProp).trim()
+        : null,
+      targetHeight: heightProp
+        ? getComputedStyle(target).getPropertyValue(heightProp).trim()
+        : null,
+    };
+  });
+
+  // The reset was injected into the shadow root, and the descendant target
+  // reads the shifted value back as empty instead of inheriting the container's.
+  expect(result.resetInShadow).toBe(true);
+  expect(result.containerHeight).toBe('400px');
+  expect(result.targetHeight).toBe('');
+});

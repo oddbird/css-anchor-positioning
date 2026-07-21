@@ -50,12 +50,29 @@ import {
   SELF_ALIGNMENT_PROPS,
   SIZING_PROPS,
 } from './syntax.js';
-import { type DeclarationWithValue, strategyForElement } from './utils.js';
+
+import {
+  type DeclarationWithValue,
+  INSTANCE_UUID,
+  strategyForElement,
+} from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
 // check it to determine which position area declaration should win, if there
-// are multiple.
-export const POSITION_AREA_CASCADE_PROPERTY = '--pa-cascade-property';
+// are multiple. Suffixed with `INSTANCE_UUID` so we don't squat on a custom
+// property an author might be using.
+export const POSITION_AREA_CASCADE_PROPERTY = `--pa-cascade-property-${INSTANCE_UUID}`;
+
+// Names the custom property the polyfill uses to carry a resolved
+// `position-area` value (e.g. `top`, `justify-self`) from the mapping
+// stylesheet to the wrapper. Suffixed with `INSTANCE_UUID` so we don't squat on
+// an author's custom property. Read and write sites all go through this helper
+// so the names can't drift.
+const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
+
+// Names the custom properties for a wrapper's insets, so a shared `auto`
+// selector's target insets don't collide.
+const paWrapperProperty = (prop: string) => `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
 
 // Set this as an attribute on a wrapper with the uuid of the winning
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
@@ -681,7 +698,7 @@ export function wrapperForPositionedElement(
     // with an `auto` fallback; using `--pa-wrapper-*` here keeps the wrapper's
     // inset values from being inherited by the target as its own insets.
     ['top', 'left', 'right', 'bottom'].forEach((prop) => {
-      wrapperEl.style.setProperty(prop, `var(--pa-wrapper-${prop})`);
+      wrapperEl.style.setProperty(prop, `var(${paWrapperProperty(prop)})`);
     });
     // Insert the wrapper relative to the target itself rather than going
     // through its parent: when `targetEl` sits directly inside a shadow root,
@@ -776,12 +793,12 @@ export async function dataForPositionAreaTarget(
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
   return `
     [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      --pa-wrapper-top: var(${targetUUID}-top);
-      --pa-wrapper-left: var(${targetUUID}-left);
-      --pa-wrapper-right: var(${targetUUID}-right);
-      --pa-wrapper-bottom: var(${targetUUID}-bottom);
-      --pa-value-justify-self: var(${targetUUID}-justify-self);
-      --pa-value-align-self: var(${targetUUID}-align-self);
+      ${paWrapperProperty('top')}: var(${targetUUID}-top);
+      ${paWrapperProperty('left')}: var(${targetUUID}-left);
+      ${paWrapperProperty('right')}: var(${targetUUID}-right);
+      ${paWrapperProperty('bottom')}: var(${targetUUID}-bottom);
+      ${paValueProperty('justify-self')}: var(${targetUUID}-justify-self);
+      ${paValueProperty('align-self')}: var(${targetUUID}-align-self);
     }
   `.replaceAll('\n', '');
 }
@@ -789,10 +806,10 @@ export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
 export function activeTargetStyles(targetUUID: string, selectorUUID: string) {
   return `
     [${POSITION_AREA_TARGET_ATTRIBUTE}="${selectorUUID}"][${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      --pa-value-top: var(${targetUUID}-top);
-      --pa-value-left: var(${targetUUID}-left);
-      --pa-value-right: var(${targetUUID}-right);
-      --pa-value-bottom: var(${targetUUID}-bottom);
+      ${paValueProperty('top')}: var(${targetUUID}-top);
+      ${paValueProperty('left')}: var(${targetUUID}-left);
+      ${paValueProperty('right')}: var(${targetUUID}-right);
+      ${paValueProperty('bottom')}: var(${targetUUID}-bottom);
     }
   `.replaceAll('\n', '');
 }

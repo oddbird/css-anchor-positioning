@@ -220,20 +220,86 @@ test('applies polyfill for `@position-fallback`', async ({ page }) => {
   const target = page.locator(targetSel);
   await target.scrollIntoViewIfNeeded();
 
-  await expect(target).toHaveCSS('left', '0px');
+  // Capture the target's pre-polyfill (static) position so we can assert the
+  // polyfill moves it.
+  const initialLeft = await target.evaluate(
+    (node) => getComputedStyle(node).left,
+  );
 
   await applyPolyfill(page);
 
-  await expect(target).not.toHaveCSS('left', '0px');
+  await expect(target).not.toHaveCSS('left', initialLeft);
   await expect(target).not.toHaveCSS('width', '100px');
 
   await target.evaluate((node: HTMLElement) => {
-    (node.offsetParent as HTMLElement).scrollLeft = 180;
-    (node.offsetParent as HTMLElement).scrollTop = 120;
+    const scrollContainer = node.closest('.scroll-container') as HTMLElement;
+    scrollContainer.scrollLeft = 180;
+    scrollContainer.scrollTop = 120;
   });
 
   await expect(target).toHaveCSS('width', '100px');
   await expect(target).toHaveCSS('height', '100px');
+});
+
+test('applies `@position-try` fallback for a fixed-positioned target', async ({
+  page,
+}) => {
+  // A fixed-positioned target's containing block is the viewport, so its
+  // `offsetParent` resolves to the document element. This exercises the
+  // viewport branch of `checkOverflow`. The anchor sits near the bottom of the
+  // viewport, so the base position (below the anchor) overflows and the
+  // fallback (above the anchor) should be applied.
+  await page.evaluate(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      #fixed-fallback-anchor {
+        anchor-name: --fixed-fallback-anchor;
+        position: fixed;
+        top: 90vh;
+        left: 50px;
+        width: 100px;
+        height: 20px;
+      }
+      #fixed-fallback-target {
+        position: fixed;
+        position-anchor: --fixed-fallback-anchor;
+        top: anchor(bottom);
+        left: anchor(left);
+        width: 100px;
+        height: 100px;
+        position-try-fallbacks: --fixed-flip;
+      }
+      @position-try --fixed-flip {
+        bottom: anchor(top);
+        top: revert;
+      }
+    `;
+    document.head.append(style);
+    const anchor = document.createElement('div');
+    anchor.id = 'fixed-fallback-anchor';
+    const target = document.createElement('div');
+    target.id = 'fixed-fallback-target';
+    document.body.append(anchor, target);
+  });
+
+  await applyPolyfill(page);
+
+  const { anchor, target } = await page.evaluate(() => {
+    const anchorEl = document.getElementById('fixed-fallback-anchor')!;
+    const targetEl = document.getElementById('fixed-fallback-target')!;
+    return {
+      anchor: anchorEl.getBoundingClientRect(),
+      target: targetEl.getBoundingClientRect(),
+    };
+  });
+
+  // The target is anchored horizontally (`left: anchor(left)`), which only
+  // holds if `anchor()` actually resolved — guarding against a trivial pass
+  // where the polyfill didn't run and the target sits at its static position.
+  expect(target.left).toBeCloseTo(anchor.left, 0);
+  // The base position (below the anchor) overflows the viewport, so the
+  // fallback flips the target above its anchor to keep it in view.
+  expect(target.bottom).toBeLessThanOrEqual(anchor.top + 1);
 });
 
 test('applies manual polyfill', async ({ page }) => {
@@ -390,4 +456,53 @@ test('does not change position if anchor is invalid', async ({ page }) => {
 
   await expectWithinOne(target, 'top', 0);
   await expectWithinOne(target, 'left', 0);
+});
+
+test('emulates non-inheritance of shifted properties without `CSS.registerProperty`', async ({
+  page,
+}) => {
+  // Simulate an engine without `CSS.registerProperty` (e.g. Firefox < 128),
+  // where the shifted custom properties would otherwise inherit. The polyfill
+  // falls back to injecting a universal `initial` reset to emulate the
+  // non-inherited behavior of the properties they stand in for. See
+  // https://github.com/oddbird/css-anchor-positioning/issues/279.
+  await page.addInitScript(() => {
+    delete (CSS as unknown as { registerProperty?: unknown }).registerProperty;
+  });
+  await page.goto('/');
+  expect(await page.evaluate(() => typeof CSS.registerProperty)).not.toBe(
+    'function',
+  );
+
+  await applyPolyfill(page);
+
+  // The combined-tactics demo's `.scroll-container` sets `height: 400px`, which
+  // is shifted into `--height-<uuid>`. Without emulated non-inheritance that
+  // value would leak onto the descendant target and corrupt its generated
+  // fallback (the Firefox < 128 bug). Assert the container reads back the
+  // shifted value while the descendant target reads back empty.
+  const { containerHeight, targetHeight } = await page.evaluate(() => {
+    // Discover the shifted `--height-<uuid>` property name from the reset style.
+    const resetText = [...document.head.querySelectorAll('style')]
+      .map((el) => el.textContent ?? '')
+      .find((text) => /--height-[\w-]+:\s*initial/.test(text))!;
+    const heightProp = resetText.match(/(--height-[\w-]+):\s*initial/)![1];
+    const container = document.querySelector(
+      '#position-try-tactics-combined .scroll-container',
+    ) as HTMLElement;
+    const target = document.getElementById(
+      'my-target-try-tactics-combined',
+    ) as HTMLElement;
+    return {
+      containerHeight: getComputedStyle(container)
+        .getPropertyValue(heightProp)
+        .trim(),
+      targetHeight: getComputedStyle(target)
+        .getPropertyValue(heightProp)
+        .trim(),
+    };
+  });
+
+  expect(containerHeight).toBe('400px');
+  expect(targetHeight).toBe('');
 });

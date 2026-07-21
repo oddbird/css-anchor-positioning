@@ -1,7 +1,5 @@
 import {
   autoUpdate,
-  detectOverflow,
-  type MiddlewareState,
   platform,
   type Rect,
   type VirtualElement,
@@ -39,8 +37,6 @@ import {
   resetParseErrors,
   strategyForElement,
 } from './utils.js';
-
-const platformWithCache = { ...platform, _c: new Map() };
 
 export const resolveLogicalSideKeyword = (side: AnchorSide, rtl: boolean) => {
   let percentage: number | undefined;
@@ -122,21 +118,28 @@ const getBorders = (el: HTMLElement, axis: 'x' | 'y') => {
       : ['border-top-width', 'border-bottom-width'];
   return (
     props.reduce(
-      (total, prop) => total + parseInt(getCSSPropertyValue(el, prop), 10),
+      (total, prop) => total + parseFloat(getCSSPropertyValue(el, prop)),
       0,
     ) || 0
   );
 };
 
-const getMargin = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
-  parseInt(getCSSPropertyValue(el, `margin-${dir}`), 10) || 0;
+const getBorder = (el: HTMLElement, dir: 'top' | 'right' | 'bottom' | 'left') =>
+  parseFloat(getComputedStyle(el).getPropertyValue(`border-${dir}-width`)) || 0;
 
+// Read the element's used margins from its computed style. Unlike reading the
+// shifted `--margin-*` custom properties, this resolves the `margin` shorthand,
+// logical margins, percentages, and `auto` to physical pixel values, and
+// reflects any margin applied by the currently-active position fallback.
 const getMargins = (el: HTMLElement) => {
+  const style = getComputedStyle(el);
+  const margin = (dir: 'top' | 'right' | 'bottom' | 'left') =>
+    parseFloat(style.getPropertyValue(`margin-${dir}`)) || 0;
   return {
-    top: getMargin(el, 'top'),
-    right: getMargin(el, 'right'),
-    bottom: getMargin(el, 'bottom'),
-    left: getMargin(el, 'left'),
+    top: margin('top'),
+    right: margin('right'),
+    bottom: margin('bottom'),
+    left: margin('left'),
   };
 };
 
@@ -527,29 +530,58 @@ async function applyAnchorPositions(
   }
 }
 
-async function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
-  const rects = await platform.getElementRects({
-    reference: target,
-    floating: target,
-    strategy: strategyForElement(target),
-  });
-  const overflow = await detectOverflow(
-    {
-      x: target.offsetLeft,
-      y: target.offsetTop,
-      platform: platformWithCache,
-      rects,
-      elements: {
-        floating: target,
-        reference: offsetParent,
-      },
-      strategy: strategyForElement(target),
-    } as unknown as MiddlewareState,
-    {
-      padding: getMargins(target),
-    },
-  );
-  return overflow;
+// How far the target's margin-box overflows each edge of its containing block.
+// Positive values indicate overflow on that side.
+//
+// Per spec, position-try options are evaluated against the target's
+// inset-modified containing block — not the scrollport of an arbitrary ancestor
+// scroll container. We therefore measure against the target's `offsetParent`
+// (its containing block), which is what native browsers use. Both rects are
+// read in viewport coordinates via `getBoundingClientRect`, so the page's
+// scroll offset cancels out regardless of how far down the document the target
+// is. See https://github.com/oddbird/css-anchor-positioning/issues/279.
+function checkOverflow(target: HTMLElement, offsetParent: HTMLElement) {
+  const targetRect = target.getBoundingClientRect();
+  const margin = getMargins(target);
+  const marginBox = {
+    top: targetRect.top - margin.top,
+    bottom: targetRect.bottom + margin.bottom,
+    left: targetRect.left - margin.left,
+    right: targetRect.right + margin.right,
+  };
+
+  // The containing block for an absolutely positioned element is the padding
+  // box of its `offsetParent`. When there is no element offsetParent (e.g. a
+  // fixed-positioned target), the containing block is the viewport.
+  const containingBlock: {
+    top: number;
+    left: number;
+    right: number;
+    bottom: number;
+  } =
+    offsetParent === document.documentElement
+      ? {
+          top: 0,
+          left: 0,
+          right: document.documentElement.clientWidth,
+          bottom: document.documentElement.clientHeight,
+        }
+      : (() => {
+          const parentRect = offsetParent.getBoundingClientRect();
+          return {
+            top: parentRect.top + getBorder(offsetParent, 'top'),
+            left: parentRect.left + getBorder(offsetParent, 'left'),
+            right: parentRect.right - getBorder(offsetParent, 'right'),
+            bottom: parentRect.bottom - getBorder(offsetParent, 'bottom'),
+          };
+        })();
+
+  return {
+    top: containingBlock.top - marginBox.top,
+    bottom: marginBox.bottom - containingBlock.bottom,
+    left: containingBlock.left - marginBox.left,
+    right: marginBox.right - containingBlock.right,
+  };
 }
 
 async function applyPositionFallbacks(
@@ -583,7 +615,7 @@ async function applyPositionFallbacks(
         }
         checking = true;
         target.removeAttribute('data-anchor-polyfill');
-        const defaultOverflow = await checkOverflow(target, offsetParent);
+        const defaultOverflow = checkOverflow(target, offsetParent);
         // If none of the sides overflow, don't try fallbacks
         if (Object.values(defaultOverflow).every((side) => side <= 0)) {
           target.removeAttribute('data-anchor-polyfill-last-successful');
@@ -596,7 +628,7 @@ async function applyPositionFallbacks(
         for (const [index, { uuid }] of fallbacks.entries()) {
           target.setAttribute('data-anchor-polyfill', uuid);
 
-          const overflow = await checkOverflow(target, offsetParent);
+          const overflow = checkOverflow(target, offsetParent);
 
           // If none of the sides overflow, use this fallback and stop loop.
           if (Object.values(overflow).every((side) => side <= 0)) {
@@ -743,7 +775,7 @@ export async function polyfill(
   // likely to be caused by parse errors.
   try {
     // pre parse CSS styles that we need to cascade
-    const cascadeCausedChanges = cascadeCSS(styleData);
+    const cascadeCausedChanges = cascadeCSS(styleData, options.roots);
     if (cascadeCausedChanges) {
       styleData = transformCSS(styleData, undefined, options.roots);
     }

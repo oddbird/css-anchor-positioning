@@ -796,9 +796,9 @@
     <section id="position-try-tactics" class="demo-item">
       <h2>
         <a href="#position-try-tactics" aria-hidden="true">🔗</a>
-        Fallbacks with <code>position-try-fallbacks</code> ⚠️
+        Fallbacks with <code>position-try-fallbacks</code>
       </h2>
-      <div style="position: relative" class="demo-elements tight">
+      <div style="position: relative" class="demo-elements scroll-fallback">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -815,11 +815,9 @@
       </div>
       <div class="note">
         <p>
-          <strong>⚠️ Note: </strong>This example is broken in both polyfilled
-          and non-polyfilled browsers.
-        </p>
-        <p>
-          With polyfill applied, the following positions are attempted in order:
+          Scroll the box to move the anchors toward its edges. As an anchor
+          nears an edge, its target would overflow the box, so the following
+          positions are attempted in order:
         </p>
         <ol>
           <li>
@@ -885,7 +883,7 @@
         Fallbacks with <code>position-try-fallbacks</code> and
         <code>@position-try</code>
       </h2>
-      <div style="position: relative" class="demo-elements tight">
+      <div style="position: relative" class="demo-elements scroll-fallback">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -902,7 +900,9 @@
       </div>
       <div class="note">
         <p>
-          With polyfill applied, the following positions are attempted in order:
+          Scroll the box to move the anchors toward its edges. As an anchor
+          nears an edge, its target would overflow the box, so the following
+          positions are attempted in order:
         </p>
         <ol>
           <li>
@@ -992,7 +992,7 @@
         <a href="#position-try-tactics-combined" aria-hidden="true">🔗</a>
         Positioning with combined try tactics
       </h2>
-      <div style="position: relative" class="demo-elements tight">
+      <div style="position: relative" class="demo-elements scroll-fallback">
         <div class="scroll-container">
           <div class="placefiller-above-anchor"></div>
           <div class="placefiller-before-anchor"></div>
@@ -1005,7 +1005,9 @@
       </div>
       <div class="note">
         <p>
-          With polyfill applied, the following positions are attempted in order:
+          Scroll the box to move the anchor toward its edges. As the anchor
+          nears an edge, the target would overflow the box, so the following
+          positions are attempted in order:
         </p>
         <ol>
           <li>

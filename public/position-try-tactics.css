@@ -1,3 +1,6 @@
+/* The scrolling-fallback layout (containing-block promotion, clipping, and
+   no padding) is provided by the shared `.scroll-fallback` class in demo.css. */
+
 #my-anchor-try-tactics {
   anchor-name: --my-anchor-try-tactics;
 }
