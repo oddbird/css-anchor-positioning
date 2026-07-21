@@ -1,5 +1,10 @@
+import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
-import { type StyleData, writeAdoptedStylesheet } from './utils.js';
+import {
+  getRootStyleContainer,
+  type StyleData,
+  writeAdoptedStylesheet,
+} from './utils.js';
 
 // This is a list of non-global attributes that apply to link elements but do
 // not apply to style elements. These should be removed when converting from a
@@ -21,19 +26,6 @@ const excludeAttributes = [
   'rel',
   'type',
 ];
-
-// Resolves the node that a polyfill-generated `<style>` should be appended to
-// for a given root, so its rules apply to wrapper elements created within that
-// root. Styles in `document.head` do not pierce into a shadow root, so styles
-// for a shadow root (or an element inside one) must be appended there instead.
-function getRootStyleContainer(
-  root: AnchorPositioningRoot,
-): ShadowRoot | HTMLHeadElement {
-  if (root instanceof ShadowRoot) return root;
-  if (root instanceof Document) return root.head;
-  const rootNode = root.getRootNode();
-  return rootNode instanceof ShadowRoot ? rootNode : document.head;
-}
 
 export function transformCSS(
   styleData: StyleData[],
@@ -79,7 +71,7 @@ export function transformCSS(
           el.insertAdjacentElement('beforebegin', styleEl);
           el.remove();
         } else {
-          styleEl.setAttribute('data-generated-by-polyfill', 'true');
+          styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
           // This is a new stylesheet (the position-area mapping styles). Its
           // rules target wrapper elements that live inside the roots being
           // polyfilled, so it must be inserted into each of those roots: a

@@ -1,6 +1,28 @@
-import { cascadeCSS, SHIFTED_PROPERTIES } from '../../src/cascade.js';
+import {
+  cascadeCSS,
+  registerShiftedProperties,
+  SHIFTED_PROPERTIES,
+} from '../../src/cascade.js';
 import { INSTANCE_UUID, type StyleData } from '../../src/utils.js';
 import { cascadeCSSForTest, getSampleCSS } from './../helpers.js';
+
+describe('registerShiftedProperties', () => {
+  it('injects a universal `initial` reset when `CSS.registerProperty` is unavailable', () => {
+    // jsdom does not implement `CSS.registerProperty`, so the fallback path
+    // runs. The reset emulates non-inheritance so ancestor values do not leak
+    // into descendants through the shifted custom properties.
+    registerShiftedProperties();
+    const style = [...document.head.querySelectorAll('style')].find((el) =>
+      el.textContent?.includes(`${SHIFTED_PROPERTIES['anchor-name']}: initial`),
+    );
+    expect(style).toBeDefined();
+    expect(style!.textContent).toContain(
+      `${SHIFTED_PROPERTIES['top']}: initial`,
+    );
+    expect(style!.textContent).toContain('::before');
+    expect(style!.textContent).toContain('::after');
+  });
+});
 
 describe('cascadeCSS', () => {
   it('moves position-anchor to custom property', () => {

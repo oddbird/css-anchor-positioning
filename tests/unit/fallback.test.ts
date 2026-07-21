@@ -3,8 +3,9 @@ import type * as csstree from 'css-tree';
 import {
   applyTryTacticsToSelector,
   getPositionTryDeclaration,
+  parsePositionFallbacks,
 } from '../../src/fallback.js';
-import { getAST, INSTANCE_UUID } from '../../src/utils.js';
+import { getAST, INSTANCE_UUID, type StyleData } from '../../src/utils.js';
 
 const setup = (styles: string) => {
   document.body.innerHTML = `<div id="ref" style="${styles}">Test</div>`;
@@ -425,6 +426,35 @@ describe('fallback', () => {
             type: 'at-rule-with-try-tactic',
           },
         ],
+      });
+    });
+  });
+
+  describe('parsePositionFallbacks', () => {
+    it('scopes try-tactic fallbacks per selector in a selector list', () => {
+      // Two targets sharing one rule via a comma-separated selector, each with
+      // a different `bottom` value so their flip-block fallbacks differ.
+      document.body.innerHTML =
+        `<div id="a" style="${propWrap('bottom')}:10px"></div>` +
+        `<div id="b" style="${propWrap('bottom')}:20px"></div>`;
+      const styleData: StyleData[] = [
+        { css: '#a, #b { position-try-fallbacks: flip-block; }' },
+      ];
+
+      const { validPositions } = parsePositionFallbacks(styleData);
+
+      // Each selector should get only its own fallback — not the other's. (A
+      // shared `anchorPosition` object previously merged both, so `#b` started
+      // with `#a`'s fallback; see #279.)
+      expect(validPositions['#a'].fallbacks).toHaveLength(1);
+      expect(validPositions['#b'].fallbacks).toHaveLength(1);
+      expect(validPositions['#a'].fallbacks?.[0].declarations).toMatchObject({
+        top: '10px',
+        bottom: 'revert',
+      });
+      expect(validPositions['#b'].fallbacks?.[0].declarations).toMatchObject({
+        top: '20px',
+        bottom: 'revert',
       });
     });
   });

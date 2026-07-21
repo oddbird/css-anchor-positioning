@@ -576,11 +576,19 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
         // Parse `position-try`, `position-try-order`, and
         // `position-try-fallbacks` declarations
         const { order, options } = getPositionFallbackValues(node);
-        const anchorPosition: AnchorPosition = {};
-        if (order) {
-          anchorPosition.order = order;
-        }
         selectors.forEach(({ selector }) => {
+          // Each selector in a comma-separated list gets its own position, so
+          // fallbacks generated for one selector don't leak onto another. This
+          // matters for try-tactics, whose fallbacks are keyed per selector
+          // (`${selector}-${tactics}`); without per-selector scoping, the
+          // second target ends up trying the first target's fallbacks. See
+          // https://github.com/oddbird/css-anchor-positioning/issues/279.
+          const anchorPosition: AnchorPosition = {};
+          if (order) {
+            anchorPosition.order = order;
+          }
+          // Track which fallbacks have been added to *this* selector.
+          const selectorFallbacksAdded = new Set<string>();
           options?.forEach((tryObject) => {
             let name;
             // Apply try fallback
@@ -623,12 +631,19 @@ export function parsePositionFallbacks(styleData: StyleData[]) {
               fallbackTargets[dataAttr] ??= [];
               fallbackTargets[dataAttr].push(selector);
 
-              if (!fallbacksAdded.has(name)) {
+              // Add the fallback to this selector's position (deduped per
+              // selector).
+              if (!selectorFallbacksAdded.has(name)) {
+                selectorFallbacksAdded.add(name);
                 anchorPosition.fallbacks ??= [];
                 anchorPosition.fallbacks.push(fallbacks[name]);
+              }
+
+              // Inject the generated `@position-try` block once per stylesheet,
+              // scoped to a unique data-attr.
+              if (!fallbacksAdded.has(name)) {
                 fallbacksAdded.add(name);
 
-                // Add `@position-try` block, scoped to a unique data-attr
                 this.stylesheet?.children.prependData({
                   type: 'Rule',
                   prelude: {
