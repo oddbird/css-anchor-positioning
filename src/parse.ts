@@ -28,7 +28,7 @@ import {
   addPositionAreaDeclarationBlockStyles,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
-  isContainingBlockDependentDeclaration,
+  hasContainingBlockDependentDeclaration,
   type PositionAreaDeclaration,
   type PositionAreaTargetData,
 } from './position-area.js';
@@ -348,9 +348,7 @@ export async function parseCSS(
   const positionAreas: PositionAreaDeclarations = {};
   const positionAreaContainingBlock =
     options.positionAreaContainingBlock ?? true;
-  // In `'auto'` mode, the selectors whose declarations resolve against the
-  // containing block. A `position-area` target matching any of these is wrapped.
-  const containingBlockDependentSelectors = new Set<string>();
+
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -376,22 +374,6 @@ export async function parseCSS(
         for (const name of getAnchorNames(node)) {
           anchorScopes[name] ??= [];
           anchorScopes[name].push(...selectors);
-        }
-      }
-
-      // Record selectors with containing-block-dependent declarations, so
-      // `'auto'` mode can decide per target whether the wrapper is needed.
-      if (
-        positionAreaContainingBlock === 'auto' &&
-        node.type === 'Declaration' &&
-        selectors.length &&
-        isContainingBlockDependentDeclaration(
-          node.property,
-          generateCSS(node.value),
-        )
-      ) {
-        for (const { selector } of selectors) {
-          containingBlockDependentSelectors.add(selector);
         }
       }
 
@@ -851,34 +833,6 @@ export async function parseCSS(
     }),
   );
 
-  // In `'auto'` mode, flag the position-area targets whose own styles resolve
-  // against the containing block, so the per-target decision in the loop below
-  // is an O(1) lookup. We resolve the containing-block-dependent selectors to
-  // elements once (using the native selector engine) and keep only the ones
-  // that are actually position-area targets, rather than testing every target
-  // against every dependent selector.
-  const containingBlockDependentTargets = new WeakSet<HTMLElement>();
-  if (positionAreaContainingBlock === 'auto') {
-    const allTargets = new Set(
-      positionAreaTargets.flatMap(({ targets }) => targets),
-    );
-    for (const selector of containingBlockDependentSelectors) {
-      let matched: HTMLElement[];
-      try {
-        matched = querySelectorAllRoots(options.roots, selector);
-      } catch {
-        // Ignore selectors that can't be used with `querySelectorAll()`
-        // (e.g. those containing pseudo-elements).
-        continue;
-      }
-      for (const el of matched) {
-        if (allTargets.has(el)) {
-          containingBlockDependentTargets.add(el);
-        }
-      }
-    }
-  }
-
   for (const { targetSel, positions, targets } of positionAreaTargets) {
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
@@ -894,7 +848,7 @@ export async function parseCSS(
       // option value is used directly.
       const needsWrapper =
         positionAreaContainingBlock === 'auto'
-          ? containingBlockDependentTargets.has(targetEl)
+          ? hasContainingBlockDependentDeclaration(targetEl)
           : positionAreaContainingBlock;
       // For every position-area declaration with this selector, create a new
       // UUID, and make sure the target has a wrapper (or is marked with a

@@ -1,5 +1,6 @@
 import type { Rule, StyleSheet } from 'css-tree';
 
+import { SHIFTED_PROPERTIES } from '../../src/cascade.js';
 import {
   activeTargetStyles,
   activeWrapperStyles,
@@ -7,7 +8,7 @@ import {
   axisForPositionAreaValue,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
-  isContainingBlockDependentDeclaration,
+  hasContainingBlockDependentDeclaration,
   markPositionAreaTarget,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
@@ -258,7 +259,16 @@ describe('position-area', () => {
     });
   });
 
-  describe('isContainingBlockDependentDeclaration', () => {
+  describe('hasContainingBlockDependentDeclaration', () => {
+    // `getCSSPropertyValue` (used internally) reads position-try-accepted
+    // properties from their shifted custom property, since the polyfill
+    // rewrites the document's CSS to duplicate those declarations there.
+    const elementWithStyle = (property: string, value: string) => {
+      const el = createEl();
+      el.style.setProperty(SHIFTED_PROPERTIES[property] ?? property, value);
+      return el;
+    };
+
     it.each([
       // Sizes resolved against the containing block.
       ['width', '50%', true],
@@ -291,9 +301,11 @@ describe('position-area', () => {
       // Unrelated properties.
       ['color', 'red', false],
     ])('%s: %s -> %s', (property, value, expected) => {
-      expect(isContainingBlockDependentDeclaration(property, value)).toBe(
-        expected,
-      );
+      expect(
+        hasContainingBlockDependentDeclaration(
+          elementWithStyle(property, value),
+        ),
+      ).toBe(expected);
     });
   });
 

@@ -29,7 +29,7 @@
 
 // When the option is `'auto'`, the choice is made per target: a target whose
 // styles resolve against the containing block (see
-// `isContainingBlockDependentDeclaration`) is wrapped, and any other target is
+// `hasContainingBlockDependentDeclaration`) is wrapped, and any other target is
 // positioned directly. Because the generated declarations are shared by every
 // element matching a selector, both the wrapped (`justify-self`/`align-self`)
 // and unwrapped (inset) declarations are emitted, each falling back to its
@@ -39,7 +39,17 @@ import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
 
-import { getOffsetParent, type PseudoElement } from './dom.js';
+import {
+  getCSSPropertyValue,
+  getOffsetParent,
+  type PseudoElement,
+} from './dom.js';
+import {
+  MARGIN_PROPS,
+  PADDING_PROPS,
+  SELF_ALIGNMENT_PROPS,
+  SIZING_PROPS,
+} from './syntax.js';
 import { type DeclarationWithValue, strategyForElement } from './utils.js';
 
 // Set this value on a target as a sibling to a position area declaration. Then
@@ -67,57 +77,6 @@ const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
 // `position-area` would natively create).
 export type PositionAreaContainingBlock = boolean | 'auto';
 
-// Sizing properties resolve a percentage, `stretch`, or `-webkit-fill-available`
-// against the containing block's size.
-const SIZE_PROPERTIES = [
-  'width',
-  'height',
-  'min-width',
-  'min-height',
-  'max-width',
-  'max-height',
-  'block-size',
-  'inline-size',
-  'min-block-size',
-  'min-inline-size',
-  'max-block-size',
-  'max-inline-size',
-];
-
-// Margin (and its longhands) resolves percentages — and distributes `auto` —
-// against the containing block's width.
-const MARGIN_PROPERTIES = [
-  'margin',
-  'margin-top',
-  'margin-right',
-  'margin-bottom',
-  'margin-left',
-  'margin-block',
-  'margin-inline',
-  'margin-block-start',
-  'margin-block-end',
-  'margin-inline-start',
-  'margin-inline-end',
-];
-
-// Padding (and its longhands) resolves percentages against the containing
-// block's width.
-const PADDING_PROPERTIES = [
-  'padding',
-  'padding-top',
-  'padding-right',
-  'padding-bottom',
-  'padding-left',
-  'padding-block',
-  'padding-inline',
-  'padding-block-start',
-  'padding-block-end',
-  'padding-inline-start',
-  'padding-inline-end',
-];
-
-const SELF_ALIGNMENT_PROPERTIES = ['justify-self', 'align-self', 'place-self'];
-
 /**
  * Whether a declaration's value resolves against the containing block, and so
  * would compute differently inside the area-sized block that `position-area`
@@ -129,27 +88,36 @@ const SELF_ALIGNMENT_PROPERTIES = ['justify-self', 'align-self', 'place-self'];
  * the wrapper is kept (the always-correct behavior). Inset properties are
  * ignored because the polyfill overrides them on the target regardless.
  */
-export function isContainingBlockDependentDeclaration(
-  property: string,
-  value: string,
+
+export function hasContainingBlockDependentDeclaration(
+  element: HTMLElement,
 ): boolean {
-  const prop = property.toLowerCase().trim();
-  const val = value.toLowerCase();
-  if (SIZE_PROPERTIES.includes(prop)) {
-    return (
-      val.includes('%') ||
-      val.includes('stretch') ||
-      val.includes('-webkit-fill-available')
-    );
+  for (const prop of SIZING_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (
+      ['%', 'stretch', '-webkit-fill-available'].some((testVal) =>
+        val.includes(testVal),
+      )
+    ) {
+      return true;
+    }
   }
-  if (MARGIN_PROPERTIES.includes(prop)) {
-    return val.includes('%') || val.includes('auto');
+  for (const prop of MARGIN_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (['%', 'auto'].some((testVal) => val.includes(testVal))) {
+      return true;
+    }
   }
-  if (PADDING_PROPERTIES.includes(prop)) {
-    return val.includes('%');
+  for (const prop of PADDING_PROPS) {
+    if (getCSSPropertyValue(element, prop).includes('%')) {
+      return true;
+    }
   }
-  if (SELF_ALIGNMENT_PROPERTIES.includes(prop)) {
-    return val.includes('stretch') || val.includes('anchor-center');
+  for (const prop of SELF_ALIGNMENT_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (['stretch', 'anchor-center'].some((testVal) => val.includes(testVal))) {
+      return true;
+    }
   }
   return false;
 }

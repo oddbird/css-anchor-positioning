@@ -2,7 +2,7 @@ import type { Block, CssNode } from 'css-tree';
 import { List } from 'css-tree/utils';
 import walk from 'css-tree/walker';
 
-import { ACCEPTED_POSITION_TRY_PROPERTIES } from './syntax.js';
+import { ACCEPTED_POSITION_TRY_PROPERTIES, PADDING_PROPS } from './syntax.js';
 import {
   generateCSS,
   getAST,
@@ -19,6 +19,8 @@ import {
  */
 export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...ACCEPTED_POSITION_TRY_PROPERTIES,
+  // Padding props are shifted for use with position-area
+  ...PADDING_PROPS,
   'anchor-scope',
   'anchor-name',
 ].reduce(
