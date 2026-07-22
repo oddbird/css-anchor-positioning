@@ -156,7 +156,7 @@ test('anchors to a pseudo-element inside a shadow root', async ({ page }) => {
   // `anchor(bottom)` resolves within the anchor's own box, so its top stays
   // above the anchor's bottom edge. Without the fix the un-hidden 100px
   // `::before` pushes the target well below that edge.
-  expect(targetBox!.y).toBeLessThan(anchorBox!.y + anchorBox!.height);
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height);
 });
 
 test('emulates non-inheritance of shifted properties inside a shadow root without `CSS.registerProperty`', async ({

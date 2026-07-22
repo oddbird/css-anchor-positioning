@@ -274,7 +274,7 @@ customElements.define("anchor-web-component", AnchorDemo);
               }
               #shadow-pseudo-anchor::before {
                 content: 'Anchor';
-                display: block;
+                display: flex;
                 width: 120px;
                 height: 100px;
                 background: var(--anchor-color);
@@ -282,7 +282,8 @@ customElements.define("anchor-web-component", AnchorDemo);
                 color: white;
                 font-weight: bold;
                 text-align: center;
-                align-content: center;
+                align-items: center;
+                justify-content: center;
                 anchor-name: --shadow-pseudo-anchor;
               }
               #shadow-pseudo-target {
