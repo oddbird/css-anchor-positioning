@@ -21,8 +21,9 @@ export function isInsetProp(
   return INSET_PROPS.includes(property as InsetProperty);
 }
 
-// Margin properties
-export const MARGIN_PROPERTIES = [
+// Margin (and its longhands) resolves percentages — and distributes `auto` —
+// against the containing block's width.
+export const MARGIN_PROPS = [
   'margin-block-start',
   'margin-block-end',
   'margin-block',
@@ -36,13 +37,14 @@ export const MARGIN_PROPERTIES = [
   'margin',
 ] as const;
 
-export type MarginProperty = (typeof MARGIN_PROPERTIES)[number];
+export type MarginProperty = (typeof MARGIN_PROPS)[number];
 
 export function isMarginProp(property: string): property is MarginProperty {
-  return MARGIN_PROPERTIES.includes(property as MarginProperty);
+  return MARGIN_PROPS.includes(property as MarginProperty);
 }
 
-// Sizing properties
+// Sizing properties resolve a percentage, `stretch`, or `-webkit-fill-available`
+// against the containing block's size.
 export const SIZING_PROPS = [
   'width',
   'height',
@@ -64,6 +66,22 @@ export function isSizingProp(property: string): property is SizingProperty {
   return SIZING_PROPS.includes(property as SizingProperty);
 }
 
+// Padding (and its longhands) resolves percentages against the containing
+// block's width.
+export const PADDING_PROPS = [
+  'padding',
+  'padding-top',
+  'padding-right',
+  'padding-bottom',
+  'padding-left',
+  'padding-block',
+  'padding-inline',
+  'padding-block-start',
+  'padding-block-end',
+  'padding-inline-start',
+  'padding-inline-end',
+] as const;
+
 // Self Alignment Properties
 export const SELF_ALIGNMENT_PROPS = [
   'justify-self',
@@ -82,7 +100,7 @@ export function isSelfAlignmentProp(
 // Accepted position try properties
 export const ACCEPTED_POSITION_TRY_PROPERTIES = [
   ...INSET_PROPS,
-  ...MARGIN_PROPERTIES,
+  ...MARGIN_PROPS,
   ...SIZING_PROPS,
   ...SELF_ALIGNMENT_PROPS,
   'position-anchor',
@@ -104,7 +122,7 @@ export function isAcceptedPositionTryProp(
 export const ACCEPTED_ANCHOR_SIZE_PROPERTIES = [
   ...SIZING_PROPS,
   ...INSET_PROPS,
-  ...MARGIN_PROPERTIES,
+  ...MARGIN_PROPS,
 ] as const;
 
 export type AcceptedAnchorSizeProperty =

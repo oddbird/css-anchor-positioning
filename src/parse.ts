@@ -23,10 +23,12 @@ import type {
   NormalizedAnchorPositioningPolyfillOptions,
 } from './polyfill.js';
 import {
+  activeTargetStyles,
   activeWrapperStyles,
   addPositionAreaDeclarationBlockStyles,
   dataForPositionAreaTarget,
   getPositionAreaDeclaration,
+  hasContainingBlockDependentDeclaration,
   type PositionAreaDeclaration,
   type PositionAreaTargetData,
 } from './position-area.js';
@@ -344,6 +346,8 @@ export async function parseCSS(
 ) {
   const anchorFunctions: AnchorFunctionDeclarations = {};
   const positionAreas: PositionAreaDeclarations = {};
+  const positionAreaContainingBlock = options.positionAreaContainingBlock;
+
   resetStores();
 
   // Parse `position-try` and related declarations/rules
@@ -399,6 +403,7 @@ export async function parseCSS(
           addPositionAreaDeclarationBlockStyles(
             positionAreaDeclaration,
             this.block,
+            positionAreaContainingBlock,
           );
           for (const { selector } of selectors) {
             positionAreas[selector] = [
@@ -819,9 +824,15 @@ export async function parseCSS(
   //
   // .foo { position-area: start }
   // .foo { position-area: end }
+  const positionAreaTargets = Object.entries(positionAreas).map(
+    ([targetSel, positions]) => ({
+      targetSel,
+      positions,
+      targets: querySelectorAllRoots(options.roots, targetSel),
+    }),
+  );
 
-  for (const [targetSel, positions] of Object.entries(positionAreas)) {
-    const targets = querySelectorAllRoots(options.roots, targetSel);
+  for (const { targetSel, positions, targets } of positionAreaTargets) {
     for (const targetEl of targets) {
       // For every target element, find a valid anchor element.
       const anchorEl = await getAnchorEl(
@@ -831,15 +842,27 @@ export async function parseCSS(
         anchorNamesSnapshot,
         anchorScopesSnapshot,
       );
+      // Resolve whether this target needs the wrapper. In `'auto'` mode, wrap
+      // only targets with containing-block-dependent styles; otherwise the
+      // option value is used directly.
+      const needsWrapper =
+        positionAreaContainingBlock === 'auto'
+          ? hasContainingBlockDependentDeclaration(targetEl)
+          : positionAreaContainingBlock;
       // For every position-area declaration with this selector, create a new
-      // UUID, and make sure the target has a wrapper.
+      // UUID, and make sure the target has a wrapper (or is marked with a
+      // matching attribute, when the wrapper is not needed).
       for (const positionData of positions) {
         const targetData = await dataForPositionAreaTarget(
           targetEl,
           positionData,
           anchorEl,
+          needsWrapper,
         );
-        positionAreaMappingStyleElement.css += activeWrapperStyles(
+        const activeStyles = needsWrapper
+          ? activeWrapperStyles
+          : activeTargetStyles;
+        positionAreaMappingStyleElement.css += activeStyles(
           targetData.targetUUID,
           positionData.selectorUUID,
         );

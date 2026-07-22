@@ -28,10 +28,12 @@ export interface PseudoElement extends VirtualElement {
  * Possible values for `anchor-scope`
  * (in addition to any valid dashed identifier)
  */
-export const enum AnchorScopeValue {
-  All = 'all',
-  None = 'none',
-}
+export const AnchorScopeValue = {
+  All: 'all',
+  None: 'none',
+} as const;
+export type AnchorScopeValue =
+  (typeof AnchorScopeValue)[keyof typeof AnchorScopeValue];
 
 /**
  * Gets the computed value of a CSS property for an element or pseudo-element.

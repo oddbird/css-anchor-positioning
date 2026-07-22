@@ -16,18 +16,46 @@
 // won the cascade and the targetUUID. This stylesheet maps the properties set
 // on the root element to `--pa-value-*:`.
 
-// Each target is wrapped with a `polyfill-position-area` element. It sets its
-// inset values from `--pa-value-*` values. The `justify-self` and `align-self`
-// properties are mapped on the element itself.
+// By default (the `positionAreaContainingBlock` option is `true`), each target
+// is wrapped with a `polyfill-position-area` element that approximates the
+// containing block created by `position-area`. The wrapper sets its own inset
+// values from `--pa-wrapper-*` values, and the `justify-self` and `align-self`
+// properties are mapped on the target itself.
+
+// When the `positionAreaContainingBlock` option is `false`, no wrapper element
+// is added. Instead of the wrapper approximating the containing block, the
+// target's position within the position-area grid area is resolved to pixel
+// inset values in polyfill.ts, so the target is positioned directly.
+
+// When the option is `'auto'`, the choice is made per target: a target whose
+// styles resolve against the containing block (see
+// `hasContainingBlockDependentDeclaration`) is wrapped, and any other target is
+// positioned directly. Because the generated declarations are shared by every
+// element matching a selector, both the wrapped (`justify-self`/`align-self`)
+// and unwrapped (inset) declarations are emitted, each falling back to its
+// initial value so only the relevant set takes effect per target.
 
 import { type Block, type CssNode, type Identifier } from 'css-tree';
 import { type List } from 'css-tree/utils';
 import { nanoid } from 'nanoid';
 
-import { getOffsetParent, type PseudoElement } from './dom.js';
+import {
+  getCSSPropertyValue,
+  getOffsetParent,
+  type PseudoElement,
+} from './dom.js';
+import {
+  MARGIN_PROPS,
+  PADDING_PROPS,
+  SELF_ALIGNMENT_PROPS,
+  SIZING_PROPS,
+} from './syntax.js';
 import {
   type DeclarationWithValue,
   INSTANCE_UUID,
+  PA_INSET_SIDES,
+  paValueProperty,
+  paWrapperProperty,
   strategyForElement,
 } from './utils.js';
 
@@ -37,29 +65,80 @@ import {
 // property an author might be using.
 export const POSITION_AREA_CASCADE_PROPERTY = `--pa-cascade-property-${INSTANCE_UUID}`;
 
-// Names the custom property the polyfill uses to carry a resolved
-// `position-area` value (e.g. `top`, `justify-self`) from the mapping
-// stylesheet to the wrapper. Suffixed with `INSTANCE_UUID` so we don't squat on
-// an author's custom property. Read and write sites all go through this helper
-// so the names can't drift.
-const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
-
 // Set this as an attribute on a wrapper with the uuid of the winning
 // `POSITION_AREA_CASCADE_PROPERTY` as the value.
 export const POSITION_AREA_WRAPPER_ATTRIBUTE = 'data-anchor-position-wrapper';
 
+// Set this as an attribute on the target with the uuid of the winning
+// `POSITION_AREA_CASCADE_PROPERTY` as the value, when the target is not wrapped
+// (the `positionAreaContainingBlock` option is `false`, or `'auto'` and the
+// target's styles don't depend on the containing block).
+export const POSITION_AREA_TARGET_ATTRIBUTE = 'data-anchor-position-area';
+
 const WRAPPER_TARGET_ATTRIBUTE_PRELUDE = 'data-pa-wrapper-for-';
+const TARGET_ATTRIBUTE_PRELUDE = 'data-pa-target-for-';
 const WRAPPER_ELEMENT = 'POLYFILL-POSITION-AREA';
+
+// The `positionAreaContainingBlock` option. `true` always wraps the target,
+// `false` never does, and `'auto'` wraps only targets that have styles which
+// resolve against the containing block (and so need the area-sized block that
+// `position-area` would natively create).
+export type PositionAreaContainingBlock = boolean | 'auto';
+
+/**
+ * Whether a declaration's value resolves against the containing block, and so
+ * would compute differently inside the area-sized block that `position-area`
+ * creates than against the original containing block. Used by the `'auto'`
+ * mode of `positionAreaContainingBlock` to decide whether a target needs the
+ * wrapper element.
+ *
+ * The check is intentionally conservative: when in doubt it returns `true` so
+ * the wrapper is kept (the always-correct behavior). Inset properties are
+ * ignored because the polyfill overrides them on the target regardless.
+ */
+export function hasContainingBlockDependentDeclaration(
+  element: HTMLElement,
+): boolean {
+  for (const prop of SIZING_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (
+      ['%', 'stretch', 'fit-content', '-webkit-fill-available'].some(
+        (testVal) => val.includes(testVal),
+      )
+    ) {
+      return true;
+    }
+  }
+  for (const prop of MARGIN_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (['%', 'auto'].some((testVal) => val.includes(testVal))) {
+      return true;
+    }
+  }
+  for (const prop of PADDING_PROPS) {
+    if (getCSSPropertyValue(element, prop).includes('%')) {
+      return true;
+    }
+  }
+  for (const prop of SELF_ALIGNMENT_PROPS) {
+    const val = getCSSPropertyValue(element, prop);
+    if (['stretch', 'anchor-center'].some((testVal) => val.includes(testVal))) {
+      return true;
+    }
+  }
+  return false;
+}
 
 type PositionAreaGridValue = 0 | 1 | 2 | 3;
 
-enum WritingMode {
-  Logical = 'Logical',
-  LogicalSelf = 'LogicalSelf',
-  Physical = 'Physical',
-  PhysicalSelf = 'PhysicalSelf',
-  Irrelevant = 'Irrelevant',
-}
+const WritingMode = {
+  Logical: 'Logical',
+  LogicalSelf: 'LogicalSelf',
+  Physical: 'Physical',
+  PhysicalSelf: 'PhysicalSelf',
+  Irrelevant: 'Irrelevant',
+} as const;
+type WritingMode = (typeof WritingMode)[keyof typeof WritingMode];
 
 export const POSITION_AREA_PROPS = [
   'left',
@@ -457,7 +536,8 @@ export interface PositionAreaTargetData {
   selectorUUID: string;
   targetUUID: string;
   anchorEl: HTMLElement | PseudoElement | null;
-  wrapperEl: HTMLElement;
+  // Present only when the target is wrapped (see `positionAreaContainingBlock`).
+  wrapperEl?: HTMLElement;
   targetEl: HTMLElement;
 }
 
@@ -527,25 +607,46 @@ export function getPositionAreaDeclaration(
 export function addPositionAreaDeclarationBlockStyles(
   declaration: PositionAreaDeclaration,
   block: Block,
+  positionAreaContainingBlock: PositionAreaContainingBlock = true,
 ) {
-  [
-    // Insets are applied to a wrapping element
-    'justify-self',
-    'align-self',
-  ].forEach((prop) => {
+  const appendDeclaration = (property: string, value: string) => {
     block.children.appendData({
       type: 'Declaration',
-      property: prop,
-      value: { type: 'Raw', value: `var(${paValueProperty(prop)})` },
+      property,
+      value: { type: 'Raw', value },
       important: false,
     });
-  });
-  block.children.appendData({
-    type: 'Declaration',
-    property: POSITION_AREA_CASCADE_PROPERTY,
-    value: { type: 'Raw', value: declaration.selectorUUID },
-    important: false,
-  });
+  };
+
+  if (positionAreaContainingBlock === 'auto') {
+    // The decision to wrap is made per target, but these declarations are
+    // shared by every element matching the selector. Emit both the wrapped
+    // (alignment) and unwrapped (inset) declarations, each with a fallback to
+    // its initial value. A wrapped target only receives the alignment values
+    // (the insets fall back to `auto`); a directly-positioned target only
+    // receives the inset values (the alignments fall back to `normal`).
+    appendDeclaration(
+      'justify-self',
+      `var(${paValueProperty('justify-self')}, normal)`,
+    );
+    appendDeclaration(
+      'align-self',
+      `var(${paValueProperty('align-self')}, normal)`,
+    );
+    PA_INSET_SIDES.forEach((prop) =>
+      appendDeclaration(prop, `var(${paValueProperty(prop)}, auto)`),
+    );
+  } else {
+    const props = positionAreaContainingBlock
+      ? // Insets are applied to a wrapping element
+        ['justify-self', 'align-self']
+      : // Insets are applied to the target itself
+        [...PA_INSET_SIDES];
+    props.forEach((prop) =>
+      appendDeclaration(prop, `var(${paValueProperty(prop)})`),
+    );
+  }
+  appendDeclaration(POSITION_AREA_CASCADE_PROPERTY, declaration.selectorUUID);
 }
 
 export function wrapperForPositionedElement(
@@ -590,8 +691,12 @@ export function wrapperForPositionedElement(
       targetEl.style.inset = 'auto';
     }
 
-    ['top', 'left', 'right', 'bottom'].forEach((prop) => {
-      wrapperEl.style.setProperty(prop, `var(${paValueProperty(prop)})`);
+    // The wrapper's own insets use a dedicated custom property namespace. In
+    // `'auto'` mode the (shared) target rule reads `--pa-value-*` for its insets
+    // with an `auto` fallback; using `--pa-wrapper-*` here keeps the wrapper's
+    // inset values from being inherited by the target as its own insets.
+    PA_INSET_SIDES.forEach((prop) => {
+      wrapperEl.style.setProperty(prop, `var(${paWrapperProperty(prop)})`);
     });
     // Insert the wrapper relative to the target itself rather than going
     // through its parent: when `targetEl` sits directly inside a shadow root,
@@ -611,10 +716,20 @@ export function wrapperForPositionedElement(
   return wrapperEl;
 }
 
+export function markPositionAreaTarget(
+  targetEl: HTMLElement,
+  targetUUID: string,
+) {
+  // A target can be affected by multiple declarations, so set each targetUUID
+  // as a boolean attribute instead of a value.
+  targetEl.setAttribute(`${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}`, '');
+}
+
 export async function dataForPositionAreaTarget(
   targetEl: HTMLElement,
   positionAreaData: PositionAreaDeclaration,
   anchorEl: HTMLElement | PseudoElement | null,
+  wrap = true,
 ): Promise<PositionAreaTargetData> {
   const targetUUID = `--pa-target-${nanoid(12)}`;
   const writingModeModifiedGrid = await getWritingModeModifiedGrid(
@@ -623,16 +738,29 @@ export async function dataForPositionAreaTarget(
   );
   const insets = getInsets(writingModeModifiedGrid);
 
-  const relevantWritingMode = getRelevantWritingMode(
-    positionAreaData.grid.block[2],
-    positionAreaData.grid.inline[2],
-  );
-  const alignmentGrid = [
-    WritingMode.LogicalSelf,
-    WritingMode.PhysicalSelf,
-  ].includes(relevantWritingMode)
-    ? writingModeModifiedGrid
-    : positionAreaData.grid;
+  let alignmentGrid;
+  if (wrap) {
+    // The wrapper inherits the writing mode of the containing block, so
+    // logical alignment values are resolved natively by CSS. Only `self`
+    // writing modes (based on the target's own writing mode) need the
+    // writing-mode-modified grid.
+    const relevantWritingMode = getRelevantWritingMode(
+      positionAreaData.grid.block[2],
+      positionAreaData.grid.inline[2],
+    );
+    const selfWritingModes: WritingMode[] = [
+      WritingMode.LogicalSelf,
+      WritingMode.PhysicalSelf,
+    ];
+    alignmentGrid = selfWritingModes.includes(relevantWritingMode)
+      ? writingModeModifiedGrid
+      : positionAreaData.grid;
+  } else {
+    // Alignments are resolved to physical inset values in polyfill.ts, so
+    // they are always based on the writing-mode-modified (physical) grid,
+    // like the insets.
+    alignmentGrid = writingModeModifiedGrid;
+  }
   const alignments = {
     block: getAxisAlignment([alignmentGrid.block[0], alignmentGrid.block[1]]),
     inline: getAxisAlignment([
@@ -641,13 +769,20 @@ export async function dataForPositionAreaTarget(
     ]),
   };
 
+  let wrapperEl;
+  if (wrap) {
+    wrapperEl = wrapperForPositionedElement(targetEl, targetUUID);
+  } else {
+    markPositionAreaTarget(targetEl, targetUUID);
+  }
+
   return {
     insets,
     alignments,
     targetUUID,
     targetEl,
     anchorEl,
-    wrapperEl: wrapperForPositionedElement(targetEl, targetUUID),
+    wrapperEl,
     values: positionAreaData.values,
     grid: positionAreaData.grid,
     selectorUUID: positionAreaData.selectorUUID,
@@ -655,14 +790,25 @@ export async function dataForPositionAreaTarget(
 }
 
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
+  const insets = PA_INSET_SIDES.map(
+    (side) => `${paWrapperProperty(side)}: var(${targetUUID}-${side});`,
+  ).join('\n      ');
   return `
     [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
-      ${paValueProperty('top')}: var(${targetUUID}-top);
-      ${paValueProperty('left')}: var(${targetUUID}-left);
-      ${paValueProperty('right')}: var(${targetUUID}-right);
-      ${paValueProperty('bottom')}: var(${targetUUID}-bottom);
+      ${insets}
       ${paValueProperty('justify-self')}: var(${targetUUID}-justify-self);
       ${paValueProperty('align-self')}: var(${targetUUID}-align-self);
+    }
+  `.replaceAll('\n', '');
+}
+
+export function activeTargetStyles(targetUUID: string, selectorUUID: string) {
+  const insets = PA_INSET_SIDES.map(
+    (side) => `${paValueProperty(side)}: var(${targetUUID}-${side});`,
+  ).join('\n      ');
+  return `
+    [${POSITION_AREA_TARGET_ATTRIBUTE}="${selectorUUID}"][${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
+      ${insets}
     }
   `.replaceAll('\n', '');
 }

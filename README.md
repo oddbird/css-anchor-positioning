@@ -103,6 +103,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     };
@@ -122,6 +123,7 @@ an argument.
     polyfill({
       elements: undefined,
       excludeInlineStyles: false,
+      positionAreaContainingBlock: true,
       roots: [document],
       useAnimationFrame: false,
     });
@@ -172,6 +174,42 @@ For legacy support, this option can also be set by setting the value of
 `window.UPDATE_ANCHOR_ON_ANIMATION_FRAME`, or, when applying the polyfill
 manually, by passing a single boolean with `polyfill(true)`.
 
+### positionAreaContainingBlock
+
+type: `boolean | 'auto'`, default: `true`
+
+Controls how the polyfill emulates the containing block that `position-area`
+natively creates for a target.
+
+- `true` (default): the polyfill wraps each `position-area` target with an
+  element that approximates the grid-area containing block, and aligns the
+  target within it. This matches the native behavior most closely, but the extra
+  wrapper element can interfere with author CSS that depends on the target's
+  position in the DOM tree (for example direct-child or sibling combinators, or
+  flex/grid layout of the target's original parent).
+- `false`: the polyfill never adds a wrapper. Instead it computes and applies
+  inset values directly on the target. This avoids the extra element, but styles
+  that resolve against the containing block — percentage sizes, `auto` or
+  percentage margins, percentage padding, or `stretch`/`anchor-center`
+  self-alignment — will not match the native behavior.
+- `'auto'`: the polyfill adds the wrapper only for targets whose styles resolve
+  against the containing block (using the same heuristics listed above), and
+  positions all other targets directly. This keeps the wrapper's correctness
+  where it matters while avoiding the extra element for the common case.
+
+  Two caveats apply to `'auto'`:
+
+  - The wrap decision is made from a target's base styles when the polyfill
+    runs. Containing-block-dependent styles that appear only in a
+    `@position-try` fallback block are not detected, so a target that becomes
+    containing-block dependent only in a fallback may be positioned without the
+    wrapper it needs.
+  - The decision is computed once and not re-evaluated. If author CSS later
+    toggles a containing-block-dependent style on a target (for example by
+    adding a class with a percentage size or `auto` margin), the target is not
+    re-wrapped. Use `true` when a target's containing-block dependence can
+    change at runtime.
+
 ## Limitations
 
 While this polyfill supports many basic use cases, it doesn't (yet) support the
@@ -204,20 +242,26 @@ following features:
 - vertical/rtl writing-modes for anchor functions (partial support)
 - implicit anchors or the `position-anchor: auto` keyword (pending resolution of
   https://github.com/whatwg/html/pull/9144)
-- `position-area` is polyfilled by adding a wrapping element around the target,
-  which adds a few differences:
-  - This breaks selectors that rely on a direct relationship with the target,
-    for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+- `position-area` support has a few differences from native behavior:
   - Overflow alignment is not applied for a target that overflows its
     inset-modified containing block but would still fit within its original
     containing block. In other words, a polyfilled target may be placed in a
     `position-area` grid section outside its containing block, where the
     implementation would move the target inside the containing block.
-  - For `popover` targets, the browser promotes the element to the top layer
-    when it is shown, which makes the viewport (not the wrapper) its containing
-    block. To work around this, the polyfill strips any non-`auto` inset from
-    the target (setting `inset: auto`) and re-applies it as padding on the
-    wrapper, so the wrapper continues to drive positioning.
+  - When the polyfill emulates the containing block by adding a wrapping element
+    around the target (see the [`positionAreaContainingBlock`](#positionareacontainingblock)
+    option), this adds further differences:
+    - It breaks selectors that rely on a direct relationship with the target,
+      for instance `~ target`, `+ target`, `> target` or using `:nth` selectors.
+    - For `popover` targets, the browser promotes the element to the top layer
+      when it is shown, which makes the viewport (not the wrapper) its
+      containing block. To work around this, the polyfill strips any non-`auto`
+      inset from the target (setting `inset: auto`) and re-applies it as padding
+      on the wrapper, so the wrapper continues to drive positioning.
+  - When the wrapper is not added, styles that resolve against the containing
+    block — percentage sizes, `auto` or percentage margins, percentage padding,
+    or `stretch`/`anchor-center` self-alignment — will not match native
+    behavior.
 
 In addition, JS APIs like `CSSPositionTryRule` or `CSS.supports` will not be
 polyfilled.
