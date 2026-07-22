@@ -45,7 +45,7 @@ jobs:
           git push origin $RESULTS_BRANCH
           git switch ${{ github.ref_name }}
       - name: Clone WPT results branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ env.RESULTS_BRANCH }}
           path: wpt-results
@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: '3.x'
       - name: Clone WPT repo
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.WPT_REPO }}
           ref: ${{ env.WPT_REF }}
