@@ -134,6 +134,31 @@ test('positions every custom-element host sharing one constructed stylesheet', a
   }
 });
 
+test('anchors to a pseudo-element inside a shadow root', async ({ page }) => {
+  // `#shadow-pseudo-anchor::before` (a block, 100px tall) is the anchor; the
+  // target uses `top: anchor(bottom)`. To measure a pseudo-element the polyfill
+  // builds a temporary "fake pseudo-element" plus a `<style>` that supplies the
+  // `content` and hides the real pseudo-element during measurement. That style
+  // must be appended to the shadow root: a `<style>` in `document.head` does not
+  // apply inside a shadow root, so the real `::before` would not be hidden and
+  // would push the measured anchor (and thus the target) a full `::before`
+  // height below the anchor box. See issue #425.
+  const anchor = page.locator('anchor-pseudo-element #shadow-pseudo-anchor');
+  const target = page.locator('anchor-pseudo-element #shadow-pseudo-target');
+
+  await applyPolyfill(page);
+
+  const anchorBox = await anchor.boundingBox();
+  const targetBox = await target.boundingBox();
+
+  // The anchor `<span>` wraps only the block `::before`, so their boxes match.
+  // With the pseudo-element correctly hidden during measurement, the target's
+  // `anchor(bottom)` resolves within the anchor's own box, so its top stays
+  // above the anchor's bottom edge. Without the fix the un-hidden 100px
+  // `::before` pushes the target well below that edge.
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height);
+});
+
 test('emulates non-inheritance of shifted properties inside a shadow root without `CSS.registerProperty`', async ({
   page,
 }) => {

@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
 import { type AnchorPositioningRoot } from './polyfill.js';
+import { getRootStyleContainer } from './utils.js';
 
 /**
  * Representation of a CSS selector that allows getting the element part and
@@ -93,7 +94,13 @@ function createFakePseudoElement(
   // Hide the pseudo-element while the "fake pseudo-element" is visible.
   sheet.textContent += `${selector} { display: none !important; }`;
 
-  document.head.append(sheet);
+  // Append the sheet to the element's own root, not `document.head`: a
+  // `<style>` in `document.head` does not apply inside a shadow root, so the
+  // `content` rule (which sizes the fake pseudo-element) and the `display: none`
+  // rule (which hides the real pseudo-element) would both be ignored when
+  // `element` lives in a shadow tree. The fake pseudo-element is inserted into
+  // `element` below, so it shares this same root.
+  getRootStyleContainer(element).append(sheet);
 
   const insertionPoint =
     pseudoElementPart === '::before' ? 'afterbegin' : 'beforeend';
