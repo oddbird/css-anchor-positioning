@@ -202,9 +202,7 @@ export const paWrapperProperty = (prop: string) =>
   `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
 
 // The physical sides the polyfill sets as insets, on the wrapper or (in the
-// unwrapped path) directly on the target. A single source of truth so the
-// mapping-stylesheet writes, the `var()` reads, and the non-inheritance
-// registration in `cascade.ts` can't drift out of sync.
+// unwrapped path) directly on the target.
 export const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
 
 // Custom properties the polyfill both sets on and reads from the *same* element
