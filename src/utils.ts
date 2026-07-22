@@ -193,30 +193,43 @@ export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
 // `position-area.ts`) so `cascade.ts` can register these as non-inherited
 // without importing `position-area.ts` -- that would create a
 // `cascade -> position-area -> dom -> cascade` import cycle.
-export const paValueProperty = (prop: string) =>
-  `--pa-value-${prop}-${INSTANCE_UUID}`;
+const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
 
 // Names the custom properties for a wrapper's insets, so a shared `auto`
 // selector's target insets don't collide.
-export const paWrapperProperty = (prop: string) =>
+const paWrapperProperty = (prop: string) =>
   `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
 
 // The physical sides the polyfill sets as insets, on the wrapper or (in the
 // unwrapped path) directly on the target.
 export const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
 
+export const paValueProperties = new Map<string, string>([
+  ...PA_INSET_SIDES.map((side): [string, string] => [
+    side,
+    paValueProperty(side),
+  ]),
+  ['justify-self', paValueProperty('justify-self')],
+  ['align-self', paValueProperty('align-self')],
+]);
+
+export const paWrapperProperties = new Map<string, string>(
+  PA_INSET_SIDES.map((side): [string, string] => [
+    side,
+    paWrapperProperty(side),
+  ]),
+);
+
 // Custom properties the polyfill both sets on and reads from the *same* element
 // -- the wrapper's insets, and (in the unwrapped path) the target's insets.
-// These must be registered non-inherited: unlike
-// `--pa-value-{justify,align}-self` (which are set on the wrapper and read on
-// the target child, and so must inherit), an inset set on one `position-area`
+// These must be registered non-inherited: an inset set on one `position-area`
 // target would otherwise leak through inheritance onto a descendant that is
 // itself a `position-area` target, overriding its `auto` fallback. See
 // `registerShiftedProperties` in cascade.ts and
 // https://github.com/oddbird/css-anchor-positioning/issues/279.
 export const NON_INHERITED_POSITION_AREA_PROPERTIES = [
-  ...PA_INSET_SIDES.map((side) => paValueProperty(side)),
-  ...PA_INSET_SIDES.map((side) => paWrapperProperty(side)),
+  ...paValueProperties.values(),
+  ...paWrapperProperties.values(),
 ];
 
 export function splitCommaList(list: List<CssNode>) {

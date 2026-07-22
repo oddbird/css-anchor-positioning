@@ -263,7 +263,7 @@ describe('position-area', () => {
   describe('activeWrapperStyles', () => {
     it('returns the active styles', () => {
       // Built with `INSTANCE_UUID` rather than a stored snapshot, since the
-      // UUID differs per run (see `paValueProperty`).
+      // UUID differs per run (see `paValueProperties`).
       const u = INSTANCE_UUID;
       expect(activeWrapperStyles('targetUUID', 'selectorUUID')).toBe(
         '    [data-anchor-position-wrapper="selectorUUID"]' +
@@ -272,6 +272,9 @@ describe('position-area', () => {
           `      --pa-wrapper-left-${u}: var(targetUUID-left);` +
           `      --pa-wrapper-right-${u}: var(targetUUID-right);` +
           `      --pa-wrapper-bottom-${u}: var(targetUUID-bottom);` +
+          `    }` +
+          '    [data-anchor-position-wrapper="selectorUUID"]' +
+          '[data-pa-wrapper-for-targetUUID] > * {' +
           `      --pa-value-justify-self-${u}: var(targetUUID-justify-self);` +
           `      --pa-value-align-self-${u}: var(targetUUID-align-self);` +
           '    }  ',

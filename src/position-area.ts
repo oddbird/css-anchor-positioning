@@ -54,8 +54,8 @@ import {
   type DeclarationWithValue,
   INSTANCE_UUID,
   PA_INSET_SIDES,
-  paValueProperty,
-  paWrapperProperty,
+  paValueProperties,
+  paWrapperProperties,
   strategyForElement,
 } from './utils.js';
 
@@ -627,14 +627,14 @@ export function addPositionAreaDeclarationBlockStyles(
     // receives the inset values (the alignments fall back to `normal`).
     appendDeclaration(
       'justify-self',
-      `var(${paValueProperty('justify-self')}, normal)`,
+      `var(${paValueProperties.get('justify-self')}, normal)`,
     );
     appendDeclaration(
       'align-self',
-      `var(${paValueProperty('align-self')}, normal)`,
+      `var(${paValueProperties.get('align-self')}, normal)`,
     );
     PA_INSET_SIDES.forEach((prop) =>
-      appendDeclaration(prop, `var(${paValueProperty(prop)}, auto)`),
+      appendDeclaration(prop, `var(${paValueProperties.get(prop)}, auto)`),
     );
   } else {
     const props = positionAreaContainingBlock
@@ -643,7 +643,7 @@ export function addPositionAreaDeclarationBlockStyles(
       : // Insets are applied to the target itself
         [...PA_INSET_SIDES];
     props.forEach((prop) =>
-      appendDeclaration(prop, `var(${paValueProperty(prop)})`),
+      appendDeclaration(prop, `var(${paValueProperties.get(prop)})`),
     );
   }
   appendDeclaration(POSITION_AREA_CASCADE_PROPERTY, declaration.selectorUUID);
@@ -696,7 +696,10 @@ export function wrapperForPositionedElement(
     // with an `auto` fallback; using `--pa-wrapper-*` here keeps the wrapper's
     // inset values from being inherited by the target as its own insets.
     PA_INSET_SIDES.forEach((prop) => {
-      wrapperEl.style.setProperty(prop, `var(${paWrapperProperty(prop)})`);
+      wrapperEl.style.setProperty(
+        prop,
+        `var(${paWrapperProperties.get(prop)})`,
+      );
     });
     // Insert the wrapper relative to the target itself rather than going
     // through its parent: when `targetEl` sits directly inside a shadow root,
@@ -791,20 +794,22 @@ export async function dataForPositionAreaTarget(
 
 export function activeWrapperStyles(targetUUID: string, selectorUUID: string) {
   const insets = PA_INSET_SIDES.map(
-    (side) => `${paWrapperProperty(side)}: var(${targetUUID}-${side});`,
+    (side) => `${paWrapperProperties.get(side)}: var(${targetUUID}-${side});`,
   ).join('\n      ');
   return `
     [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
       ${insets}
-      ${paValueProperty('justify-self')}: var(${targetUUID}-justify-self);
-      ${paValueProperty('align-self')}: var(${targetUUID}-align-self);
+    }
+    [${POSITION_AREA_WRAPPER_ATTRIBUTE}="${selectorUUID}"][${WRAPPER_TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] > * {
+      ${paValueProperties.get('justify-self')}: var(${targetUUID}-justify-self);
+      ${paValueProperties.get('align-self')}: var(${targetUUID}-align-self);
     }
   `.replaceAll('\n', '');
 }
 
 export function activeTargetStyles(targetUUID: string, selectorUUID: string) {
   const insets = PA_INSET_SIDES.map(
-    (side) => `${paValueProperty(side)}: var(${targetUUID}-${side});`,
+    (side) => `${paValueProperties.get(side)}: var(${targetUUID}-${side});`,
   ).join('\n      ');
   return `
     [${POSITION_AREA_TARGET_ATTRIBUTE}="${selectorUUID}"][${TARGET_ATTRIBUTE_PRELUDE}${targetUUID}] {
