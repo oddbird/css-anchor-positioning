@@ -199,18 +199,13 @@ const PA_VALUE_PROPS = [
 ] as const;
 export type PaValueProp = (typeof PA_VALUE_PROPS)[number];
 
-// Names the custom property the polyfill uses to carry a resolved
+// Names the custom properties the polyfill uses to carry a resolved
 // `position-area` value (e.g. `top`, `justify-self`) from the mapping
 // stylesheet to the target or wrapper, and the parallel `--pa-wrapper-*`
 // namespace for a wrapper's insets (so a shared `auto` selector's target insets
-// don't collide). Suffixed with `INSTANCE_UUID` so we don't squat on an
-// author's custom property. Precomputed into Maps (rather than helper
-// functions) so `NON_INHERITED_POSITION_AREA_PROPERTIES` below stays in
-// lockstep with the exact set of names read/written at the call sites; the keys
-// are typed so a mistyped property is a compile error. Exported as
-// `ReadonlyMap` so a consumer can't `.set`/`.delete` and silently desync
-// `NON_INHERITED_POSITION_AREA_PROPERTIES` (snapshotted from `.values()`
-// below).
+// don't collide). Precomputed into Maps so
+// `NON_INHERITED_POSITION_AREA_PROPERTIES` below stays in lockstep with the
+// exact set of names read/written at the call sites.
 export const paValueProperties: ReadonlyMap<PaValueProp, string> = new Map(
   PA_VALUE_PROPS.map((prop) => [prop, `--pa-value-${prop}-${INSTANCE_UUID}`]),
 );
