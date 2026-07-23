@@ -183,6 +183,20 @@
       </div>
     </section>
 
+    <section class="position-area-demo-item" id="nested-alignment">
+      <h2>
+        <a href="#nested-alignment" aria-hidden="true">🔗</a>
+        <code>alignment does not leak to descendants ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target spanleft-top" id="nested-alignment-target">
+          Target
+          <span id="nested-alignment-descendant">Nested descendant</span>
+        </div>
+      </div>
+    </section>
+
     <section class="position-area-demo-item" id="center-left">
       <h2>
         <a href="#center-left" aria-hidden="true">🔗</a>

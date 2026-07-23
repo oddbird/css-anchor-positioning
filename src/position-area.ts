@@ -54,6 +54,7 @@ import {
   type DeclarationWithValue,
   INSTANCE_UUID,
   PA_INSET_SIDES,
+  type PaValueProp,
   paValueProperties,
   paWrapperProperties,
   strategyForElement,
@@ -637,7 +638,7 @@ export function addPositionAreaDeclarationBlockStyles(
       appendDeclaration(prop, `var(${paValueProperties.get(prop)}, auto)`),
     );
   } else {
-    const props = positionAreaContainingBlock
+    const props: PaValueProp[] = positionAreaContainingBlock
       ? // Insets are applied to a wrapping element
         ['justify-self', 'align-self']
       : // Insets are applied to the target itself

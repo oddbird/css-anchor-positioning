@@ -185,46 +185,43 @@ export function getRootStyleContainer(
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;
 
-// Names the custom property the polyfill uses to carry a resolved
-// `position-area` value (e.g. `top`, `justify-self`) from the mapping
-// stylesheet to the target or wrapper. Suffixed with `INSTANCE_UUID` so we
-// don't squat on an author's custom property. Read and write sites all go
-// through this helper so the names can't drift. Lives here (rather than in
-// `position-area.ts`) so `cascade.ts` can register these as non-inherited
-// without importing `position-area.ts` -- that would create a
-// `cascade -> position-area -> dom -> cascade` import cycle.
-const paValueProperty = (prop: string) => `--pa-value-${prop}-${INSTANCE_UUID}`;
-
-// Names the custom properties for a wrapper's insets, so a shared `auto`
-// selector's target insets don't collide.
-const paWrapperProperty = (prop: string) =>
-  `--pa-wrapper-${prop}-${INSTANCE_UUID}`;
-
 // The physical sides the polyfill sets as insets, on the wrapper or (in the
 // unwrapped path) directly on the target.
 export const PA_INSET_SIDES = ['top', 'left', 'right', 'bottom'] as const;
+type PaInsetSide = (typeof PA_INSET_SIDES)[number];
 
-export const paValueProperties = new Map<string, string>([
-  ...PA_INSET_SIDES.map((side): [string, string] => [
-    side,
-    paValueProperty(side),
-  ]),
-  ['justify-self', paValueProperty('justify-self')],
-  ['align-self', paValueProperty('align-self')],
-]);
+// Every property carried through a `--pa-value-*` custom property: the four
+// insets plus the two alignments.
+const PA_VALUE_PROPS = [
+  ...PA_INSET_SIDES,
+  'justify-self',
+  'align-self',
+] as const;
+export type PaValueProp = (typeof PA_VALUE_PROPS)[number];
 
-export const paWrapperProperties = new Map<string, string>(
-  PA_INSET_SIDES.map((side): [string, string] => [
-    side,
-    paWrapperProperty(side),
-  ]),
+// Names the custom property the polyfill uses to carry a resolved
+// `position-area` value (e.g. `top`, `justify-self`) from the mapping
+// stylesheet to the target or wrapper, and the parallel `--pa-wrapper-*`
+// namespace for a wrapper's insets (so a shared `auto` selector's target insets
+// don't collide). Suffixed with `INSTANCE_UUID` so we don't squat on an
+// author's custom property. Precomputed into Maps (rather than helper
+// functions) so `NON_INHERITED_POSITION_AREA_PROPERTIES` below stays in
+// lockstep with the exact set of names read/written at the call sites; the keys
+// are typed so a mistyped property is a compile error.
+export const paValueProperties = new Map<PaValueProp, string>(
+  PA_VALUE_PROPS.map((prop) => [prop, `--pa-value-${prop}-${INSTANCE_UUID}`]),
+);
+export const paWrapperProperties = new Map<PaInsetSide, string>(
+  PA_INSET_SIDES.map((side) => [side, `--pa-wrapper-${side}-${INSTANCE_UUID}`]),
 );
 
-// Custom properties the polyfill both sets on and reads from the *same* element
-// -- the wrapper's insets, and (in the unwrapped path) the target's insets.
-// These must be registered non-inherited: an inset set on one `position-area`
-// target would otherwise leak through inheritance onto a descendant that is
-// itself a `position-area` target, overriding its `auto` fallback. See
+// Custom properties the polyfill both sets on and reads from the *same*
+// element: the wrapper's insets, the target's insets (in the unwrapped path),
+// and the target-child's alignments (`--pa-value-{justify,align}-self`, set on
+// the wrapper's child via the `> *` rule in `activeWrapperStyles`). These must
+// be registered non-inherited: a value set on one `position-area` target would
+// otherwise leak through inheritance onto a descendant that is itself a
+// `position-area` target, overriding its `auto`/`normal` fallback. See
 // `registerShiftedProperties` in cascade.ts and
 // https://github.com/oddbird/css-anchor-positioning/issues/279.
 export const NON_INHERITED_POSITION_AREA_PROPERTIES = [
