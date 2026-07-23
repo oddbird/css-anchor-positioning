@@ -178,6 +178,64 @@ test('applies logical self properties based on writing mode`', async ({
   );
 });
 
+test('does not leak alignment onto a descendant of a position-area target', async ({
+  page,
+}) => {
+  // The alignment value props (`--pa-value-{justify,align}-self`) are set
+  // directly on the wrapped target's child and registered non-inherited, so a
+  // wrapped target's alignment must not leak onto a descendant (which could
+  // itself be a `position-area` target relying on its own `normal` fallback).
+  // Mirror the inset-leak guard in `polyfill.test.ts` for alignment; exercise
+  // the `CSS.registerProperty`-absent fallback path (the universal `initial`
+  // reset), where a missing reset would let the value inherit. See #438 / #279.
+  await page.addInitScript(() => {
+    delete (CSS as unknown as { registerProperty?: unknown }).registerProperty;
+  });
+  await page.goto('/position-area.html');
+  expect(await page.evaluate(() => typeof CSS.registerProperty)).not.toBe(
+    'function',
+  );
+  await applyPolyfill(page);
+
+  const values = await page.evaluate(() => {
+    // Discover the shifted `--pa-value-justify-self-<uuid>` name from the reset.
+    const resetText = [...document.head.querySelectorAll('style')]
+      .map((el) => el.textContent ?? '')
+      .find((text) => /--pa-value-justify-self-[\w-]+:\s*initial/.test(text));
+    // A missing reset is itself the regression under test (the alignment prop
+    // dropped from the non-inherited set); fail with a legible message rather
+    // than a cryptic "Cannot read properties of undefined" from the `.match`.
+    if (!resetText) {
+      throw new Error(
+        'no `--pa-value-justify-self` reset found — likely dropped from ' +
+          'NON_INHERITED_POSITION_AREA_PROPERTIES',
+      );
+    }
+    const prop = resetText.match(
+      /(--pa-value-justify-self-[\w-]+):\s*initial/,
+    )![1];
+    const target = document.getElementById('nested-alignment-target')!;
+    const wrapper = target.parentElement!; // POLYFILL-POSITION-AREA
+    const descendant = document.getElementById('nested-alignment-descendant')!;
+    const read = (el: Element) =>
+      getComputedStyle(el).getPropertyValue(prop).trim();
+    return {
+      wrapperTag: wrapper.tagName,
+      wrapperValue: read(wrapper),
+      targetValue: read(target),
+      descendantValue: read(descendant),
+    };
+  });
+
+  // The target is wrapped, and its own alignment resolves on the child.
+  expect(values.wrapperTag).toBe('POLYFILL-POSITION-AREA');
+  expect(values.targetValue).toBe('end');
+  // The alignment value prop lives on the child, not the wrapper...
+  expect(values.wrapperValue).toBe('');
+  // ...and does not inherit down to a descendant of the target.
+  expect(values.descendantValue).toBe('');
+});
+
 test.describe('with `positionAreaContainingBlock: false`', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/position-area.html?no-containing-block');

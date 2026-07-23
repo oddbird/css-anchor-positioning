@@ -6,6 +6,7 @@ import {
 import {
   INSTANCE_UUID,
   NON_INHERITED_POSITION_AREA_PROPERTIES,
+  PA_INSET_SIDES,
   type StyleData,
 } from '../../src/utils.js';
 import { cascadeCSSForTest, getSampleCSS } from './../helpers.js';
@@ -39,6 +40,26 @@ describe('registerShiftedProperties', () => {
     for (const property of NON_INHERITED_POSITION_AREA_PROPERTIES) {
       expect(style!.textContent).toContain(`${property}: initial`);
     }
+  });
+
+  it('registers the alignment value props as non-inherited, not just insets', () => {
+    // Regression guard: the alignment value props (`--pa-value-{justify,align}-self`)
+    // must be members of the non-inherited set, alongside the four inset value
+    // props and the four wrapper insets. They used to be excluded (they relied on
+    // inheritance from the wrapper); now they are set directly on the wrapper's
+    // child and must not leak onto a descendant `position-area` target. Dropping
+    // them from this set would reintroduce that leak, so pin the exact membership
+    // here rather than only looping over whatever the array happens to contain.
+    const u = INSTANCE_UUID;
+    const expected = [
+      ...PA_INSET_SIDES.map((side) => `--pa-value-${side}-${u}`),
+      `--pa-value-justify-self-${u}`,
+      `--pa-value-align-self-${u}`,
+      ...PA_INSET_SIDES.map((side) => `--pa-wrapper-${side}-${u}`),
+    ];
+    expect([...NON_INHERITED_POSITION_AREA_PROPERTIES].sort()).toEqual(
+      expected.sort(),
+    );
   });
 });
 

@@ -12,7 +12,13 @@ import {
   markPositionAreaTarget,
   wrapperForPositionedElement,
 } from '../../src/position-area.js';
-import { generateCSS, getAST, INSTANCE_UUID } from '../../src/utils.js';
+import {
+  generateCSS,
+  getAST,
+  INSTANCE_UUID,
+  paValueProperties,
+  paWrapperProperties,
+} from '../../src/utils.js';
 
 const createPositionAreaNode = (input: string[]) => {
   const css = getAST(`a{position-area:${input.join(' ')}}`) as StyleSheet;
@@ -260,10 +266,32 @@ describe('position-area', () => {
     });
   });
 
+  describe('paValueProperties / paWrapperProperties', () => {
+    it('names the value and wrapper custom properties from a single source', () => {
+      const u = INSTANCE_UUID;
+      // `--pa-value-*` covers the four insets plus the two alignments.
+      expect([...paValueProperties]).toEqual([
+        ['top', `--pa-value-top-${u}`],
+        ['left', `--pa-value-left-${u}`],
+        ['right', `--pa-value-right-${u}`],
+        ['bottom', `--pa-value-bottom-${u}`],
+        ['justify-self', `--pa-value-justify-self-${u}`],
+        ['align-self', `--pa-value-align-self-${u}`],
+      ]);
+      // `--pa-wrapper-*` covers only the four insets.
+      expect([...paWrapperProperties]).toEqual([
+        ['top', `--pa-wrapper-top-${u}`],
+        ['left', `--pa-wrapper-left-${u}`],
+        ['right', `--pa-wrapper-right-${u}`],
+        ['bottom', `--pa-wrapper-bottom-${u}`],
+      ]);
+    });
+  });
+
   describe('activeWrapperStyles', () => {
     it('returns the active styles', () => {
       // Built with `INSTANCE_UUID` rather than a stored snapshot, since the
-      // UUID differs per run (see `paValueProperty`).
+      // UUID differs per run (see `paValueProperties`).
       const u = INSTANCE_UUID;
       expect(activeWrapperStyles('targetUUID', 'selectorUUID')).toBe(
         '    [data-anchor-position-wrapper="selectorUUID"]' +
@@ -272,6 +300,9 @@ describe('position-area', () => {
           `      --pa-wrapper-left-${u}: var(targetUUID-left);` +
           `      --pa-wrapper-right-${u}: var(targetUUID-right);` +
           `      --pa-wrapper-bottom-${u}: var(targetUUID-bottom);` +
+          `    }` +
+          '    [data-anchor-position-wrapper="selectorUUID"]' +
+          '[data-pa-wrapper-for-targetUUID] > * {' +
           `      --pa-value-justify-self-${u}: var(targetUUID-justify-self);` +
           `      --pa-value-align-self-${u}: var(targetUUID-align-self);` +
           '    }  ',
