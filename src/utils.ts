@@ -207,11 +207,14 @@ export type PaValueProp = (typeof PA_VALUE_PROPS)[number];
 // author's custom property. Precomputed into Maps (rather than helper
 // functions) so `NON_INHERITED_POSITION_AREA_PROPERTIES` below stays in
 // lockstep with the exact set of names read/written at the call sites; the keys
-// are typed so a mistyped property is a compile error.
-export const paValueProperties = new Map<PaValueProp, string>(
+// are typed so a mistyped property is a compile error. Exported as
+// `ReadonlyMap` so a consumer can't `.set`/`.delete` and silently desync
+// `NON_INHERITED_POSITION_AREA_PROPERTIES` (snapshotted from `.values()`
+// below).
+export const paValueProperties: ReadonlyMap<PaValueProp, string> = new Map(
   PA_VALUE_PROPS.map((prop) => [prop, `--pa-value-${prop}-${INSTANCE_UUID}`]),
 );
-export const paWrapperProperties = new Map<PaInsetSide, string>(
+export const paWrapperProperties: ReadonlyMap<PaInsetSide, string> = new Map(
   PA_INSET_SIDES.map((side) => [side, `--pa-wrapper-${side}-${INSTANCE_UUID}`]),
 );
 

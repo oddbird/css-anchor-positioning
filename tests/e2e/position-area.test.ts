@@ -201,7 +201,16 @@ test('does not leak alignment onto a descendant of a position-area target', asyn
     // Discover the shifted `--pa-value-justify-self-<uuid>` name from the reset.
     const resetText = [...document.head.querySelectorAll('style')]
       .map((el) => el.textContent ?? '')
-      .find((text) => /--pa-value-justify-self-[\w-]+:\s*initial/.test(text))!;
+      .find((text) => /--pa-value-justify-self-[\w-]+:\s*initial/.test(text));
+    // A missing reset is itself the regression under test (the alignment prop
+    // dropped from the non-inherited set); fail with a legible message rather
+    // than a cryptic "Cannot read properties of undefined" from the `.match`.
+    if (!resetText) {
+      throw new Error(
+        'no `--pa-value-justify-self` reset found — likely dropped from ' +
+          'NON_INHERITED_POSITION_AREA_PROPERTIES',
+      );
+    }
     const prop = resetText.match(
       /(--pa-value-justify-self-[\w-]+):\s*initial/,
     )![1];
