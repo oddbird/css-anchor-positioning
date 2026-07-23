@@ -14,17 +14,23 @@ const btnSelector = '#apply-polyfill';
 async function applyPolyfill(page: Page) {
   const btn = page.locator(btnSelector);
   await btn.click();
-  return await expect(btn).toBeDisabled();
+  // The button only disables after `polyfill()` resolves; completion time is
+  // variable on CI (especially WebKit on the heaviest pages), so allow more
+  // than the default 10s.
+  await expect(btn).toBeDisabled({ timeout: 30 * 1000 });
+  // The demo pages load external web fonts, which reflow text after loading and
+  // shift measured element positions. Wait for fonts to settle so later
+  // `boundingBox()` reads are stable.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
 }
 
 test('applies polyfill for position-area`', async ({ page }) => {
   await applyPolyfill(page);
   const section = page.locator('#spanleft-top');
   const anchor = section.locator('.anchor');
-  const anchorBox = await anchor.boundingBox();
-
   const targetWrapper = section.locator('POLYFILL-POSITION-AREA');
-  const targetWrapperBox = await targetWrapper.boundingBox();
   const target = targetWrapper.locator('.target');
 
   await expect(target).toHaveCSS('justify-self', 'end');
@@ -32,16 +38,22 @@ test('applies polyfill for position-area`', async ({ page }) => {
   await expectWithinOne(targetWrapper, 'top', 0);
   await expectWithinOne(targetWrapper, 'left', 0);
 
-  // Right sides should be aligned
-  expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
-    anchorBox!.x + anchorBox!.width,
-    0,
-  );
-  // Target bottom should be aligned with anchor top
-  expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
-    anchorBox!.y,
-    0,
-  );
+  // Re-read boxes on each attempt so async layout settling (web-font reflow,
+  // autoUpdate) can't wedge the test on a single stale measurement.
+  await expect(async () => {
+    const anchorBox = await anchor.boundingBox();
+    const targetWrapperBox = await targetWrapper.boundingBox();
+    // Right sides should be aligned
+    expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
+      anchorBox!.x + anchorBox!.width,
+      0,
+    );
+    // Target bottom should be aligned with anchor top
+    expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
+      anchorBox!.y,
+      0,
+    );
+  }).toPass();
 });
 test('applies to declarations with different containing blocks`', async ({
   page,
@@ -53,13 +65,9 @@ test('applies to declarations with different containing blocks`', async ({
   const container1 = section.getByTestId('container1');
   const container2 = section.getByTestId('container2');
   const anchor1 = container1.locator('.anchor');
-  const anchor1Box = await anchor1.boundingBox();
   const anchor2 = container2.locator('.anchor');
-  const anchor2Box = await anchor2.boundingBox();
   const target1Wrapper = container1.locator('POLYFILL-POSITION-AREA');
-  const target1WrapperBox = await target1Wrapper.boundingBox();
   const target2Wrapper = container2.locator('POLYFILL-POSITION-AREA');
-  const target2WrapperBox = await target2Wrapper.boundingBox();
   const target1 = target1Wrapper.locator('.target');
   const target2 = target2Wrapper.locator('.target');
 
@@ -69,16 +77,22 @@ test('applies to declarations with different containing blocks`', async ({
   await expectWithinOne(target1Wrapper, 'bottom', 0);
   await expectWithinOne(target1Wrapper, 'right', 0);
 
-  // Target Left should be aligned with anchor right
-  expect(target1WrapperBox!.x).toBeCloseTo(
-    anchor1Box!.x + anchor1Box!.width,
-    0,
-  );
-  // Target top should be aligned with anchor bottom
-  expect(target1WrapperBox!.y).toBeCloseTo(
-    anchor1Box!.y + anchor1Box!.height,
-    0,
-  );
+  // Re-read boxes on each attempt so async layout settling (web-font reflow,
+  // autoUpdate) can't wedge the test on a single stale measurement.
+  await expect(async () => {
+    const anchor1Box = await anchor1.boundingBox();
+    const target1WrapperBox = await target1Wrapper.boundingBox();
+    // Target Left should be aligned with anchor right
+    expect(target1WrapperBox!.x).toBeCloseTo(
+      anchor1Box!.x + anchor1Box!.width,
+      0,
+    );
+    // Target top should be aligned with anchor bottom
+    expect(target1WrapperBox!.y).toBeCloseTo(
+      anchor1Box!.y + anchor1Box!.height,
+      0,
+    );
+  }).toPass();
 
   // test container 2
   await expect(target2).toHaveCSS('justify-self', 'start');
@@ -86,26 +100,27 @@ test('applies to declarations with different containing blocks`', async ({
   await expectWithinOne(target2Wrapper, 'bottom', 0);
   await expectWithinOne(target2Wrapper, 'right', 0);
 
-  // Target Left should be aligned with anchor right
-  expect(target2WrapperBox!.x).toBeCloseTo(
-    anchor2Box!.x + anchor2Box!.width,
-    0,
-  );
-  // Target top should be aligned with anchor bottom
-  expect(target2WrapperBox!.y).toBeCloseTo(
-    anchor2Box!.y + anchor2Box!.height,
-    0,
-  );
+  await expect(async () => {
+    const anchor2Box = await anchor2.boundingBox();
+    const target2WrapperBox = await target2Wrapper.boundingBox();
+    // Target Left should be aligned with anchor right
+    expect(target2WrapperBox!.x).toBeCloseTo(
+      anchor2Box!.x + anchor2Box!.width,
+      0,
+    );
+    // Target top should be aligned with anchor bottom
+    expect(target2WrapperBox!.y).toBeCloseTo(
+      anchor2Box!.y + anchor2Box!.height,
+      0,
+    );
+  }).toPass();
 });
 
 test('respects cascade`', async ({ page }) => {
   await applyPolyfill(page);
   const section = page.locator('#spanleft-top');
   const anchor = section.locator('.anchor');
-  const anchorBox = await anchor.boundingBox();
-
   const targetWrapper = section.locator('POLYFILL-POSITION-AREA');
-  const targetWrapperBox = await targetWrapper.boundingBox();
   const target = targetWrapper.locator('.target');
 
   await expect(target).toHaveCSS('justify-self', 'end');
@@ -113,16 +128,22 @@ test('respects cascade`', async ({ page }) => {
   await expectWithinOne(targetWrapper, 'top', 0);
   await expectWithinOne(targetWrapper, 'left', 0);
 
-  // Right sides should be aligned
-  expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
-    anchorBox!.x + anchorBox!.width,
-    0,
-  );
-  // Target bottom should be aligned with anchor top
-  expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
-    anchorBox!.y,
-    0,
-  );
+  // Re-read boxes on each attempt so async layout settling (web-font reflow,
+  // autoUpdate) can't wedge the test on a single stale measurement.
+  await expect(async () => {
+    const anchorBox = await anchor.boundingBox();
+    const targetWrapperBox = await targetWrapper.boundingBox();
+    // Right sides should be aligned
+    expect(targetWrapperBox!.x + targetWrapperBox!.width).toBeCloseTo(
+      anchorBox!.x + anchorBox!.width,
+      0,
+    );
+    // Target bottom should be aligned with anchor top
+    expect(targetWrapperBox!.y + targetWrapperBox!.height).toBeCloseTo(
+      anchorBox!.y,
+      0,
+    );
+  }).toPass();
 });
 test('applies logical properties based on writing mode`', async ({ page }) => {
   await applyPolyfill(page);

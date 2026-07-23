@@ -18,7 +18,16 @@ const DEMO_ELEMENT_PADDING_NUMBER = 30;
 async function applyPolyfill(page: Page) {
   const btn = page.locator(btnSelector);
   await btn.click();
-  return await expect(btn).toBeDisabled();
+  // The button only disables after `polyfill()` resolves; completion time is
+  // variable on CI (especially WebKit on the heaviest pages), so allow more
+  // than the default 10s.
+  await expect(btn).toBeDisabled({ timeout: 30 * 1000 });
+  // The demo pages load external web fonts, which reflow text after loading and
+  // shift measured element positions. Wait for fonts to settle so later
+  // `boundingBox()` reads are stable.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+  });
 }
 
 async function getElementWidth(page: Page, sel: string) {
