@@ -1,4 +1,4 @@
-import { polyfill } from './polyfill.js';
+import { type AnchorPositioningPolyfillOptions, polyfill } from './polyfill.js';
 import { captureAdoptedStylesheetText, originalReplaceSync } from './utils.js';
 
 interface CustomElementHost extends HTMLElement {
@@ -12,22 +12,21 @@ const patchedHosts = new WeakSet<HTMLElement>();
 /**
  * Wraps the `connectedCallback` of a shadow root's host element so that, after
  * the original callback runs (and the shadow DOM is populated), the polyfill is
- * run for that shadow root to position its anchored elements.
+ * run for that shadow root to position its anchored elements, using the options
+ * given to `patchAndPolyfillConstructedStylesheets`.
  */
-function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
+function patchHostConnectedCallback(
+  shadowRoot: ShadowRoot,
+  options: AnchorPositioningPolyfillOptions,
+) {
   const host = shadowRoot.host as CustomElementHost;
   if (patchedHosts.has(host)) {
     return;
   }
   patchedHosts.add(host);
 
-  // Carry over any global options (e.g. `positionAreaContainingBlock`), but
-  // always scope the run to this shadow root.
-  const runPolyfill = () =>
-    polyfill({
-      ...window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
-      roots: [shadowRoot],
-    });
+  // `roots` is always overridden, to scope the run to this shadow root.
+  const runPolyfill = () => polyfill({ ...options, roots: [shadowRoot] });
 
   const originalConnectedCallback = host.connectedCallback;
   host.connectedCallback = function (this: CustomElementHost) {
@@ -54,8 +53,15 @@ function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
  * Call this as early as possible — before any custom element's
  * `connectedCallback` runs — so that constructed stylesheets are captured and
  * their shadow roots are queued for positioning.
+ *
+ * The given options are passed on to each polyfill run this sets up, except for
+ * `roots`, which is always the shadow root being positioned. Defaults to
+ * `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`, matching `polyfill()`.
  */
-export function patchAndPolyfillConstructedStylesheets() {
+export function patchAndPolyfillConstructedStylesheets(
+  options: AnchorPositioningPolyfillOptions = window.ANCHOR_POSITIONING_POLYFILL_OPTIONS ??
+    {},
+) {
   // Patch `replaceSync` to capture the source text of constructed stylesheets
   // so the polyfill can later re-parse it.
   if (CSSStyleSheet.prototype.replaceSync === originalReplaceSync) {
@@ -88,7 +94,7 @@ export function patchAndPolyfillConstructedStylesheets() {
       set(this: ShadowRoot, sheets: CSSStyleSheet[]) {
         originalAdoptedStyleSheetsSet.call(this, sheets);
         if (sheets.length > 0) {
-          patchHostConnectedCallback(this);
+          patchHostConnectedCallback(this, options);
         }
       },
     });
