@@ -21,10 +21,18 @@ function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
   }
   patchedHosts.add(host);
 
+  // Carry over any global options (e.g. `positionAreaContainingBlock`), but
+  // always scope the run to this shadow root.
+  const runPolyfill = () =>
+    polyfill({
+      ...window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
+      roots: [shadowRoot],
+    });
+
   const originalConnectedCallback = host.connectedCallback;
   host.connectedCallback = function (this: CustomElementHost) {
     originalConnectedCallback?.call(this);
-    void polyfill({ roots: [shadowRoot] });
+    void runPolyfill();
   };
 
   // If the host is already connected (e.g. `adoptedStyleSheets` was assigned
@@ -33,7 +41,7 @@ function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
   // has finished and the shadow DOM has been populated.
   if (host.isConnected) {
     queueMicrotask(() => {
-      void polyfill({ roots: [shadowRoot] });
+      void runPolyfill();
     });
   }
 }
