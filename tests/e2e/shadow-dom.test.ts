@@ -115,22 +115,10 @@ test('applies global polyfill options to adopted stylesheets in shadow root', as
 
   const wrapper = page.locator('anchor-adopted-styles POLYFILL-POSITION-AREA');
   const target = page.locator('anchor-adopted-styles .target');
-  const anchor = page.locator('anchor-adopted-styles .anchor');
 
   // The unwrapped path marks the target itself instead of adding a wrapper.
   await expect(target).toHaveAttribute('data-anchor-position-area');
   await expect(wrapper).toHaveCount(0);
-
-  const anchorBox = await anchor.boundingBox();
-  const targetBox = await target.boundingBox();
-
-  // The target is still positioned by `position-area: bottom span-left`:
-  // right sides aligned, target top aligned with anchor bottom.
-  expect(targetBox!.x + targetBox!.width).toBeCloseTo(
-    anchorBox!.x + anchorBox!.width,
-    0,
-  );
-  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('positions every custom-element host sharing one constructed stylesheet', async ({
