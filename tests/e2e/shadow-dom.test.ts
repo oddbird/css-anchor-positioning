@@ -97,6 +97,88 @@ test('applies polyfill for adopted stylesheets in shadow root', async ({
   expect(targetWrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
+test('applies global polyfill options to adopted stylesheets in shadow root', async ({
+  page,
+}) => {
+  // `patchAndPolyfillConstructedStylesheets()` runs the polyfill itself for
+  // each shadow root, so global options must carry over into those runs. With
+  // `positionAreaContainingBlock: false`, the `position-area` target must be
+  // positioned directly instead of wrapped in `<polyfill-position-area>`.
+  await page.addInitScript(() => {
+    window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
+      positionAreaContainingBlock: false,
+    };
+  });
+  await page.goto('/shadow-dom.html');
+
+  await applyPolyfill(page);
+
+  const wrapper = page.locator('anchor-adopted-styles POLYFILL-POSITION-AREA');
+  const target = page.locator('anchor-adopted-styles .target');
+
+  // The unwrapped path marks the target itself instead of adding a wrapper.
+  await expect(target).toHaveAttribute('data-anchor-position-area');
+  await expect(wrapper).toHaveCount(0);
+});
+
+test('applies explicit polyfill options to adopted stylesheets in shadow root', async ({
+  page,
+}) => {
+  // Options given to `patchAndPolyfillConstructedStylesheets()` are forwarded
+  // to the polyfill run it sets up for each shadow root, and take precedence
+  // over the global options.
+  await page.addInitScript(() => {
+    window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
+      positionAreaContainingBlock: true,
+    };
+  });
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
+    // and the import linter from trying to resolve it statically.
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = await import(fnEntry);
+
+    patchAndPolyfillConstructedStylesheets({
+      positionAreaContainingBlock: false,
+    });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --explicit-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --explicit-anchor;
+        position-area: bottom span-left;
+      }
+    `);
+
+    customElements.define(
+      'explicit-options',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div class="anchor">Anchor</div>
+            <div class="target">Target</div>`;
+        }
+      },
+    );
+
+    document.body.append(document.createElement('explicit-options'));
+  });
+
+  const target = page.locator('explicit-options .target');
+  const wrapper = page.locator('explicit-options POLYFILL-POSITION-AREA');
+
+  // Waiting on the attribute lets the queued polyfill run finish before the
+  // wrapper is asserted to be absent.
+  await expect(target).toHaveAttribute('data-anchor-position-area');
+  await expect(wrapper).toHaveCount(0);
+});
+
 test('positions every custom-element host sharing one constructed stylesheet', async ({
   page,
 }) => {
