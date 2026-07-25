@@ -69,7 +69,10 @@ const ELEMENTS_WITH_INLINE_POSITION_AREA = '[style*="position-area"]';
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
-function fetchInlineStyles(elements?: HTMLElement[]) {
+function fetchInlineStyles(
+  roots: AnchorPositioningRoot[],
+  elements?: HTMLElement[],
+) {
   const elementsWithInlineAnchorStyles: HTMLElement[] = elements
     ? elements.filter(
         (el) =>
@@ -77,14 +80,23 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
           (el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY) ||
             el.matches(ELEMENTS_WITH_INLINE_POSITION_AREA)),
       )
-    : Array.from(
-        document.querySelectorAll(
-          [
-            ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY,
-            ELEMENTS_WITH_INLINE_POSITION_AREA,
-          ].join(','),
-        ),
-      );
+    : (() => {
+        const query = [
+          ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY,
+          ELEMENTS_WITH_INLINE_POSITION_AREA,
+        ].join(',');
+        // The document is searched as well as the roots: a run scoped to a
+        // shadow root still needs inline styles from the outer tree, where its
+        // host and any light-DOM anchors live. Searching the roots on top of
+        // that is what finds inline styles *inside* a shadow root, which
+        // `document.querySelectorAll()` does not reach.
+        return [
+          ...new Set([
+            ...(document.querySelectorAll(query) as NodeListOf<HTMLElement>),
+            ...querySelectorAllRoots(roots, query),
+          ]),
+        ];
+      })();
   const inlineStyles: Partial<StyleData>[] = [];
 
   elementsWithInlineAnchorStyles
@@ -160,7 +172,7 @@ export async function fetchCSS(
     ? (options.elements ?? [])
     : undefined;
 
-  const inlines = fetchInlineStyles(elementsForInlines);
+  const inlines = fetchInlineStyles(options.roots, elementsForInlines);
 
   // Collect constructed stylesheets adopted on the polyfill roots. Skipped when
   // an explicit `elements` list is provided, as that opts into element-only

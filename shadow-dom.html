@@ -99,35 +99,35 @@
         }
         customElements.define('position-anchor-on-host', PositionAnchorOnHost);
 
-        // Anchor and target both live inside the shadow root, styled by an
-        // adopted stylesheet, and the target is placed with `position-area`
-        // instead of individual `anchor()` insets.
+        // Anchor and target both live inside the shadow root, and the target
+        // is placed with `position-area` instead of individual `anchor()`
+        // insets. Styled by a `<style>` rather than an adopted stylesheet, so
+        // that this shadow root is not picked up by
+        // `patchAndPolyfillConstructedStylesheets()` and can be polyfilled
+        // with its own options below.
         class AnchorPositionArea extends HTMLElement {
           connectedCallback() {
-            this.attachShadow({ mode: 'open' });
-
-            const sheet = new CSSStyleSheet();
-            sheet.replaceSync(`
-              #shadow-position-area-anchor {
-                margin-block-start: calc(1lh + 1rem);
-                /* The polyfill centers a \`span-all\` axis on the containing
-                block rather than on the anchor, so keep the narrow anchor
-                centered in it to match the spec's \`anchor-center\`. */
-                margin-inline: auto;
-                width: 8em;
-              }
-              #shadow-position-area-target {
-                /* Overrides the UA stylesheet's \`margin: auto\` for popovers. */
-                margin: initial;
-                position-area: top;
-                text-align: center;
-                width: 14em;
-              }
-            `);
-            this.shadowRoot.adoptedStyleSheets = [sheet];
+            this.shadowRoot ?? this.attachShadow({ mode: 'open' });
 
             this.shadowRoot.innerHTML = `
               <link rel="stylesheet" href="/demo.css" />
+              <style>
+                #shadow-position-area-anchor {
+                  margin-block-start: calc(1lh + 1rem);
+                  /* The polyfill centers a span-all axis on the containing
+                  block rather than on the anchor, so keep the narrow anchor
+                  centered in it to match the spec's anchor-center. */
+                  margin-inline: auto;
+                  width: 8em;
+                }
+                #shadow-position-area-target {
+                  /* Overrides the UA stylesheet's margin: auto for popovers. */
+                  margin: initial;
+                  position-area: top;
+                  text-align: center;
+                  width: 14em;
+                }
+              </style>
               <div id="shadow-position-area-anchor" class="anchor">Anchor</div>
               <div id="shadow-position-area-target" class="target" popover="manual">Target</div>
             `;
@@ -161,25 +161,40 @@
           // Load the shadow entrypoint first so the `replaceSync` and
           // `adoptedStyleSheets` patches are installed before any custom
           // element's `connectedCallback` runs.
-          const { default: polyfill, patchAndPolyfillConstructedStylesheets } =
-            await import('/src/index-fn.ts');
+          const {
+            default: polyfill,
+            patchAndPolyfillConstructedStylesheets,
+            patchCSSOM,
+          } = await import('/src/index-fn.ts');
 
           // Patch Constructed stylesheets
           patchAndPolyfillConstructedStylesheets();
 
+          // Make `anchor-name` and `position-anchor` settable through the
+          // CSSOM, for the <anchor-position-area> demo below.
+          patchCSSOM();
+
           // Now define the custom elements
           defineCustomElements();
 
-          // Load the polyfill explicitly for the <anchor-web-component> and
-          // <anchor-pseudo-element> demos. The <anchor-adopted-styles>,
-          // <position-anchor-on-host> and <anchor-position-area> demos use
-          // `adoptedStyleSheets`, so they are already covered by the adopted
-          // stylesheet patch.
+          // Load the polyfill explicitly for the demos that don't use
+          // `adoptedStyleSheets`. The <anchor-adopted-styles> and
+          // <position-anchor-on-host> demos do, so they are already covered by
+          // the adopted stylesheet patch.
           await polyfill({
             roots: [
               document.querySelector('anchor-web-component').shadowRoot,
               document.querySelector('anchor-pseudo-element').shadowRoot,
             ],
+          });
+
+          // The <anchor-position-area> demo is positioned directly rather than
+          // wrapped: its target is a popover, and a popover is promoted to the
+          // top layer, where its containing block is the viewport rather than
+          // the `<polyfill-position-area>` wrapper.
+          await polyfill({
+            roots: [document.querySelector('anchor-position-area').shadowRoot],
+            positionAreaContainingBlock: false,
           });
 
           btn.innerText = 'Polyfill Applied';
@@ -553,42 +568,65 @@ customElements.define("position-anchor-on-host", PositionAnchorOnHost);
           button.
         </p>
         <p>
-          <strong>This demo does not work.</strong> Like a design system
-          component would, it sets <code>anchor-name</code> and
-          <code>position-anchor</code> from JavaScript through the CSSOM. A
-          browser that needs this polyfill does not support those properties, so
-          the assignments are silently dropped instead of becoming CSS
-          declarations — nothing is written to the elements'
-          <code>style</code> attributes, which is what the polyfill reads. The
-          anchor is never resolved and the popover stays unpositioned. Writing
-          the declarations into the <code>style</code> attribute directly is
-          what makes them visible to the polyfill.
+          Like a design system component would, it sets
+          <code>anchor-name</code> and <code>position-anchor</code> from
+          JavaScript through the CSSOM. A browser that needs this polyfill does
+          not support those properties, and the CSSOM drops what it does not
+          know, so the assignments never become CSS declarations and nothing is
+          written to the <code>style</code> attributes the polyfill reads.
+          <code>patchCSSOM()</code> makes those properties settable, at the cost
+          of <code>'anchorName' in element.style</code> reporting support that
+          isn't there.
+        </p>
+        <p>
+          So detect native support with <code>CSS.supports()</code>, which the
+          patch leaves alone:
+        </p>
+
+        <pre><code class="language-js"
+>// Not this, `patchCSSOM()` makes it true:
+if (!('anchorName' in document.documentElement.style)) {
+}
+
+// This:
+if (!CSS.supports('anchor-name: --a')) {
+  const { default: polyfill, patchCSSOM } = await import(
+    '@oddbird/css-anchor-positioning/fn'
+  );
+
+  patchCSSOM();
+  await polyfill();
+}</code></pre>
+        <p>
+          A popover is promoted to the top layer, where its containing block is
+          the viewport rather than the
+          <code>&lt;polyfill-position-area&gt;</code>
+          wrapper, so this demo is polyfilled with
+          <code>positionAreaContainingBlock: false</code> and positioned
+          directly.
         </p>
       </div>
 
       <pre><code class="language-html"
 >&lt;anchor-position-area&gt;&lt;/anchor-position-area&gt;
 &lt;script&gt;
-&lt;!-- Load the shadow entrypoint before defining custom elements,
-so the replaceSync and adoptedStyleSheets patches are installed
-before any connectedCallback runs. --&gt;
-import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
-patchAndPolyfillConstructedStylesheets();
+import polyfill, { patchCSSOM } from '@oddbird/css-anchor-positioning/fn';
+
+&lt;!-- Call before any connectedCallback runs, so the anchor properties
+are settable by the time an element wires up its anchor. --&gt;
+patchCSSOM();
+
 class AnchorPositionArea extends HTMLElement {
   connectedCallback() {
     this.attachShadow({ mode: "open" });
-
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(`
-      #shadow-position-area-target {
-        margin: initial;
-        position-area: top;
-        width: 14em;
-      }
-    `);
-    this.shadowRoot.adoptedStyleSheets = [sheet];
-
     this.shadowRoot.innerHTML = `
+      &lt;style&gt;
+        #shadow-position-area-target {
+          margin: initial;
+          position-area: top;
+          width: 14em;
+        }
+      &lt;/style&gt;
       &lt;div id="shadow-position-area-anchor"&gt;Anchor&lt;/div&gt;
       &lt;div id="shadow-position-area-target" popover="manual"&gt;Popover (Target)&lt;/div&gt;
     `;
@@ -596,8 +634,7 @@ class AnchorPositionArea extends HTMLElement {
     const anchor = this.shadowRoot.getElementById("shadow-position-area-anchor"),
       target = this.shadowRoot.getElementById("shadow-position-area-target");
 
-    // Set from JavaScript, the way a design system component would. Without
-    // native support the CSSOM drops both, so the polyfill never sees them.
+    // Dropped by the CSSOM without `patchCSSOM()`.
     anchor.style.anchorName = target.style.positionAnchor =
       "--shadow-position-area-anchor";
 
@@ -605,6 +642,11 @@ class AnchorPositionArea extends HTMLElement {
   }
 }
 customElements.define("anchor-position-area", AnchorPositionArea);
+
+await polyfill({
+  roots: [document.querySelector("anchor-position-area").shadowRoot],
+  positionAreaContainingBlock: false,
+});
 &lt;/script&gt;
 </code></pre>
     </section>

@@ -299,3 +299,53 @@ test('emulates non-inheritance of shifted properties inside a shadow root withou
   expect(result.containerHeight).toBe('400px');
   expect(result.targetHeight).toBe('');
 });
+
+test('picks up anchors set through the CSSOM', async ({ page }) => {
+  // `patchCSSOM()` makes `anchor-name` and `position-anchor` settable through
+  // the CSSOM. Without it those assignments are dropped by a browser that has
+  // no native anchor positioning, and never reach the `style` attribute the
+  // polyfill reads. The elements live in a shadow root, so this also covers
+  // inline styles being collected per polyfill root rather than from
+  // `document`.
+  await applyPolyfill(page);
+
+  await page.evaluate(async () => {
+    // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
+    // and the import linter from trying to resolve it statically.
+    const fnEntry = '/src/index-fn.ts';
+    const { default: polyfill } = await import(fnEntry);
+
+    const host = document.createElement('div');
+    host.id = 'cssom-anchors';
+    document.body.append(host);
+
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        #target { position: absolute; top: anchor(bottom); left: anchor(right); }
+      </style>
+      <div style="position: relative">
+        <span id="anchor">Anchor</span>
+        <div id="target">Target</div>
+      </div>`;
+
+    const anchor = shadow.getElementById('anchor')!,
+      target = shadow.getElementById('target')!;
+
+    anchor.style.anchorName = '--cssom-anchor';
+    target.style.positionAnchor = '--cssom-anchor';
+
+    await polyfill({ roots: [shadow] });
+  });
+
+  const anchor = page.locator('#cssom-anchors #anchor');
+  const target = page.locator('#cssom-anchors #target');
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `top: anchor(bottom)` and `left: anchor(right)` put the target's top-left
+  // corner on the anchor's bottom-right corner.
+  expect(targetBox.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+  expect(targetBox.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
+});
