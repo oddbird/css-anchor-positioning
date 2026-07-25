@@ -37,7 +37,7 @@ To use the polyfill, add this script tag to your document `<head>`:
 
 ```js
 <script type="module">
-  if (!("anchorName" in document.documentElement.style)) {
+  if (!CSS.supports("anchor-name: --a")) {
     import("https://unpkg.com/@oddbird/css-anchor-positioning");
   }
 </script>
@@ -58,6 +58,21 @@ polyfill();
 The `polyfill` function returns a promise that resolves when the polyfill has
 been applied.
 
+### Feature detection
+
+Use `CSS.supports()` to check for native support:
+
+```js
+if (!CSS.supports('anchor-name: --a')) {
+  // Load the polyfill.
+}
+```
+
+Checking for the property on a style declaration —
+`'anchorName' in document.documentElement.style` — works too, but only until
+something defines that property. [`patchCSSOM()`](#setting-anchor-properties-from-javascript)
+does exactly that, so `CSS.supports()` is the check to rely on.
+
 ### Constructed stylesheets (`adoptedStyleSheets`)
 
 If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
@@ -65,7 +80,7 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 
 ```html
 <script type="module">
-  if (!('anchorName' in document.documentElement.style)) {
+  if (!CSS.supports('anchor-name: --a')) {
     const { patchAndPolyfillConstructedStylesheets } =
       await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
     patchAndPolyfillConstructedStylesheets();
@@ -91,6 +106,50 @@ element's `connectedCallback` finishes.
 You can view a more complete demo
 [here](https://anchor-positioning.oddbird.net/shadow-dom.html).
 
+### Setting anchor properties from JavaScript
+
+Assigning `anchor-name` or `position-anchor` through the CSSOM does nothing in a
+browser without native anchor positioning. The CSSOM drops properties it doesn't
+know, so no CSS declaration is produced and nothing is written to the `style`
+attribute the polyfill reads — while reading the value back still returns it,
+which makes the assignment look like it worked:
+
+```js
+el.style.anchorName = '--foo';
+el.style.anchorName; // '--foo'
+el.getAttribute('style'); // null
+```
+
+If your components wire up their anchors at runtime, call `patchCSSOM()` to make
+those properties settable. Like the constructed stylesheet patches, call it
+before any `connectedCallback` runs:
+
+```js
+import polyfill, { patchCSSOM } from '@oddbird/css-anchor-positioning/fn';
+
+patchCSSOM();
+
+// Define your custom elements, then apply the polyfill.
+await polyfill();
+```
+
+It patches the `style` getter to know which element a declaration belongs to,
+and defines `anchorName` and `positionAnchor` on `CSSStyleDeclaration`, writing
+what you set into the element's `style` attribute. `setProperty()`,
+`getPropertyValue()` and `removeProperty()` accept the dashed names as well.
+
+Two things to know:
+
+- It makes `'anchorName' in element.style` return `true`, so anything detecting
+  native support that way will think the browser supports anchor positioning.
+  Use [`CSS.supports()`](#feature-detection) instead.
+- It covers those two properties, not values. An `anchor()` value assigned to
+  `el.style.top` is dropped just the same, for being a value the browser does
+  not understand.
+
+Values set before `patchCSSOM()` runs are not picked up, since the assignments
+that were dropped left nothing behind.
+
 ## Configuration
 
 The polyfill supports a small number of options. When using the default version
@@ -99,7 +158,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
 
 ```js
 <script type="module">
-  if (!("anchorName" in document.documentElement.style)) {
+  if (!CSS.supports("anchor-name: --a")) {
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
@@ -117,7 +176,7 @@ an argument.
 
 ```js
 <script type="module">
-  if (!("anchorName" in document.documentElement.style)) {
+  if (!CSS.supports("anchor-name: --a")) {
     const { default: polyfill } = await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js");
 
     polyfill({
@@ -273,6 +332,8 @@ Browsers provide some validation for imperatively setting inline styles.
 styles of `el`. This is problematic for this polyfill, as we would like to
 support `el.style.anchorName = "--foo"`, but that won't work in browsers that
 don't support the `anchor-name` property.
+[`patchCSSOM()`](#setting-anchor-properties-from-javascript) makes `anchor-name`
+and `position-anchor` settable that way.
 
 While `el.setAttribute('style', 'anchor-name: --foo')` or `<div
 style="anchor-name: --foo" />` both work, developers are often using tools that
