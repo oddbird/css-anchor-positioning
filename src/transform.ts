@@ -33,7 +33,14 @@ export function transformCSS(
   roots?: AnchorPositioningRoot[],
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const { el, css, changed, created = false, sheet } of styleData) {
+  for (const {
+    el,
+    css,
+    changed,
+    created = false,
+    sheet,
+    containers,
+  } of styleData) {
     const updatedObject: StyleData = { el, css, changed: false, sheet };
     if (changed) {
       if (sheet) {
@@ -72,14 +79,19 @@ export function transformCSS(
           el.remove();
         } else {
           styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
-          // This is a new stylesheet (the position-area mapping styles). Its
-          // rules target wrapper elements that live inside the roots being
-          // polyfilled, so it must be inserted into each of those roots: a
-          // `<style>` in `document.head` does not apply inside a shadow root.
-          const containers = new Set(
-            (roots?.length ? roots : [document]).map(getRootStyleContainer),
-          );
-          for (const container of containers) {
+          // This is a new stylesheet (the position-area mapping styles). A
+          // `<style>` only applies within its own tree, so it is inserted into
+          // the tree of every element its rules match, as recorded while the
+          // rules were generated. Those are not always the roots being
+          // polyfilled: a `position-area` in a `:host` rule targets the shadow
+          // host, which lives in the outer tree. Fall back to the roots when
+          // no containers were recorded.
+          const styleContainers = containers?.size
+            ? containers
+            : new Set(
+                (roots?.length ? roots : [document]).map(getRootStyleContainer),
+              );
+          for (const container of styleContainers) {
             // If there are multiple roots, clone the element for each root
             const node = styleEl.isConnected
               ? styleEl

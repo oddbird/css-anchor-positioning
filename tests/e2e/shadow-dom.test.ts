@@ -216,6 +216,94 @@ test('positions every custom-element host sharing one constructed stylesheet', a
   }
 });
 
+test('positions a custom-element host with `position-area` in a `:host` rule', async ({
+  page,
+}) => {
+  // The `position-area` is declared in a `:host` rule, so the element it
+  // positions is the host, which lives in the *outer* tree rather than in the
+  // shadow root the declaration came from. The polyfill generates a stylesheet
+  // mapping the computed insets onto the target; it has to be inserted into the
+  // host's own tree, since a `<style>` inside the shadow root never matches the
+  // host. Without that, the `--pa-value-*` custom properties the target's
+  // insets read stay undefined and the host is left unpositioned.
+  await applyPolyfill(page);
+
+  // The page has already installed the adopted-stylesheet patches, so adopting
+  // a sheet into this element's shadow root queues a polyfill run for it.
+  await page.evaluate(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host {
+        padding: 0.5em;
+        position: absolute;
+        position-area: top;
+        white-space: nowrap;
+      }
+    `);
+
+    customElements.define(
+      'position-area-on-host',
+      class extends HTMLElement {
+        connectedCallback() {
+          // Moving the host into the `position-area` wrapper disconnects and
+          // reconnects it, so this runs more than once.
+          if (this.shadowRoot) return;
+
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = '<slot></slot>';
+        }
+      },
+    );
+
+    const container = document.createElement('div');
+    container.id = 'position-area-on-host';
+    container.setAttribute('style', 'position: relative; margin-top: 5rem');
+    // Written as attribute text: the CSSOM drops `anchor-name` and
+    // `position-anchor` in a browser without native support, and the polyfill
+    // reads the `style` attribute.
+    container.innerHTML = `
+      <div class="anchor" style="anchor-name: --position-area-on-host">Anchor</div>
+      <position-area-on-host style="position-anchor: --position-area-on-host">Target</position-area-on-host>`;
+    document.body.append(container);
+  });
+
+  const anchor = page.locator('#position-area-on-host .anchor');
+  const target = page.locator('#position-area-on-host position-area-on-host');
+
+  // The wrapper is added by the queued polyfill run, with or without the
+  // mapping styles reaching the host's tree, so waiting on it does not mask the
+  // failure this test guards against.
+  await expect(
+    page.locator('#position-area-on-host POLYFILL-POSITION-AREA'),
+  ).toHaveCount(1);
+
+  // The generated mapping rules (keyed on the `data-pa-*` attributes the
+  // polyfill sets on the target or its wrapper) belong in the host's tree.
+  const mappingStylesInDocument = await page.evaluate(() =>
+    [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some((rule) =>
+          /data-pa-(wrapper|target)-for-/.test(rule.cssText),
+        );
+      } catch {
+        return false;
+      }
+    }),
+  );
+  expect(mappingStylesInDocument, 'mapping styles in the host tree').toBe(true);
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `position-area: top` puts the target directly above the anchor.
+  expect(targetBox.y + targetBox.height).toBeCloseTo(anchorBox.y, 0);
+  expect(targetBox.x + targetBox.width / 2).toBeCloseTo(
+    anchorBox.x + anchorBox.width / 2,
+    0,
+  );
+});
+
 test('anchors to a pseudo-element inside a shadow root', async ({ page }) => {
   // `#shadow-pseudo-anchor::before` (a block, 100px tall) is the anchor; the
   // target uses `top: anchor(bottom)`. To measure a pseudo-element the polyfill

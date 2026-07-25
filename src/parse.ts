@@ -49,6 +49,7 @@ import {
   type DeclarationWithValue,
   generateCSS,
   getAST,
+  getRootStyleContainer,
   getSelectors,
   isAnchorFunction,
   type StyleData,
@@ -815,6 +816,7 @@ export async function parseCSS(
     changed: false,
     created: true,
     css: '',
+    containers: new Set(),
   };
   styleData.push(positionAreaMappingStyleElement);
 
@@ -867,6 +869,14 @@ export async function parseCSS(
           positionData.selectorUUID,
         );
         positionAreaMappingStyleElement.changed = true;
+        // These rules match the target (or the wrapper inserted next to it), so
+        // they belong in the target's own tree. That is not necessarily one of
+        // the roots being polyfilled: a `position-area` in a `:host` rule
+        // targets the shadow host, which lives outside the shadow root the
+        // declaration came from.
+        positionAreaMappingStyleElement.containers!.add(
+          getRootStyleContainer(targetEl),
+        );
         // Populate new data for each anchor/target combo
         validPositions[targetSel] = {
           ...validPositions[targetSel],
