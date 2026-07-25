@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
-import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
+import { POLYFILLED_STYLE_ATTRIBUTE, SHIFTED_PROPERTIES } from './cascade.js';
 import { querySelectorAllRoots } from './dom.js';
 import {
   type AnchorPositioningRoot,
@@ -63,8 +63,26 @@ async function fetchLinkedStylesheets(
   return results.filter((loaded) => loaded !== null);
 }
 
-const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
-const ELEMENTS_WITH_INLINE_POSITION_AREA = '[style*="position-area"]';
+// Inline styles are collected so that `cascadeCSS` can shift their declarations
+// into custom properties, like it does for the rest of the CSS. That has to
+// cover every property the polyfill later reads back through
+// `getCSSPropertyValue` — insets, margins, sizing, padding, self-alignment,
+// `position-area` — and not just the anchor-specific ones: a target can take
+// its `position-area` from a stylesheet while setting its margin inline.
+// `anchor` is matched on its own as well, for `anchor()`/`anchor-size()` values.
+// Built on first use rather than at module evaluation: `cascade.js` and this
+// module are part of an import cycle, so `SHIFTED_PROPERTIES` is not
+// necessarily initialized yet when this module is evaluated.
+let inlineAnchorStylesQuery: string | undefined;
+function elementsWithInlineAnchorStylesQuery() {
+  inlineAnchorStylesQuery ??= [
+    '[style*="anchor"]',
+    ...Object.keys(SHIFTED_PROPERTIES).map(
+      (property) => `[style*="${property}"]`,
+    ),
+  ].join(',');
+  return inlineAnchorStylesQuery;
+}
 // Searches for all elements with inline style attributes that include `anchor`.
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
@@ -74,16 +92,10 @@ function fetchInlineStyles(elements?: HTMLElement[]) {
     ? elements.filter(
         (el) =>
           el instanceof HTMLElement &&
-          (el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY) ||
-            el.matches(ELEMENTS_WITH_INLINE_POSITION_AREA)),
+          el.matches(elementsWithInlineAnchorStylesQuery()),
       )
     : Array.from(
-        document.querySelectorAll(
-          [
-            ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY,
-            ELEMENTS_WITH_INLINE_POSITION_AREA,
-          ].join(','),
-        ),
+        document.querySelectorAll(elementsWithInlineAnchorStylesQuery()),
       );
   const inlineStyles: Partial<StyleData>[] = [];
 

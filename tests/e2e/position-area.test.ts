@@ -393,6 +393,46 @@ test.describe('with `positionAreaContainingBlock: auto`', () => {
     ).toHaveCount(1);
   });
 
+  test('wraps a target whose containing-block-dependent style is inline', async ({
+    page,
+  }) => {
+    // Inline styles are shifted into custom properties like the rest of the
+    // CSS, so a target that takes its `position-area` from a stylesheet while
+    // setting a containing-block-dependent style inline is still recognised as
+    // needing the wrapper. Without the shift the inline `padding-right: 50%`
+    // reads back as empty and the target is positioned directly.
+    await page.evaluate(async () => {
+      // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
+      // and the import linter from trying to resolve it statically.
+      const fnEntry = '/src/index-fn.ts';
+      const { default: polyfill } = await import(fnEntry);
+
+      const style = document.createElement('style');
+      style.textContent = `
+        #inline-shifted .anchor { anchor-name: --inline-shifted; }
+        #inline-shifted .target {
+          position: absolute;
+          position-anchor: --inline-shifted;
+          position-area: top;
+        }`;
+      document.head.append(style);
+
+      const container = document.createElement('div');
+      container.id = 'inline-shifted';
+      container.setAttribute('style', 'position: relative');
+      container.innerHTML = `
+        <div class="anchor">Anchor</div>
+        <div class="target" style="padding-right: 50%">Target</div>`;
+      document.body.append(container);
+
+      await polyfill({ positionAreaContainingBlock: 'auto' });
+    });
+
+    await expect(
+      page.locator('#inline-shifted polyfill-position-area'),
+    ).toHaveCount(1);
+  });
+
   test('positions a wrapped target correctly', async ({ page }) => {
     await applyPolyfill(page);
     const section = page.locator('#spanleft-top');
