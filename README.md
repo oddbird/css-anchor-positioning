@@ -106,17 +106,24 @@ el.getAttribute('style'); // null
 ```
 
 If your components wire up their anchors at runtime, call `patchCSSOM()` to make
-those properties settable. Like the constructed stylesheet patches, call it
-before any `connectedCallback` runs:
+those properties settable. Like the constructed stylesheet patch, call it before
+any `connectedCallback` runs:
 
 ```js
-import polyfill, { patchCSSOM } from '@oddbird/css-anchor-positioning/fn';
+import {
+  patchAndPolyfillConstructedStylesheets,
+  patchCSSOM,
+} from '@oddbird/css-anchor-positioning/fn';
 
 patchCSSOM();
+patchAndPolyfillConstructedStylesheets();
 
-// Define your custom elements, then apply the polyfill.
-await polyfill();
+// Define your custom elements after the patches are installed.
 ```
+
+If your components don't adopt constructed stylesheets, apply the polyfill
+yourself once the elements are defined, passing their shadow roots as
+[`roots`](#roots).
 
 It patches the `style` getter to know which element a declaration belongs to,
 and defines `anchorName` and `positionAnchor` on `CSSStyleDeclaration`, writing
