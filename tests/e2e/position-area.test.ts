@@ -396,41 +396,26 @@ test.describe('with `positionAreaContainingBlock: auto`', () => {
   test('wraps a target whose containing-block-dependent style is inline', async ({
     page,
   }) => {
-    // Inline styles are shifted into custom properties like the rest of the
-    // CSS, so a target that takes its `position-area` from a stylesheet while
-    // setting a containing-block-dependent style inline is still recognised as
-    // needing the wrapper. Without the shift the inline `padding-right: 50%`
-    // reads back as empty and the target is positioned directly.
-    await page.evaluate(async () => {
-      // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
-      // and the import linter from trying to resolve it statically.
-      const fnEntry = '/src/index-fn.ts';
-      const { default: polyfill } = await import(fnEntry);
+    // `#inline-shifted .target` takes its `position-area` from a stylesheet and
+    // sets `padding-right: 50%` inline. Inline styles are shifted into custom
+    // properties like the rest of the CSS, so the percentage padding is still
+    // seen here and the target is wrapped. Without the shift it reads back as
+    // empty and the target is positioned directly.
+    await applyPolyfill(page);
 
-      const style = document.createElement('style');
-      style.textContent = `
-        #inline-shifted .anchor { anchor-name: --inline-shifted; }
-        #inline-shifted .target {
-          position: absolute;
-          position-anchor: --inline-shifted;
-          position-area: top;
-        }`;
-      document.head.append(style);
+    const section = page.locator('#inline-shifted');
+    const targetWrapper = section.locator('polyfill-position-area');
+    await expect(targetWrapper).toHaveCount(1);
 
-      const container = document.createElement('div');
-      container.id = 'inline-shifted';
-      container.setAttribute('style', 'position: relative');
-      container.innerHTML = `
-        <div class="anchor">Anchor</div>
-        <div class="target" style="padding-right: 50%">Target</div>`;
-      document.body.append(container);
-
-      await polyfill({ positionAreaContainingBlock: 'auto' });
-    });
-
-    await expect(
-      page.locator('#inline-shifted polyfill-position-area'),
-    ).toHaveCount(1);
+    // The reason it needs the wrapper: the padding has to resolve against the
+    // position-area cell, not the original parent.
+    const wrapperContentWidth = await targetWrapper.evaluate(
+      (el) => el.clientWidth,
+    );
+    const paddingRight = await section
+      .locator('.target')
+      .evaluate((el) => parseFloat(getComputedStyle(el).paddingRight));
+    expect(paddingRight).toBeCloseTo(wrapperContentWidth / 2, 0);
   });
 
   test('positions a wrapped target correctly', async ({ page }) => {

@@ -67,6 +67,12 @@
   position-area: span-left top;
 }
 
+/* Same as `.spanleft-top`, but the containing-block-dependent padding is set
+ * as an inline style on the target instead. */
+.target.inline-shifted {
+  position-area: span-left top;
+}
+
 .target.spanall-left {
   position-area: span-all left;
 }

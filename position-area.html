@@ -183,6 +183,29 @@
       </div>
     </section>
 
+    <section class="position-area-demo-item" id="inline-shifted">
+      <h2>
+        <a href="#inline-shifted" aria-hidden="true">🔗</a>
+        <code>span-left top, padding set inline ✅</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div class="anchor">Anchor</div>
+        <div class="target inline-shifted" style="padding-right: 50%">
+          Target with longer content
+        </div>
+      </div>
+      <p>
+        The same as the demo above, except that
+        <code>padding-right: 50%</code> is an inline style rather than a
+        stylesheet rule. Inline styles are shifted into custom properties like
+        the rest of the CSS, so <a href="?auto"><code>auto</code> mode</a> can
+        still see the percentage padding and wraps the target. Without that
+        shift the padding reads back as empty, the target is positioned
+        directly, and the padding resolves against the original containing block
+        instead of the <code>position-area</code> cell.
+      </p>
+    </section>
+
     <section class="position-area-demo-item" id="nested-alignment">
       <h2>
         <a href="#nested-alignment" aria-hidden="true">🔗</a>
