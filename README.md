@@ -37,7 +37,7 @@ To use the polyfill, add this script tag to your document `<head>`:
 
 ```js
 <script type="module">
-  if (!CSS.supports("anchor-name: --a")) {
+  if (!("anchorName" in document.documentElement.style)) {
     import("https://unpkg.com/@oddbird/css-anchor-positioning");
   }
 </script>
@@ -58,21 +58,6 @@ polyfill();
 The `polyfill` function returns a promise that resolves when the polyfill has
 been applied.
 
-### Feature detection
-
-Use `CSS.supports()` to check for native support:
-
-```js
-if (!CSS.supports('anchor-name: --a')) {
-  // Load the polyfill.
-}
-```
-
-Checking for the property on a style declaration —
-`'anchorName' in document.documentElement.style` — works too, but only until
-something defines that property. [`patchCSSOM()`](#setting-anchor-properties-from-javascript)
-does exactly that, so `CSS.supports()` is the check to rely on.
-
 ### Constructed stylesheets (`adoptedStyleSheets`)
 
 If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
@@ -80,7 +65,7 @@ If your custom elements use [constructed stylesheets](https://developer.mozilla.
 
 ```html
 <script type="module">
-  if (!CSS.supports('anchor-name: --a')) {
+  if (!('anchorName' in document.documentElement.style)) {
     const { patchAndPolyfillConstructedStylesheets } =
       await import('https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js');
     patchAndPolyfillConstructedStylesheets();
@@ -140,9 +125,10 @@ what you set into the element's `style` attribute. `setProperty()`,
 
 Two things to know:
 
-- It makes `'anchorName' in element.style` return `true`, so anything detecting
-  native support that way will think the browser supports anchor positioning.
-  Use [`CSS.supports()`](#feature-detection) instead.
+- Once it has run, `'anchorName' in element.style` returns `true`. Feature
+  detection happens before the polyfill is loaded, so that check is unaffected,
+  but anything detecting support later on can use
+  `CSS.supports('anchor-name: --a')`, which the patch leaves alone.
 - It covers those two properties, not values. An `anchor()` value assigned to
   `el.style.top` is dropped just the same, for being a value the browser does
   not understand.
@@ -158,7 +144,7 @@ value of `window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`.
 
 ```js
 <script type="module">
-  if (!CSS.supports("anchor-name: --a")) {
+  if (!("anchorName" in document.documentElement.style)) {
     window.ANCHOR_POSITIONING_POLYFILL_OPTIONS = {
       elements: undefined,
       excludeInlineStyles: false,
@@ -176,7 +162,7 @@ an argument.
 
 ```js
 <script type="module">
-  if (!CSS.supports("anchor-name: --a")) {
+  if (!("anchorName" in document.documentElement.style)) {
     const { default: polyfill } = await import("https://unpkg.com/@oddbird/css-anchor-positioning/dist/css-anchor-positioning-fn.js");
 
     polyfill({
