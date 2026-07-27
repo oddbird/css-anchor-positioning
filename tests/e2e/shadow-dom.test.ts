@@ -242,7 +242,7 @@ test('positions a custom-element host with `position-area` in a `:host` rule', a
     `);
 
     customElements.define(
-      'position-area-on-host',
+      'position-area-host-fixture',
       class extends HTMLElement {
         connectedCallback() {
           // Moving the host into the `position-area` wrapper disconnects and
@@ -257,25 +257,27 @@ test('positions a custom-element host with `position-area` in a `:host` rule', a
     );
 
     const container = document.createElement('div');
-    container.id = 'position-area-on-host';
+    container.id = 'position-area-host-fixture';
     container.setAttribute('style', 'position: relative; margin-top: 5rem');
     // Written as attribute text: the CSSOM drops `anchor-name` and
     // `position-anchor` in a browser without native support, and the polyfill
     // reads the `style` attribute.
     container.innerHTML = `
-      <div class="anchor" style="anchor-name: --position-area-on-host">Anchor</div>
-      <position-area-on-host style="position-anchor: --position-area-on-host">Target</position-area-on-host>`;
+      <div class="anchor" style="anchor-name: --position-area-host-fixture">Anchor</div>
+      <position-area-host-fixture style="position-anchor: --position-area-host-fixture">Target</position-area-host-fixture>`;
     document.body.append(container);
   });
 
-  const anchor = page.locator('#position-area-on-host .anchor');
-  const target = page.locator('#position-area-on-host position-area-on-host');
+  const anchor = page.locator('#position-area-host-fixture .anchor');
+  const target = page.locator(
+    '#position-area-host-fixture position-area-host-fixture',
+  );
 
   // The wrapper is added by the queued polyfill run, with or without the
   // mapping styles reaching the host's tree, so waiting on it does not mask the
   // failure this test guards against.
   await expect(
-    page.locator('#position-area-on-host POLYFILL-POSITION-AREA'),
+    page.locator('#position-area-host-fixture POLYFILL-POSITION-AREA'),
   ).toHaveCount(1);
 
   // The generated mapping rules (keyed on the `data-pa-*` attributes the
