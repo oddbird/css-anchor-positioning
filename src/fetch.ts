@@ -70,49 +70,59 @@ async function fetchLinkedStylesheets(
 // `position-area` — and not just the anchor-specific ones: a target can take
 // its `position-area` from a stylesheet while setting its margin inline.
 // `anchor` is matched on its own as well, for `anchor()`/`anchor-size()` values.
+//
+// Matching tests the `style` attribute against a single regex rather than
+// handing `querySelectorAll` one `[style*="..."]` clause per property. Engines
+// do not bucket attribute-substring selectors by attribute presence, so a
+// ~50-clause query runs every substring test against every element in the
+// document; querying `[style]` and filtering here is an order of magnitude
+// faster, and scales with the number of styled elements rather than with the
+// size of the document.
+//
+// A term that contains another term is redundant -- `margin` already matches
+// `margin-inline-start`, `anchor` already matches `anchor-name` -- so only the
+// shortest distinct ones are kept.
+//
 // Built on first use rather than at module evaluation: `cascade.js` and this
 // module are part of an import cycle, so `SHIFTED_PROPERTIES` is not
 // necessarily initialized yet when this module is evaluated.
-let inlineAnchorStylesQuery: string | undefined;
-function elementsWithInlineAnchorStylesQuery() {
-  inlineAnchorStylesQuery ??= [
-    '[style*="anchor"]',
-    ...Object.keys(SHIFTED_PROPERTIES).map(
-      (property) => `[style*="${property}"]`,
-    ),
-  ].join(',');
-  return inlineAnchorStylesQuery;
+let inlineAnchorStylesRegex: RegExp | undefined;
+function hasInlineAnchorStyles(el: HTMLElement) {
+  if (!inlineAnchorStylesRegex) {
+    const terms = ['anchor', ...Object.keys(SHIFTED_PROPERTIES)];
+    inlineAnchorStylesRegex = new RegExp(
+      terms
+        .filter(
+          (term) =>
+            !terms.some((other) => other !== term && term.includes(other)),
+        )
+        .join('|'),
+    );
+  }
+  return inlineAnchorStylesRegex.test(el.getAttribute('style') ?? '');
 }
 // Searches for all elements with inline style attributes that include `anchor`.
 // For each element found, adds a new 'data-has-inline-styles' attribute with a
 // random UUID value, and then formats the styles in the same manner as CSS from
 // style tags.
 function fetchInlineStyles(elements?: HTMLElement[]) {
-  const elementsWithInlineAnchorStyles: HTMLElement[] = elements
-    ? elements.filter(
-        (el) =>
-          el instanceof HTMLElement &&
-          el.matches(elementsWithInlineAnchorStylesQuery()),
-      )
-    : Array.from(
-        document.querySelectorAll(elementsWithInlineAnchorStylesQuery()),
-      );
+  const elementsWithInlineAnchorStyles: HTMLElement[] = (
+    elements ?? Array.from(document.querySelectorAll<HTMLElement>('[style]'))
+  ).filter((el) => el instanceof HTMLElement && hasInlineAnchorStyles(el));
   const inlineStyles: Partial<StyleData>[] = [];
 
-  elementsWithInlineAnchorStyles
-    .filter((el) => el instanceof HTMLElement)
-    .forEach((el) => {
-      const dataAttribute = 'data-has-inline-styles';
-      // Reuse an existing id rather than minting a new one each run: a
-      // concurrent run (e.g. another shadow root being polyfilled) may already
-      // be relying on this element's id in an anchor selector, and re-stamping
-      // it would invalidate that selector.
-      const selector = el.getAttribute(dataAttribute) ?? nanoid(12);
-      el.setAttribute(dataAttribute, selector);
-      const styles = el.getAttribute('style');
-      const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
-      inlineStyles.push({ el, css });
-    });
+  elementsWithInlineAnchorStyles.forEach((el) => {
+    const dataAttribute = 'data-has-inline-styles';
+    // Reuse an existing id rather than minting a new one each run: a
+    // concurrent run (e.g. another shadow root being polyfilled) may already
+    // be relying on this element's id in an anchor selector, and re-stamping
+    // it would invalidate that selector.
+    const selector = el.getAttribute(dataAttribute) ?? nanoid(12);
+    el.setAttribute(dataAttribute, selector);
+    const styles = el.getAttribute('style');
+    const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
+    inlineStyles.push({ el, css });
+  });
 
   return inlineStyles;
 }
