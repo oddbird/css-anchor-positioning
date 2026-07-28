@@ -1,10 +1,6 @@
 import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
-import {
-  getRootStyleContainer,
-  type StyleData,
-  writeAdoptedStylesheet,
-} from './utils.js';
+import { type StyleData, writeAdoptedStylesheet } from './utils.js';
 
 // This is a list of non-global attributes that apply to link elements but do
 // not apply to style elements. These should be removed when converting from a
@@ -84,14 +80,10 @@ export function transformCSS(
           // the tree of every element its rules match, as recorded while the
           // rules were generated. Those are not always the roots being
           // polyfilled: a `position-area` in a `:host` rule targets the shadow
-          // host, which lives in the outer tree. Fall back to the roots when
-          // no containers were recorded.
-          const styleContainers = containers?.size
-            ? containers
-            : new Set(
-                (roots?.length ? roots : [document]).map(getRootStyleContainer),
-              );
-          for (const container of styleContainers) {
+          // host, which lives in the outer tree. An empty set means no rules
+          // were generated -- `css`, `changed` and `containers` are populated
+          // together -- so there is nothing to insert.
+          for (const container of containers ?? []) {
             // If there are multiple roots, clone the element for each root
             const node = styleEl.isConnected
               ? styleEl

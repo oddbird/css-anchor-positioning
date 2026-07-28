@@ -80,6 +80,9 @@ describe('transformCSS', () => {
         css: 'html { margin: 0; }',
         changed: true,
         created: true,
+        // `parseCSS` records the style container of every element the created
+        // rules match, and only marks the sheet `changed` once it has.
+        containers: new Set([document.head]),
       },
     ];
     transformCSS(styleData, undefined);
@@ -92,5 +95,21 @@ describe('transformCSS', () => {
       true,
     );
     expect(createdStyleElement.textContent).toBe('html { margin: 0; }');
+  });
+
+  it('does not insert created styles when no containers were recorded', () => {
+    document.head.innerHTML = ``;
+    const styleData = [
+      {
+        el: document.createElement('link'),
+        css: '',
+        changed: true,
+        created: true,
+        containers: new Set<ShadowRoot | HTMLHeadElement>(),
+      },
+    ];
+    transformCSS(styleData, undefined);
+
+    expect(document.querySelector('style')).toBe(null);
   });
 });
