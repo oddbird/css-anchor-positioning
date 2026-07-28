@@ -137,12 +137,13 @@ export function patchCSSOM() {
   patched = true;
 
   // Record which element an inline declaration belongs to.
-  for (const proto of [HTMLElement.prototype, SVGElement.prototype]) {
-    const descriptor = Object.getOwnPropertyDescriptor(proto, 'style');
-    const getStyle = descriptor?.get;
-    if (!descriptor || !getStyle) continue;
-
-    Object.defineProperty(proto, 'style', {
+  const descriptor = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'style',
+  );
+  const getStyle = descriptor?.get;
+  if (descriptor && getStyle) {
+    Object.defineProperty(HTMLElement.prototype, 'style', {
       ...descriptor,
       get(this: Element) {
         const style = getStyle.call(this) as CSSStyleDeclaration;
