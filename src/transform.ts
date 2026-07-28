@@ -37,7 +37,13 @@ export function transformCSS(
     sheet,
     containers,
   } of styleData) {
-    const updatedObject: StyleData = { el, css, changed: false, sheet };
+    const updatedObject: StyleData = {
+      el,
+      css,
+      changed: false,
+      sheet,
+      containers,
+    };
     if (changed) {
       if (sheet) {
         // Handle constructed stylesheets adopted via `adoptedStyleSheets`.

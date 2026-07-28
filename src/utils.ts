@@ -73,12 +73,13 @@ export interface StyleData {
   // The constructed stylesheet this data came from, when the styles were
   // adopted via `adoptedStyleSheets` rather than a `<style>`/`<link>` element.
   sheet?: CSSStyleSheet;
-  // For a polyfill-created stylesheet: the containers it must be inserted into,
-  // one per tree holding an element its rules match. A `<style>` only applies
-  // within its own tree, and the elements these rules target do not always live
-  // in the roots being polyfilled — a `:host` rule styles the shadow host,
-  // which sits in the *outer* tree.
-  containers?: Set<ShadowRoot | HTMLHeadElement>;
+  // The containers this stylesheet must be inserted into, one per tree holding
+  // an element its rules match. A `<style>` only applies within its own tree,
+  // and the elements the rules target do not always live in the roots being
+  // polyfilled — a `:host` rule styles the shadow host, which sits in the
+  // *outer* tree. Only consulted for polyfill-created stylesheets (`created`);
+  // an empty set for author styles, which are transformed in place.
+  containers: Set<ShadowRoot | HTMLHeadElement>;
 }
 
 // Reference to the native `CSSStyleSheet.prototype.replaceSync` so that the

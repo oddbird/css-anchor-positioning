@@ -438,7 +438,10 @@ describe('fallback', () => {
         `<div id="a" style="${propWrap('bottom')}:10px"></div>` +
         `<div id="b" style="${propWrap('bottom')}:20px"></div>`;
       const styleData: StyleData[] = [
-        { css: '#a, #b { position-try-fallbacks: flip-block; }' },
+        {
+          css: '#a, #b { position-try-fallbacks: flip-block; }',
+          containers: new Set(),
+        },
       ];
 
       const { validPositions } = parsePositionFallbacks(styleData);
