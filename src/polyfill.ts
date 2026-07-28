@@ -6,7 +6,6 @@ import {
 } from '@floating-ui/dom';
 
 import { cascadeCSS } from './cascade.js';
-import { restoreInlineAnchorValues } from './cssom.js';
 import { getCSSPropertyValue, getOffsetParent } from './dom.js';
 import { fetchCSS } from './fetch.js';
 import {
@@ -760,11 +759,6 @@ export async function polyfill(
   const options = normalizePolyfillOptions(
     useAnimationFrameOrOption ?? window.ANCHOR_POSITIONING_POLYFILL_OPTIONS,
   );
-
-  // Anchors set through the patched CSSOM accessors live in a registry; make
-  // sure the `style` attributes they mirror into are up to date before
-  // anything reads them.
-  restoreInlineAnchorValues();
 
   // fetch CSS from stylesheet and inline style
   let styleData = await fetchCSS(options);

@@ -1,3 +1,5 @@
+import { SHIFTED_PROPERTIES } from './cascade.js';
+
 // The properties this patch makes settable through the CSSOM, mapped to the CSS
 // property they write. A browser without native anchor positioning does not
 // know them, and the CSSOM drops what it does not know: `el.style.anchorName =
@@ -13,127 +15,27 @@ const PATCHED_PROPERTIES = {
 
 const PATCHED_CSS_PROPERTIES: string[] = Object.values(PATCHED_PROPERTIES);
 
-// The element an inline `CSSStyleDeclaration` belongs to. Inline styles have no
-// `ownerNode`, so the only way back to the element is to record it while
-// `element.style` is being accessed — which is exactly when a declaration is
-// about to be read or written.
-const inlineStyleOwners = new WeakMap<CSSStyleDeclaration, Element>();
-
-// The values set through the patched accessors, and the authoritative copy of
-// them. They are mirrored into the `style` attribute for the polyfill (and for
-// devtools) to read, but any later CSSOM write reserializes the declaration
-// block and drops declarations the browser does not understand, so the
-// attribute on its own cannot be trusted:
-//
-//   el.setAttribute('style', 'anchor-name: --foo; color: red');
-//   el.style.top = '1px';
-//   el.getAttribute('style'); // 'color: red; top: 1px;'
-const inlineValues = new WeakMap<Element, Map<string, string>>();
-
-// Every element that has a value in `inlineValues`, so the mirrors can be
-// restored before a polyfill run reads them. Held weakly, so this never keeps
-// an element alive.
-const patchedElements = new Set<WeakRef<Element>>();
-
 let patched = false;
-
-/** Reads a declaration from an element's `style` attribute. */
-function getInlineDeclaration(element: Element, property: string) {
-  const [, value = ''] =
-    new RegExp(`(?:^|;)\\s*${property}\\s*:([^;]*)`, 'i').exec(
-      element.getAttribute('style') ?? '',
-    ) ?? [];
-  return value.trim();
-}
-
-/**
- * Writes a declaration into an element's `style` attribute, leaving the other
- * declarations untouched. An empty value removes the declaration.
- *
- * The attribute is edited as text rather than through the CSSOM, which would
- * drop the declaration again.
- */
-function setInlineDeclaration(
-  element: Element,
-  property: string,
-  value: string,
-) {
-  let style = (element.getAttribute('style') ?? '')
-    .replace(new RegExp(`(^|;)\\s*${property}\\s*:[^;]*;?`, 'i'), '$1')
-    .replace(/^\s*;/, '')
-    .trim();
-
-  if (value) {
-    style = style && !style.endsWith(';') ? `${style};` : style;
-    style = `${style}${style ? ' ' : ''}${property}: ${value};`;
-  }
-
-  if (style) {
-    element.setAttribute('style', style);
-  } else if (element.hasAttribute('style')) {
-    element.setAttribute('style', '');
-  }
-}
-
-function writeValue(element: Element, property: string, value: string) {
-  let values = inlineValues.get(element);
-  if (!values) {
-    values = new Map();
-    inlineValues.set(element, values);
-    patchedElements.add(new WeakRef(element));
-  }
-
-  if (value) {
-    values.set(property, value);
-  } else {
-    values.delete(property);
-  }
-
-  setInlineDeclaration(element, property, value);
-}
-
-/**
- * Re-applies the values set through the patched accessors to the `style`
- * attributes they were mirrored into, in case a later CSSOM write dropped them,
- * and drops elements that have been garbage collected.
- *
- * Called at the start of a polyfill run, so that everything downstream can keep
- * reading the `style` attribute as the single source of inline styles.
- */
-export function restoreInlineAnchorValues() {
-  if (!patched) return;
-
-  for (const ref of patchedElements) {
-    const element = ref.deref();
-    if (!element) {
-      patchedElements.delete(ref);
-      continue;
-    }
-
-    for (const [property, value] of inlineValues.get(element) ?? []) {
-      if (getInlineDeclaration(element, property) !== value) {
-        setInlineDeclaration(element, property, value);
-      }
-    }
-  }
-}
 
 /**
  * Makes `anchor-name` and `position-anchor` settable through the CSSOM, so that
  * anchors wired up from JavaScript — `element.style.anchorName = '--foo'` — are
  * visible to the polyfill in browsers without native anchor positioning.
  *
+ * The value is stored in the custom property `cascadeCSS` would have shifted the
+ * declaration into anyway (`SHIFTED_PROPERTIES`). A custom property is not a
+ * property the browser can fail to understand, so unlike `anchor-name` it is
+ * kept: it reaches the `style` attribute through the native setter, survives
+ * later CSSOM writes that reserialize the declaration block, and is already what
+ * `getCSSPropertyValue` reads. That means no bookkeeping of our own — no
+ * shadowing of the `style` attribute, and no need to know which element a
+ * declaration belongs to, so `CSSStyleDeclaration` is the only thing patched.
+ *
  * This is opt-in, and does nothing when anchor positioning is supported
  * natively, because it has a side effect worth knowing about: defining these
  * properties makes `'anchorName' in document.documentElement.style` return
  * `true`, which is a common way to detect native support. Use
  * `CSS.supports('anchor-name: --a')` for that instead — it is unaffected.
- *
- * There is also a cost: overriding `HTMLElement.prototype.style` puts a JS
- * accessor in front of every `el.style` access on the page, not only the
- * polyfill's own. Measured at a flat ~10-30ns per access across Chromium,
- * Firefox and WebKit — roughly 50k accesses to add 1ms — so it is unlikely to
- * be noticeable, but it is global and lasts for the lifetime of the page.
  *
  * Values set before this is called are not picked up; call it as early as
  * possible, alongside the other patches.
@@ -142,58 +44,55 @@ export function patchCSSOM() {
   if (patched || CSS.supports('anchor-name: --a')) return;
   patched = true;
 
-  // Record which element an inline declaration belongs to.
-  const descriptor = Object.getOwnPropertyDescriptor(
-    HTMLElement.prototype,
-    'style',
-  );
-  const getStyle = descriptor?.get;
-  if (descriptor && getStyle) {
-    Object.defineProperty(HTMLElement.prototype, 'style', {
-      ...descriptor,
-      get(this: Element) {
-        const style = getStyle.call(this) as CSSStyleDeclaration;
-        inlineStyleOwners.set(style, this);
-        return style;
-      },
-    });
-  }
+  const { getPropertyValue, removeProperty, setProperty } =
+    CSSStyleDeclaration.prototype;
 
-  const ownerOf = (style: CSSStyleDeclaration) => inlineStyleOwners.get(style);
+  // Writes through the native accessors, so the patched ones below can call
+  // this without recursing. An empty value removes the declaration, matching
+  // how the CSSOM treats an empty assignment.
+  const writeValue = (
+    style: CSSStyleDeclaration,
+    cssProperty: string,
+    value: string | null,
+    priority?: string,
+  ) => {
+    const property = SHIFTED_PROPERTIES[cssProperty];
+    const trimmed = `${value ?? ''}`.trim();
+    if (trimmed) {
+      setProperty.call(style, property, trimmed, priority);
+    } else {
+      removeProperty.call(style, property);
+    }
+  };
+
+  // The property this declaration stores `cssProperty` in, for the properties
+  // we own; anything else is passed through untouched.
+  const storedAs = (cssProperty: string) =>
+    PATCHED_CSS_PROPERTIES.includes(cssProperty)
+      ? SHIFTED_PROPERTIES[cssProperty]
+      : cssProperty;
 
   for (const [property, cssProperty] of Object.entries(PATCHED_PROPERTIES)) {
     Object.defineProperty(CSSStyleDeclaration.prototype, property, {
       configurable: true,
       enumerable: true,
       get(this: CSSStyleDeclaration) {
-        const element = ownerOf(this);
-        // Not an inline style (a computed style, say), so there is no value of
-        // ours to report.
-        return (element && inlineValues.get(element)?.get(cssProperty)) ?? '';
+        return getPropertyValue.call(this, SHIFTED_PROPERTIES[cssProperty]);
       },
       set(this: CSSStyleDeclaration, value: string) {
-        const element = ownerOf(this);
-        if (element) {
-          writeValue(element, cssProperty, `${value ?? ''}`.trim());
-        }
+        writeValue(this, cssProperty, value);
       },
     });
   }
 
   // The dashed form goes through these, and is dropped just the same.
-  const { getPropertyValue, removeProperty, setProperty } =
-    CSSStyleDeclaration.prototype;
-
   CSSStyleDeclaration.prototype.setProperty = function (
     property: string,
     value: string | null,
     priority?: string,
   ) {
-    const element = PATCHED_CSS_PROPERTIES.includes(property)
-      ? ownerOf(this)
-      : undefined;
-    if (element) {
-      writeValue(element, property, `${value ?? ''}`.trim());
+    if (PATCHED_CSS_PROPERTIES.includes(property)) {
+      writeValue(this, property, value, priority);
       return;
     }
     return setProperty.call(this, property, value, priority);
@@ -202,26 +101,12 @@ export function patchCSSOM() {
   CSSStyleDeclaration.prototype.getPropertyValue = function (
     property: string,
   ): string {
-    const element = PATCHED_CSS_PROPERTIES.includes(property)
-      ? ownerOf(this)
-      : undefined;
-    if (element) {
-      return inlineValues.get(element)?.get(property) ?? '';
-    }
-    return getPropertyValue.call(this, property);
+    return getPropertyValue.call(this, storedAs(property));
   };
 
   CSSStyleDeclaration.prototype.removeProperty = function (
     property: string,
   ): string {
-    const element = PATCHED_CSS_PROPERTIES.includes(property)
-      ? ownerOf(this)
-      : undefined;
-    if (element) {
-      const previous = inlineValues.get(element)?.get(property) ?? '';
-      writeValue(element, property, '');
-      return previous;
-    }
-    return removeProperty.call(this, property);
+    return removeProperty.call(this, storedAs(property));
   };
 }

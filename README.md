@@ -125,17 +125,21 @@ If your components don't adopt constructed stylesheets, apply the polyfill
 yourself once the elements are defined, passing their shadow roots as
 [`roots`](#roots).
 
-It patches the `style` getter to know which element a declaration belongs to,
-and defines `anchorName` and `positionAnchor` on `CSSStyleDeclaration`, writing
-what you set into the element's `style` attribute. `setProperty()`,
-`getPropertyValue()` and `removeProperty()` accept the dashed names as well.
+It defines `anchorName` and `positionAnchor` on `CSSStyleDeclaration`, storing
+what you set in the custom property the polyfill shifts that declaration into
+internally. `setProperty()`, `getPropertyValue()` and `removeProperty()` accept
+the dashed names as well.
 
-Two things to know:
+Three things to know:
 
 - Once it has run, `'anchorName' in element.style` returns `true`. Feature
   detection happens before the polyfill is loaded, so that check is unaffected,
   but anything detecting support later on can use
   `CSS.supports('anchor-name: --a')`, which the patch leaves alone.
+- The `style` attribute holds the polyfill's custom property rather than the
+  property you assigned, so devtools shows `--anchor-name-<id>: --foo` instead
+  of `anchor-name: --foo`. Reading the value back through the CSSOM returns what
+  you set.
 - It covers those two properties, not values. An `anchor()` value assigned to
   `el.style.top` is dropped just the same, for being a value the browser does
   not understand.

@@ -10,6 +10,7 @@ import type {
 import walk from 'css-tree/walker';
 import { nanoid } from 'nanoid/non-secure';
 
+import { SHIFTED_PROPERTIES } from './cascade.js';
 import {
   AnchorScopeValue,
   getCSSPropertyValue,
@@ -107,7 +108,16 @@ export interface TryBlock {
 }
 
 function isAnchorNameDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'anchor-name';
+  // The shifted custom property counts too: `patchCSSOM` writes anchors set
+  // through the CSSOM straight into it, so they never appear as an `anchor-name`
+  // declaration. Author `anchor-name` declarations have both by this point
+  // (`cascadeCSS` appends the shifted one), so a rule now matches twice; the
+  // caller drops the repeated selector.
+  return (
+    node.type === 'Declaration' &&
+    (node.property === 'anchor-name' ||
+      node.property === SHIFTED_PROPERTIES['anchor-name'])
+  );
 }
 
 function isAnchorScopeDeclaration(node: CssNode): node is DeclarationWithValue {
@@ -272,9 +282,18 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
  * DOM) from one inherited via a shadow-scoped `:host` rule. Only the former may
  * reference an anchor in the host's outer tree.
  */
+// Matches either spelling of the declaration: the property as authored, or the
+// custom property `patchCSSOM` stores a CSSOM-set value in. Built on first use,
+// as `SHIFTED_PROPERTIES` is keyed by a UUID generated at load.
+let inlinePositionAnchorRegex: RegExp | undefined;
 function hasInlinePositionAnchor(el: HTMLElement): boolean {
   const style = el.getAttribute('style');
-  return style ? /(?:^|;)\s*position-anchor\s*:/i.test(style) : false;
+  if (!style) return false;
+  inlinePositionAnchorRegex ??= new RegExp(
+    `(?:^|;)\\s*(?:position-anchor|${SHIFTED_PROPERTIES['position-anchor']})\\s*:`,
+    'i',
+  );
+  return inlinePositionAnchorRegex.test(style);
 }
 
 async function getAnchorEl(
@@ -363,8 +382,18 @@ export async function parseCSS(
       // Parse `anchor-name` declaration
       if (isAnchorNameDeclaration(node) && selectors.length) {
         for (const name of getAnchorNames(node)) {
-          anchorNames[name] ??= [];
-          anchorNames[name].push(...selectors);
+          const registered = (anchorNames[name] ??= []);
+          // Registering a selector twice for the same name is not harmless: for
+          // a pseudo-element selector, the anchor search builds a fake element
+          // per entry (see `getElementsBySelector`) but only ever removes the
+          // one it returns, leaving the extra in the DOM to disturb layout. A
+          // name now matches two declarations per rule — the property and the
+          // custom property `cascadeCSS` shifts it into — so drop repeats.
+          for (const selector of selectors) {
+            if (!registered.some((s) => s.selector === selector.selector)) {
+              registered.push(selector);
+            }
+          }
         }
       }
 
