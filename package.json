@@ -100,6 +100,7 @@
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-html": "^8.1.4",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-simple-import-sort": "^13.0.0",
     "fetch-mock": "^12.6.0",

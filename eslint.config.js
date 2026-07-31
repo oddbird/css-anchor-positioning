@@ -3,6 +3,7 @@
 import js from '@eslint/js';
 import vitest from '@vitest/eslint-plugin';
 import prettier from 'eslint-config-prettier';
+import html from 'eslint-plugin-html';
 import { importX } from 'eslint-plugin-import-x';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import globals from 'globals';
@@ -58,6 +59,20 @@ export default [
       'import-x/newline-after-import': 'warn',
       'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
       'import-x/order': 'off',
+    },
+  },
+  {
+    files: ['*.html'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        Typekit: 'readonly',
+      },
+    },
+    plugins: { html },
+    rules: {
+      'import-x/no-unresolved': ['error', { ignore: ['^/'] }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
   {

@@ -19,7 +19,7 @@
     <script>
       try {
         Typekit.load({ async: true });
-      } catch (e) {}
+      } catch {}
     </script>
     <link rel="stylesheet" href="/demo.css" />
 
@@ -168,7 +168,7 @@
       const manualSet1Button = document.getElementById(
         'apply-polyfill-manually-set1',
       );
-      manualSet1Button?.addEventListener('click', (e) => {
+      manualSet1Button?.addEventListener('click', () => {
         polyfill({
           elements: [
             document.getElementById('my-style-manual-anchor'),
@@ -182,7 +182,7 @@
       const manualSet2Button = document.getElementById(
         'apply-polyfill-manually-set2',
       );
-      manualSet2Button?.addEventListener('click', (e) => {
+      manualSet2Button?.addEventListener('click', () => {
         polyfill({
           elements: [
             document.getElementById('my-style-manual-anchor'),
@@ -197,7 +197,7 @@
       const manualSet3Button = document.getElementById(
         'apply-polyfill-manually-set3',
       );
-      manualSet3Button?.addEventListener('click', (e) => {
+      manualSet3Button?.addEventListener('click', () => {
         polyfill({
           elements: [
             document.getElementById('my-style-manual-anchor'),
