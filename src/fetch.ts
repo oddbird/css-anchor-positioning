@@ -87,6 +87,14 @@ async function fetchLinkedStylesheets(
 // module are part of an import cycle, so `SHIFTED_PROPERTIES` is not
 // necessarily initialized yet when this module is evaluated.
 let inlineAnchorStylesRegex: RegExp | undefined;
+/**
+ * Checks if the given element has inline styles used by the polyfill, including
+ * margin, inset, sizing, padding, self-alignment, `position-area`, and anchor
+ * properties.
+ *
+ * @param el The element to check.
+ * @returns True if the element has inline styles used by the polyfill.
+ */
 function hasInlineAnchorStyles(el: HTMLElement) {
   if (!inlineAnchorStylesRegex) {
     const terms = ['anchor', ...Object.keys(SHIFTED_PROPERTIES)];
