@@ -11,9 +11,9 @@ export default defineConfig({
     ? {
         rollupOptions: {
           input: {
-            main: resolve(__dirname, 'index.html'),
-            positionArea: resolve(__dirname, 'position-area.html'),
-            shadowDOM: resolve(__dirname, 'shadow-dom.html'),
+            main: resolve(import.meta.dirname, 'index.html'),
+            positionArea: resolve(import.meta.dirname, 'position-area.html'),
+            shadowDOM: resolve(import.meta.dirname, 'shadow-dom.html'),
           },
         },
       }
@@ -21,7 +21,7 @@ export default defineConfig({
         lib: process.env.BUILD_WPT
           ? // build that adds a delay variable for WPT test-runner
             {
-              entry: resolve(__dirname, 'src/index-wpt.ts'),
+              entry: resolve(import.meta.dirname, 'src/index-wpt.ts'),
               name: 'CssAnchorPositioning',
               formats: ['umd'],
               // the proper extensions will be added
@@ -30,14 +30,14 @@ export default defineConfig({
           : process.env.BUILD_FN
             ? // build that exposes the polyfill as a fn
               {
-                entry: resolve(__dirname, 'src/index-fn.ts'),
+                entry: resolve(import.meta.dirname, 'src/index-fn.ts'),
                 name: 'CssAnchorPositioning',
                 // the proper extensions will be added
                 fileName: 'css-anchor-positioning-fn',
               }
             : // build that runs the polyfill on import
               {
-                entry: resolve(__dirname, 'src/index.ts'),
+                entry: resolve(import.meta.dirname, 'src/index.ts'),
                 name: 'CssAnchorPositioning',
                 // the proper extensions will be added
                 fileName: 'css-anchor-positioning',
@@ -46,6 +46,9 @@ export default defineConfig({
         target: 'es6',
         sourcemap: true,
         rollupOptions: {
+          ...(process.env.BUILD_FN
+            ? { output: { exports: 'named' as const } }
+            : {}),
           plugins: [
             // Remove unused source-map-js module to minimize build size
             // @ts-expect-error https://github.com/rollup/plugins/issues/1541
