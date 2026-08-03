@@ -86,10 +86,8 @@ export function transformCSS(
           // the tree of every element its rules match, as recorded while the
           // rules were generated. Those are not always the roots being
           // polyfilled: a `position-area` in a `:host` rule targets the shadow
-          // host, which lives in the outer tree. An empty set means no rules
-          // were generated -- `css`, `changed` and `containers` are populated
-          // together -- so there is nothing to insert.
-          for (const container of containers ?? []) {
+          // host, which lives in the outer tree.
+          for (const container of containers) {
             // If there are multiple roots, clone the element for each root
             const node = styleEl.isConnected
               ? styleEl
