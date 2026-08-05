@@ -34,7 +34,7 @@ export default [
         ...globals.es2021,
       },
       parserOptions: {
-        project: ['tsconfig.json', 'tests/tsconfig.json'],
+        project: ['tsconfig.json', 'tsconfig.demo.json', 'tests/tsconfig.json'],
         warnOnUnsupportedTypeScriptVersion: false,
       },
     },
@@ -42,7 +42,11 @@ export default [
     settings: {
       'import-x/resolver': {
         typescript: {
-          project: ['tsconfig.json', 'tests/tsconfig.json'],
+          project: [
+            'tsconfig.json',
+            'tsconfig.demo.json',
+            'tests/tsconfig.json',
+          ],
         },
       },
     },

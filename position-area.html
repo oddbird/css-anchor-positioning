@@ -24,55 +24,7 @@
     <link rel="stylesheet" href="/demo.css" />
     <link rel="stylesheet" href="/position-area-page.css" />
 
-    <script type="module">
-      import polyfill from '/src/index-fn.ts';
-
-      const SUPPORTS_ANCHOR_POSITIONING =
-        'anchorName' in document.documentElement.style;
-
-      const btn = document.getElementById('apply-polyfill');
-
-      // Add `?no-containing-block` to the URL to apply the polyfill with
-      // `positionAreaContainingBlock: false`, which positions targets
-      // directly instead of wrapping them. Add `?auto` to use `'auto'`, which
-      // wraps only targets whose styles resolve against the containing block.
-      const params = new URLSearchParams(location.search);
-      const positionAreaContainingBlock = params.has('no-containing-block')
-        ? false
-        : params.has('auto')
-          ? 'auto'
-          : true;
-
-      if (!SUPPORTS_ANCHOR_POSITIONING) {
-        btn.addEventListener('click', () =>
-          polyfill({ positionAreaContainingBlock }).then((rules) => {
-            btn.innerText = 'Polyfill Applied';
-            btn.setAttribute('disabled', '');
-            console.log(rules);
-            const toggleWrapper = document.getElementById('toggle-wrapper');
-            toggleWrapper.removeAttribute('disabled');
-            toggleWrapper.innerText = 'Toggle Wrapper Visibility';
-          }),
-        );
-      } else {
-        btn.innerText = 'No Polyfill Needed';
-        btn.setAttribute('disabled', '');
-        console.log(
-          'anchor-positioning is supported in this browser; polyfill skipped.',
-        );
-      }
-
-      document
-        .getElementById('toggle-wrapper')
-        .addEventListener('click', () => {
-          document.body.classList.toggle('show-wrapper');
-        });
-      document
-        .getElementById('switch-cascade')
-        .addEventListener('click', () => {
-          document.body.classList.toggle('cascade-override');
-        });
-    </script>
+    <script type="module" src="/demo/position-area.ts"></script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script src="https://unpkg.com/prismjs@v1.x/components/prism-core.min.js"></script>
     <script src="https://unpkg.com/prismjs@v1.x/plugins/autoloader/prism-autoloader.min.js"></script>

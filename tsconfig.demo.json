@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "declaration": false,
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": ["demo/**/*.ts", "src/**/*.d.ts"]
+}
