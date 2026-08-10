@@ -1,0 +1,36 @@
+name: AgentScan
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+  issues:
+    types:
+      - opened
+
+jobs:
+  agentscan:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
+    steps:
+      - name: AgentScan
+        uses: MatteoGabriele/agentscan-action@c7d61446e7aece6bdd3edcee4558bbfc0392615e
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-close: true
+          message-mixed: |
+            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            If this was flagged in error, we apologize.
+            Please reopen the pull request and we will manually review it.
+          message-automation: |
+            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            If this was flagged in error, we apologize.
+            Please reopen the pull request and we will manually review it.
+          message-community-flagged: |
+            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            If this was flagged in error, we apologize.
+            Please reopen the pull request and we will manually review it.
