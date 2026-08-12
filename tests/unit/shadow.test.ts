@@ -43,10 +43,15 @@ async function adoptStylesheet() {
   return shadowRoot;
 }
 
+// Custom element names can only be defined once per registry, and the registry
+// outlives `vi.resetModules()`, so each call needs its own tag.
+let tagCount = 0;
+
 // Adopts a stylesheet into a shadow root whose host is not in the document
 // yet, mirroring a custom element that builds its shadow root in its
 // constructor. Returns the host, still disconnected.
-function adoptStylesheetWhileDisconnected(tagName: string) {
+function adoptStylesheetWhileDisconnected() {
+  const tagName = `adopts-early-${(tagCount += 1)}`;
   customElements.define(tagName, class extends HTMLElement {});
   const host = document.createElement(tagName);
   const shadowRoot = host.attachShadow({ mode: 'open' });
@@ -59,19 +64,22 @@ function optionsOfLastRun() {
 }
 
 describe('patchAndPolyfillConstructedStylesheets', () => {
-  // Each `loadShadowModule()` re-evaluates `utils.js`, which captures whatever
-  // `replaceSync` is current as the "original" — so without restoring it, every
-  // test would leave another wrapper stacked on the shared prototype.
+  // Each `loadShadowModule()` re-evaluates the module's patched-once state, so
+  // without restoring these, every test would leave another wrapper stacked on
+  // the shared globals.
   let originalReplaceSync: typeof CSSStyleSheet.prototype.replaceSync;
+  let originalDefine: typeof customElements.define;
 
   beforeEach(() => {
     originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
+    originalDefine = customElements.define;
     installAdoptedStyleSheets();
     polyfillMock.mockClear();
   });
 
   afterEach(() => {
     CSSStyleSheet.prototype.replaceSync = originalReplaceSync;
+    customElements.define = originalDefine;
     delete (ShadowRoot.prototype as Partial<ShadowRoot>).adoptedStyleSheets;
     delete window.ANCHOR_POSITIONING_POLYFILL_OPTIONS;
     document.body.replaceChildren();
@@ -172,8 +180,7 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
     const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
     patchAndPolyfillConstructedStylesheets();
 
-    const { host, shadowRoot } =
-      adoptStylesheetWhileDisconnected('adopt-early');
+    const { host, shadowRoot } = adoptStylesheetWhileDisconnected();
 
     // Nothing to position until the host is in the document.
     expect(polyfillMock).not.toHaveBeenCalled();
@@ -190,7 +197,7 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
       positionAreaContainingBlock: false,
     });
 
-    const { host } = adoptStylesheetWhileDisconnected('adopt-early-options');
+    const { host } = adoptStylesheetWhileDisconnected();
     document.body.append(host);
     await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
 
@@ -198,6 +205,10 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
       positionAreaContainingBlock: false,
     });
   });
+
+  // Connecting a host inside another shadow root is covered by the e2e suite
+  // instead: jsdom delivers mutation records across shadow boundaries, so a
+  // unit test here passes with or without the fix.
 
   it('does not run the polyfill when no stylesheets are adopted', async () => {
     const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();

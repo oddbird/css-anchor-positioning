@@ -61,7 +61,7 @@ been applied.
 ### Constructed stylesheets (`adoptedStyleSheets`)
 
 If your custom elements use [constructed stylesheets](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet)
-(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), call `patchAndPolyfillConstructedStylesheets()` **before** any custom element's `connectedCallback` runs:
+(via `new CSSStyleSheet()` + `replaceSync()` + `shadowRoot.adoptedStyleSheets`), call `patchAndPolyfillConstructedStylesheets()` **before** any of those custom elements are defined:
 
 ```html
 <script type="module">
@@ -87,6 +87,13 @@ This patches `CSSStyleSheet.prototype.replaceSync` to capture
 stylesheet source text, and patches the `ShadowRoot.prototype.adoptedStyleSheets`
 setter to automatically run the polyfill for each shadow root once its host
 element's `connectedCallback` finishes.
+
+A host that adopts its stylesheet before it is connected — typically one that
+builds its shadow root in the constructor — is positioned by its
+`connectedCallback`. That requires `customElements.define()` to be patched
+first, which is why this must be called before those elements are defined. Such
+a host is also never positioned if it isn't a custom element, since nothing
+signals that it has been connected.
 
 Those automatic runs use the same [options](#configuration) as `polyfill()`,
 either passed directly or read from

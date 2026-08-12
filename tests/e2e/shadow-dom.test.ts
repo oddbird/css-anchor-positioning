@@ -200,10 +200,8 @@ test('positions a host that adopts its stylesheet before being connected', async
   page,
 }) => {
   // A custom element that builds its shadow root in the constructor adopts its
-  // stylesheet while still disconnected. Custom element lifecycle callbacks are
-  // captured when the element is defined, so the polyfill can't hook the host's
-  // `connectedCallback` at that point — it has to wait for the host to enter
-  // the document.
+  // stylesheet while still disconnected, so nothing can be positioned until it
+  // is connected and its shadow DOM is populated.
   await page.goto('/shadow-dom.html');
 
   await page.evaluate(async () => {
@@ -264,6 +262,72 @@ test('positions a host that adopts its stylesheet before being connected', async
     anchorBox!.x + anchorBox!.width,
     0,
   );
+});
+
+test('positions a host connected inside another shadow root', async ({
+  page,
+}) => {
+  // The inner element adopts in its constructor and is then appended into the
+  // outer element's shadow root, never touching the document tree. Mutation
+  // records don't cross shadow boundaries, so this only works if the host's own
+  // `connectedCallback` drives the run.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --nested-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --nested-anchor;
+        position-area: bottom span-left;
+      }
+    `);
+
+    customElements.define(
+      'nested-inner',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div class="anchor">Anchor</div>
+            <div class="target">Target</div>`;
+        }
+      },
+    );
+
+    customElements.define(
+      'nested-outer',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.append(document.createElement('nested-inner'));
+        }
+      },
+    );
+
+    document.body.append(document.createElement('nested-outer'));
+  });
+
+  const wrapper = page.locator(
+    'nested-outer nested-inner POLYFILL-POSITION-AREA',
+  );
+  const anchor = page.locator('nested-outer nested-inner .anchor');
+
+  await expect(wrapper).toHaveCount(1);
+
+  const anchorBox = await anchor.boundingBox();
+  const wrapperBox = await wrapper.boundingBox();
+  expect(wrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('positions every custom-element host sharing one constructed stylesheet', async ({
