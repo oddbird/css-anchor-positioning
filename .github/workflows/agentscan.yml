@@ -1,13 +1,21 @@
 name: AgentScan
 
 on:
+  # Do NOT add actions/checkout to this workflow: pull_request_target runs
+  # with write permissions, so checking out PR code would allow a malicious
+  # PR to run arbitrary code with access to the token.
+  # Only `opened` (not `reopened`): a flagged PR/issue that gets reopened
+  # stays open for manual review, as the flag messages promise.
   pull_request_target:
     types:
       - opened
-      - reopened
   issues:
     types:
       - opened
+
+concurrency:
+  group: agentscan-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
 
 jobs:
   agentscan:
@@ -18,19 +26,23 @@ jobs:
       contents: read
     steps:
       - name: AgentScan
-        uses: MatteoGabriele/agentscan-action@c7d61446e7aece6bdd3edcee4558bbfc0392615e
+        uses: MatteoGabriele/agentscan-action@e02ef270c024bfad3541b2a71619c3c9f20b3312 # v2.2.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          scan-issues: true
           auto-close: true
+          trusted-author-associations: '["owner", "member", "collaborator"]'
+          # Only `automation` and community-flagged accounts are auto-closed
+          # (the action's default); `mixed` is labeled and left open.
           message-mixed: |
-            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            This was flagged as potentially not having a human behind it.
             If this was flagged in error, we apologize.
-            Please reopen the pull request and we will manually review it.
+            A maintainer will review it manually.
           message-automation: |
-            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            This was flagged as potentially not having a human behind it, and so it was closed.
             If this was flagged in error, we apologize.
-            Please reopen the pull request and we will manually review it.
+            Please reopen it and we will manually review it.
           message-community-flagged: |
-            This pull request was flagged as potentially not having a human behind it, and so it was closed.
+            This was flagged as potentially not having a human behind it, and so it was closed.
             If this was flagged in error, we apologize.
-            Please reopen the pull request and we will manually review it.
+            Please reopen it and we will manually review it.
