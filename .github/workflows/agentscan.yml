@@ -6,12 +6,16 @@ on:
   # PR to run arbitrary code with access to the token.
   # Only `opened` (not `reopened`): a flagged PR/issue that gets reopened
   # stays open for manual review, as the flag messages promise.
+  # To trigger a scan manually, add the `agentscan:scan` label to any PR
+  # or issue (remove and re-add it to re-scan).
   pull_request_target:
     types:
       - opened
+      - labeled
   issues:
     types:
       - opened
+      - labeled
 
 concurrency:
   group: agentscan-${{ github.event.pull_request.number || github.event.issue.number }}
@@ -19,6 +23,9 @@ concurrency:
 
 jobs:
   agentscan:
+    # On `labeled` events, only run for the manual-trigger label (the scan
+    # itself adds `agentscan:*` labels, which must not re-trigger it).
+    if: github.event.action != 'labeled' || github.event.label.name == 'agentscan:scan'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
