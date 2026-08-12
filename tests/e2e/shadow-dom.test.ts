@@ -1,5 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
 
+// Type-only: the entry is imported dynamically at runtime from a path the dev
+// server resolves (see below), which would otherwise be typed `any`.
+import type * as fnModule from '../../src/index-fn.js';
 import { expectWithinOne } from './utils.js';
 
 test.beforeEach(async ({ page }) => {
@@ -115,10 +118,16 @@ test('applies global polyfill options to adopted stylesheets in shadow root', as
 
   const wrapper = page.locator('anchor-adopted-styles POLYFILL-POSITION-AREA');
   const target = page.locator('anchor-adopted-styles .target');
+  const anchor = page.locator('anchor-adopted-styles .anchor');
 
   // The unwrapped path marks the target itself instead of adding a wrapper.
   await expect(target).toHaveAttribute('data-anchor-position-area');
   await expect(wrapper).toHaveCount(0);
+
+  // The target is still positioned, not merely left unwrapped.
+  const anchorBox = await anchor.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('applies explicit polyfill options to adopted stylesheets in shadow root', async ({
@@ -136,9 +145,12 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
 
   await page.evaluate(async () => {
     // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
-    // and the import linter from trying to resolve it statically.
+    // and the import linter from trying to resolve it statically. The cast
+    // restores the type checking that a non-literal `import()` gives up.
     const fnEntry = '/src/index-fn.ts';
-    const { patchAndPolyfillConstructedStylesheets } = await import(fnEntry);
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
 
     patchAndPolyfillConstructedStylesheets({
       positionAreaContainingBlock: false,
@@ -172,11 +184,16 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
 
   const target = page.locator('explicit-options .target');
   const wrapper = page.locator('explicit-options POLYFILL-POSITION-AREA');
+  const anchor = page.locator('explicit-options .anchor');
 
-  // Waiting on the attribute lets the queued polyfill run finish before the
-  // wrapper is asserted to be absent.
+  // The attribute is only set on the unwrapped path, so waiting on it both
+  // sequences the queued polyfill run and asserts which path was taken.
   await expect(target).toHaveAttribute('data-anchor-position-area');
   await expect(wrapper).toHaveCount(0);
+
+  const anchorBox = await anchor.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('positions every custom-element host sharing one constructed stylesheet', async ({

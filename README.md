@@ -88,6 +88,19 @@ stylesheet source text, and patches the `ShadowRoot.prototype.adoptedStyleSheets
 setter to automatically run the polyfill for each shadow root once its host
 element's `connectedCallback` finishes.
 
+Those automatic runs use the same [options](#configuration) as `polyfill()`,
+either passed directly or read from
+`window.ANCHOR_POSITIONING_POLYFILL_OPTIONS`:
+
+```js
+patchAndPolyfillConstructedStylesheets({ positionAreaContainingBlock: false });
+```
+
+The `roots` and `elements` options are ignored, since each run is scoped to the
+shadow root being positioned. The global is read when each run happens, not when
+`patchAndPolyfillConstructedStylesheets()` is called, so it can still be set
+afterwards; an explicit argument takes precedence over the global.
+
 You can view a more complete demo
 [here](https://anchor-positioning.oddbird.net/shadow-dom.html).
 
