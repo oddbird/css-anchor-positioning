@@ -43,6 +43,17 @@ async function adoptStylesheet() {
   return shadowRoot;
 }
 
+// Adopts a stylesheet into a shadow root whose host is not in the document
+// yet, mirroring a custom element that builds its shadow root in its
+// constructor. Returns the host, still disconnected.
+function adoptStylesheetWhileDisconnected(tagName: string) {
+  customElements.define(tagName, class extends HTMLElement {});
+  const host = document.createElement(tagName);
+  const shadowRoot = host.attachShadow({ mode: 'open' });
+  shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+  return { host, shadowRoot };
+}
+
 function optionsOfLastRun() {
   return polyfillMock.mock.lastCall?.[0];
 }
@@ -154,6 +165,37 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
     expect(optionsOfLastRun()).toMatchObject({
       elements: undefined,
       roots: [shadowRoot],
+    });
+  });
+
+  it('runs the polyfill for a host connected after adopting', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const { host, shadowRoot } =
+      adoptStylesheetWhileDisconnected('adopt-early');
+
+    // Nothing to position until the host is in the document.
+    expect(polyfillMock).not.toHaveBeenCalled();
+
+    document.body.append(host);
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+
+    expect(optionsOfLastRun()).toMatchObject({ roots: [shadowRoot] });
+  });
+
+  it('applies options to a host connected after adopting', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets({
+      positionAreaContainingBlock: false,
+    });
+
+    const { host } = adoptStylesheetWhileDisconnected('adopt-early-options');
+    document.body.append(host);
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+
+    expect(optionsOfLastRun()).toMatchObject({
+      positionAreaContainingBlock: false,
     });
   });
 

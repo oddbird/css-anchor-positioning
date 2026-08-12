@@ -196,6 +196,76 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
   expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
+test('positions a host that adopts its stylesheet before being connected', async ({
+  page,
+}) => {
+  // A custom element that builds its shadow root in the constructor adopts its
+  // stylesheet while still disconnected. Custom element lifecycle callbacks are
+  // captured when the element is defined, so the polyfill can't hook the host's
+  // `connectedCallback` at that point — it has to wait for the host to enter
+  // the document.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --constructor-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --constructor-anchor;
+        position-area: bottom span-left;
+      }
+    `);
+
+    customElements.define(
+      'adopts-in-constructor',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div class="anchor">Anchor</div>
+            <div class="target">Target</div>`;
+        }
+      },
+    );
+
+    // Constructed (and adopting) well before it is connected.
+    const host = document.createElement('adopts-in-constructor');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    document.body.append(host);
+  });
+
+  const anchor = page.locator('adopts-in-constructor .anchor');
+  const wrapper = page.locator('adopts-in-constructor POLYFILL-POSITION-AREA');
+
+  // Assert the generated wrapper, not geometry. An unresolved `anchor()` or
+  // `position-area` leaves the target at its static position, which for a
+  // target that directly follows its anchor in flow is the same place the
+  // anchored position would put it — so position assertions alone pass whether
+  // or not the polyfill ran. The wrapper only exists if it ran.
+  await expect(wrapper).toHaveCount(1);
+
+  const anchorBox = await anchor.boundingBox();
+  const wrapperBox = await wrapper.boundingBox();
+
+  // `bottom` aligns the target's top with the anchor's bottom; `span-left`
+  // aligns their right edges.
+  expect(wrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
+  expect(wrapperBox!.x + wrapperBox!.width).toBeCloseTo(
+    anchorBox!.x + anchorBox!.width,
+    0,
+  );
+});
+
 test('positions every custom-element host sharing one constructed stylesheet', async ({
   page,
 }) => {

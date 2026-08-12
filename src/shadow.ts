@@ -1,10 +1,6 @@
 import { type AnchorPositioningPolyfillOptions, polyfill } from './polyfill.js';
 import { captureAdoptedStylesheetText, originalReplaceSync } from './utils.js';
 
-interface CustomElementHost extends HTMLElement {
-  connectedCallback?: () => void;
-}
-
 /**
  * Options accepted by `patchAndPolyfillConstructedStylesheets()`. `roots` and
  * `elements` are omitted because each polyfill run it sets up is scoped to a
@@ -41,33 +37,62 @@ function runPolyfill(shadowRoot: ShadowRoot) {
   });
 }
 
+// Hosts that adopted a stylesheet while disconnected, mapped to the run that
+// positions them once they enter the document. Emptied by `connectionObserver`.
+const pendingHosts = new Map<HTMLElement, () => void>();
+let connectionObserver: MutationObserver | undefined;
+
 /**
- * Wraps the `connectedCallback` of a shadow root's host element so that, after
- * the original callback runs (and the shadow DOM is populated), the polyfill is
- * run for that shadow root to position its anchored elements, using the options
- * given to `patchAndPolyfillConstructedStylesheets`.
+ * Runs `onConnected` once `host` is in the document. Custom element lifecycle
+ * callbacks are captured when the element is defined, so patching the host's
+ * own `connectedCallback` here would never be invoked for the reaction; watch
+ * the document for the host being inserted instead.
+ */
+function whenConnected(host: HTMLElement, onConnected: () => void) {
+  pendingHosts.set(host, onConnected);
+
+  // `connectedCallback` reactions run synchronously during insertion, so by the
+  // time observer records are delivered the shadow DOM has been populated.
+  connectionObserver ??= new MutationObserver(() => {
+    for (const [pendingHost, callback] of pendingHosts) {
+      if (pendingHost.isConnected) {
+        pendingHosts.delete(pendingHost);
+        callback();
+      }
+    }
+    if (pendingHosts.size === 0) {
+      connectionObserver?.disconnect();
+      connectionObserver = undefined;
+    }
+  });
+  connectionObserver.observe(document, { childList: true, subtree: true });
+}
+
+/**
+ * Queues the polyfill run that positions a shadow root's anchored elements,
+ * using the options given to `patchAndPolyfillConstructedStylesheets`. The run
+ * is deferred until the host is connected and its shadow DOM is populated,
+ * which is not yet the case when `adoptedStyleSheets` is assigned from a
+ * constructor or before the host is inserted.
  */
 function patchHostConnectedCallback(shadowRoot: ShadowRoot) {
-  const host = shadowRoot.host as CustomElementHost;
+  const host = shadowRoot.host as HTMLElement;
   if (patchedHosts.has(host)) {
     return;
   }
   patchedHosts.add(host);
 
-  const originalConnectedCallback = host.connectedCallback;
-  host.connectedCallback = function (this: CustomElementHost) {
-    originalConnectedCallback?.call(this);
+  const run = () => {
     void runPolyfill(shadowRoot);
   };
 
-  // If the host is already connected (e.g. `adoptedStyleSheets` was assigned
-  // from within the host's `connectedCallback`), the wrapper above won't run
-  // for the current connection, so run the polyfill once the current callback
-  // has finished and the shadow DOM has been populated.
+  // Already connected (e.g. `adoptedStyleSheets` was assigned from within the
+  // host's `connectedCallback`): run once that callback has finished and the
+  // shadow DOM has been populated.
   if (host.isConnected) {
-    queueMicrotask(() => {
-      void runPolyfill(shadowRoot);
-    });
+    queueMicrotask(run);
+  } else {
+    whenConnected(host, run);
   }
 }
 
