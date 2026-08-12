@@ -1,3 +1,5 @@
+import './global.js';
+
 import { polyfill } from './polyfill.js';
 
 export {

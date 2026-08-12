@@ -1,3 +1,5 @@
+import './global.js';
+
 import { polyfill } from './polyfill.js';
 
 // Used by the WPT test harness to delay test assertions

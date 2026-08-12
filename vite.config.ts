@@ -9,6 +9,10 @@ export default defineConfig({
   },
   build: process.env.BUILD_DEMO
     ? {
+        // Every build is additive; `npm run clean` empties `dist/` once, up
+        // front. Otherwise this build would wipe the declaration files that
+        // `npm run types` emits there.
+        emptyOutDir: false,
         rollupOptions: {
           input: {
             main: resolve(import.meta.dirname, 'index.html'),
