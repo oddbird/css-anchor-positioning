@@ -1,4 +1,4 @@
-import { transformCSS } from '../../src/transform.js';
+import { insertGeneratedStyles, transformCSS } from '../../src/transform.js';
 
 describe('transformCSS', () => {
   it('parses and removes new anchor positioning CSS after transformation to JS', () => {
@@ -21,25 +21,21 @@ describe('transformCSS', () => {
         el: link,
         css: 'html { margin: 0; }',
         changed: true,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
       },
       {
         el: style,
         css: 'html { padding: 0; }',
         changed: true,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
       },
       {
         el: div,
         css: '[data-has-inline-styles="key"]{color:blue;}',
         changed: true,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
       },
       {
         el: div2,
         css: '[data-has-inline-styles="key2"]{color:blue;}',
         changed: false,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
       },
     ];
     const inlineStyles = new Map();
@@ -73,7 +69,6 @@ describe('transformCSS', () => {
         el: link,
         css: 'html { margin: 0; }',
         changed: true,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
       },
     ];
     const inlineStyles = new Map();
@@ -90,44 +85,34 @@ describe('transformCSS', () => {
     const transformedLink = document.querySelector('link') as HTMLLinkElement;
     expect(transformedLink).toBe(null);
   });
+});
 
-  it('creates new style elements for created styles', () => {
+describe('insertGeneratedStyles', () => {
+  it('inserts a style element into each recorded container', () => {
     document.head.innerHTML = ``;
-    const styleData = [
-      {
-        el: document.createElement('link'),
-        css: 'html { margin: 0; }',
-        changed: true,
-        created: true,
-        // `parseCSS` records the style container of every element the created
-        // rules match, and only marks the sheet `changed` once it has.
-        containers: new Set([document.head]),
-      },
-    ];
-    transformCSS(styleData, undefined);
+    document.body.innerHTML = `<div id="host"></div>`;
+    const shadowRoot = document
+      .getElementById('host')!
+      .attachShadow({ mode: 'open' });
 
-    const createdStyleElement = document.querySelector(
-      'style',
-    ) as HTMLStyleElement;
-    expect(createdStyleElement.hasAttribute('data-original-href')).toBe(false);
-    expect(createdStyleElement.hasAttribute('data-generated-by-polyfill')).toBe(
-      true,
-    );
-    expect(createdStyleElement.textContent).toBe('html { margin: 0; }');
+    insertGeneratedStyles({
+      css: 'html { margin: 0; }',
+      containers: new Set([document.head, shadowRoot]),
+    });
+
+    for (const container of [document.head, shadowRoot]) {
+      const styleEl = container.querySelector('style') as HTMLStyleElement;
+      expect(styleEl.textContent).toBe('html { margin: 0; }');
+      expect(styleEl.hasAttribute('data-generated-by-polyfill')).toBe(true);
+      // Not a rewritten author `<link>`, so it carries no original href.
+      expect(styleEl.hasAttribute('data-original-href')).toBe(false);
+    }
   });
 
-  it('does not insert created styles when no containers were recorded', () => {
+  it('inserts nothing when no rules were generated', () => {
     document.head.innerHTML = ``;
-    const styleData = [
-      {
-        el: document.createElement('link'),
-        css: '',
-        changed: true,
-        created: true,
-        containers: new Set<ShadowRoot | HTMLHeadElement>(),
-      },
-    ];
-    transformCSS(styleData, undefined);
+
+    insertGeneratedStyles({ css: '', containers: new Set([document.head]) });
 
     expect(document.querySelector('style')).toBe(null);
   });

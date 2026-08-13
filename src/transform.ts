@@ -1,6 +1,10 @@
 import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
-import { type StyleData, writeAdoptedStylesheet } from './utils.js';
+import {
+  type GeneratedStyles,
+  type StyleData,
+  writeAdoptedStylesheet,
+} from './utils.js';
 
 // This is a list of non-global attributes that apply to link elements but do
 // not apply to style elements. These should be removed when converting from a
@@ -29,21 +33,8 @@ export function transformCSS(
   roots?: AnchorPositioningRoot[],
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const {
-    el,
-    css,
-    changed,
-    created = false,
-    sheet,
-    containers,
-  } of styleData) {
-    const updatedObject: StyleData = {
-      el,
-      css,
-      changed: false,
-      sheet,
-      containers,
-    };
+  for (const { el, css, changed, sheet } of styleData) {
+    const updatedObject: StyleData = { el, css, changed: false, sheet };
     if (changed) {
       if (sheet) {
         // Handle constructed stylesheets adopted via `adoptedStyleSheets`.
@@ -75,26 +66,8 @@ export function transformCSS(
         if (el.hasAttribute('href')) {
           styleEl.setAttribute('data-original-href', el.getAttribute('href')!);
         }
-        if (!created) {
-          // This is an existing stylesheet, so we replace it.
-          el.insertAdjacentElement('beforebegin', styleEl);
-          el.remove();
-        } else {
-          styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
-          // This is a new stylesheet (the position-area mapping styles). A
-          // `<style>` only applies within its own tree, so it is inserted into
-          // the tree of every element its rules match, as recorded while the
-          // rules were generated. Those are not always the roots being
-          // polyfilled: a `position-area` in a `:host` rule targets the shadow
-          // host, which lives in the outer tree.
-          for (const container of containers ?? []) {
-            // If there are multiple roots, clone the element for each root
-            const node = styleEl.isConnected
-              ? styleEl
-              : styleEl.cloneNode(true);
-            container.append(node);
-          }
-        }
+        el.insertAdjacentElement('beforebegin', styleEl);
+        el.remove();
         updatedObject.el = styleEl;
       } else if (el?.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
@@ -138,4 +111,18 @@ export function transformCSS(
     updatedStyleData.push(updatedObject);
   }
   return updatedStyleData;
+}
+
+/**
+ * Inserts styles the polyfill generated itself (the position-area mapping
+ * styles) into each container recorded while the rules were generated.
+ */
+export function insertGeneratedStyles({ css, containers }: GeneratedStyles) {
+  if (!css) return;
+  for (const container of containers) {
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+    styleEl.textContent = css;
+    container.append(styleEl);
+  }
 }
