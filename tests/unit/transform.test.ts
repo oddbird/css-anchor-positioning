@@ -1,4 +1,5 @@
 import { insertGeneratedStyles, transformCSS } from '../../src/transform.js';
+import { type StyleContainer } from '../../src/utils.js';
 
 describe('transformCSS', () => {
   it('parses and removes new anchor positioning CSS after transformation to JS', () => {
@@ -88,21 +89,26 @@ describe('transformCSS', () => {
 });
 
 describe('insertGeneratedStyles', () => {
-  it('inserts a style element into each recorded container', () => {
+  it('gives each container only its own rules', () => {
     document.head.innerHTML = ``;
     document.body.innerHTML = `<div id="host"></div>`;
     const shadowRoot = document
       .getElementById('host')!
       .attachShadow({ mode: 'open' });
 
-    insertGeneratedStyles({
-      css: 'html { margin: 0; }',
-      containers: new Set([document.head, shadowRoot]),
-    });
+    insertGeneratedStyles(
+      new Map<StyleContainer, string>([
+        [document.head, 'html { margin: 0; }'],
+        [shadowRoot, 'html { padding: 0; }'],
+      ]),
+    );
 
-    for (const container of [document.head, shadowRoot]) {
-      const styleEl = container.querySelector('style') as HTMLStyleElement;
-      expect(styleEl.textContent).toBe('html { margin: 0; }');
+    const headStyle = document.head.querySelector('style') as HTMLStyleElement;
+    const shadowStyle = shadowRoot.querySelector('style') as HTMLStyleElement;
+    expect(headStyle.textContent).toBe('html { margin: 0; }');
+    expect(shadowStyle.textContent).toBe('html { padding: 0; }');
+
+    for (const styleEl of [headStyle, shadowStyle]) {
       expect(styleEl.hasAttribute('data-generated-by-polyfill')).toBe(true);
       // Not a rewritten author `<link>`, so it carries no original href.
       expect(styleEl.hasAttribute('data-original-href')).toBe(false);
@@ -112,7 +118,8 @@ describe('insertGeneratedStyles', () => {
   it('inserts nothing when no rules were generated', () => {
     document.head.innerHTML = ``;
 
-    insertGeneratedStyles({ css: '', containers: new Set([document.head]) });
+    insertGeneratedStyles(new Map());
+    insertGeneratedStyles(new Map([[document.head, '']]));
 
     expect(document.querySelector('style')).toBe(null);
   });

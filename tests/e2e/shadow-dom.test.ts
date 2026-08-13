@@ -257,28 +257,25 @@ test('positions a custom-element host with `position-area` in a `:host` rule', a
     );
 
     const container = document.createElement('div');
-    container.id = 'position-area-host-fixture';
+    container.id = 'pa-host-fixture';
     container.setAttribute('style', 'position: relative; margin-top: 5rem');
     // Written as attribute text: the CSSOM drops `anchor-name` and
     // `position-anchor` in a browser without native support, and the polyfill
     // reads the `style` attribute.
     container.innerHTML = `
-      <div class="anchor" style="anchor-name: --position-area-host-fixture">Anchor</div>
-      <position-area-host-fixture style="position-anchor: --position-area-host-fixture">Target</position-area-host-fixture>`;
+      <div class="anchor" style="anchor-name: --pa-host-fixture">Anchor</div>
+      <position-area-host-fixture style="position-anchor: --pa-host-fixture">Target</position-area-host-fixture>`;
     document.body.append(container);
   });
 
-  const anchor = page.locator('#position-area-host-fixture .anchor');
-  const target = page.locator(
-    '#position-area-host-fixture position-area-host-fixture',
-  );
+  const anchor = page.locator('#pa-host-fixture .anchor');
+  const target = page.locator('#pa-host-fixture position-area-host-fixture');
+  const wrapper = page.locator('#pa-host-fixture POLYFILL-POSITION-AREA');
 
   // The wrapper is added by the queued polyfill run, with or without the
   // mapping styles reaching the host's tree, so waiting on it does not mask the
   // failure this test guards against.
-  await expect(
-    page.locator('#position-area-host-fixture POLYFILL-POSITION-AREA'),
-  ).toHaveCount(1);
+  await expect(wrapper).toHaveCount(1);
 
   // The generated mapping rules (keyed on the `data-pa-*` attributes the
   // polyfill sets on the target or its wrapper) belong in the host's tree.
@@ -295,6 +292,35 @@ test('positions a custom-element host with `position-area` in a `:host` rule', a
   );
   expect(mappingStylesInDocument, 'mapping styles in the host tree').toBe(true);
 
+  // The wrapper exists as soon as the CSS is parsed, but its insets are only
+  // resolved later, when the polyfill computes positions. Wait for that (this
+  // assertion retries) so the measurements below cannot race it.
+  await expect(wrapper).not.toHaveCSS('bottom', 'auto');
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `position-area: top` puts the target directly above the anchor.
+  expect(targetBox.y + targetBox.height).toBeCloseTo(anchorBox.y, 0);
+  expect(targetBox.x + targetBox.width / 2).toBeCloseTo(
+    anchorBox.x + anchorBox.width / 2,
+    0,
+  );
+});
+
+test('positions the `position-area` on a `:host` rule demo', async ({
+  page,
+}) => {
+  // Covers the documented `#position-area-on-host` example itself, where the
+  // custom element is defined before the polyfill runs, rather than the
+  // dynamically-defined fixture above.
+  const anchor = page.locator('#position-area-on-host .anchor');
+  const target = page.locator('#position-area-on-host position-area-on-host');
+  const wrapper = page.locator('#position-area-on-host POLYFILL-POSITION-AREA');
+
+  await applyPolyfill(page);
+
+  await expect(wrapper).not.toHaveCSS('bottom', 'auto');
   const anchorBox = (await anchor.boundingBox())!;
   const targetBox = (await target.boundingBox())!;
 

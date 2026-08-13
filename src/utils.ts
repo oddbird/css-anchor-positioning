@@ -75,17 +75,15 @@ export interface StyleData {
 }
 
 /**
- * Styles the polyfill generates itself, rather than author styles it rewrites.
+ * Styles the polyfill generates itself, rather than author styles it rewrites,
+ * keyed by the container each block of rules is inserted into.
  *
- * A `<style>` only applies within its own tree, so the rules are inserted into
- * one container per tree holding an element they match. Those are not always
- * the roots being polyfilled: a `position-area` in a `:host` rule targets the
- * shadow host, which sits in the *outer* tree.
+ * A `<style>` only applies within its own tree, so rules are grouped by the
+ * tree holding the elements they match, and each tree gets only its own rules.
+ * Those trees are not always the roots being polyfilled: a `position-area` in a
+ * `:host` rule targets the shadow host, which sits in the *outer* tree.
  */
-export interface GeneratedStyles {
-  css: string;
-  containers: Set<ShadowRoot | HTMLHeadElement>;
-}
+export type GeneratedStyles = Map<StyleContainer, string>;
 
 // Reference to the native `CSSStyleSheet.prototype.replaceSync` so that the
 // polyfill can write transformed CSS back into a constructed stylesheet without
@@ -182,17 +180,24 @@ export function writeAdoptedStylesheet(
   return sheet;
 }
 
+export type StyleContainer = ShadowRoot | HTMLHeadElement;
+
 // Resolves the node that a polyfill-generated `<style>` should be appended to
 // for a given root, so its rules apply within that root. Styles in
 // `document.head` do not pierce into a shadow root, so styles for a shadow root
 // (or an element inside one) must be appended there instead.
+//
+// Returns `null` for an element in a detached tree: no stylesheet applies to it
+// and it isn't rendered, so there is no container whose rules could reach it.
 export function getRootStyleContainer(
   root: AnchorPositioningRoot,
-): ShadowRoot | HTMLHeadElement {
+): StyleContainer | null {
   if (root instanceof ShadowRoot) return root;
   if (root instanceof Document) return root.head;
   const rootNode = root.getRootNode();
-  return rootNode instanceof ShadowRoot ? rootNode : document.head;
+  if (rootNode instanceof ShadowRoot) return rootNode;
+  if (rootNode instanceof Document) return rootNode.head;
+  return null;
 }
 
 export const POSITION_ANCHOR_PROPERTY = `--position-anchor-${INSTANCE_UUID}`;

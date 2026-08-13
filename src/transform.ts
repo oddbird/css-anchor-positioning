@@ -115,11 +115,11 @@ export function transformCSS(
 
 /**
  * Inserts styles the polyfill generated itself (the position-area mapping
- * styles) into each container recorded while the rules were generated.
+ * styles) into the container recorded for each block of rules.
  */
-export function insertGeneratedStyles({ css, containers }: GeneratedStyles) {
-  if (!css) return;
-  for (const container of containers) {
+export function insertGeneratedStyles(styles: GeneratedStyles) {
+  for (const [container, css] of styles) {
+    if (!css) continue;
     const styleEl = document.createElement('style');
     styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
     styleEl.textContent = css;
