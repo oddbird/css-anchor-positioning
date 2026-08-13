@@ -79,7 +79,7 @@ export interface StyleData {
   // polyfilled — a `:host` rule styles the shadow host, which sits in the
   // *outer* tree. Only consulted for polyfill-created stylesheets (`created`);
   // an empty set for author styles, which are transformed in place.
-  containers: Set<ShadowRoot | HTMLHeadElement>;
+  containers?: Set<ShadowRoot | HTMLHeadElement>;
 }
 
 // Reference to the native `CSSStyleSheet.prototype.replaceSync` so that the

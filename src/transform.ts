@@ -87,7 +87,7 @@ export function transformCSS(
           // rules were generated. Those are not always the roots being
           // polyfilled: a `position-area` in a `:host` rule targets the shadow
           // host, which lives in the outer tree.
-          for (const container of containers) {
+          for (const container of containers ?? []) {
             // If there are multiple roots, clone the element for each root
             const node = styleEl.isConnected
               ? styleEl

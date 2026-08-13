@@ -874,7 +874,7 @@ export async function parseCSS(
         // the roots being polyfilled: a `position-area` in a `:host` rule
         // targets the shadow host, which lives outside the shadow root the
         // declaration came from.
-        positionAreaMappingStyleElement.containers.add(
+        positionAreaMappingStyleElement.containers?.add(
           getRootStyleContainer(targetEl),
         );
         // Populate new data for each anchor/target combo
