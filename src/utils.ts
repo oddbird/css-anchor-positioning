@@ -74,6 +74,10 @@ export interface StyleData {
   sheet?: CSSStyleSheet;
 }
 
+// The node a polyfill-generated `<style>` is appended to, so its rules apply
+// within one tree. See `getRootStyleContainer`.
+export type StyleContainer = ShadowRoot | HTMLHeadElement;
+
 /**
  * Styles the polyfill generates itself, rather than author styles it rewrites,
  * keyed by the container each block of rules is inserted into.
@@ -179,8 +183,6 @@ export function writeAdoptedStylesheet(
   originalReplaceSync.call(sheet, css);
   return sheet;
 }
-
-export type StyleContainer = ShadowRoot | HTMLHeadElement;
 
 // Resolves the node that a polyfill-generated `<style>` should be appended to
 // for a given root, so its rules apply within that root. Styles in
