@@ -97,6 +97,9 @@ let inlineAnchorStylesRegex: RegExp | undefined;
  */
 export function hasInlineAnchorStyles(el: HTMLElement) {
   if (!inlineAnchorStylesRegex) {
+    // While there is overlap in the terms (`margin` and `margin-block-start`),
+    // reducing the list to only the shortest distinct terms doesn't
+    // significantly improve performance.
     const terms = ['anchor', ...Object.keys(SHIFTED_PROPERTIES)];
     // Match at a declaration boundary, so a term appearing in a *value* does
     // not count: `float: left` and `line-height: 1.5` are not styles we read.
