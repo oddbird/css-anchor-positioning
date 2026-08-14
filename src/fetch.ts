@@ -95,16 +95,14 @@ let inlineAnchorStylesRegex: RegExp | undefined;
  * @param el The element to check.
  * @returns True if the element has inline styles used by the polyfill.
  */
-function hasInlineAnchorStyles(el: HTMLElement) {
+export function hasInlineAnchorStyles(el: HTMLElement) {
   if (!inlineAnchorStylesRegex) {
     const terms = ['anchor', ...Object.keys(SHIFTED_PROPERTIES)];
+    // Match at a declaration boundary, so a term appearing in a *value* does
+    // not count: `float: left` and `line-height: 1.5` are not styles we read.
     inlineAnchorStylesRegex = new RegExp(
-      terms
-        .filter(
-          (term) =>
-            !terms.some((other) => other !== term && term.includes(other)),
-        )
-        .join('|'),
+      `(?:^|;)\\s*(?:${terms.join('|')})`,
+      'i',
     );
   }
   return inlineAnchorStylesRegex.test(el.getAttribute('style') ?? '');
