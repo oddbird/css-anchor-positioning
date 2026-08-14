@@ -79,10 +79,6 @@ async function fetchLinkedStylesheets(
 // faster, and scales with the number of styled elements rather than with the
 // size of the document.
 //
-// A term that contains another term is redundant -- `margin` already matches
-// `margin-inline-start`, `anchor` already matches `anchor-name` -- so only the
-// shortest distinct ones are kept.
-//
 // Built on first use rather than at module evaluation: `cascade.js` and this
 // module are part of an import cycle, so `SHIFTED_PROPERTIES` is not
 // necessarily initialized yet when this module is evaluated.
