@@ -85,12 +85,12 @@ patchAndPolyfillConstructedStylesheets();
 
 This patches `CSSStyleSheet.prototype.replaceSync` to capture stylesheet source
 text, and patches the `ShadowRoot.prototype.adoptedStyleSheets` setter to
-automatically run the polyfill for each shadow root once its host element's
-`connectedCallback` finishes.
+automatically run the polyfill for each shadow root, deferred until its host is
+connected and its shadow DOM has been populated.
 
-The polyfill only positions custom elements defined with
-`customElements.define()` after `patchAndPolyfillConstructedStylesheets()` is
-called.
+A host that adopts its stylesheet _before_ it is connected is positioned only if
+it is a custom element defined after
+`patchAndPolyfillConstructedStylesheets()` is called.
 
 Those automatic runs use the same [options](#configuration) as `polyfill()`,
 either passed directly or read from

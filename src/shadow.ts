@@ -11,9 +11,9 @@ export type ConstructedStylesheetsPolyfillOptions = Omit<
   'elements' | 'roots'
 >;
 
-// Marks host elements whose `connectedCallback` has already been wrapped, so we
-// don't wrap it more than once if multiple stylesheets are adopted.
-const patchedHosts = new WeakSet<HTMLElement>();
+// Marks host elements already queued for positioning, so that adopting several
+// stylesheets into one shadow root only queues a single run.
+const queuedHosts = new WeakSet<HTMLElement>();
 
 // Whether the `adoptedStyleSheets` setter has already been patched. The patched
 // setter can't be compared against the original (we only have the original from
@@ -98,10 +98,10 @@ function patchCustomElementsDefine() {
  */
 function positionWhenPopulated(shadowRoot: ShadowRoot) {
   const host = shadowRoot.host as HTMLElement;
-  if (patchedHosts.has(host)) {
+  if (queuedHosts.has(host)) {
     return;
   }
-  patchedHosts.add(host);
+  queuedHosts.add(host);
 
   // Already connected (e.g. `adoptedStyleSheets` was assigned from within the
   // host's `connectedCallback`): run once that callback has finished and the
