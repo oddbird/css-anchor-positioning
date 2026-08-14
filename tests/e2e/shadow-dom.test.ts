@@ -216,6 +216,229 @@ test('positions every custom-element host sharing one constructed stylesheet', a
   }
 });
 
+test('positions a custom-element host with `position-area` in a `:host` rule', async ({
+  page,
+}) => {
+  // The `position-area` is declared in a `:host` rule, so the element it
+  // positions is the host, which lives in the *outer* tree rather than in the
+  // shadow root the declaration came from. The polyfill generates a stylesheet
+  // mapping the computed insets onto the target; it has to be inserted into the
+  // host's own tree, since a `<style>` inside the shadow root never matches the
+  // host. Without that, the `--pa-value-*` custom properties the target's
+  // insets read stay undefined and the host is left unpositioned.
+  await applyPolyfill(page);
+
+  // The page has already installed the adopted-stylesheet patches, so adopting
+  // a sheet into this element's shadow root queues a polyfill run for it.
+  await page.evaluate(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host {
+        padding: 0.5em;
+        position: absolute;
+        position-area: top;
+        white-space: nowrap;
+      }
+    `);
+
+    customElements.define(
+      'position-area-host-fixture',
+      class extends HTMLElement {
+        connectedCallback() {
+          // Moving the host into the `position-area` wrapper disconnects and
+          // reconnects it, so this runs more than once.
+          if (this.shadowRoot) return;
+
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = '<slot></slot>';
+        }
+      },
+    );
+
+    const container = document.createElement('div');
+    container.id = 'pa-host-fixture';
+    container.setAttribute('style', 'position: relative; margin-top: 5rem');
+    // Written as attribute text: the CSSOM drops `anchor-name` and
+    // `position-anchor` in a browser without native support, and the polyfill
+    // reads the `style` attribute.
+    container.innerHTML = `
+      <div class="anchor" style="anchor-name: --pa-host-fixture">Anchor</div>
+      <position-area-host-fixture style="position-anchor: --pa-host-fixture">Target</position-area-host-fixture>`;
+    document.body.append(container);
+  });
+
+  const anchor = page.locator('#pa-host-fixture .anchor');
+  const target = page.locator('#pa-host-fixture position-area-host-fixture');
+  // Playwright's CSS engine pierces open shadow roots, so a descendant
+  // combinator here would also match wrappers inside the host's shadow tree.
+  // The wrapper the polyfill inserts replaces the host in its own parent, so
+  // scope this to direct children.
+  const wrapper = page.locator('#pa-host-fixture > POLYFILL-POSITION-AREA');
+
+  // The wrapper is added by the queued polyfill run, with or without the
+  // mapping styles reaching the host's tree, so waiting on it does not mask the
+  // failure this test guards against.
+  await expect(wrapper).toHaveCount(1);
+
+  // The generated mapping rules (keyed on the `data-pa-*` attributes the
+  // polyfill sets on the target or its wrapper) belong in the host's tree.
+  const mappingStylesInDocument = await page.evaluate(() =>
+    [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some((rule) =>
+          /data-pa-(wrapper|target)-for-/.test(rule.cssText),
+        );
+      } catch {
+        return false;
+      }
+    }),
+  );
+  expect(mappingStylesInDocument, 'mapping styles in the host tree').toBe(true);
+
+  // The wrapper exists as soon as the CSS is parsed, but its insets are only
+  // resolved later, when the polyfill computes positions. Wait for that (this
+  // assertion retries) so the measurements below cannot race it.
+  await expect(wrapper).not.toHaveCSS('bottom', 'auto');
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `position-area: top` puts the target directly above the anchor.
+  expect(targetBox.y + targetBox.height).toBeCloseTo(anchorBox.y, 0);
+  expect(targetBox.x + targetBox.width / 2).toBeCloseTo(
+    anchorBox.x + anchorBox.width / 2,
+    0,
+  );
+});
+
+test('positions the `position-area` on a `:host` rule demo', async ({
+  page,
+}) => {
+  // Covers the documented `#position-area-on-host` example itself, where the
+  // custom element is defined before the polyfill runs, rather than the
+  // dynamically-defined fixture above.
+  const anchor = page.locator('#position-area-on-host .anchor');
+  const target = page.locator('#position-area-on-host position-area-on-host');
+  // Scoped to a direct child: Playwright locators pierce open shadow roots.
+  const wrapper = page.locator(
+    '#position-area-on-host .demo-elements > POLYFILL-POSITION-AREA',
+  );
+
+  await applyPolyfill(page);
+
+  await expect(wrapper).not.toHaveCSS('bottom', 'auto');
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `position-area: top` puts the target directly above the anchor.
+  expect(targetBox.y + targetBox.height).toBeCloseTo(anchorBox.y, 0);
+  expect(targetBox.x + targetBox.width / 2).toBeCloseTo(
+    anchorBox.x + anchorBox.width / 2,
+    0,
+  );
+});
+
+test('gives each tree only its own `position-area` mapping rules', async ({
+  page,
+}) => {
+  // One polyfill run, two style containers: the `:host` rule targets the host
+  // (which lives in the outer tree, so its rules belong in `document.head`),
+  // while `.inner` targets an element inside the shadow root. Each container
+  // must receive its own rules, and only its own.
+  await applyPolyfill(page);
+
+  await page.evaluate(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host { position: absolute; position-area: top; padding: 0.5em; }
+      .inner-anchor { anchor-name: --inner; }
+      .inner {
+        position: absolute;
+        position-anchor: --inner;
+        position-area: bottom;
+      }
+    `);
+
+    customElements.define(
+      'two-container-fixture',
+      class extends HTMLElement {
+        connectedCallback() {
+          // Moving the host into the `position-area` wrapper reconnects it.
+          if (this.shadowRoot) return;
+
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div style="position: relative; height: 80px">
+              <div class="inner-anchor" style="margin-top: 20px">Inner anchor</div>
+              <div class="inner">Inner target</div>
+            </div>`;
+        }
+      },
+    );
+
+    const container = document.createElement('div');
+    container.id = 'two-container';
+    container.setAttribute('style', 'position: relative; margin-top: 12rem');
+    container.innerHTML = `
+      <div class="anchor" style="anchor-name: --two-container">Anchor</div>
+      <two-container-fixture style="position-anchor: --two-container">Target</two-container-fixture>`;
+    document.body.append(container);
+  });
+
+  const host = page.locator('#two-container two-container-fixture');
+  const outerAnchor = page.locator('#two-container .anchor');
+  const innerAnchor = host.locator('.inner-anchor');
+  const innerTarget = host.locator('.inner');
+
+  // Both wrappers must resolve their insets. Scoped to direct children, since
+  // Playwright locators pierce open shadow roots and would otherwise match the
+  // outer and inner wrappers together.
+  await expect(
+    page.locator('#two-container > POLYFILL-POSITION-AREA'),
+  ).not.toHaveCSS('bottom', 'auto');
+  await expect(innerTarget.locator('xpath=..')).not.toHaveCSS('top', 'auto');
+
+  const outerAnchorBox = (await outerAnchor.boundingBox())!;
+  const hostBox = (await host.boundingBox())!;
+  const innerAnchorBox = (await innerAnchor.boundingBox())!;
+  const innerTargetBox = (await innerTarget.boundingBox())!;
+
+  // The host is positioned by rules in `document.head`...
+  expect(hostBox.y + hostBox.height, 'host above its outer anchor').toBeCloseTo(
+    outerAnchorBox.y,
+    0,
+  );
+  // ...and the inner target by rules in the shadow root.
+  expect(innerTargetBox.y, 'inner target below its inner anchor').toBeCloseTo(
+    innerAnchorBox.y + innerAnchorBox.height,
+    0,
+  );
+
+  // Neither container carries the other's rules. Counting rule blocks keyed on
+  // a `data-pa-*-for-` attribute catches a regression to inserting the whole
+  // generated stylesheet into every container.
+  const ruleCounts = await page.evaluate(() => {
+    const keyed = /data-pa-(wrapper|target)-for-/;
+    const count = (root: Document | ShadowRoot) =>
+      [...root.querySelectorAll('style[data-generated-by-polyfill]')]
+        .flatMap((el) => (el.textContent ?? '').split('}'))
+        .filter((rule) => keyed.test(rule)).length;
+    const shadowRoot = document.querySelector(
+      'two-container-fixture',
+    )!.shadowRoot!;
+    return { shadow: count(shadowRoot), head: count(document) };
+  });
+
+  // `.inner` needs a wrapper, which emits two rules (the wrapper's insets and
+  // its `> *` alignment). The host's rules are not among them.
+  expect(ruleCounts.shadow, 'rules in the shadow root').toBe(2);
+  // The head holds the host's two rules plus the two for the demo section's
+  // own `position-area` host.
+  expect(ruleCounts.head, 'rules in the document head').toBe(4);
+});
+
 test('anchors to a pseudo-element inside a shadow root', async ({ page }) => {
   // `#shadow-pseudo-anchor::before` (a block, 100px tall) is the anchor; the
   // target uses `top: anchor(bottom)`. To measure a pseudo-element the polyfill

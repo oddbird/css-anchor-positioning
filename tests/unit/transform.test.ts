@@ -1,4 +1,5 @@
-import { transformCSS } from '../../src/transform.js';
+import { insertGeneratedStyles, transformCSS } from '../../src/transform.js';
+import { type StyleContainer } from '../../src/utils.js';
 
 describe('transformCSS', () => {
   it('parses and removes new anchor positioning CSS after transformation to JS', () => {
@@ -17,8 +18,16 @@ describe('transformCSS', () => {
     const div = document.getElementById('div') as HTMLDivElement;
     const div2 = document.getElementById('div2') as HTMLDivElement;
     const styleData = [
-      { el: link, css: 'html { margin: 0; }', changed: true },
-      { el: style, css: 'html { padding: 0; }', changed: true },
+      {
+        el: link,
+        css: 'html { margin: 0; }',
+        changed: true,
+      },
+      {
+        el: style,
+        css: 'html { padding: 0; }',
+        changed: true,
+      },
       {
         el: div,
         css: '[data-has-inline-styles="key"]{color:blue;}',
@@ -56,7 +65,13 @@ describe('transformCSS', () => {
       <link id="the-link" media="screen" title="stylish" rel="stylesheet" href="/sample.css"/>
     `;
     const link = document.querySelector('link') as HTMLLinkElement;
-    const styleData = [{ el: link, css: 'html { margin: 0; }', changed: true }];
+    const styleData = [
+      {
+        el: link,
+        css: 'html { margin: 0; }',
+        changed: true,
+      },
+    ];
     const inlineStyles = new Map();
     const initialStyleElement = document.querySelector('style');
     expect(initialStyleElement).toBe(null);
@@ -71,26 +86,41 @@ describe('transformCSS', () => {
     const transformedLink = document.querySelector('link') as HTMLLinkElement;
     expect(transformedLink).toBe(null);
   });
+});
 
-  it('creates new style elements for created styles', () => {
+describe('insertGeneratedStyles', () => {
+  it('gives each container only its own rules', () => {
     document.head.innerHTML = ``;
-    const styleData = [
-      {
-        el: document.createElement('link'),
-        css: 'html { margin: 0; }',
-        changed: true,
-        created: true,
-      },
-    ];
-    transformCSS(styleData, undefined);
+    document.body.innerHTML = `<div id="host"></div>`;
+    const shadowRoot = document
+      .getElementById('host')!
+      .attachShadow({ mode: 'open' });
 
-    const createdStyleElement = document.querySelector(
-      'style',
-    ) as HTMLStyleElement;
-    expect(createdStyleElement.hasAttribute('data-original-href')).toBe(false);
-    expect(createdStyleElement.hasAttribute('data-generated-by-polyfill')).toBe(
-      true,
+    insertGeneratedStyles(
+      new Map<StyleContainer, string>([
+        [document.head, 'html { margin: 0; }'],
+        [shadowRoot, 'html { padding: 0; }'],
+      ]),
     );
-    expect(createdStyleElement.textContent).toBe('html { margin: 0; }');
+
+    const headStyle = document.head.querySelector('style') as HTMLStyleElement;
+    const shadowStyle = shadowRoot.querySelector('style') as HTMLStyleElement;
+    expect(headStyle.textContent).toBe('html { margin: 0; }');
+    expect(shadowStyle.textContent).toBe('html { padding: 0; }');
+
+    for (const styleEl of [headStyle, shadowStyle]) {
+      expect(styleEl.hasAttribute('data-generated-by-polyfill')).toBe(true);
+      // Not a rewritten author `<link>`, so it carries no original href.
+      expect(styleEl.hasAttribute('data-original-href')).toBe(false);
+    }
+  });
+
+  it('inserts nothing when no rules were generated', () => {
+    document.head.innerHTML = ``;
+
+    insertGeneratedStyles(new Map());
+    insertGeneratedStyles(new Map([[document.head, '']]));
+
+    expect(document.querySelector('style')).toBe(null);
   });
 });
