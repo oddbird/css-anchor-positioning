@@ -295,7 +295,7 @@ describe('hasInlineAnchorStyles', () => {
     ['column-width (contains "width")', 'column-width: 100px;'],
     ['transform-origin: top left', 'transform-origin: top left;'],
     ['term as custom property', '--anchor: anchor(--my-anchor);'],
-  ])('returns true (known false positive) for %s', (_name, style) => {
+  ])('returns false for %s', (_name, style) => {
     expect(hasInlineAnchorStyles(elWithStyle(style))).toBe(false);
   });
 
