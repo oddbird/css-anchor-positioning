@@ -110,10 +110,10 @@ export function hasInlineAnchorStyles(el: HTMLElement) {
   }
   return inlineAnchorStylesRegex.test(el.getAttribute('style') ?? '');
 }
-// Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, adds a new 'data-has-inline-styles' attribute with a
-// random UUID value, and then formats the styles in the same manner as CSS from
-// style tags.
+// Searches for all elements with inline style attributes that contain
+// declarations used by the polyfill. For each element found, adds a new
+// 'data-has-inline-styles' attribute with a random UUID value, and then formats
+// the styles in the same manner as CSS from style tags.
 function fetchInlineStyles(elements?: HTMLElement[]) {
   const elementsWithInlineAnchorStyles: HTMLElement[] = (
     elements ?? Array.from(document.querySelectorAll<HTMLElement>('[style]'))
