@@ -181,7 +181,7 @@ function restoreCSSOMProperties(node: CssNode, block?: Block) {
   // produced (on this run, or on a previous one over CSS the polyfill has
   // already transformed), and restoring would declare it twice.
   for (const child of block.children) {
-    if (isDeclaration(child) && child.property === property) {
+    if (isDeclaration(child, property)) {
       return { updated: false };
     }
   }
