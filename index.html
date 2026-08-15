@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="/anchor-media-query.css" />
     <link rel="stylesheet" href="/anchor-scope.css" />
     <link rel="stylesheet" href="/position-area.css" />
+    <link rel="stylesheet" href="/cssom.css" />
     <link rel="stylesheet" href="/anchor-inside-outside.css" />
     <link rel="stylesheet" href="/import-has-import.css" />
     <link rel="stylesheet" href="/invalid-anchor.css" />
@@ -69,7 +70,7 @@
       }
     </style>
     <script type="module">
-      import polyfill from '/src/index-fn.ts';
+      import polyfill, { patchCSSOM } from '/src/index-fn.ts';
 
       const SUPPORTS_ANCHOR_POSITIONING =
         'anchorName' in document.documentElement.style;
@@ -91,6 +92,20 @@
           'anchor-positioning is supported in this browser; polyfill skipped.',
         );
       }
+      // Wire up the `#cssom` demo from JavaScript, the way a design system
+      // component would. `patchCSSOM()` goes after the feature check above:
+      // defining these properties makes `'anchorName' in element.style` true.
+      patchCSSOM();
+      document.getElementById('my-cssom-anchor').style.anchorName =
+        '--my-cssom-anchor';
+      const cssomTarget = document.getElementById('my-cssom-target');
+      cssomTarget.style.positionAnchor = '--my-cssom-anchor';
+      const cssomPositionAreaTarget = document.getElementById(
+        'my-cssom-position-area-target',
+      );
+      cssomPositionAreaTarget.style.positionAnchor = '--my-cssom-anchor';
+      cssomPositionAreaTarget.style.positionArea = 'top';
+
       // Vite errors while trying to parse the end script tag, but interpolating
       // it avoids the error.
       const polyfillCDN = `
@@ -1617,6 +1632,69 @@ CSS inside the anchor-manual.css file:
 #imports .anchor {
   color: var(--brand-orange);
 }</code></pre>
+    </section>
+    <section id="cssom" class="demo-item">
+      <h2>
+        <a href="#cssom" aria-hidden="true">🔗</a>
+        Setting properties from JavaScript [<code>patchCSSOM()</code>]
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div id="my-cssom-position-area-target" class="target">
+          position-area Target
+        </div>
+        <div id="my-cssom-anchor" class="anchor">Anchor</div>
+        <div id="my-cssom-target" class="target">anchor() Target</div>
+      </div>
+      <p class="note">
+        With polyfill applied: the position-area Target sits above the Anchor,
+        and the anchor() Target at its bottom right corner. Neither
+        <code>anchor-name</code>, <code>position-anchor</code> nor
+        <code>position-area</code> is declared in CSS here — all three are
+        assigned through the CSSOM, which a browser without native anchor
+        positioning drops on the floor unless
+        <a
+          href="https://github.com/oddbird/css-anchor-positioning#setting-anchor-properties-from-javascript"
+          ><code>patchCSSOM()</code></a
+        >
+        has been called. Note that it makes
+        <code>'anchorName' in element.style</code> true, so detect native
+        support with <code>CSS.supports('anchor-name: --a')</code> instead.
+      </p>
+      <pre><code class="language-html"
+>&lt;div id="my-cssom-position-area-target" class="target"&gt;position-area Target&lt;/div&gt;
+&lt;div id="my-cssom-anchor" class="anchor"&gt;Anchor&lt;/div&gt;
+&lt;div id="my-cssom-target" class="target"&gt;anchor() Target&lt;/div&gt;</code>
+
+<code class="language-css"
+>/* A CSSOM write re-serializes the declaration block, dropping the
+   `anchor()` values the browser does not understand, so those stay
+   in the stylesheet. */
+#my-cssom-target {
+  position: absolute;
+  top: anchor(bottom);
+  left: anchor(right);
+}
+
+#my-cssom-position-area-target {
+  position: absolute;
+}</code>
+
+<code class="language-js"
+>import polyfill, { patchCSSOM } from '@oddbird/css-anchor-positioning/fn';
+
+// Call before anything assigns these properties.
+patchCSSOM();
+
+document.getElementById('my-cssom-anchor').style.anchorName = '--my-cssom-anchor';
+
+const target = document.getElementById('my-cssom-target');
+target.style.positionAnchor = '--my-cssom-anchor';
+
+const positionAreaTarget = document.getElementById('my-cssom-position-area-target');
+positionAreaTarget.style.positionAnchor = '--my-cssom-anchor';
+positionAreaTarget.style.positionArea = 'top';
+
+if (!CSS.supports('anchor-name: --a')) await polyfill();</code></pre>
     </section>
     <section id="shadow-dom">
       <h2>
