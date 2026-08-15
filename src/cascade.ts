@@ -26,11 +26,9 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...PADDING_PROPS,
   'anchor-scope',
   'anchor-name',
-  // The `position-try` properties are parsed out of the CSS text rather than
-  // read back from computed style, so nothing needs their shifted value. They
-  // are shifted anyway so that `patchCSSOM` has somewhere to store a value set
-  // through the CSSOM: an unknown property does not survive being written back
-  // to a `style` attribute, but a custom property does.
+  // Nothing reads the shifted `position-try` values (they are parsed out of the
+  // CSS text), but `patchCSSOM` needs somewhere to store them that survives
+  // being written back to a `style` attribute.
   'position-try',
   'position-try-fallbacks',
   'position-try-order',
@@ -44,12 +42,9 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
 
 /**
  * The anchor positioning properties `patchCSSOM` makes settable through the
- * CSSOM: every property from the spec that the polyfill reads. Only
- * `position-visibility` is left out, which the polyfill does not parse at all,
- * so a value set on it would have nothing reading it back.
- *
- * Each is a `SHIFTED_PROPERTIES` entry, which is what a CSSOM-set value is
- * stored in.
+ * CSSOM, each stored in its `SHIFTED_PROPERTIES` custom property. Every
+ * property from the spec except `position-visibility`, which the polyfill does
+ * not parse at all.
  */
 export const CSSOM_PROPERTIES = [
   'anchor-name',
@@ -163,22 +158,16 @@ export function registerShiftedProperties(
   }
 }
 
-/**
- * Map of the custom property `patchCSSOM` stores a value in, back to the
- * property that value was set on.
- */
+/** Custom property `patchCSSOM` stores a value in, to the property it was set on. */
 const CSSOM_STORED_PROPERTIES: Record<string, string> = Object.fromEntries(
   CSSOM_PROPERTIES.map((property) => [SHIFTED_PROPERTIES[property], property]),
 );
 
 /**
  * Restore a declaration that `patchCSSOM` wrote to the property it stands in
- * for. A value set through the CSSOM never reaches the `style` attribute as the
- * property itself -- a browser that needs this polyfill drops what it does not
- * know -- so it is stored in the custom property the declaration would have
- * been shifted into anyway. Renaming it here gives the rest of the polyfill the
- * same shape it gets from author CSS, so no parser has to know about the CSSOM
- * at all; `shiftUnsupportedProperties` then puts the custom property back.
+ * for, giving the rest of the polyfill the same shape it gets from author CSS
+ * -- so no parser has to know about the CSSOM.
+ * `shiftUnsupportedProperties` then puts the custom property back.
  */
 function restoreCSSOMProperties(node: CssNode, block?: Block) {
   if (!isDeclaration(node) || !block) {

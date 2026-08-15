@@ -1,14 +1,7 @@
 import { CSSOM_PROPERTIES, SHIFTED_PROPERTIES } from './cascade.js';
 
-// The properties this patch makes settable through the CSSOM, as the camel-case
-// name to define on `CSSStyleDeclaration` mapped to the CSS property it writes.
-// A browser without native anchor positioning does not know them, and the CSSOM
-// drops what it does not know: `el.style.anchorName = '--foo'` only sets a
-// property on the style object and never produces a CSS declaration, while
-// `el.style.setProperty('anchor-name', '--foo')` is ignored outright. Reading
-// the value back still returns it, so the assignment looks like it worked. The
-// polyfill reads the `style` attribute, so without this patch it never sees
-// anchors that are wired up from JavaScript.
+// Camel-case name to define on `CSSStyleDeclaration`, mapped to the CSS
+// property it writes.
 const PATCHED_PROPERTIES: Record<string, string> = Object.fromEntries(
   CSSOM_PROPERTIES.map((property) => [
     property.replace(/-([a-z])/g, (_, char: string) => char.toUpperCase()),
@@ -21,22 +14,15 @@ const PATCHED_CSS_PROPERTIES: string[] = Object.values(PATCHED_PROPERTIES);
 let patched = false;
 
 /**
- * Makes the anchor positioning properties the polyfill supports — `anchor-name`,
- * `anchor-scope`, `position-anchor`, `position-area`, and the `position-try`
- * properties — settable through the CSSOM, so that anchor positioning wired up
- * from JavaScript — `element.style.anchorName = '--foo'` — is visible to the
- * polyfill in browsers without native anchor positioning.
+ * Makes the anchor positioning properties settable through the CSSOM, so that
+ * anchors wired up from JavaScript — `element.style.anchorName = '--foo'` — are
+ * visible to the polyfill in browsers without native anchor positioning, which
+ * drop what they do not know before it reaches the `style` attribute.
  *
  * The value is stored in the custom property `cascadeCSS` would have shifted the
- * declaration into anyway (`SHIFTED_PROPERTIES`). A custom property is not a
- * property the browser can fail to understand, so unlike `anchor-name` it is
- * kept: it reaches the `style` attribute through the native setter, survives
- * later CSSOM writes that reserialize the declaration block, and is already what
- * `getCSSPropertyValue` reads. `cascadeCSS` restores it to the property it was
- * set on, so the rest of the polyfill sees an ordinary declaration. That means
- * no bookkeeping of our own — no shadowing of the `style` attribute, and no need
- * to know which element a declaration belongs to, so `CSSStyleDeclaration` is
- * the only thing patched.
+ * declaration into anyway (`SHIFTED_PROPERTIES`), which the browser cannot drop,
+ * and `cascadeCSS` restores it to the property it was set on. That keeps all the
+ * bookkeeping out of here, so `CSSStyleDeclaration` is the only thing patched.
  *
  * This is opt-in, and does nothing when anchor positioning is supported
  * natively, because it has a side effect worth knowing about: defining these
@@ -55,8 +41,7 @@ export function patchCSSOM() {
     CSSStyleDeclaration.prototype;
 
   // Writes through the native accessors, so the patched ones below can call
-  // this without recursing. An empty value removes the declaration, matching
-  // how the CSSOM treats an empty assignment.
+  // this without recursing.
   const writeValue = (
     style: CSSStyleDeclaration,
     cssProperty: string,

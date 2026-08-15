@@ -32,14 +32,10 @@ const excludeAttributes = [
 
 /**
  * Splits the transformed CSS for an element's inline styles into the element's
- * own declarations and any rules the polyfill added alongside them.
- *
- * Inline styles are collected as a single rule, but the polyfill can add rules
- * to that block -- `parsePositionFallbacks` puts a generated `@position-try`
- * block there when the target declares `position-try-fallbacks` inline. A
- * `style` attribute holds declarations and not rules, so those need a
- * stylesheet of their own; folding them into the attribute would write a
- * mangled selector into it and lose the element's real styles.
+ * own declarations and any rules the polyfill added alongside them -- a
+ * generated `@position-try` block, for a target declaring
+ * `position-try-fallbacks` inline. A `style` attribute holds declarations and
+ * not rules, so those need a stylesheet of their own.
  */
 function splitInlineStyles(css: string, selector: string) {
   const ast = getAST(css);
