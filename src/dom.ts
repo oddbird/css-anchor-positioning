@@ -101,8 +101,9 @@ function createFakePseudoElement(
   // `content` rule (which sizes the fake pseudo-element) and the `display: none`
   // rule (which hides the real pseudo-element) would both be ignored when
   // `element` lives in a shadow tree. The fake pseudo-element is inserted into
-  // `element` below, so it shares this same root.
-  getRootStyleContainer(element).append(sheet);
+  // `element` below, so it shares this same root. A detached element has no
+  // container — and no layout to measure — so there is nothing to append to.
+  getRootStyleContainer(element)?.append(sheet);
 
   const insertionPoint =
     pseudoElementPart === '::before' ? 'afterbegin' : 'beforeend';

@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid/non-secure';
 
-import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
+import { POLYFILLED_STYLE_ATTRIBUTE, SHIFTED_PROPERTIES } from './cascade.js';
 import { querySelectorAllRoots } from './dom.js';
 import {
   type AnchorPositioningRoot,
@@ -63,56 +63,94 @@ async function fetchLinkedStylesheets(
   return results.filter((loaded) => loaded !== null);
 }
 
-const ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY = '[style*="anchor"]';
-const ELEMENTS_WITH_INLINE_POSITION_AREA = '[style*="position-area"]';
-// Searches for all elements with inline style attributes that include `anchor`.
-// For each element found, adds a new 'data-has-inline-styles' attribute with a
-// random UUID value, and then formats the styles in the same manner as CSS from
-// style tags.
+// Inline styles are collected so that `cascadeCSS` can shift their declarations
+// into custom properties, like it does for the rest of the CSS. That has to
+// cover every property the polyfill later reads back through
+// `getCSSPropertyValue` — insets, margins, sizing, padding, self-alignment,
+// `position-area` — and not just the anchor-specific ones: a target can take
+// its `position-area` from a stylesheet while setting its margin inline.
+// `anchor` is matched on its own as well, for `anchor()`/`anchor-size()` values.
+//
+// Matching tests the `style` attribute against a single regex rather than
+// handing `querySelectorAll` one `[style*="..."]` clause per property. Engines
+// do not bucket attribute-substring selectors by attribute presence, so a
+// ~50-clause query runs every substring test against every element in the
+// document; querying `[style]` and filtering here is an order of magnitude
+// faster, and scales with the number of styled elements rather than with the
+// size of the document.
+//
+// Built on first use rather than at module evaluation: `cascade.js` and this
+// module are part of an import cycle, so `SHIFTED_PROPERTIES` is not
+// necessarily initialized yet when this module is evaluated.
+let inlineAnchorStylesRegex: RegExp | undefined;
+/**
+ * Checks if the given element has inline styles used by the polyfill, including
+ * margin, inset, sizing, padding, self-alignment, `position-area`, and anchor
+ * properties.
+ *
+ * @param el The element to check.
+ * @returns True if the element has inline styles used by the polyfill.
+ */
+export function hasInlineAnchorStyles(el: HTMLElement) {
+  if (!inlineAnchorStylesRegex) {
+    // While there is overlap in the terms (`margin` and `margin-block-start`),
+    // reducing the list to only the shortest distinct terms doesn't
+    // significantly improve performance.
+    // The shifted custom properties are terms in their own right: `patchCSSOM`
+    // writes a CSSOM-set `anchor-name`/`position-anchor` straight into the
+    // custom property the declaration would have been shifted into, so the
+    // `style` attribute never contains the plain property name. Their `--`
+    // prefix also keeps them from matching the plain terms at a boundary.
+    const terms = [
+      'anchor',
+      ...Object.keys(SHIFTED_PROPERTIES),
+      ...Object.values(SHIFTED_PROPERTIES),
+    ];
+    // Match at a declaration boundary, so a term appearing in a *value* does
+    // not count: `float: left` and `line-height: 1.5` are not styles we read.
+    inlineAnchorStylesRegex = new RegExp(
+      `(?:^|;)\\s*(?:${terms.join('|')})`,
+      'i',
+    );
+  }
+  return inlineAnchorStylesRegex.test(el.getAttribute('style') ?? '');
+}
+// Searches for all elements with inline style attributes that contain
+// declarations used by the polyfill. For each element found, adds a new
+// 'data-has-inline-styles' attribute with a random UUID value, and then formats
+// the styles in the same manner as CSS from style tags.
 function fetchInlineStyles(
   roots: AnchorPositioningRoot[],
   elements?: HTMLElement[],
 ) {
-  const elementsWithInlineAnchorStyles: HTMLElement[] = elements
-    ? elements.filter(
-        (el) =>
-          el instanceof HTMLElement &&
-          (el.matches(ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY) ||
-            el.matches(ELEMENTS_WITH_INLINE_POSITION_AREA)),
-      )
-    : (() => {
-        const query = [
-          ELEMENTS_WITH_INLINE_ANCHOR_STYLES_QUERY,
-          ELEMENTS_WITH_INLINE_POSITION_AREA,
-        ].join(',');
-        // The document is searched as well as the roots: a run scoped to a
-        // shadow root still needs inline styles from the outer tree, where its
-        // host and any light-DOM anchors live. Searching the roots on top of
-        // that is what finds inline styles *inside* a shadow root, which
-        // `document.querySelectorAll()` does not reach.
-        return [
-          ...new Set([
-            ...(document.querySelectorAll(query) as NodeListOf<HTMLElement>),
-            ...querySelectorAllRoots(roots, query),
-          ]),
-        ];
-      })();
+  const elementsWithInlineAnchorStyles: HTMLElement[] = (
+    elements ??
+      // The document is searched as well as the roots: a run scoped to a shadow
+      // root still needs inline styles from the outer tree, where its host and
+      // any light-DOM anchors live. Searching the roots on top of that is what
+      // finds inline styles *inside* a shadow root, which
+      // `document.querySelectorAll()` does not reach.
+      [
+        ...new Set([
+          ...document.querySelectorAll<HTMLElement>('[style]'),
+          ...querySelectorAllRoots(roots, '[style]'),
+        ]),
+      ]
+  ).filter((el) => el instanceof HTMLElement && hasInlineAnchorStyles(el));
   const inlineStyles: Partial<StyleData>[] = [];
 
-  elementsWithInlineAnchorStyles
-    .filter((el) => el instanceof HTMLElement)
-    .forEach((el) => {
-      const dataAttribute = 'data-has-inline-styles';
-      // Reuse an existing id rather than minting a new one each run: a
-      // concurrent run (e.g. another shadow root being polyfilled) may already
-      // be relying on this element's id in an anchor selector, and re-stamping
-      // it would invalidate that selector.
-      const selector = el.getAttribute(dataAttribute) ?? nanoid(12);
-      el.setAttribute(dataAttribute, selector);
-      const styles = el.getAttribute('style');
-      const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
-      inlineStyles.push({ el, css });
-    });
+  elementsWithInlineAnchorStyles.forEach((el) => {
+    const dataAttribute = 'data-has-inline-styles';
+    // Reuse an existing id rather than minting a new one each run: a
+    // concurrent run (e.g. another shadow root being polyfilled) may already
+    // be relying on this element's id in an anchor selector, and re-stamping
+    // it would invalidate that selector.
+    const selector = el.getAttribute(dataAttribute) ?? nanoid(12);
+    el.setAttribute(dataAttribute, selector);
+    const styles = el.getAttribute('style');
+    const css = `[${dataAttribute}="${selector}"] { ${styles} }`;
+    inlineStyles.push({ el, css });
+  });
 
   return inlineStyles;
 }

@@ -49,7 +49,9 @@ import {
 import {
   type DeclarationWithValue,
   generateCSS,
+  type GeneratedStyles,
   getAST,
+  getRootStyleContainer,
   getSelectors,
   isAnchorFunction,
   type StyleData,
@@ -838,14 +840,10 @@ export async function parseCSS(
     }
   }
 
-  // Create a new stylesheet for the position-area mapping styles
-  const positionAreaMappingStyleElement: StyleData = {
-    el: document.createElement('link'),
-    changed: false,
-    created: true,
-    css: '',
-  };
-  styleData.push(positionAreaMappingStyleElement);
+  // Collect the position-area mapping styles the polyfill generates. These are
+  // returned rather than added to `styleData`: they are polyfill output, not
+  // author styles to be rewritten in place.
+  const positionAreaStyles: GeneratedStyles = new Map();
 
   // We loop through each selector that has been used to apply a position-area
   // declaration, and find all elements that match the selector. The same
@@ -891,11 +889,19 @@ export async function parseCSS(
         const activeStyles = needsWrapper
           ? activeWrapperStyles
           : activeTargetStyles;
-        positionAreaMappingStyleElement.css += activeStyles(
-          targetData.targetUUID,
-          positionData.selectorUUID,
-        );
-        positionAreaMappingStyleElement.changed = true;
+        // These rules match the target (or the wrapper inserted next to it), so
+        // they belong in the target's own tree. That is not necessarily one of
+        // the roots being polyfilled: a `position-area` in a `:host` rule
+        // targets the shadow host, which lives outside the shadow root the
+        // declaration came from.
+        const container = getRootStyleContainer(targetEl);
+        if (container) {
+          positionAreaStyles.set(
+            container,
+            (positionAreaStyles.get(container) ?? '') +
+              activeStyles(targetData.targetUUID, positionData.selectorUUID),
+          );
+        }
         // Populate new data for each anchor/target combo
         validPositions[targetSel] = {
           ...validPositions[targetSel],
@@ -912,5 +918,10 @@ export async function parseCSS(
     }
   }
 
-  return { rules: validPositions, inlineStyles, anchorScopes };
+  return {
+    rules: validPositions,
+    inlineStyles,
+    anchorScopes,
+    positionAreaStyles,
+  };
 }

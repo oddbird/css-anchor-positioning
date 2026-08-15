@@ -1,6 +1,6 @@
 import fetchMock from 'fetch-mock';
 
-import { fetchCSS } from '../../src/fetch.js';
+import { fetchCSS, hasInlineAnchorStyles } from '../../src/fetch.js';
 import { getSampleCSS, requestWithCSSType } from '../helpers.js';
 
 describe('fetch stylesheet', () => {
@@ -244,5 +244,82 @@ describe('fetch styles manually', () => {
     expect(styleData[3].css.trim()).toContain('[data-has-inline-styles=');
     expect(styleData[3].css).toContain('right: anchor(--anchor left);');
     expect(styleData[3].css).toContain('top: anchor(--anchor bottom);');
+  });
+});
+
+describe('hasInlineAnchorStyles', () => {
+  function elWithStyle(style: string) {
+    const el = document.createElement('div');
+    el.setAttribute('style', style);
+    return el;
+  }
+
+  it('returns false when the element has no style attribute', () => {
+    const el = document.createElement('div');
+    expect(hasInlineAnchorStyles(el)).toBe(false);
+  });
+
+  it('returns false for an empty style attribute', () => {
+    expect(hasInlineAnchorStyles(elWithStyle(''))).toBe(false);
+  });
+
+  it.each([
+    ['color', 'color: red;'],
+    ['background', 'background: blue;'],
+    ['font-weight', 'font-weight: bold;'],
+    ['display', 'display: flex;'],
+    ['z-index', 'z-index: 1;'],
+    ['clear', 'clear: both;'],
+    ['vertical-align', 'vertical-align: middle;'],
+    ['letter-spacing', 'letter-spacing: 1px;'],
+    ['box-sizing', 'box-sizing: border-box;'],
+  ])(
+    'returns false for %s, which is unrelated to the polyfill',
+    (_name, style) => {
+      expect(hasInlineAnchorStyles(elWithStyle(style))).toBe(false);
+    },
+  );
+
+  // Don't match terms that appear in other property names or values.
+  it.each([
+    ['border-top (contains "top")', 'border-top: 1px solid red;'],
+    ['border-left-width (contains "left")', 'border-left-width: 2px;'],
+    ['line-height (contains "height")', 'line-height: 1.5;'],
+    ['float: left (contains "left")', 'float: left;'],
+    ['text-align: right (contains "right")', 'text-align: right;'],
+    ['outline-width (contains "width")', 'outline-width: 1px;'],
+    [
+      'background-position: top (contains "top")',
+      'background-position: top right;',
+    ],
+    ['column-width (contains "width")', 'column-width: 100px;'],
+    ['transform-origin: top left', 'transform-origin: top left;'],
+    ['term as custom property', '--anchor: anchor(--my-anchor);'],
+  ])('returns false for %s', (_name, style) => {
+    expect(hasInlineAnchorStyles(elWithStyle(style))).toBe(false);
+  });
+
+  it.each([
+    ['anchor()', 'top: anchor(--my-anchor end);'],
+    ['anchor-name', 'anchor-name: --my-anchor;'],
+    ['anchor-scope', 'anchor-scope: --my-anchor;'],
+    ['position-anchor', 'position-anchor: --my-anchor;'],
+    ['position-area', 'position-area: top;'],
+    ['an inset longhand', 'inset-block-start: 1px;'],
+    ['a plain inset property', 'top: 1px;'],
+    ['a margin longhand', 'margin-inline-start: 1px;'],
+    ['a plain margin property', 'margin-left: 1px;'],
+    ['a sizing property', 'width: 100px;'],
+    ['a min-sizing longhand', 'min-inline-size: 100px;'],
+    ['a padding longhand', 'padding-inline-start: 1px;'],
+    ['a plain padding property', 'padding: 1px;'],
+    ['a self-alignment property', 'justify-self: center;'],
+  ])('returns true when the style includes %s', (_name, style) => {
+    expect(hasInlineAnchorStyles(elWithStyle(style))).toBe(true);
+  });
+
+  it('matches regardless of where the relevant declaration falls', () => {
+    const el = elWithStyle('color: red; anchor-name: --my-anchor; z-index: 1;');
+    expect(hasInlineAnchorStyles(el)).toBe(true);
   });
 });
