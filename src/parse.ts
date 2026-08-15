@@ -10,7 +10,6 @@ import type {
 import walk from 'css-tree/walker';
 import { nanoid } from 'nanoid/non-secure';
 
-import { SHIFTED_PROPERTIES } from './cascade.js';
 import {
   AnchorScopeValue,
   getCSSPropertyValue,
@@ -267,19 +266,14 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
  * to the element's own tree (e.g. an inline style on a shadow host, in the light
  * DOM) from one inherited via a shadow-scoped `:host` rule. Only the former may
  * reference an anchor in the host's outer tree.
+ *
+ * Matched at a declaration boundary rather than as a substring, so the property
+ * appearing in a *value* (`anchor-name: --position-anchor-x`) or as part of
+ * another property (`--my-position-anchor`) does not count.
  */
-// Matches either spelling of the declaration: the property as authored, or the
-// custom property `patchCSSOM` stores a CSSOM-set value in. Built on first use,
-// as `SHIFTED_PROPERTIES` is keyed by a UUID generated at load.
-let inlinePositionAnchorRegex: RegExp | undefined;
 function hasInlinePositionAnchor(el: HTMLElement): boolean {
   const style = el.getAttribute('style');
-  if (!style) return false;
-  inlinePositionAnchorRegex ??= new RegExp(
-    `(?:^|;)\\s*(?:position-anchor|${SHIFTED_PROPERTIES['position-anchor']})\\s*:`,
-    'i',
-  );
-  return inlinePositionAnchorRegex.test(style);
+  return style ? /(?:^|;)\s*position-anchor\s*:/i.test(style) : false;
 }
 
 async function getAnchorEl(

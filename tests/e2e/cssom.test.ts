@@ -260,3 +260,63 @@ test('keeps working when the same properties are set again', async ({
   expect(boxes.target.top).toBeCloseTo(boxes.other.bottom, 0);
   expect(boxes.target.left).toBeCloseTo(210, 0);
 });
+
+test('resolves an outer-tree anchor for a host whose `position-anchor` is set through the CSSOM', async ({
+  page,
+}) => {
+  // A `position-anchor` on a shadow host may only reach an anchor in the host's
+  // outer tree when it is declared in that tree -- which `hasInlinePositionAnchor`
+  // decides by reading the `style` attribute. A CSSOM-set value only appears
+  // there as the property once `cascadeCSS` has restored it and `transformCSS`
+  // has written it back, so this pins that those run before `parseCSS`.
+  const boxes = await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { default: polyfill, patchCSSOM } = await import(fnEntry);
+    patchCSSOM();
+
+    class HostEl extends HTMLElement {
+      connectedCallback() {
+        if (this.shadowRoot) return;
+        this.attachShadow({ mode: 'open' });
+        this.shadowRoot!.innerHTML = `
+          <style>
+            :host { position: absolute; top: anchor(bottom); left: anchor(left); }
+          </style><slot></slot>`;
+      }
+    }
+    customElements.define('cssom-host', HostEl);
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <div id="container" style="position: relative; width: 300px; height: 300px">
+        <div id="anchor" style="position: absolute; top: 100px; left: 60px; width: 60px; height: 20px"></div>
+        <cssom-host id="host">Target</cssom-host>
+      </div>`;
+    document.body.append(wrapper);
+
+    const anchor = document.getElementById('anchor')!;
+    const host = document.getElementById('host')!;
+    anchor.style.anchorName = '--cssom-host-anchor';
+    host.style.setProperty('position-anchor', '--cssom-host-anchor');
+
+    // Scoped to the component's own shadow root, so the anchor in the outer
+    // tree is only reachable because the host declares `position-anchor` there.
+    await polyfill({ roots: [host.shadowRoot!] });
+
+    const container = document
+      .getElementById('container')!
+      .getBoundingClientRect();
+    const rel = (el: HTMLElement) => {
+      const { top, left, bottom } = el.getBoundingClientRect();
+      return {
+        top: top - container.top,
+        left: left - container.left,
+        bottom: bottom - container.top,
+      };
+    };
+    return { anchor: rel(anchor), host: rel(host) };
+  });
+
+  expect(boxes.host.top).toBeCloseTo(boxes.anchor.bottom, 0);
+  expect(boxes.host.left).toBeCloseTo(boxes.anchor.left, 0);
+});
