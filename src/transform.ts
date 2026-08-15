@@ -1,7 +1,10 @@
 import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
 import {
+  generateCSS,
   type GeneratedStyles,
+  getAST,
+  getRootStyleContainer,
   type StyleData,
   writeAdoptedStylesheet,
 } from './utils.js';
@@ -26,6 +29,34 @@ const excludeAttributes = [
   'rel',
   'type',
 ];
+
+/**
+ * Splits the transformed CSS for an element's inline styles into the element's
+ * own declarations and any rules the polyfill added alongside them.
+ *
+ * Inline styles are collected as a single rule, but the polyfill can add rules
+ * to that block -- `parsePositionFallbacks` puts a generated `@position-try`
+ * block there when the target declares `position-try-fallbacks` inline. A
+ * `style` attribute holds declarations and not rules, so those need a
+ * stylesheet of their own; folding them into the attribute would write a
+ * mangled selector into it and lose the element's real styles.
+ */
+function splitInlineStyles(css: string, selector: string) {
+  const ast = getAST(css);
+  let declarations = '';
+  const rules: string[] = [];
+  if (ast.type === 'StyleSheet') {
+    for (const node of ast.children) {
+      if (node.type === 'Rule' && generateCSS(node.prelude) === selector) {
+        // A generated block includes its braces.
+        declarations = generateCSS(node.block).slice(1, -1);
+      } else {
+        rules.push(generateCSS(node));
+      }
+    }
+  }
+  return { declarations, rules: rules.join('') };
+}
 
 export function transformCSS(
   styleData: StyleData[],
@@ -73,9 +104,20 @@ export function transformCSS(
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
         if (attr) {
-          const pre = `[data-has-inline-styles="${attr}"]{`;
-          const post = `}`;
-          let styles = css.slice(pre.length, 0 - post.length);
+          const { declarations, rules } = splitInlineStyles(
+            css,
+            `[data-has-inline-styles="${attr}"]`,
+          );
+          let styles = declarations;
+          if (rules) {
+            const container = getRootStyleContainer(el);
+            if (container) {
+              const styleEl = document.createElement('style');
+              styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+              styleEl.textContent = rules;
+              container.append(styleEl);
+            }
+          }
           // Check for custom anchor-element mapping, so it is not overwritten
           // when inline styles are updated
           const mappings = inlineStyles?.get(el);

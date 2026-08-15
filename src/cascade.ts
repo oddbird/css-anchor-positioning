@@ -26,6 +26,14 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...PADDING_PROPS,
   'anchor-scope',
   'anchor-name',
+  // The `position-try` properties are parsed out of the CSS text rather than
+  // read back from computed style, so nothing needs their shifted value. They
+  // are shifted anyway so that `patchCSSOM` has somewhere to store a value set
+  // through the CSSOM: an unknown property does not survive being written back
+  // to a `style` attribute, but a custom property does.
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
 ].reduce(
   (acc, prop) => {
     acc[prop] = `--${prop}-${INSTANCE_UUID}`;
@@ -33,6 +41,25 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   },
   {} as Record<string, string>,
 );
+
+/**
+ * The anchor positioning properties `patchCSSOM` makes settable through the
+ * CSSOM: every property from the spec that the polyfill reads. Only
+ * `position-visibility` is left out, which the polyfill does not parse at all,
+ * so a value set on it would have nothing reading it back.
+ *
+ * Each is a `SHIFTED_PROPERTIES` entry, which is what a CSSOM-set value is
+ * stored in.
+ */
+export const CSSOM_PROPERTIES = [
+  'anchor-name',
+  'anchor-scope',
+  'position-anchor',
+  'position-area',
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
+];
 
 /**
  * Attribute marking a `<style>` element the polyfill generates itself -- the
@@ -134,6 +161,43 @@ export function registerShiftedProperties(
       container.append(style);
     }
   }
+}
+
+/**
+ * Map of the custom property `patchCSSOM` stores a value in, back to the
+ * property that value was set on.
+ */
+const CSSOM_STORED_PROPERTIES: Record<string, string> = Object.fromEntries(
+  CSSOM_PROPERTIES.map((property) => [SHIFTED_PROPERTIES[property], property]),
+);
+
+/**
+ * Restore a declaration that `patchCSSOM` wrote to the property it stands in
+ * for. A value set through the CSSOM never reaches the `style` attribute as the
+ * property itself -- a browser that needs this polyfill drops what it does not
+ * know -- so it is stored in the custom property the declaration would have
+ * been shifted into anyway. Renaming it here gives the rest of the polyfill the
+ * same shape it gets from author CSS, so no parser has to know about the CSSOM
+ * at all; `shiftUnsupportedProperties` then puts the custom property back.
+ */
+function restoreCSSOMProperties(node: CssNode, block?: Block) {
+  if (!isDeclaration(node) || !block) {
+    return { updated: false };
+  }
+  const property = CSSOM_STORED_PROPERTIES[node.property];
+  if (!property) {
+    return { updated: false };
+  }
+  // Not when the rule already declares the property: this is the pair a shift
+  // produced (on this run, or on a previous one over CSS the polyfill has
+  // already transformed), and restoring would declare it twice.
+  for (const child of block.children) {
+    if (isDeclaration(child) && child.property === property) {
+      return { updated: false };
+    }
+  }
+  node.property = property;
+  return { updated: true };
 }
 
 /**
@@ -249,12 +313,15 @@ export function cascadeCSS(
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
+        // Before the steps below, so that a value set through the CSSOM is
+        // expanded and shifted like the declaration it stands in for.
+        const { updated: restored } = restoreCSSOMProperties(node, block);
         const { updated: shorthandUpdated } = expandInsetShorthands(
           node,
           block,
         );
         const { updated } = shiftUnsupportedProperties(node, block);
-        if (updated || shorthandUpdated) {
+        if (updated || shorthandUpdated || restored) {
           changed = true;
         }
       },
