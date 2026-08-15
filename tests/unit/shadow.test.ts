@@ -68,18 +68,18 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
   // without restoring these, every test would leave another wrapper stacked on
   // the shared globals.
   let originalReplaceSync: typeof CSSStyleSheet.prototype.replaceSync;
-  let originalDefine: typeof customElements.define;
+  let originalDefine: typeof CustomElementRegistry.prototype.define;
 
   beforeEach(() => {
     originalReplaceSync = CSSStyleSheet.prototype.replaceSync;
-    originalDefine = customElements.define;
+    originalDefine = CustomElementRegistry.prototype.define;
     installAdoptedStyleSheets();
     polyfillMock.mockClear();
   });
 
   afterEach(() => {
     CSSStyleSheet.prototype.replaceSync = originalReplaceSync;
-    customElements.define = originalDefine;
+    CustomElementRegistry.prototype.define = originalDefine;
     delete (ShadowRoot.prototype as Partial<ShadowRoot>).adoptedStyleSheets;
     delete window.ANCHOR_POSITIONING_POLYFILL_OPTIONS;
     document.body.replaceChildren();
@@ -209,6 +209,20 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
   // Connecting a host inside another shadow root is covered by the e2e suite
   // instead: jsdom delivers mutation records across shadow boundaries, so a
   // unit test here passes with or without the fix.
+
+  it('patches `define` on the registry prototype', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    // Scoped registries inherit `define` from the prototype, so patching there
+    // rather than on `customElements` is what makes them work too. jsdom can't
+    // construct one (`new CustomElementRegistry()` throws), so assert the
+    // mechanism instead of the behavior.
+    expect(CustomElementRegistry.prototype.define).not.toBe(originalDefine);
+    expect(Object.prototype.hasOwnProperty.call(customElements, 'define')).toBe(
+      false,
+    );
+  });
 
   it('does not run the polyfill when no stylesheets are adopted', async () => {
     const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();

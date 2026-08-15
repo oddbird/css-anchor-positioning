@@ -41,15 +41,15 @@ function runPolyfill(shadowRoot: ShadowRoot) {
 // waiting to be positioned by the host's `connectedCallback`.
 const pendingHosts = new WeakMap<HTMLElement, ShadowRoot>();
 
-// Whether `customElements.define` has already been patched, so that repeated
-// calls don't nest another wrapper.
+// Whether `CustomElementRegistry.prototype.define` has already been patched, so
+// that repeated calls don't nest another wrapper.
 let customElementsPatched = false;
 
 /**
- * Patches `customElements.define` to wrap each element's `connectedCallback`
- * before the registry captures it, so that a host which adopted a stylesheet
- * while disconnected gets positioned once it is connected and its shadow DOM
- * has been populated.
+ * Patches `CustomElementRegistry.prototype.define` to wrap each element's
+ * `connectedCallback` before the registry captures it, so that a host which
+ * adopted a stylesheet while disconnected gets positioned once it is connected
+ * and its shadow DOM has been populated.
  *
  * The wrapping has to happen here rather than on the host element: lifecycle
  * callbacks are looked up when the element is defined and stored on the
@@ -57,15 +57,18 @@ let customElementsPatched = false;
  * the reaction. Watching the document for insertions doesn't work either —
  * mutation records don't cross shadow boundaries, so a host appended into
  * another component's shadow root would be missed.
+ *
+ * Patching the prototype rather than `customElements` covers scoped custom
+ * element registries as well, since every registry inherits `define` from it.
  */
 function patchCustomElementsDefine() {
-  if (customElementsPatched || typeof customElements === 'undefined') {
+  if (customElementsPatched || typeof CustomElementRegistry === 'undefined') {
     return;
   }
   customElementsPatched = true;
 
-  const originalDefine = customElements.define;
-  customElements.define = function (
+  const originalDefine = CustomElementRegistry.prototype.define;
+  CustomElementRegistry.prototype.define = function (
     this: CustomElementRegistry,
     name: string,
     constructor: CustomElementConstructor,
