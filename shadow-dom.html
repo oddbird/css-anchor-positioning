@@ -27,6 +27,12 @@
       anchor-adopted-styles {
         width: 100%;
       }
+
+      registry-anchor,
+      scoped-registry-host {
+        display: block;
+        flex: 1;
+      }
     </style>
     <script type="module">
       function defineCustomElements() {
@@ -130,7 +136,107 @@
           }
         }
         customElements.define('position-area-on-host', PositionAreaOnHost);
+
+        // One tag name, two definitions: `<registry-anchor>` is defined on
+        // `window.customElements` for the outer tree, and again in a registry
+        // scoped to `<scoped-registry-host>`'s shadow root. Which definition an
+        // element upgrades to depends on the tree it sits in.
+        //
+        // Both style themselves with a constructed stylesheet, so both are
+        // positioned by the `adoptedStyleSheets` patch -- which hangs off the
+        // shadow root rather than off any registry, and so does not care which
+        // one defined the host.
+        const registrySheet = (anchorName, side) => {
+          const sheet = new CSSStyleSheet();
+          sheet.replaceSync(`
+            .anchor {
+              anchor-name: ${anchorName};
+              margin-block-end: calc(1lh + 1rem);
+              width: fit-content;
+            }
+            .target {
+              position: absolute;
+              position-anchor: ${anchorName};
+              top: anchor(bottom);
+              ${side}: anchor(${side});
+            }
+          `);
+          return sheet;
+        };
+        const globalRegistrySheet = registrySheet(
+          '--global-registry-anchor',
+          'left',
+        );
+        const scopedRegistrySheet = registrySheet(
+          '--scoped-registry-anchor',
+          'right',
+        );
+
+        const registryAnchorMarkup = (label) => `
+          <link rel="stylesheet" href="/demo.css" />
+          <div class="anchor">${label} Anchor</div>
+          <div class="target">${label} Target</div>
+        `;
+
+        class GlobalRegistryAnchor extends HTMLElement {
+          connectedCallback() {
+            if (this.shadowRoot) return;
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.adoptedStyleSheets = [globalRegistrySheet];
+            this.shadowRoot.innerHTML = registryAnchorMarkup('Global');
+          }
+        }
+        customElements.define('registry-anchor', GlobalRegistryAnchor);
+
+        // Never registered on `window.customElements`: it only exists inside
+        // the scoped registry below.
+        class ScopedRegistryAnchor extends HTMLElement {
+          connectedCallback() {
+            if (this.shadowRoot) return;
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.adoptedStyleSheets = [scopedRegistrySheet];
+            this.shadowRoot.innerHTML = registryAnchorMarkup('Scoped');
+          }
+        }
+
+        class ScopedRegistryHost extends HTMLElement {
+          connectedCallback() {
+            if (this.shadowRoot) return;
+            if (!SUPPORTS_SCOPED_REGISTRIES) {
+              this.attachShadow({ mode: 'open' });
+              this.shadowRoot.innerHTML = `
+                <link rel="stylesheet" href="/demo.css" />
+                <p>This browser does not support scoped registries.</p>
+              `;
+              return;
+            }
+            const registry = new CustomElementRegistry();
+            registry.define('registry-anchor', ScopedRegistryAnchor);
+            this.attachShadow({
+              mode: 'open',
+              customElementRegistry: registry,
+            });
+            // Resolves to the scoped definition, not the global one.
+            this.shadowRoot.innerHTML = '<registry-anchor></registry-anchor>';
+          }
+        }
+        customElements.define('scoped-registry-host', ScopedRegistryHost);
       }
+
+      const SUPPORTS_SCOPED_REGISTRIES = (() => {
+        try {
+          const registry = new CustomElementRegistry();
+          const probe = document.createElement('div');
+          return (
+            probe.attachShadow({
+              mode: 'open',
+              customElementRegistry: registry,
+            }).customElementRegistry === registry
+          );
+        } catch {
+          return false;
+        }
+      })();
 
       const btn = document.getElementById('apply-polyfill');
 
@@ -574,6 +680,103 @@ class PositionAreaOnHost extends HTMLElement {
   }
 }
 customElements.define("position-area-on-host", PositionAreaOnHost);
+&lt;/script&gt;
+</code></pre>
+    </section>
+    <section id="scoped-registry" class="demo-item">
+      <h2>
+        <a href="#scoped-registry" aria-hidden="true">🔗</a>
+        Works with a scoped custom element registry
+      </h2>
+      <div style="display: flex; gap: 2rem" class="demo-elements">
+        <registry-anchor></registry-anchor>
+        <scoped-registry-host></scoped-registry-host>
+      </div>
+      <div class="note">
+        <p>
+          With polyfill applied: both Targets are positioned below their own
+          Anchor — the Global one aligned to its left edge, the Scoped one to
+          its right.
+        </p>
+        <p>
+          Both elements are
+          <code>&lt;registry-anchor&gt;</code>, but they are two different
+          definitions. The left one comes from
+          <code>window.customElements</code>. The right one comes from a
+          <a
+            href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#scoped_custom_element_registries"
+            >scoped registry</a
+          >
+          that only applies inside
+          <code>&lt;scoped-registry-host&gt;</code>'s shadow root, and is never
+          registered globally.
+        </p>
+        <p>
+          The polyfill treats them the same, because the constructed-stylesheet
+          patch hangs off <code>adoptedStyleSheets</code> and the shadow root
+          rather than off a registry. A polyfill that keyed on
+          <code>window.customElements</code> would silently miss the scoped one.
+        </p>
+        <p>
+          <strong>Note: </strong>scoped registries need Chrome 146+ or Safari
+          26+. Those versions also support anchor positioning natively, so this
+          demo only exercises the polyfill in a browser that gains scoped
+          registries before anchor positioning. Where they are unavailable, the
+          right-hand component says so.
+        </p>
+      </div>
+      <pre><code class="language-html"
+>&lt;registry-anchor&gt;&lt;/registry-anchor&gt;
+&lt;scoped-registry-host&gt;&lt;/scoped-registry-host&gt;
+&lt;script&gt;
+&lt;!-- Load the shadow entrypoint before defining custom elements,
+so the replaceSync and adoptedStyleSheets patches are installed
+before any connectedCallback runs. --&gt;
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
+patchAndPolyfillConstructedStylesheets();
+
+class GlobalRegistryAnchor extends HTMLElement {
+  connectedCallback() {
+    if (this.shadowRoot) return;
+    this.attachShadow({ mode: "open" });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --global-registry-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --global-registry-anchor;
+        top: anchor(bottom);
+        left: anchor(left);
+      }
+    `);
+    this.shadowRoot.adoptedStyleSheets = [sheet];
+    this.shadowRoot.innerHTML =
+      "&lt;div class='anchor'&gt;Anchor&lt;/div&gt;&lt;div class='target'&gt;Target&lt;/div&gt;";
+  }
+}
+customElements.define("registry-anchor", GlobalRegistryAnchor);
+
+&lt;!-- Same tag name, a different definition, never registered globally. --&gt;
+class ScopedRegistryAnchor extends HTMLElement {
+  connectedCallback() {
+    &lt;!-- ...adopts its own constructed stylesheet... --&gt;
+  }
+}
+
+class ScopedRegistryHost extends HTMLElement {
+  connectedCallback() {
+    if (this.shadowRoot) return;
+
+    const registry = new CustomElementRegistry();
+    registry.define("registry-anchor", ScopedRegistryAnchor);
+    this.attachShadow({ mode: "open", customElementRegistry: registry });
+
+    &lt;!-- Resolves to the scoped definition, not the global one. --&gt;
+    this.shadowRoot.innerHTML = "&lt;registry-anchor&gt;&lt;/registry-anchor&gt;";
+  }
+}
+customElements.define("scoped-registry-host", ScopedRegistryHost);
 &lt;/script&gt;
 </code></pre>
     </section>

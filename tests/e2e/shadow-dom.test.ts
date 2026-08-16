@@ -522,3 +522,87 @@ test('emulates non-inheritance of shifted properties inside a shadow root withou
   expect(result.containerHeight).toBe('400px');
   expect(result.targetHeight).toBe('');
 });
+
+// Whether the browser honours `attachShadow({ customElements })`. Detected the
+// same way the demo does: by checking the option was honoured, rather than only
+// that `CustomElementRegistry` is constructible. An unrecognized `attachShadow`
+// option is ignored silently, so testing for the constructor alone would report
+// support the browser does not have.
+function supportsScopedRegistries(page: Page) {
+  return page.evaluate(() => {
+    try {
+      const registry = new CustomElementRegistry();
+      const probe = document.createElement('div');
+      return (
+        probe.attachShadow({ mode: 'open', customElementRegistry: registry })
+          .customElementRegistry === registry
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** The anchor and target boxes inside a `<registry-anchor>`'s shadow root. */
+function registryAnchorBoxes(page: Page, hostSelector: string) {
+  return page.evaluate((selector) => {
+    const host = document.querySelector(selector)!;
+    const root = (
+      host.tagName.toLowerCase() === 'registry-anchor'
+        ? host
+        : host.shadowRoot!.querySelector('registry-anchor')!
+    ) as HTMLElement;
+    const shadow = root.shadowRoot!;
+    const rect = (el: Element) => {
+      const { top, bottom, left, right } = el.getBoundingClientRect();
+      return { top, bottom, left, right };
+    };
+    return {
+      anchor: rect(shadow.querySelector('.anchor')!),
+      target: rect(shadow.querySelector('.target')!),
+    };
+  }, hostSelector);
+}
+
+test('positions a custom element defined on `window.customElements`', async ({
+  page,
+}) => {
+  // The control for the scoped-registry case below: same component shape, same
+  // constructed stylesheet, defined the ordinary way.
+  await applyPolyfill(page);
+
+  const { anchor, target } = await registryAnchorBoxes(page, 'registry-anchor');
+
+  expect(target.top).toBeCloseTo(anchor.bottom, 0);
+  expect(target.left).toBeCloseTo(anchor.left, 0);
+});
+
+test('positions a custom element defined in a scoped registry', async ({
+  page,
+}) => {
+  test.skip(
+    !(await supportsScopedRegistries(page)),
+    'Browser does not honour `attachShadow({ customElements })`.',
+  );
+
+  await applyPolyfill(page);
+
+  // Upgraded from the scoped definition, which was never registered globally --
+  // the tag name resolves to the outer definition everywhere else on the page.
+  const scopedIsGlobal = await page.evaluate(() => {
+    const scoped = document
+      .querySelector('scoped-registry-host')!
+      .shadowRoot!.querySelector('registry-anchor')!;
+    return scoped.constructor === customElements.get('registry-anchor');
+  });
+  expect(scopedIsGlobal).toBe(false);
+
+  // The constructed-stylesheet patch reaches it all the same: it hangs off the
+  // shadow root, not off a registry.
+  const { anchor, target } = await registryAnchorBoxes(
+    page,
+    'scoped-registry-host',
+  );
+  expect(target.top).toBeCloseTo(anchor.bottom, 0);
+  expect(target.right).toBeCloseTo(anchor.right, 0);
+});
