@@ -1,5 +1,8 @@
 import { expect, type Page, test } from '@playwright/test';
 
+// Type-only: the entry is imported dynamically at runtime from a path the dev
+// server resolves (see below), which would otherwise be typed `any`.
+import type * as fnModule from '../../src/index-fn.js';
 import { expectWithinOne } from './utils.js';
 
 test.beforeEach(async ({ page }) => {
@@ -115,10 +118,16 @@ test('applies global polyfill options to adopted stylesheets in shadow root', as
 
   const wrapper = page.locator('anchor-adopted-styles POLYFILL-POSITION-AREA');
   const target = page.locator('anchor-adopted-styles .target');
+  const anchor = page.locator('anchor-adopted-styles .anchor');
 
   // The unwrapped path marks the target itself instead of adding a wrapper.
   await expect(target).toHaveAttribute('data-anchor-position-area');
   await expect(wrapper).toHaveCount(0);
+
+  // The target is still positioned, not merely left unwrapped.
+  const anchorBox = await anchor.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('applies explicit polyfill options to adopted stylesheets in shadow root', async ({
@@ -136,9 +145,12 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
 
   await page.evaluate(async () => {
     // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
-    // and the import linter from trying to resolve it statically.
+    // and the import linter from trying to resolve it statically. The cast
+    // restores the type checking that a non-literal `import()` gives up.
     const fnEntry = '/src/index-fn.ts';
-    const { patchAndPolyfillConstructedStylesheets } = await import(fnEntry);
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
 
     patchAndPolyfillConstructedStylesheets({
       positionAreaContainingBlock: false,
@@ -172,11 +184,150 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
 
   const target = page.locator('explicit-options .target');
   const wrapper = page.locator('explicit-options POLYFILL-POSITION-AREA');
+  const anchor = page.locator('explicit-options .anchor');
 
-  // Waiting on the attribute lets the queued polyfill run finish before the
-  // wrapper is asserted to be absent.
+  // The attribute is only set on the unwrapped path, so waiting on it both
+  // sequences the queued polyfill run and asserts which path was taken.
   await expect(target).toHaveAttribute('data-anchor-position-area');
   await expect(wrapper).toHaveCount(0);
+
+  const anchorBox = await anchor.boundingBox();
+  const targetBox = await target.boundingBox();
+  expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
+});
+
+test('positions a host that adopts its stylesheet before being connected', async ({
+  page,
+}) => {
+  // A custom element that builds its shadow root in the constructor adopts its
+  // stylesheet while still disconnected, so nothing can be positioned until it
+  // is connected and its shadow DOM is populated.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --constructor-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --constructor-anchor;
+        position-area: bottom span-left;
+      }
+    `);
+
+    customElements.define(
+      'adopts-in-constructor',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div class="anchor">Anchor</div>
+            <div class="target">Target</div>`;
+        }
+      },
+    );
+
+    // Constructed (and adopting) well before it is connected.
+    const host = document.createElement('adopts-in-constructor');
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    document.body.append(host);
+  });
+
+  const anchor = page.locator('adopts-in-constructor .anchor');
+  const wrapper = page.locator('adopts-in-constructor POLYFILL-POSITION-AREA');
+
+  // Assert the generated wrapper, not geometry. An unresolved `anchor()` or
+  // `position-area` leaves the target at its static position, which for a
+  // target that directly follows its anchor in flow is the same place the
+  // anchored position would put it — so position assertions alone pass whether
+  // or not the polyfill ran. The wrapper only exists if it ran.
+  await expect(wrapper).toHaveCount(1);
+
+  const anchorBox = await anchor.boundingBox();
+  const wrapperBox = await wrapper.boundingBox();
+
+  // `bottom` aligns the target's top with the anchor's bottom; `span-left`
+  // aligns their right edges.
+  expect(wrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
+  expect(wrapperBox!.x + wrapperBox!.width).toBeCloseTo(
+    anchorBox!.x + anchorBox!.width,
+    0,
+  );
+});
+
+test('positions a host connected inside another shadow root', async ({
+  page,
+}) => {
+  // The inner element adopts in its constructor and is then appended into the
+  // outer element's shadow root, never touching the document tree. Mutation
+  // records don't cross shadow boundaries, so this only works if the host's own
+  // `connectedCallback` drives the run.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --nested-anchor; }
+      .target {
+        position: absolute;
+        position-anchor: --nested-anchor;
+        position-area: bottom span-left;
+      }
+    `);
+
+    customElements.define(
+      'nested-inner',
+      class extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div class="anchor">Anchor</div>
+            <div class="target">Target</div>`;
+        }
+      },
+    );
+
+    customElements.define(
+      'nested-outer',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.append(document.createElement('nested-inner'));
+        }
+      },
+    );
+
+    document.body.append(document.createElement('nested-outer'));
+  });
+
+  const wrapper = page.locator(
+    'nested-outer nested-inner POLYFILL-POSITION-AREA',
+  );
+  const anchor = page.locator('nested-outer nested-inner .anchor');
+
+  await expect(wrapper).toHaveCount(1);
+
+  const anchorBox = await anchor.boundingBox();
+  const wrapperBox = await wrapper.boundingBox();
+  expect(wrapperBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
 test('positions every custom-element host sharing one constructed stylesheet', async ({
