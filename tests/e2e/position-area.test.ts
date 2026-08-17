@@ -393,6 +393,31 @@ test.describe('with `positionAreaContainingBlock: auto`', () => {
     ).toHaveCount(1);
   });
 
+  test('wraps a target whose containing-block-dependent style is inline', async ({
+    page,
+  }) => {
+    // `#inline-shifted .target` takes its `position-area` from a stylesheet and
+    // sets `padding-right: 50%` inline. Inline styles are shifted into custom
+    // properties like the rest of the CSS, so the percentage padding is still
+    // seen here and the target is wrapped. Without the shift it reads back as
+    // empty and the target is positioned directly.
+    await applyPolyfill(page);
+
+    const section = page.locator('#inline-shifted');
+    const targetWrapper = section.locator('polyfill-position-area');
+    await expect(targetWrapper).toHaveCount(1);
+
+    // The reason it needs the wrapper: the padding has to resolve against the
+    // position-area cell, not the original parent.
+    const wrapperContentWidth = await targetWrapper.evaluate(
+      (el) => el.clientWidth,
+    );
+    const paddingRight = await section
+      .locator('.target')
+      .evaluate((el) => parseFloat(getComputedStyle(el).paddingRight));
+    expect(paddingRight).toBeCloseTo(wrapperContentWidth / 2, 0);
+  });
+
   test('positions a wrapped target correctly', async ({ page }) => {
     await applyPolyfill(page);
     const section = page.locator('#spanleft-top');

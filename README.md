@@ -275,6 +275,26 @@ following features:
       containing block. To work around this, the polyfill strips any non-`auto`
       inset from the target (setting `inset: auto`) and re-applies it as padding
       on the wrapper, so the wrapper continues to drive positioning.
+    - Moving the target into the wrapper disconnects and reconnects it. If the
+      target is a custom element, its `connectedCallback` therefore runs more
+      than once, and any setup that can only happen once must be guarded — for
+      example, calling `attachShadow()` a second time throws. This applies to
+      any custom element the polyfill positions with `position-area`, including
+      a host positioned by a `position-area` in its own `:host` rule:
+
+      ```js
+      class MyElement extends HTMLElement {
+        connectedCallback() {
+          if (this.shadowRoot) return;
+          this.attachShadow({ mode: 'open' });
+          // ...
+        }
+      }
+      ```
+
+      Setting [`positionAreaContainingBlock`](#positionareacontainingblock) to
+      `false` (or `'auto'`, for targets that don't need the wrapper) avoids the
+      wrapper, and with it the reconnection.
   - When the wrapper is not added, styles that resolve against the containing
     block — percentage sizes, `auto` or percentage margins, percentage padding,
     or `stretch`/`anchor-center` self-alignment — will not match native

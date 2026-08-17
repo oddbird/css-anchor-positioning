@@ -97,6 +97,39 @@
           }
         }
         customElements.define('position-anchor-on-host', PositionAnchorOnHost);
+
+        // `position-area` in a `:host` rule positions the shadow *host*, which
+        // lives in the outer tree rather than in the shadow root the rule came
+        // from. The styles the polyfill generates to map the computed insets
+        // onto the target have to be inserted into that outer tree to match it.
+        const positionAreaOnHostSheet = new CSSStyleSheet();
+        positionAreaOnHostSheet.replaceSync(`
+          :host {
+            --element-color: var(--target, var(--outer-anchored));
+            background: var(--element-color);
+            border: thin solid var(--border);
+            border-radius: var(--radius-1);
+            color: white;
+            font-weight: bold;
+            padding: 0.5em;
+            white-space: nowrap;
+            position: absolute;
+            position-area: top;
+          }
+        `);
+
+        class PositionAreaOnHost extends HTMLElement {
+          connectedCallback() {
+            // Moving the host into the `position-area` wrapper disconnects and
+            // reconnects it, so this runs more than once.
+            if (this.shadowRoot) return;
+
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.adoptedStyleSheets = [positionAreaOnHostSheet];
+            this.shadowRoot.innerHTML = '<slot></slot>';
+          }
+        }
+        customElements.define('position-area-on-host', PositionAreaOnHost);
       }
 
       const btn = document.getElementById('apply-polyfill');
@@ -477,6 +510,70 @@ class PositionAnchorOnHost extends HTMLElement {
   }
 }
 customElements.define("position-anchor-on-host", PositionAnchorOnHost);
+&lt;/script&gt;
+</code></pre>
+    </section>
+    <section id="position-area-on-host" class="demo-item">
+      <h2>
+        <a href="#position-area-on-host" aria-hidden="true">🔗</a>
+        Works when a custom element host has <code>position-area</code>
+      </h2>
+      <div style="position: relative" class="demo-elements">
+        <div
+          class="anchor"
+          style="
+            anchor-name: --position-area-on-host;
+            margin-block-start: calc(1lh + 1rem);
+          "
+        >
+          Anchor
+        </div>
+        <position-area-on-host style="position-anchor: --position-area-on-host"
+          >Target</position-area-on-host
+        >
+      </div>
+      <div class="note">
+        <p>With polyfill applied: Target sits directly above the Anchor.</p>
+        <p>
+          The <code>position-area</code> is declared in a
+          <code>:host</code> rule, so the element it positions is the host
+          (<code>&lt;position-area-on-host&gt;</code>), which lives in the outer
+          tree rather than in the shadow root the rule came from. The styles the
+          polyfill generates to map the computed insets onto the target are
+          inserted into the host's own tree; a <code>&lt;style&gt;</code> inside
+          the shadow root would never match the host.
+        </p>
+      </div>
+
+      <pre><code class="language-html"
+>&lt;div class="anchor" style="anchor-name: --position-area-on-host"&gt;Anchor&lt;/div&gt;
+&lt;position-area-on-host style="position-anchor: --position-area-on-host"&gt;Target&lt;/position-area-on-host&gt;
+&lt;script&gt;
+&lt;!-- Load the shadow entrypoint before defining custom elements,
+so the replaceSync and adoptedStyleSheets patches are installed
+before any connectedCallback runs. --&gt;
+import { patchAndPolyfillConstructedStylesheets } from '@oddbird/css-anchor-positioning/fn';
+patchAndPolyfillConstructedStylesheets();
+
+class PositionAreaOnHost extends HTMLElement {
+  connectedCallback() {
+    // Moving the host into the position-area wrapper reconnects it.
+    if (this.shadowRoot) return;
+
+    this.attachShadow({ mode: "open" });
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      :host {
+        position: absolute;
+        position-area: top;
+      }
+    `);
+    this.shadowRoot.adoptedStyleSheets = [sheet];
+    this.shadowRoot.innerHTML = "&lt;slot&gt;&lt;/slot&gt;";
+  }
+}
+customElements.define("position-area-on-host", PositionAreaOnHost);
 &lt;/script&gt;
 </code></pre>
     </section>

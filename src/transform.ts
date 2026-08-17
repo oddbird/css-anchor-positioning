@@ -1,7 +1,7 @@
 import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
 import {
-  getRootStyleContainer,
+  type GeneratedStyles,
   type StyleData,
   writeAdoptedStylesheet,
 } from './utils.js';
@@ -33,7 +33,7 @@ export function transformCSS(
   roots?: AnchorPositioningRoot[],
 ) {
   const updatedStyleData: StyleData[] = [];
-  for (const { el, css, changed, created = false, sheet } of styleData) {
+  for (const { el, css, changed, sheet } of styleData) {
     const updatedObject: StyleData = { el, css, changed: false, sheet };
     if (changed) {
       if (sheet) {
@@ -66,27 +66,8 @@ export function transformCSS(
         if (el.hasAttribute('href')) {
           styleEl.setAttribute('data-original-href', el.getAttribute('href')!);
         }
-        if (!created) {
-          // This is an existing stylesheet, so we replace it.
-          el.insertAdjacentElement('beforebegin', styleEl);
-          el.remove();
-        } else {
-          styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
-          // This is a new stylesheet (the position-area mapping styles). Its
-          // rules target wrapper elements that live inside the roots being
-          // polyfilled, so it must be inserted into each of those roots: a
-          // `<style>` in `document.head` does not apply inside a shadow root.
-          const containers = new Set(
-            (roots?.length ? roots : [document]).map(getRootStyleContainer),
-          );
-          for (const container of containers) {
-            // If there are multiple roots, clone the element for each root
-            const node = styleEl.isConnected
-              ? styleEl
-              : styleEl.cloneNode(true);
-            container.append(node);
-          }
-        }
+        el.insertAdjacentElement('beforebegin', styleEl);
+        el.remove();
         updatedObject.el = styleEl;
       } else if (el?.hasAttribute('data-has-inline-styles')) {
         // Handle inline styles
@@ -130,4 +111,18 @@ export function transformCSS(
     updatedStyleData.push(updatedObject);
   }
   return updatedStyleData;
+}
+
+/**
+ * Inserts styles the polyfill generated itself (the position-area mapping
+ * styles) into the container recorded for each block of rules.
+ */
+export function insertGeneratedStyles(styles: GeneratedStyles) {
+  for (const [container, css] of styles) {
+    if (!css) continue;
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+    styleEl.textContent = css;
+    container.append(styleEl);
+  }
 }

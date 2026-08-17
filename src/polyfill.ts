@@ -31,8 +31,9 @@ import {
   isInsetProp,
   type SizingProperty,
 } from './syntax.js';
-import { transformCSS } from './transform.js';
+import { insertGeneratedStyles, transformCSS } from './transform.js';
 import {
+  type GeneratedStyles,
   reportParseErrorsOnFailure,
   resetParseErrors,
   strategyForElement,
@@ -766,6 +767,7 @@ export async function polyfill(
   // eslint-disable-next-line no-useless-assignment
   let rules: AnchorPositions = {};
   let inlineStyles: Map<HTMLElement, Record<string, string>> | undefined;
+  let positionAreaStyles: GeneratedStyles;
 
   // Reset the CSS parse errors in case the polyfill is run multiple times, and
   // at the beginning in case a previous run failed.
@@ -784,6 +786,7 @@ export async function polyfill(
     const parsedCSS = await parseCSS(styleData, options);
     rules = parsedCSS.rules;
     inlineStyles = parsedCSS.inlineStyles;
+    positionAreaStyles = parsedCSS.positionAreaStyles;
   } catch (error) {
     reportParseErrorsOnFailure();
     throw error;
@@ -792,6 +795,7 @@ export async function polyfill(
   if (Object.values(rules).length) {
     // update source code
     transformCSS(styleData, inlineStyles, options.roots);
+    insertGeneratedStyles(positionAreaStyles);
 
     // calculate position values
     await position(rules, options.useAnimationFrame);

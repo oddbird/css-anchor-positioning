@@ -113,6 +113,10 @@ export function registerShiftedProperties(
       .join('\n  ');
     for (const root of roots) {
       const container = getRootStyleContainer(root);
+      // A detached root has no container whose styles would reach it.
+      if (!container) {
+        continue;
+      }
       // Inject the reset once per container (a shadow root, or a document head
       // shared by several light-DOM roots). Dedupe against the live DOM: scope
       // the query to our own generated styles via the marker attribute, then
