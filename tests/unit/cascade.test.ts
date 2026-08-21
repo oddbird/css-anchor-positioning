@@ -1,5 +1,6 @@
 import {
   cascadeCSS,
+  CSSOM_PROPERTIES,
   registerShiftedProperties,
   SHIFTED_PROPERTIES,
 } from '../../src/cascade.js';
@@ -92,6 +93,40 @@ describe('cascadeCSS', () => {
     ];
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(false);
+  });
+});
+
+describe('restoreCSSOMProperties', () => {
+  it.each(CSSOM_PROPERTIES)(
+    'restores a `%s` value stored by patchCSSOM',
+    (property) => {
+      // `patchCSSOM` stores the value in the shifted custom property, because a
+      // browser without native anchor positioning drops the property itself.
+      // Restoring it here is what lets every later stage treat a CSSOM-set
+      // value as the ordinary declaration it stands in for.
+      const css = cascadeCSSForTest(
+        `#target{${SHIFTED_PROPERTIES[property]}:--foo}`,
+      );
+      expect(css).toContain(`${property}:--foo`);
+      // ...and it is shifted back, so the value survives being written to the
+      // `style` attribute again.
+      expect(css).toContain(`${SHIFTED_PROPERTIES[property]}:--foo`);
+    },
+  );
+
+  it('leaves the pair a shift produced alone', () => {
+    // The polyfill re-reads its own transformed CSS on a later run, where the
+    // property and its shifted custom property are both present. Restoring
+    // there would declare the property twice, and each run would add another.
+    const css = cascadeCSSForTest(
+      `#target{anchor-name:--foo;${SHIFTED_PROPERTIES['anchor-name']}:--foo}`,
+    );
+    expect(css.match(/anchor-name:--foo/g)).toHaveLength(1);
+  });
+
+  it('does not restore custom properties it does not own', () => {
+    const css = cascadeCSSForTest(`#target{--anchor-name:--foo}`);
+    expect(css).toBe('#target{--anchor-name:--foo}');
   });
 });
 

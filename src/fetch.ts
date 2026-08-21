@@ -96,7 +96,16 @@ export function hasInlineAnchorStyles(el: HTMLElement) {
     // While there is overlap in the terms (`margin` and `margin-block-start`),
     // reducing the list to only the shortest distinct terms doesn't
     // significantly improve performance.
-    const terms = ['anchor', ...Object.keys(SHIFTED_PROPERTIES)];
+    // The shifted custom properties are terms in their own right: `patchCSSOM`
+    // writes a CSSOM-set `anchor-name`/`position-anchor` straight into the
+    // custom property the declaration would have been shifted into, so the
+    // `style` attribute never contains the plain property name. Their `--`
+    // prefix also keeps them from matching the plain terms at a boundary.
+    const terms = [
+      'anchor',
+      ...Object.keys(SHIFTED_PROPERTIES),
+      ...Object.values(SHIFTED_PROPERTIES),
+    ];
     // Match at a declaration boundary, so a term appearing in a *value* does
     // not count: `float: left` and `line-height: 1.5` are not styles we read.
     inlineAnchorStylesRegex = new RegExp(
@@ -110,9 +119,23 @@ export function hasInlineAnchorStyles(el: HTMLElement) {
 // declarations used by the polyfill. For each element found, adds a new
 // 'data-has-inline-styles' attribute with a random UUID value, and then formats
 // the styles in the same manner as CSS from style tags.
-function fetchInlineStyles(elements?: HTMLElement[]) {
+function fetchInlineStyles(
+  roots: AnchorPositioningRoot[],
+  elements?: HTMLElement[],
+) {
   const elementsWithInlineAnchorStyles: HTMLElement[] = (
-    elements ?? Array.from(document.querySelectorAll<HTMLElement>('[style]'))
+    elements ??
+      // The document is searched as well as the roots: a run scoped to a shadow
+      // root still needs inline styles from the outer tree, where its host and
+      // any light-DOM anchors live. Searching the roots on top of that is what
+      // finds inline styles *inside* a shadow root, which
+      // `document.querySelectorAll()` does not reach.
+      [
+        ...new Set([
+          ...document.querySelectorAll<HTMLElement>('[style]'),
+          ...querySelectorAllRoots(roots, '[style]'),
+        ]),
+      ]
   ).filter((el) => el instanceof HTMLElement && hasInlineAnchorStyles(el));
   const inlineStyles: Partial<StyleData>[] = [];
 
@@ -187,7 +210,7 @@ export async function fetchCSS(
     ? (options.elements ?? [])
     : undefined;
 
-  const inlines = fetchInlineStyles(elementsForInlines);
+  const inlines = fetchInlineStyles(options.roots, elementsForInlines);
 
   // Collect constructed stylesheets adopted on the polyfill roots. Skipped when
   // an explicit `elements` list is provided, as that opts into element-only

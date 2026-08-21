@@ -26,6 +26,12 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   ...PADDING_PROPS,
   'anchor-scope',
   'anchor-name',
+  // Nothing reads the shifted `position-try` values (they are parsed out of the
+  // CSS text), but `patchCSSOM` needs somewhere to store them that survives
+  // being written back to a `style` attribute.
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
 ].reduce(
   (acc, prop) => {
     acc[prop] = `--${prop}-${INSTANCE_UUID}`;
@@ -33,6 +39,22 @@ export const SHIFTED_PROPERTIES: Record<string, string> = [
   },
   {} as Record<string, string>,
 );
+
+/**
+ * The anchor positioning properties `patchCSSOM` makes settable through the
+ * CSSOM, each stored in its `SHIFTED_PROPERTIES` custom property. Every
+ * property from the spec except `position-visibility`, which the polyfill does
+ * not parse at all.
+ */
+export const CSSOM_PROPERTIES = [
+  'anchor-name',
+  'anchor-scope',
+  'position-anchor',
+  'position-area',
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
+];
 
 /**
  * Attribute marking a `<style>` element the polyfill generates itself -- the
@@ -134,6 +156,37 @@ export function registerShiftedProperties(
       container.append(style);
     }
   }
+}
+
+/** Custom property `patchCSSOM` stores a value in, to the property it was set on. */
+const CSSOM_STORED_PROPERTIES: Record<string, string> = Object.fromEntries(
+  CSSOM_PROPERTIES.map((property) => [SHIFTED_PROPERTIES[property], property]),
+);
+
+/**
+ * Restore a declaration that `patchCSSOM` wrote to the property it stands in
+ * for, giving the rest of the polyfill the same shape it gets from author CSS
+ * -- so no parser has to know about the CSSOM.
+ * `shiftUnsupportedProperties` then puts the custom property back.
+ */
+function restoreCSSOMProperties(node: CssNode, block?: Block) {
+  if (!isDeclaration(node) || !block) {
+    return { updated: false };
+  }
+  const property = CSSOM_STORED_PROPERTIES[node.property];
+  if (!property) {
+    return { updated: false };
+  }
+  // Not when the rule already declares the property: this is the pair a shift
+  // produced (on this run, or on a previous one over CSS the polyfill has
+  // already transformed), and restoring would declare it twice.
+  for (const child of block.children) {
+    if (isDeclaration(child, property)) {
+      return { updated: false };
+    }
+  }
+  node.property = property;
+  return { updated: true };
 }
 
 /**
@@ -249,12 +302,15 @@ export function cascadeCSS(
       visit: 'Declaration',
       enter(node) {
         const block = this.rule?.block;
+        // Before the steps below, so that a value set through the CSSOM is
+        // expanded and shifted like the declaration it stands in for.
+        const { updated: restored } = restoreCSSOMProperties(node, block);
         const { updated: shorthandUpdated } = expandInsetShorthands(
           node,
           block,
         );
         const { updated } = shiftUnsupportedProperties(node, block);
-        if (updated || shorthandUpdated) {
+        if (updated || shorthandUpdated || restored) {
           changed = true;
         }
       },

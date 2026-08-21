@@ -56,8 +56,15 @@ export function generateCSS(ast: CssNode) {
   });
 }
 
-export function isDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration';
+/** Whether the node is a declaration, optionally of a given property. */
+export function isDeclaration(
+  node: CssNode,
+  property?: string,
+): node is DeclarationWithValue {
+  return (
+    node.type === 'Declaration' &&
+    (property === undefined || node.property === property)
+  );
 }
 
 export function getDeclarationValue(node: DeclarationWithValue) {

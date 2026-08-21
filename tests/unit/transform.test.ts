@@ -52,7 +52,9 @@ describe('transformCSS', () => {
     expect(newLink.textContent).toBe('html { margin: 0; }');
 
     expect(style.innerHTML).toBe('html { padding: 0; }');
-    expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue;');
+    // The declarations are re-serialized out of the rule rather than sliced out
+    // of the CSS text, so the source's trailing `;` is not carried over.
+    expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue');
     expect(div2.getAttribute('style')).toBe('color: red;');
     // `data-has-inline-styles` is intentionally retained so its id stays stable
     // across (possibly concurrent) polyfill runs.

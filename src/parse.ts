@@ -53,6 +53,7 @@ import {
   getRootStyleContainer,
   getSelectors,
   isAnchorFunction,
+  isDeclaration,
   type StyleData,
 } from './utils.js';
 import { validatedForPositioning } from './validate.js';
@@ -106,14 +107,6 @@ export interface TryBlock {
   // `key` is the property being declared
   // `value` is the property value
   declarations: Partial<Record<AcceptedPositionTryProperty, string>>;
-}
-
-function isAnchorNameDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'anchor-name';
-}
-
-function isAnchorScopeDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'anchor-scope';
 }
 
 function isAnchorSizeFunction(node: CssNode | null): node is FunctionNode {
@@ -273,6 +266,10 @@ function getAnchorFunctionData(node: CssNode, declaration: Declaration | null) {
  * to the element's own tree (e.g. an inline style on a shadow host, in the light
  * DOM) from one inherited via a shadow-scoped `:host` rule. Only the former may
  * reference an anchor in the host's outer tree.
+ *
+ * Matched at a declaration boundary rather than as a substring, so the property
+ * appearing in a *value* (`anchor-name: --position-anchor-x`) or as part of
+ * another property (`--my-position-anchor`) does not count.
  */
 function hasInlinePositionAnchor(el: HTMLElement): boolean {
   const style = el.getAttribute('style');
@@ -363,7 +360,7 @@ export async function parseCSS(
       const selectors = getSelectors(rule);
 
       // Parse `anchor-name` declaration
-      if (isAnchorNameDeclaration(node) && selectors.length) {
+      if (isDeclaration(node, 'anchor-name') && selectors.length) {
         for (const name of getAnchorNames(node)) {
           anchorNames[name] ??= [];
           anchorNames[name].push(...selectors);
@@ -371,7 +368,7 @@ export async function parseCSS(
       }
 
       // Parse `anchor-scope` declarations
-      if (isAnchorScopeDeclaration(node) && selectors.length) {
+      if (isDeclaration(node, 'anchor-scope') && selectors.length) {
         for (const name of getAnchorNames(node)) {
           anchorScopes[name] ??= [];
           anchorScopes[name].push(...selectors);
