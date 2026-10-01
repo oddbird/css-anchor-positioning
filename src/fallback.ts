@@ -41,6 +41,7 @@ import {
   getSelectors,
   INSTANCE_UUID,
   isAnchorFunction,
+  isDeclaration,
   splitCommaList,
   type StyleData,
 } from './utils.js';
@@ -120,28 +121,6 @@ type PositionTryObject =
   | PositionTryDefPositionArea
   | PositionTryDefAtRule
   | PositionTryDefAtRuleWithTactic;
-
-function isDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration';
-}
-
-function isPositionTryFallbacksDeclaration(
-  node: CssNode,
-): node is DeclarationWithValue {
-  return (
-    node.type === 'Declaration' && node.property === 'position-try-fallbacks'
-  );
-}
-
-function isPositionTryOrderDeclaration(
-  node: CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-try-order';
-}
-
-function isPositionTryDeclaration(node: CssNode): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-try';
-}
 
 function isPositionTryAtRule(node: CssNode): node is AtRuleRaw {
   return node.type === 'Atrule' && node.name === 'position-try';
@@ -452,7 +431,10 @@ function parsePositionTryFallbacks(list: List<CssNode>) {
 }
 
 function getPositionTryFallbacksDeclaration(node: Declaration) {
-  if (isPositionTryFallbacksDeclaration(node) && node.value.children.first) {
+  if (
+    isDeclaration(node, 'position-try-fallbacks') &&
+    node.value.children.first
+  ) {
     return parsePositionTryFallbacks(node.value.children);
   }
   return [];
@@ -462,7 +444,7 @@ export function getPositionTryDeclaration(node: Declaration): {
   order?: PositionTryOrder;
   options?: PositionTryObject[];
 } {
-  if (isPositionTryDeclaration(node) && node.value.children.first) {
+  if (isDeclaration(node, 'position-try') && node.value.children.first) {
     const declarationNode = clone(node) as DeclarationWithValue;
     let order: PositionTryOrder | undefined;
     // get potential order
@@ -479,7 +461,7 @@ export function getPositionTryDeclaration(node: Declaration): {
 }
 
 function getPositionTryOrderDeclaration(node: Declaration) {
-  if (isPositionTryOrderDeclaration(node) && node.value.children.first) {
+  if (isDeclaration(node, 'position-try-order') && node.value.children.first) {
     return {
       order: (node.value.children.first as Identifier).name as PositionTryOrder,
     };

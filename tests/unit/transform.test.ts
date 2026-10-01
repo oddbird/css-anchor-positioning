@@ -1,3 +1,4 @@
+import { CSSOM_PROPERTIES, SHIFTED_PROPERTIES } from '../../src/cascade.js';
 import { insertGeneratedStyles, transformCSS } from '../../src/transform.js';
 import { type StyleContainer } from '../../src/utils.js';
 
@@ -28,14 +29,17 @@ describe('transformCSS', () => {
         css: 'html { padding: 0; }',
         changed: true,
       },
+      // As `generateCSS` would have produced it: `transformCSS` only reaches
+      // this branch for CSS a previous stage regenerated (every
+      // `styleObj.changed = true` follows a `styleObj.css = generateCSS()`).
       {
         el: div,
-        css: '[data-has-inline-styles="key"]{color:blue;}',
+        css: '[data-has-inline-styles="key"]{color:blue}',
         changed: true,
       },
       {
         el: div2,
-        css: '[data-has-inline-styles="key2"]{color:blue;}',
+        css: '[data-has-inline-styles="key2"]{color:blue}',
         changed: false,
       },
     ];
@@ -52,12 +56,97 @@ describe('transformCSS', () => {
     expect(newLink.textContent).toBe('html { margin: 0; }');
 
     expect(style.innerHTML).toBe('html { padding: 0; }');
-    expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue;');
+    expect(div.getAttribute('style')).toBe('--foo: var(--bar); color:blue');
     expect(div2.getAttribute('style')).toBe('color: red;');
     // `data-has-inline-styles` is intentionally retained so its id stays stable
     // across (possibly concurrent) polyfill runs.
     expect(div.getAttribute('data-has-inline-styles')).toBe('key');
     expect(div2.getAttribute('data-has-inline-styles')).toBe('key2');
+  });
+
+  it('splits a generated rule out of the inline styles', () => {
+    // A target declaring `position-try-fallbacks` inline gets a generated
+    // `@position-try` block alongside its declarations. A `style` attribute
+    // holds declarations and not rules, so that needs a stylesheet of its own.
+    document.head.innerHTML = '';
+    document.body.innerHTML = `
+      <div id="div" data-has-inline-styles="key" style="top: 0" />
+    `;
+    const div = document.getElementById('div') as HTMLDivElement;
+    transformCSS(
+      [
+        {
+          el: div,
+          css:
+            '[data-has-inline-styles="key"]{top:0}' +
+            '@position-try --fallback{top:anchor(top)}',
+          changed: true,
+        },
+      ],
+      new Map(),
+    );
+
+    expect(div.getAttribute('style')).toBe('top:0');
+    const generated = document.head.querySelector(
+      'style[data-generated-by-polyfill]',
+    ) as HTMLStyleElement;
+    expect(generated.textContent).toBe(
+      '@position-try --fallback{top:anchor(top)}',
+    );
+  });
+
+  it.each(CSSOM_PROPERTIES)(
+    'keeps a `%s` value written through the CSSOM mid-run',
+    (property) => {
+      // `patchCSSOM` stores the value in the shifted custom property, which
+      // lives only on the element. A write landing after this run captured the
+      // element's inline styles must survive the write-back, and is newer than
+      // whatever the captured text held.
+      const stored = SHIFTED_PROPERTIES[property];
+      document.body.innerHTML = `
+        <div id="div" data-has-inline-styles="key" style="color: red;" />
+      `;
+      const div = document.getElementById('div') as HTMLDivElement;
+      const styleData = [
+        {
+          el: div,
+          css: `[data-has-inline-styles="key"]{color:blue;${property}:--stale;${stored}:--stale}`,
+          changed: true,
+        },
+      ];
+
+      // The concurrent CSSOM write, after the CSS above was captured.
+      div.setAttribute('style', `color: red; ${stored}: --fresh`);
+      transformCSS(styleData, new Map());
+
+      const style = div.getAttribute('style')!;
+      expect(style).toContain(`${stored}: --fresh`);
+      // ...and it wins, since a `style` attribute cascades like any other
+      // declaration list.
+      expect(style.lastIndexOf(`${stored}:`)).toBe(
+        style.indexOf(`${stored}: --fresh`),
+      );
+    },
+  );
+
+  it('does not duplicate a CSSOM value the run already accounts for', () => {
+    const stored = SHIFTED_PROPERTIES['anchor-name'];
+    document.body.innerHTML = `
+      <div id="div" data-has-inline-styles="key" style="${stored}: --foo" />
+    `;
+    const div = document.getElementById('div') as HTMLDivElement;
+    transformCSS(
+      [
+        {
+          el: div,
+          css: `[data-has-inline-styles="key"]{anchor-name:--foo;${stored}:--foo}`,
+          changed: true,
+        },
+      ],
+      new Map(),
+    );
+
+    expect(div.getAttribute('style')).toBe(`anchor-name:--foo;${stored}:--foo`);
   });
 
   it('preserves id, media, and title attributes when replacing link elements', () => {

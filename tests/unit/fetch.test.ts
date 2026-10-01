@@ -1,6 +1,7 @@
 import fetchMock from 'fetch-mock';
 
 import { fetchCSS, hasInlineAnchorStyles } from '../../src/fetch.js';
+import type { AnchorPositioningRoot } from '../../src/polyfill.js';
 import { getSampleCSS, requestWithCSSType } from '../helpers.js';
 
 describe('fetch stylesheet', () => {
@@ -106,6 +107,61 @@ describe('fetch inline styles', () => {
     expect(styleData[3].css.trim()).toContain(
       'anchor-name: --my-anchor-in-line',
     );
+  });
+});
+
+describe('fetch inline styles across roots', () => {
+  afterEach(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '';
+  });
+
+  const inlineStyleData = async (roots: AnchorPositioningRoot[]) =>
+    (await fetchCSS({ roots, positionAreaContainingBlock: true })).filter(
+      (data) => data.css.includes('[data-has-inline-styles='),
+    );
+
+  it('collects each element once when a root is the document', async () => {
+    // `roots` defaults to `[document]`, which already covers the document-wide
+    // search -- an element must not be collected twice off the back of that.
+    document.body.innerHTML =
+      '<div id="a" style="anchor-name: --dedupe-a"></div>';
+
+    const data = await inlineStyleData([document]);
+
+    expect(data).toHaveLength(1);
+  });
+
+  it('collects a shadow host and its shadow content once each', async () => {
+    // The host lives in the outer tree, so the document search finds it; the
+    // `:host` resolution in `querySelectorAllRoots` finds it again. Its shadow
+    // content is reachable only through the root.
+    document.body.innerHTML =
+      '<div id="host" style="anchor-name: --host"></div>';
+    const host = document.getElementById('host')!;
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.innerHTML = '<div style="anchor-name: --inner"></div>';
+
+    const data = await inlineStyleData([document, shadowRoot]);
+
+    expect(data).toHaveLength(2);
+    expect(data.filter((d) => d.css.includes('--host'))).toHaveLength(1);
+    expect(data.filter((d) => d.css.includes('--inner'))).toHaveLength(1);
+  });
+
+  it('searches the document even when it is not among the roots', async () => {
+    // A run scoped to a shadow root still needs the outer tree's inline styles.
+    document.body.innerHTML =
+      '<div id="host" style="anchor-name: --outer"></div>';
+    const shadowRoot = document
+      .getElementById('host')!
+      .attachShadow({ mode: 'open' });
+    shadowRoot.innerHTML = '<div style="anchor-name: --scoped"></div>';
+
+    const data = await inlineStyleData([shadowRoot]);
+
+    expect(data.filter((d) => d.css.includes('--outer'))).toHaveLength(1);
+    expect(data.filter((d) => d.css.includes('--scoped'))).toHaveLength(1);
   });
 });
 
@@ -321,5 +377,15 @@ describe('hasInlineAnchorStyles', () => {
   it('matches regardless of where the relevant declaration falls', () => {
     const el = elWithStyle('color: red; anchor-name: --my-anchor; z-index: 1;');
     expect(hasInlineAnchorStyles(el)).toBe(true);
+  });
+
+  it.each([
+    ['an upper-case property name', 'ANCHOR-NAME: --my-anchor;'],
+    ['a mixed-case property name', 'color: red; Position-Anchor: --a;'],
+    ['leading whitespace before the declaration', '   anchor-name: --a;'],
+  ])('matches %s', (_name, style) => {
+    // CSS property names are ASCII case-insensitive, and a `style` attribute
+    // may hold whitespace anywhere a declaration may start.
+    expect(hasInlineAnchorStyles(elWithStyle(style))).toBe(true);
   });
 });

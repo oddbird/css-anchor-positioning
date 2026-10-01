@@ -1,5 +1,9 @@
 import { type AnchorPositioningPolyfillOptions, polyfill } from './polyfill.js';
-import { captureAdoptedStylesheetText, originalReplaceSync } from './utils.js';
+import {
+  captureAdoptedStylesheetText,
+  isWritingAdoptedStylesheet,
+  originalReplaceSync,
+} from './utils.js';
 
 /**
  * Options accepted by `patchAndPolyfillConstructedStylesheets()`. `roots` and
@@ -12,7 +16,9 @@ export type ConstructedStylesheetsPolyfillOptions = Omit<
 >;
 
 // Marks host elements already queued for positioning, so that adopting several
-// stylesheets into one shadow root only queues a single run.
+// stylesheets into one shadow root only queues a single run. Cleared when that
+// run starts, so a stylesheet adopted afterwards (a theme swap, an updated
+// constructed stylesheet) queues a fresh one.
 const queuedHosts = new WeakSet<HTMLElement>();
 
 // Whether the `adoptedStyleSheets` setter has already been patched. The patched
@@ -78,17 +84,36 @@ function patchCustomElementsDefine() {
       connectedCallback?: (this: HTMLElement) => void;
     };
     const originalConnectedCallback = prototype.connectedCallback;
+    const hadOwnConnectedCallback = Object.prototype.hasOwnProperty.call(
+      prototype,
+      'connectedCallback',
+    );
 
     prototype.connectedCallback = function (this: HTMLElement) {
       originalConnectedCallback?.call(this);
       const shadowRoot = pendingHosts.get(this);
       if (shadowRoot) {
         pendingHosts.delete(this);
+        queuedHosts.delete(this);
         void runPolyfill(shadowRoot);
       }
     };
 
-    return originalDefine.call(this, name, constructor, options);
+    try {
+      return originalDefine.call(this, name, constructor, options);
+    } catch (error) {
+      // The registry rejected the definition -- an invalid or already-taken
+      // name, say -- so it never captured the wrapper. Put the prototype back
+      // exactly as we found it: a constructor the registry refused can be
+      // offered again under another name, and a wrapper left behind would be
+      // captured as that call's original, stacking a second layer.
+      if (hadOwnConnectedCallback) {
+        prototype.connectedCallback = originalConnectedCallback;
+      } else {
+        delete prototype.connectedCallback;
+      }
+      throw error;
+    }
   };
 }
 
@@ -111,11 +136,23 @@ function positionWhenPopulated(shadowRoot: ShadowRoot) {
   // shadow DOM has been populated.
   if (host.isConnected) {
     queueMicrotask(() => {
+      queuedHosts.delete(host);
       void runPolyfill(shadowRoot);
     });
   } else {
-    // Positioned by the `connectedCallback` wrapper installed above.
+    // Positioned by the `connectedCallback` wrapper installed above -- but only
+    // a custom element has one. Check back once the current task's DOM work is
+    // done as well: building a shadow root and appending its host is normally a
+    // single synchronous sequence, so by then a plain element is usually
+    // connected too. Whichever of the two gets there first claims the entry.
     pendingHosts.set(host, shadowRoot);
+    queueMicrotask(() => {
+      if (host.isConnected && pendingHosts.get(host) === shadowRoot) {
+        pendingHosts.delete(host);
+        queuedHosts.delete(host);
+        void runPolyfill(shadowRoot);
+      }
+    });
   }
 }
 
@@ -128,8 +165,10 @@ function positionWhenPopulated(shadowRoot: ShadowRoot) {
  * that constructed stylesheets are captured and their shadow roots are queued
  * for positioning. A host that adopts a stylesheet before it is connected is
  * positioned by its `connectedCallback`, which can only be wrapped for elements
- * defined after this runs. (Such a host is also never positioned if it isn't a
- * custom element, since nothing would signal that it had been connected.)
+ * defined after this runs, or — for a plain element, which has no such callback
+ * — as soon as the task that adopted the stylesheet ends. A plain element that
+ * is still disconnected by then is only positioned once the polyfill is run
+ * again, since nothing signals that it has been connected.
  *
  * The given options are passed on to each polyfill run this sets up, except for
  * `roots` and `elements`, which are always scoped to the shadow root being
@@ -174,7 +213,9 @@ export function patchAndPolyfillConstructedStylesheets(
       ...adoptedStyleSheetsDescriptor,
       set(this: ShadowRoot, sheets: CSSStyleSheet[]) {
         originalAdoptedStyleSheetsSet.call(this, sheets);
-        if (sheets.length > 0) {
+        // Not for the polyfill swapping in its own transformed copy: that is
+        // the tail end of a run, not a reason to start another one.
+        if (sheets.length > 0 && !isWritingAdoptedStylesheet()) {
           positionWhenPopulated(this);
         }
       },

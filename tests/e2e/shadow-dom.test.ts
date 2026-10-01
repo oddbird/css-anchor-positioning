@@ -196,6 +196,206 @@ test('applies explicit polyfill options to adopted stylesheets in shadow root', 
   expect(targetBox!.y).toBeCloseTo(anchorBox!.y + anchorBox!.height, 0);
 });
 
+test('repositions when a host adopts a stylesheet a second time', async ({
+  page,
+}) => {
+  // Swapping in an updated constructed stylesheet (a theme change, say) is a
+  // normal web-component pattern. The second assignment has to queue a run of
+  // its own; nothing else would ever notice the new rules.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --re-adopted; }
+      .target {
+        position: absolute;
+        position-anchor: --re-adopted;
+        top: anchor(bottom);
+      }
+    `);
+
+    customElements.define(
+      're-adopting-fixture',
+      class extends HTMLElement {
+        connectedCallback() {
+          if (this.shadowRoot) return;
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div style="position: relative; height: 120px">
+              <div class="anchor" style="margin-top: 40px">Anchor</div>
+              <div class="target">Target</div>
+            </div>`;
+        }
+      },
+    );
+
+    document.body.append(document.createElement('re-adopting-fixture'));
+  });
+
+  const anchor = page.locator('re-adopting-fixture .anchor');
+  const target = page.locator('re-adopting-fixture .target');
+
+  await expect(target).not.toHaveCSS('top', 'auto');
+  const anchorBox = (await anchor.boundingBox())!;
+  expect(
+    (await target.boundingBox())!.y,
+    'positioned by the first sheet',
+  ).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+
+  // A second sheet, offset from the same anchor, adopted into the same host.
+  await page.evaluate(() => {
+    const updated = new CSSStyleSheet();
+    updated.replaceSync(`
+      .anchor { anchor-name: --re-adopted; }
+      .target {
+        position: absolute;
+        position-anchor: --re-adopted;
+        top: calc(anchor(bottom) + 30px);
+      }
+    `);
+    document.querySelector(
+      're-adopting-fixture',
+    )!.shadowRoot!.adoptedStyleSheets = [updated];
+  });
+
+  await expect
+    .poll(async () => (await target.boundingBox())!.y)
+    .toBeCloseTo(anchorBox.y + anchorBox.height + 30, 0);
+});
+
+test('positions a plain element that adopts before being connected', async ({
+  page,
+}) => {
+  // A built-in element can attach a shadow root without going through
+  // `customElements.define`, so there is no `connectedCallback` to wrap.
+  await page.goto('/shadow-dom.html');
+
+  await page.evaluate(async () => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
+      .anchor { anchor-name: --plain-host; }
+      .target {
+        position: absolute;
+        position-anchor: --plain-host;
+        top: anchor(bottom);
+      }
+    `);
+
+    // Built, adopted and populated while disconnected, then appended. The
+    // anchor is out of flow, so the target's static position is the top of the
+    // container -- 120px above where its anchor puts it. Without that gap an
+    // unresolved `anchor()` would leave the target exactly where the assertion
+    // expects it, and the test would pass without a polyfill run.
+    const host = document.createElement('div');
+    host.id = 'plain-host';
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.adoptedStyleSheets = [sheet];
+    shadowRoot.innerHTML = `
+      <div id="plain-container" style="position: relative; height: 200px">
+        <div class="anchor" style="position: absolute; top: 100px; height: 20px">Anchor</div>
+        <div class="target">Target</div>
+      </div>`;
+    document.body.append(host);
+  });
+
+  const container = page.locator('#plain-container');
+  const anchor = page.locator('#plain-host .anchor');
+  const target = page.locator('#plain-host .target');
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const containerBox = (await container.boundingBox())!;
+  await expect
+    .poll(async () => (await target.boundingBox())!.y)
+    .toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+  // The static position the target would keep unpositioned, for contrast.
+  expect(anchorBox.y + anchorBox.height - containerBox.y).toBeCloseTo(120, 0);
+});
+
+test('picks up a constructed stylesheet updated in place', async ({ page }) => {
+  // The polyfill adopts a private copy of a constructed stylesheet, so the
+  // sheet the application still holds is no longer the one in
+  // `adoptedStyleSheets`. A later `replaceSync` on it has to reach the next
+  // polyfill run all the same -- reading the copy's own rules would pin the
+  // styles to whatever the source said when the copy was made.
+  await page.goto('/shadow-dom.html');
+
+  const rule = (top: string) => `
+    .anchor { anchor-name: --updated-in-place; }
+    .target {
+      position: absolute;
+      position-anchor: --updated-in-place;
+      top: ${top};
+    }`;
+
+  await page.evaluate(async (css) => {
+    const fnEntry = '/src/index-fn.ts';
+    const { patchAndPolyfillConstructedStylesheets } = (await import(
+      fnEntry
+    )) as typeof fnModule;
+    patchAndPolyfillConstructedStylesheets();
+
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(css);
+    (window as unknown as { sheet: CSSStyleSheet }).sheet = sheet;
+
+    customElements.define(
+      'updated-in-place-fixture',
+      class extends HTMLElement {
+        connectedCallback() {
+          if (this.shadowRoot) return;
+          this.attachShadow({ mode: 'open' });
+          this.shadowRoot!.adoptedStyleSheets = [sheet];
+          this.shadowRoot!.innerHTML = `
+            <div style="position: relative; height: 120px">
+              <div class="anchor" style="margin-top: 40px">Anchor</div>
+              <div class="target">Target</div>
+            </div>`;
+        }
+      },
+    );
+
+    document.body.append(document.createElement('updated-in-place-fixture'));
+  }, rule('anchor(bottom)'));
+
+  const anchor = page.locator('updated-in-place-fixture .anchor');
+  const target = page.locator('updated-in-place-fixture .target');
+
+  await expect(target).not.toHaveCSS('top', 'auto');
+  const anchorBox = (await anchor.boundingBox())!;
+  expect((await target.boundingBox())!.y).toBeCloseTo(
+    anchorBox.y + anchorBox.height,
+    0,
+  );
+
+  // The application updates the sheet it still holds, then re-runs.
+  await page.evaluate(async (css) => {
+    const fnEntry = '/src/index-fn.ts';
+    const { default: polyfill } = (await import(fnEntry)) as typeof fnModule;
+    (window as unknown as { sheet: CSSStyleSheet }).sheet.replaceSync(css);
+    const host = document.querySelector('updated-in-place-fixture')!;
+    await polyfill({ roots: [host.shadowRoot!] });
+  }, rule('calc(anchor(bottom) + 30px)'));
+
+  await expect
+    .poll(async () => (await target.boundingBox())!.y)
+    .toBeCloseTo(anchorBox.y + anchorBox.height + 30, 0);
+});
+
 test('positions a host that adopts its stylesheet before being connected', async ({
   page,
 }) => {
@@ -672,4 +872,54 @@ test('emulates non-inheritance of shifted properties inside a shadow root withou
   expect(result.resetInShadow).toBe(true);
   expect(result.containerHeight).toBe('400px');
   expect(result.targetHeight).toBe('');
+});
+
+test('picks up anchors set through the CSSOM', async ({ page }) => {
+  // `patchCSSOM()` makes `anchor-name` and `position-anchor` settable through
+  // the CSSOM. Without it those assignments are dropped by a browser that has
+  // no native anchor positioning, and never reach the `style` attribute the
+  // polyfill reads. The elements live in a shadow root, so this also covers
+  // inline styles being collected per polyfill root rather than from
+  // `document`.
+  await applyPolyfill(page);
+
+  await page.evaluate(async () => {
+    // Resolved by the Vite dev server at runtime; the indirection keeps `tsc`
+    // and the import linter from trying to resolve it statically.
+    const fnEntry = '/src/index-fn.ts';
+    const { default: polyfill } = await import(fnEntry);
+
+    const host = document.createElement('div');
+    host.id = 'cssom-anchors';
+    document.body.append(host);
+
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = `
+      <style>
+        #target { position: absolute; top: anchor(bottom); left: anchor(right); }
+      </style>
+      <div style="position: relative">
+        <span id="anchor">Anchor</span>
+        <div id="target">Target</div>
+      </div>`;
+
+    const anchor = shadow.getElementById('anchor')!,
+      target = shadow.getElementById('target')!;
+
+    anchor.style.anchorName = '--cssom-anchor';
+    target.style.positionAnchor = '--cssom-anchor';
+
+    await polyfill({ roots: [shadow] });
+  });
+
+  const anchor = page.locator('#cssom-anchors #anchor');
+  const target = page.locator('#cssom-anchors #target');
+
+  const anchorBox = (await anchor.boundingBox())!;
+  const targetBox = (await target.boundingBox())!;
+
+  // `top: anchor(bottom)` and `left: anchor(right)` put the target's top-left
+  // corner on the anchor's bottom-right corner.
+  expect(targetBox.y).toBeCloseTo(anchorBox.y + anchorBox.height, 0);
+  expect(targetBox.x).toBeCloseTo(anchorBox.x + anchorBox.width, 0);
 });

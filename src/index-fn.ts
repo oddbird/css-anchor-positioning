@@ -2,6 +2,7 @@ import './global.js';
 
 import { polyfill } from './polyfill.js';
 
+export { patchCSSOM } from './cssom.js';
 export {
   type ConstructedStylesheetsPolyfillOptions,
   patchAndPolyfillConstructedStylesheets,
