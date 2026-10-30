@@ -303,7 +303,7 @@ export const getPixelValue = async ({
   return fallback;
 };
 
-// Use `isPositionAreaDeclaration` instead for type narrowing AST nodes.
+// Use `isDeclaration(node, 'position-area')` instead for type narrowing AST nodes.
 const isPositionAreaTarget = (
   value: AnchorFunction | PositionAreaTargetData,
 ): value is PositionAreaTargetData => {

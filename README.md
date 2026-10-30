@@ -108,6 +108,79 @@ afterwards; an explicit argument takes precedence over the global.
 You can view a more complete demo
 [here](https://anchor-positioning.oddbird.net/shadow-dom.html).
 
+### Setting anchor properties from JavaScript
+
+Assigning an anchor positioning property through the CSSOM does nothing in a
+browser without native anchor positioning. The CSSOM drops properties it doesn't
+know, so no CSS declaration is produced and nothing is written to the `style`
+attribute the polyfill reads — while reading the value back still returns it,
+which makes the assignment look like it worked:
+
+```js
+el.style.anchorName = '--foo';
+el.style.anchorName; // '--foo'
+el.getAttribute('style'); // null
+```
+
+If your components wire up their anchor positioning at runtime, call
+`patchCSSOM()` to make those properties settable. Like the constructed
+stylesheet patch, call it before any `connectedCallback` runs:
+
+```js
+import {
+  patchAndPolyfillConstructedStylesheets,
+  patchCSSOM,
+} from '@oddbird/css-anchor-positioning/fn';
+
+patchCSSOM();
+patchAndPolyfillConstructedStylesheets();
+
+// Define your custom elements after the patches are installed.
+```
+
+If your components don't adopt constructed stylesheets, apply the polyfill
+yourself once the elements are defined, passing their shadow roots as
+[`roots`](#roots).
+
+It covers every anchor positioning property the polyfill supports, defining each
+on `CSSStyleDeclaration` and storing what you set in the custom property the
+polyfill shifts that declaration into internally:
+
+| Property                 | CSSOM name             |
+| ------------------------ | ---------------------- |
+| `anchor-name`            | `anchorName`           |
+| `anchor-scope`           | `anchorScope`          |
+| `position-anchor`        | `positionAnchor`       |
+| `position-area`          | `positionArea`         |
+| `position-try`           | `positionTry`          |
+| `position-try-fallbacks` | `positionTryFallbacks` |
+| `position-try-order`     | `positionTryOrder`     |
+
+`setProperty()`, `getPropertyValue()` and `removeProperty()` accept the dashed
+names as well. `position-visibility` is left out, as the polyfill does not
+support it.
+
+Four things to know:
+
+- Once it has run, `'anchorName' in element.style` returns `true`. Feature
+  detection happens before the polyfill is loaded, so that check is unaffected,
+  but anything detecting support later on can use
+  `CSS.supports('anchor-name: --a')`, which the patch leaves alone.
+- The `style` attribute holds the polyfill's custom property rather than the
+  property you assigned, so devtools shows `--anchor-name-<id>: --foo` instead
+  of `anchor-name: --foo`. Reading the value back through the CSSOM returns what
+  you set.
+- It covers properties, not values. An `anchor()` value assigned to
+  `el.style.top` is dropped just the same, for being a value the browser does
+  not understand.
+- Any CSSOM write re-serializes the whole declaration block from what the
+  browser parsed, so it also drops `anchor()` values already in the `style`
+  attribute. Keep those in a stylesheet if the element's inline styles are
+  written to from JavaScript.
+
+Values set before `patchCSSOM()` runs are not picked up, since the assignments
+that were dropped left nothing behind.
+
 ## Configuration
 
 The polyfill supports a small number of options. When using the default version
@@ -310,6 +383,8 @@ Browsers provide some validation for imperatively setting inline styles.
 styles of `el`. This is problematic for this polyfill, as we would like to
 support `el.style.anchorName = "--foo"`, but that won't work in browsers that
 don't support the `anchor-name` property.
+[`patchCSSOM()`](#setting-anchor-properties-from-javascript) makes the anchor
+positioning properties settable that way.
 
 While `el.setAttribute('style', 'anchor-name: --foo')` or `<div
 style="anchor-name: --foo" />` both work, developers are often using tools that

@@ -515,3 +515,47 @@ test('emulates non-inheritance of shifted properties without `CSS.registerProper
   expect(containerHeight).toBe('400px');
   expect(targetHeight).toBe('');
 });
+
+test('applies polyfill for properties set through the CSSOM', async ({
+  page,
+}) => {
+  // The `#cssom` demo declares none of `anchor-name`, `position-anchor` or
+  // `position-area` in CSS -- all three are assigned from JavaScript, which only
+  // reaches the polyfill because the page calls `patchCSSOM()`.
+  const boxes = async () =>
+    await page.evaluate(() => {
+      const rel = (id: string) => {
+        const container = document
+          .querySelector('#cssom .demo-elements')!
+          .getBoundingClientRect();
+        const { top, left, bottom, right } = document
+          .getElementById(id)!
+          .getBoundingClientRect();
+        return {
+          top: top - container.top,
+          left: left - container.left,
+          bottom: bottom - container.top,
+          right: right - container.left,
+        };
+      };
+      return {
+        anchor: rel('my-cssom-anchor'),
+        target: rel('my-cssom-target'),
+        positionArea: rel('my-cssom-position-area-target'),
+      };
+    });
+
+  // `patchCSSOM()` makes the properties settable, but it does not position
+  // anything on its own.
+  const before = await boxes();
+  expect(before.target.top).not.toBeCloseTo(before.anchor.bottom, 0);
+
+  await applyPolyfill(page);
+
+  const after = await boxes();
+  // `anchor()` insets put this target on the anchor's bottom right corner.
+  expect(after.target.top).toBeCloseTo(after.anchor.bottom, 0);
+  expect(after.target.left).toBeCloseTo(after.anchor.right, 0);
+  // `position-area: top` puts this one directly above the anchor.
+  expect(after.positionArea.bottom).toBeCloseTo(after.anchor.top, 0);
+});

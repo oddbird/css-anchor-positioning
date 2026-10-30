@@ -1,0 +1,20 @@
+/* `anchor-name`, `position-anchor` and `position-area` are set from JavaScript
+   for this demo (see `patchCSSOM()` in index.html), so they are deliberately
+   absent here. Only what a CSSOM write cannot carry lives in this file: a write
+   re-serializes the declaration block from what the browser parsed, which drops
+   the `anchor()` values it does not understand. */
+
+#cssom .anchor {
+  inline-size: fit-content;
+  margin: 3em auto;
+}
+
+#my-cssom-target {
+  position: absolute;
+  top: anchor(bottom);
+  left: anchor(right);
+}
+
+#my-cssom-position-area-target {
+  position: absolute;
+}
