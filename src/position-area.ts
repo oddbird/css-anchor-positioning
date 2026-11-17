@@ -53,6 +53,7 @@ import {
 import {
   type DeclarationWithValue,
   INSTANCE_UUID,
+  isDeclaration,
   PA_INSET_SIDES,
   type PaValueProp,
   paValueProperties,
@@ -542,12 +543,6 @@ export interface PositionAreaTargetData {
   targetEl: HTMLElement;
 }
 
-function isPositionAreaDeclaration(
-  node: CssNode,
-): node is DeclarationWithValue {
-  return node.type === 'Declaration' && node.property === 'position-area';
-}
-
 function parsePositionAreaValue(node: DeclarationWithValue) {
   const value = (node.value.children as List<Identifier>)
     .toArray()
@@ -565,7 +560,7 @@ function parsePositionAreaValue(node: DeclarationWithValue) {
 export function getPositionAreaDeclaration(
   node: CssNode,
 ): PositionAreaDeclaration | undefined {
-  if (!isPositionAreaDeclaration(node)) return undefined;
+  if (!isDeclaration(node, 'position-area')) return undefined;
 
   const value = parsePositionAreaValue(node);
   // If it's not a valid value, we can ignore it.

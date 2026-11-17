@@ -210,6 +210,44 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
   // instead: jsdom delivers mutation records across shadow boundaries, so a
   // unit test here passes with or without the fix.
 
+  it('restores `connectedCallback` when `define()` throws', async () => {
+    // A rejected definition never captured the wrapper, and the constructor can
+    // be offered again under another name. A wrapper left on the prototype
+    // would be captured as that call's original and run the deferred-run logic
+    // twice per connect.
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const connectedCallback = vi.fn();
+    class Fixture extends HTMLElement {}
+    Fixture.prototype.connectedCallback = connectedCallback;
+
+    expect(() => customElements.define('not a valid name', Fixture)).toThrow();
+    expect(Fixture.prototype.connectedCallback).toBe(connectedCallback);
+
+    // Defining it under a valid name now wraps the real callback, once.
+    const tagName = `retried-${(tagCount += 1)}`;
+    customElements.define(tagName, Fixture);
+    const host = document.createElement(tagName);
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+    document.body.append(host);
+
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+    expect(connectedCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves no own `connectedCallback` behind when `define()` throws', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    class Bare extends HTMLElement {}
+    expect(() => customElements.define('also not valid', Bare)).toThrow();
+    expect(
+      Object.prototype.hasOwnProperty.call(Bare.prototype, 'connectedCallback'),
+    ).toBe(false);
+  });
+
   it('patches `define` on the registry prototype', async () => {
     const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
     patchAndPolyfillConstructedStylesheets();
@@ -222,6 +260,97 @@ describe('patchAndPolyfillConstructedStylesheets', () => {
     expect(Object.prototype.hasOwnProperty.call(customElements, 'define')).toBe(
       false,
     );
+  });
+
+  it('runs the polyfill again when a stylesheet is adopted a second time', async () => {
+    // A component swapping in an updated constructed stylesheet (a theme
+    // change, say) reassigns `adoptedStyleSheets` on a host that has already
+    // been positioned once. Anchors styled by the new sheet still need a run.
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const shadowRoot = await adoptStylesheet();
+    expect(polyfillMock).toHaveBeenCalledTimes(1);
+
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+    expect(polyfillMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs the polyfill again after a host connected while pending', async () => {
+    // The deferred run clears the queue entry too, so the same reassignment
+    // works for a host first positioned by its `connectedCallback`.
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const { host, shadowRoot } = adoptStylesheetWhileDisconnected();
+    document.body.append(host);
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+    expect(polyfillMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('positions a plain element that adopts before being connected', async () => {
+    // A built-in element can attach a shadow root without ever going through
+    // `customElements.define`, so it has no `connectedCallback` to wrap. The
+    // build-then-append sequence is synchronous, so checking back at the end of
+    // the task finds it connected.
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const host = document.createElement('div');
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+    expect(polyfillMock).not.toHaveBeenCalled();
+    document.body.append(host);
+
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+    expect(optionsOfLastRun()).toMatchObject({ roots: [shadowRoot] });
+  });
+
+  it('does not double-run a custom element that connects in the same task', async () => {
+    // Both the `connectedCallback` wrapper and the end-of-task check apply
+    // here; only one of them may claim the pending entry.
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const { host } = adoptStylesheetWhileDisconnected();
+    document.body.append(host);
+
+    await vi.waitFor(() => expect(polyfillMock).toHaveBeenCalledTimes(1));
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+    expect(polyfillMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a plain element pending while it stays disconnected', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const host = document.createElement('div');
+    host.attachShadow({ mode: 'open' }).adoptedStyleSheets = [
+      {} as CSSStyleSheet,
+    ];
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+    expect(polyfillMock).not.toHaveBeenCalled();
+  });
+
+  it('coalesces several stylesheets adopted in the same task', async () => {
+    const { patchAndPolyfillConstructedStylesheets } = await loadShadowModule();
+    patchAndPolyfillConstructedStylesheets();
+
+    const host = document.createElement('div');
+    document.body.append(host);
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet];
+    shadowRoot.adoptedStyleSheets = [{} as CSSStyleSheet, {} as CSSStyleSheet];
+    await new Promise<void>((resolve) => queueMicrotask(resolve));
+
+    expect(polyfillMock).toHaveBeenCalledTimes(1);
   });
 
   it('does not run the polyfill when no stylesheets are adopted', async () => {

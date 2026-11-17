@@ -1,7 +1,13 @@
-import { POLYFILLED_STYLE_ATTRIBUTE } from './cascade.js';
+import {
+  CSSOM_STORED_PROPERTIES,
+  POLYFILLED_STYLE_ATTRIBUTE,
+} from './cascade.js';
 import type { AnchorPositioningRoot } from './polyfill.js';
 import {
+  generateCSS,
   type GeneratedStyles,
+  getAST,
+  getRootStyleContainer,
   type StyleData,
   writeAdoptedStylesheet,
 } from './utils.js';
@@ -26,6 +32,65 @@ const excludeAttributes = [
   'rel',
   'type',
 ];
+
+/**
+ * Splits the transformed CSS for an element's inline styles into the element's
+ * own declarations and any rules the polyfill added alongside them -- a
+ * generated `@position-try` block, for a target declaring
+ * `position-try-fallbacks` inline. A `style` attribute holds declarations and
+ * not rules, so those need a stylesheet of their own.
+ */
+function splitInlineStyles(css: string, selector: string) {
+  // Almost always there is nothing to split: the element declared no
+  // `position-try-fallbacks` inline, so its own rule is the whole of `css`.
+  // Slice it out rather than parsing and re-serializing per element per run.
+  //
+  // The guard is exact rather than optimistic. A single `}` ending the string
+  // means one block, and `startsWith` means it is this element's -- so no rule
+  // can hide before or after it, and a `}` inside a declaration value falls
+  // through to the parse below. `css` is always `generateCSS` output here
+  // (every `styleObj.changed = true` follows a `styleObj.css = generateCSS()`),
+  // so the slice is byte for byte what the parse would have produced.
+  const prefix = `${selector}{`;
+  if (css.startsWith(prefix) && css.indexOf('}') === css.length - 1) {
+    return { declarations: css.slice(prefix.length, -1), rules: '' };
+  }
+
+  const ast = getAST(css);
+  let declarations = '';
+  const rules: string[] = [];
+  if (ast.type === 'StyleSheet') {
+    for (const node of ast.children) {
+      if (node.type === 'Rule' && generateCSS(node.prelude) === selector) {
+        // A generated block includes its braces.
+        declarations = generateCSS(node.block).slice(1, -1);
+      } else {
+        rules.push(generateCSS(node));
+      }
+    }
+  }
+  return { declarations, rules: rules.join('') };
+}
+
+/**
+ * Splits a declaration list (a `style` attribute, or the declarations generated
+ * for one) into trimmed property/value pairs, ignoring anything without a
+ * colon. Later duplicates come last, as they do in the cascade.
+ */
+function declarationPairs(text: string) {
+  const pairs: [string, string][] = [];
+  for (const declaration of text.split(';')) {
+    const index = declaration.indexOf(':');
+    if (index < 0) {
+      continue;
+    }
+    const property = declaration.slice(0, index).trim();
+    if (property) {
+      pairs.push([property, declaration.slice(index + 1).trim()]);
+    }
+  }
+  return pairs;
+}
 
 export function transformCSS(
   styleData: StyleData[],
@@ -73,9 +138,20 @@ export function transformCSS(
         // Handle inline styles
         const attr = el.getAttribute('data-has-inline-styles');
         if (attr) {
-          const pre = `[data-has-inline-styles="${attr}"]{`;
-          const post = `}`;
-          let styles = css.slice(pre.length, 0 - post.length);
+          const { declarations, rules } = splitInlineStyles(
+            css,
+            `[data-has-inline-styles="${attr}"]`,
+          );
+          let styles = declarations;
+          if (rules) {
+            const container = getRootStyleContainer(el);
+            if (container) {
+              const styleEl = document.createElement('style');
+              styleEl.setAttribute(POLYFILLED_STYLE_ATTRIBUTE, 'true');
+              styleEl.textContent = rules;
+              container.append(styleEl);
+            }
+          }
           // Check for custom anchor-element mapping, so it is not overwritten
           // when inline styles are updated
           const mappings = inlineStyles?.get(el);
@@ -84,21 +160,41 @@ export function transformCSS(
               styles = `${key}: var(${val}); ${styles}`;
             }
           }
-          // Preserve any `--anchor-*` mappings a concurrently-running polyfill
-          // added to this element after this run captured its inline styles, so
-          // we don't clobber another run's target. Read the *current* value here
-          // (not the text captured at fetch time) so late writes are kept.
-          const preserved = (el.getAttribute('style') ?? '')
-            .split(';')
-            .map((decl) => decl.trim())
-            .filter((decl) => {
-              const prop = decl.slice(0, decl.indexOf(':')).trim();
-              return (
-                prop.startsWith('--anchor-') && !styles.includes(`${prop}:`)
-              );
-            });
+          // Overwriting the `style` attribute would drop declarations that
+          // only ever lived on the element. Read the *current* attribute (not
+          // the text captured at fetch time) and carry those over:
+          //
+          // - `--anchor-*` mappings a concurrently-running polyfill added
+          //   after this run captured its inline styles, so we don't clobber
+          //   another run's target. This run's own mappings win, so they go
+          //   first and any property this run declares is skipped.
+          // - values written through the CSSOM, which `patchCSSOM` stores in
+          //   the shifted custom property. Every one of them is a candidate,
+          //   not just the two that happen to share the `--anchor-` prefix.
+          //   Such a write can land at any point during a run and is newer
+          //   than the text this run captured, so it goes last and wins.
+          const generated = new Map(declarationPairs(styles));
+          const preserved: string[] = [];
+          const cssomWrites: string[] = [];
+          for (const [property, value] of declarationPairs(
+            el.getAttribute('style') ?? '',
+          )) {
+            if (CSSOM_STORED_PROPERTIES[property]) {
+              if (generated.get(property) !== value) {
+                cssomWrites.push(`${property}: ${value}`);
+              }
+            } else if (
+              property.startsWith('--anchor-') &&
+              !generated.has(property)
+            ) {
+              preserved.push(`${property}: ${value}`);
+            }
+          }
           if (preserved.length) {
             styles = `${preserved.join('; ')}; ${styles}`;
+          }
+          if (cssomWrites.length) {
+            styles = `${styles}; ${cssomWrites.join('; ')}`;
           }
           el.setAttribute('style', styles);
         }

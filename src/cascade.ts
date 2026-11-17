@@ -5,6 +5,7 @@ import walk from 'css-tree/walker';
 import { type AnchorPositioningRoot } from './polyfill.js';
 import { ACCEPTED_POSITION_TRY_PROPERTIES, PADDING_PROPS } from './syntax.js';
 import {
+  type DeclarationWithValue,
   generateCSS,
   getAST,
   getRootStyleContainer,
@@ -14,25 +15,62 @@ import {
   type StyleData,
 } from './utils.js';
 
-/**
- * Map of CSS property to CSS custom property that the property's value is
- * shifted into. This is used to subject properties that are not yet natively
- * supported to the CSS cascade so later stages can read computed values. It is
- * also used by the fallback algorithm to find initial, non-computed values.
- */
-export const SHIFTED_PROPERTIES: Record<string, string> = [
+const SHIFTED_PROPERTY_NAMES = [
   ...ACCEPTED_POSITION_TRY_PROPERTIES,
   // Padding props are shifted for use with position-area
   ...PADDING_PROPS,
   'anchor-scope',
   'anchor-name',
-].reduce(
-  (acc, prop) => {
-    acc[prop] = `--${prop}-${INSTANCE_UUID}`;
-    return acc;
-  },
-  {} as Record<string, string>,
-);
+  // Nothing reads the shifted `position-try` values (they are parsed out of the
+  // CSS text), but `patchCSSOM` needs somewhere to store them that survives
+  // being written back to a `style` attribute.
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
+] as const;
+
+/** A CSS property whose declarations are shifted into a custom property. */
+export type ShiftedProperty = (typeof SHIFTED_PROPERTY_NAMES)[number];
+
+/**
+ * Map of CSS property to CSS custom property that the property's value is
+ * shifted into. This is used to subject properties that are not yet natively
+ * supported to the CSS cascade so later stages can read computed values. It is
+ * also used by the fallback algorithm to find initial, non-computed values.
+ *
+ * Keyed by `string` rather than `ShiftedProperty`, because most callers look up
+ * a property name parsed out of CSS text. A miss reads back as `undefined`.
+ */
+export const SHIFTED_PROPERTIES: Record<string, string> =
+  SHIFTED_PROPERTY_NAMES.reduce(
+    (acc, prop) => {
+      acc[prop] = `--${prop}-${INSTANCE_UUID}`;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
+
+/**
+ * The anchor positioning properties `patchCSSOM` makes settable through the
+ * CSSOM, each stored in its `SHIFTED_PROPERTIES` custom property. Every
+ * property from the spec except `position-visibility`, which the polyfill does
+ * not parse at all.
+ *
+ * Typed as `ShiftedProperty[]` so a name with nowhere to be stored is a
+ * compile error rather than a silent `undefined` custom property: this list is
+ * maintained by hand, since the properties the polyfill shifts are mostly ones
+ * that are natively settable already (insets, margins, padding) and have no
+ * business being patched onto `CSSStyleDeclaration`.
+ */
+export const CSSOM_PROPERTIES: ShiftedProperty[] = [
+  'anchor-name',
+  'anchor-scope',
+  'position-anchor',
+  'position-area',
+  'position-try',
+  'position-try-fallbacks',
+  'position-try-order',
+];
 
 /**
  * Attribute marking a `<style>` element the polyfill generates itself -- the
@@ -134,6 +172,64 @@ export function registerShiftedProperties(
       container.append(style);
     }
   }
+}
+
+/** Custom property `patchCSSOM` stores a value in, to the property it was set on. */
+export const CSSOM_STORED_PROPERTIES: Record<string, string> =
+  Object.fromEntries(
+    CSSOM_PROPERTIES.map((property) => [
+      SHIFTED_PROPERTIES[property],
+      property,
+    ]),
+  );
+
+/**
+ * Restore the declarations `patchCSSOM` wrote into a rule to the properties
+ * they stand in for, giving the rest of the polyfill the same shape it gets
+ * from author CSS -- so no parser has to know about the CSSOM.
+ * `shiftUnsupportedProperties` then puts the custom properties back.
+ *
+ * A rule can hold both halves of a shift the polyfill produced on an earlier
+ * run (`anchor-name: --foo; --anchor-name-<uuid>: --foo`). A CSSOM write only
+ * updates the custom property half, so when the two disagree the custom
+ * property holds the newer value -- and it is the half every later stage
+ * reads. Collapse each pair to the last stored value: keep that declaration,
+ * renamed, and drop the rest. Leaving the literal in place instead would let
+ * `shiftUnsupportedProperties` re-shift the stale value *after* the fresh one,
+ * where last-declaration-wins makes it the value that takes effect; it would
+ * also add a duplicate declaration on every run.
+ */
+function restoreCSSOMProperties(block: Block) {
+  // Last declaration wins, as it would in the cascade.
+  const stored = new Map<string, DeclarationWithValue>();
+  for (const child of block.children) {
+    if (isDeclaration(child) && CSSOM_STORED_PROPERTIES[child.property]) {
+      stored.set(child.property, child);
+    }
+  }
+  if (!stored.size) {
+    return { updated: false };
+  }
+  const restoring = new Set(stored.values());
+  const properties = new Set(
+    [...stored.keys()].map((property) => CSSOM_STORED_PROPERTIES[property]),
+  );
+  block.children.forEach((child, item) => {
+    if (!isDeclaration(child)) {
+      return;
+    }
+    // The property being restored, and any superseded stored declaration.
+    if (
+      properties.has(child.property) ||
+      (CSSOM_STORED_PROPERTIES[child.property] && !restoring.has(child))
+    ) {
+      block.children.remove(item);
+    }
+  });
+  for (const node of restoring) {
+    node.property = CSSOM_STORED_PROPERTIES[node.property];
+  }
+  return { updated: true };
 }
 
 /**
@@ -245,6 +341,18 @@ export function cascadeCSS(
   for (const styleObj of styleData) {
     let changed = false;
     const ast = getAST(styleObj.css, true);
+    // Before the declaration walk below, so that a value set through the CSSOM
+    // is expanded and shifted like the declaration it stands in for, and so
+    // the literal it supersedes is gone before it can be shifted.
+    walk(ast, {
+      visit: 'Rule',
+      enter(node) {
+        const { updated } = restoreCSSOMProperties(node.block);
+        if (updated) {
+          changed = true;
+        }
+      },
+    });
     walk(ast, {
       visit: 'Declaration',
       enter(node) {
