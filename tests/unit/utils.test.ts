@@ -4,6 +4,7 @@ import {
   cssParseErrors,
   getAST,
   getRootStyleContainer,
+  isShadowRoot,
   splitCommaList,
 } from '../../src/utils.js';
 
@@ -91,5 +92,29 @@ describe('getRootStyleContainer', () => {
     // No stylesheet reaches a detached tree, so there is no container whose
     // rules could apply; `document.head` would silently never match.
     expect(getRootStyleContainer(document.createElement('div'))).toBe(null);
+  });
+});
+
+describe('isShadowRoot', () => {
+  it('returns true for a ShadowRoot and false for other nodes', () => {
+    const host = document.createElement('div');
+    const shadowRoot = host.attachShadow({ mode: 'open' });
+
+    expect(isShadowRoot(shadowRoot)).toBe(true);
+    expect(isShadowRoot(document)).toBe(false);
+    expect(isShadowRoot(host)).toBe(false);
+  });
+
+  it('returns false without throwing when global ShadowRoot is undefined', () => {
+    const originalShadowRoot = globalThis.ShadowRoot;
+    try {
+      // @ts-expect-error simulating environments without global ShadowRoot
+      delete globalThis.ShadowRoot;
+
+      expect(isShadowRoot(document)).toBe(false);
+      expect(getRootStyleContainer(document)).toBe(document.head);
+    } finally {
+      globalThis.ShadowRoot = originalShadowRoot;
+    }
   });
 });

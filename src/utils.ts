@@ -191,13 +191,17 @@ export function writeAdoptedStylesheet(
 //
 // Returns `null` for an element in a detached tree: no stylesheet applies to it
 // and it isn't rendered, so there is no container whose rules could reach it.
+export function isShadowRoot(node: unknown): node is ShadowRoot {
+  return typeof ShadowRoot !== 'undefined' && node instanceof ShadowRoot;
+}
+
 export function getRootStyleContainer(
   root: AnchorPositioningRoot,
 ): StyleContainer | null {
-  if (root instanceof ShadowRoot) return root;
+  if (isShadowRoot(root)) return root;
   if (root instanceof Document) return root.head;
   const rootNode = root.getRootNode();
-  if (rootNode instanceof ShadowRoot) return rootNode;
+  if (isShadowRoot(rootNode)) return rootNode;
   if (rootNode instanceof Document) return rootNode.head;
   return null;
 }

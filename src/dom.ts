@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid/non-secure';
 
 import { SHIFTED_PROPERTIES } from './cascade.js';
 import { type AnchorPositioningRoot } from './polyfill.js';
-import { getRootStyleContainer } from './utils.js';
+import { getRootStyleContainer, isShadowRoot } from './utils.js';
 
 /**
  * Representation of a CSS selector that allows getting the element part and
@@ -296,7 +296,7 @@ export const querySelectorAllRoots = (
     const elements = [...root.querySelectorAll(selector)] as HTMLElement[];
     // `:host` (and `:host(...)`) selectors don't match via `querySelectorAll()`
     // within a shadow root, so resolve them to the shadow root's host element.
-    if (root instanceof ShadowRoot) {
+    if (isShadowRoot(root)) {
       const host = root.host as HTMLElement;
       if (hostMatchesSelector(host, selector)) {
         elements.push(host);

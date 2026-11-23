@@ -154,7 +154,7 @@ export function patchAndPolyfillConstructedStylesheets(
     };
   }
 
-  if (adoptedStyleSheetsPatched) {
+  if (adoptedStyleSheetsPatched || typeof ShadowRoot === 'undefined') {
     return;
   }
 
