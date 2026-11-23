@@ -109,6 +109,56 @@ describe('fetch inline styles', () => {
   });
 });
 
+describe('fetch inline styles in shadow roots', () => {
+  afterEach(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '';
+  });
+
+  it('collects inline anchor styles inside shadow roots', async () => {
+    document.body.innerHTML = '<div id="host"></div>';
+    const host = document.getElementById('host')!;
+    const root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = `
+      <div style="anchor-name: --a">Anchor</div>
+      <div style="position: absolute; top: anchor(--a end)">Target</div>
+    `;
+
+    const styleData = await fetchCSS({
+      roots: [document, root],
+      positionAreaContainingBlock: true,
+    });
+
+    expect(styleData).toHaveLength(2);
+    expect(root.querySelectorAll('[data-has-inline-styles]')).toHaveLength(2);
+    expect(styleData[0].css).toContain('anchor-name: --a');
+    expect(styleData[1].css).toContain('top: anchor(--a end)');
+  });
+
+  it('scopes inline style collection to the provided roots', async () => {
+    document.body.innerHTML = `
+      <div id="light-anchor" style="anchor-name: --light">Light</div>
+      <div id="host"></div>
+    `;
+    const host = document.getElementById('host')!;
+    const root = host.attachShadow({ mode: 'open' });
+    root.innerHTML = '<div style="anchor-name: --shadow">Shadow</div>';
+
+    const styleData = await fetchCSS({
+      roots: [root],
+      positionAreaContainingBlock: true,
+    });
+
+    expect(styleData).toHaveLength(1);
+    expect(styleData[0].css).toContain('anchor-name: --shadow');
+    expect(
+      document
+        .getElementById('light-anchor')!
+        .hasAttribute('data-has-inline-styles'),
+    ).toBe(false);
+  });
+});
+
 describe('fetch styles manually', () => {
   let target5Css: string;
   let target6Css: string;

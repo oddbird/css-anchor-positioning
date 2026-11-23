@@ -110,9 +110,12 @@ export function hasInlineAnchorStyles(el: HTMLElement) {
 // declarations used by the polyfill. For each element found, adds a new
 // 'data-has-inline-styles' attribute with a random UUID value, and then formats
 // the styles in the same manner as CSS from style tags.
-function fetchInlineStyles(elements?: HTMLElement[]) {
+function fetchInlineStyles(
+  elements?: HTMLElement[],
+  roots: AnchorPositioningRoot[] = [document],
+) {
   const elementsWithInlineAnchorStyles: HTMLElement[] = (
-    elements ?? Array.from(document.querySelectorAll<HTMLElement>('[style]'))
+    elements ?? querySelectorAllRoots(roots, '[style]')
   ).filter((el) => el instanceof HTMLElement && hasInlineAnchorStyles(el));
   const inlineStyles: Partial<StyleData>[] = [];
 
@@ -187,7 +190,7 @@ export async function fetchCSS(
     ? (options.elements ?? [])
     : undefined;
 
-  const inlines = fetchInlineStyles(elementsForInlines);
+  const inlines = fetchInlineStyles(elementsForInlines, options.roots);
 
   // Collect constructed stylesheets adopted on the polyfill roots. Skipped when
   // an explicit `elements` list is provided, as that opts into element-only
