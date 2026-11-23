@@ -93,6 +93,13 @@ describe('cascadeCSS', () => {
     const cascadeCausedChanges = await cascadeCSS(styleData);
     expect(cascadeCausedChanges).toBe(false);
   });
+  it('is idempotent across repeated runs without duplicating declarations', () => {
+    const firstRun = cascadeCSSForTest(
+      '#target{anchor-name:--a;inset:10px 20px}',
+    );
+    const secondRun = cascadeCSSForTest(firstRun);
+    expect(secondRun).toBe(firstRun);
+  });
 });
 
 describe('expandInsetShorthands', () => {

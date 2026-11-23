@@ -137,11 +137,29 @@ export function registerShiftedProperties(
 }
 
 /**
+ * Remove every declaration of `property` from `block`.
+ *
+ * Used before appending a generated declaration, so that re-processing a block
+ * we already wrote doesn't accumulate a duplicate each time. Inline styles are
+ * re-parsed from the `style` attribute a previous run wrote back, so this keeps
+ * repeated runs idempotent while preserving last-wins order when a block
+ * declares the same property twice.
+ */
+function dropExistingDeclarations(block: Block, property: string) {
+  block.children.forEach((child, item) => {
+    if (isDeclaration(child) && child.property === property) {
+      block.children.remove(item);
+    }
+  });
+}
+
+/**
  * Shift property declarations for properties that are not yet natively
  * supported into custom properties.
  */
 function shiftUnsupportedProperties(node: CssNode, block?: Block) {
   if (isDeclaration(node) && SHIFTED_PROPERTIES[node.property] && block) {
+    dropExistingDeclarations(block, SHIFTED_PROPERTIES[node.property]);
     block.children.appendData({
       ...node,
       property: SHIFTED_PROPERTIES[node.property],
@@ -166,6 +184,7 @@ function expandInsetShorthands(node: CssNode, block?: Block) {
 
   const appendProperty = (property: string, value?: CssNode) => {
     if (!value) return;
+    dropExistingDeclarations(block, property);
     block.children.appendData({
       ...node,
       property,
