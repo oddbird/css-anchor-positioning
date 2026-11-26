@@ -184,7 +184,15 @@ export async function fetchCSS(
     });
 
   const elementsForInlines = options.excludeInlineStyles
-    ? (options.elements ?? [])
+    ? [
+        ...new Set(
+          (options.elements ?? []).flatMap((el) =>
+            el instanceof HTMLElement
+              ? [el, ...Array.from(el.querySelectorAll<HTMLElement>('[style]'))]
+              : [],
+          ),
+        ),
+        ]
     : undefined;
 
   const inlines = fetchInlineStyles(elementsForInlines);
