@@ -247,6 +247,41 @@ describe('fetch styles manually', () => {
   });
 });
 
+describe('fetch inline styles from descendants of listed elements', () => {
+  beforeAll(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = `
+      <div id="wrapper">
+        <div id="anchor" style="anchor-name: --a; width: 100px; height: 100px;">A</div>
+        <div id="target" style="position: absolute; top: anchor(--a end);">T</div>
+      </div>
+    `;
+  });
+
+  afterAll(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = '';
+  });
+
+  it('fetches inline styles of descendants when elements lists their ancestor', async () => {
+    const wrapper = document.getElementById('wrapper')!;
+    const styleData = await fetchCSS({
+      roots: [document],
+      elements: [wrapper],
+      excludeInlineStyles: true,
+      positionAreaContainingBlock: true,
+    });
+
+    expect(styleData).toHaveLength(2);
+    expect(styleData.map((s) => s.css)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('anchor-name: --a'),
+        expect.stringContaining('top: anchor(--a end)'),
+      ]),
+    );
+  });
+});
+
 describe('hasInlineAnchorStyles', () => {
   function elWithStyle(style: string) {
     const el = document.createElement('div');
